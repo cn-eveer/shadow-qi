@@ -340,8 +340,8 @@ kbd{display:inline-block;min-width:1.75em;text-align:center;padding:1px 6px;font
           <tr><td>Falling Staff<small>Heavy punch in the air: brings the staff down on them and bounces them off the ground.</small></td><td class="cmd">I in the air</td></tr>
           <tr><td>Extending Staff<small>The staff shoots out to a third of the stage.</small></td><td class="cmd">→ → + U</td></tr>
           <tr><td>Pole Vault Smash<small>Plants the staff, vaults over the gap and slams it down, bouncing them.</small></td><td class="cmd">→ → + I</td></tr>
-          <tr><td>Low Staff Dance<small>A low spinning sweep that pops them up on a hit. Guarded or not, it keeps going: U rising poke, I vaults over to their other side and strikes, J a second sweep, K a pole slam that knocks them down. Up to five parts, ending with the slam.</small></td><td class="cmd">→ → + J, then U / I / J / K</td></tr>
-          <tr><td>Monkey Staff Rush<small>Opens with a pole spin kick, then keeps going whether it hits or is guarded. After each part press another button: U thrusts, J sweeps low, I hops into an overhead crash (bounces them on a hit), K ends with a spinning finish that knocks them away. Up to five parts in any order, ending with the finish; it wears down their guard fast.</small></td><td class="cmd">→ → + K, then U / I / J / K</td></tr>
+          <tr><td>Low Staff Dance<small>A low spinning sweep that pops them up on a hit. Guarded or not, it keeps going: U rising poke, I vaults over to their other side and strikes, J a second sweep, K a pole slam that knocks them down. Up to five parts, ending with the slam. On a hit every part combos; once it is guarded, the J sweep winds up slowly and they can hit her before it.</small></td><td class="cmd">→ → + J, then U / I / J / K</td></tr>
+          <tr><td>Monkey Staff Rush<small>Opens with a pole spin kick, then keeps going whether it hits or is guarded. After each part press another button: U thrusts, J sweeps low, I hops into an overhead crash (bounces them on a hit), K ends with a spinning finish that knocks them away. Up to five parts in any order, ending with the finish; it wears down their guard fast. On a hit every part combos; once it is guarded, the J sweep winds up slowly and they can hit her before it.</small></td><td class="cmd">→ → + K, then U / I / J / K</td></tr>
           <tr><td>Staff Windmill<small>Spins the staff in front: four hits, and it swats projectiles out of the air.</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>Cloud Somersault<small>Somersaults up onto a cloud, hangs a moment, then dives at where they are.</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>Somersault Kick<small>A flipping kick that launches; she can’t be hit at the very start.</small></td><td class="cmd">← ← + J</td></tr>
@@ -526,8 +526,8 @@ kbd{display:inline-block;min-width:1.75em;text-align:center;padding:1px 6px;font
           <tr><td>落とし棍<small>空中でI。棍を振り下ろしてバウンドさせる。</small></td><td class="cmd">空中で I</td></tr>
           <tr><td>伸縮棍<small>棍が画面の3分の1まで伸びる。</small></td><td class="cmd">→ → + U</td></tr>
           <tr><td>棒高跳び叩き<small>棍で跳び越えて叩きつけ、バウンドさせる。</small></td><td class="cmd">→ → + I</td></tr>
-          <tr><td>棍の舞<small>低い回転払いで浮かせる。当たってもガードされても続く：U突き上げ、I反対側へ跳んで一撃、J二度目の払い、K叩きつけでダウン。最大5段。</small></td><td class="cmd">→ → + J → U/I/J/K</td></tr>
-          <tr><td>猿王連棍<small>棍を軸に回し蹴りから始まり、当たってもガードされても続く：U突き、J足払い、I飛び上がって叩き（ヒットでバウンド）、K回転のとどめ。最大5段。ガードを大きく削る。</small></td><td class="cmd">→ → + K → U/I/J/K</td></tr>
+          <tr><td>棍の舞<small>低い回転払いで浮かせる。当たってもガードされても続く：U突き上げ、I反対側へ跳んで一撃、J二度目の払い、K叩きつけでダウン。最大5段。当たれば全段つながるが、ガードされるとJの払いの出が遅くなり割り込まれる。</small></td><td class="cmd">→ → + J → U/I/J/K</td></tr>
+          <tr><td>猿王連棍<small>棍を軸に回し蹴りから始まり、当たってもガードされても続く：U突き、J足払い、I飛び上がって叩き（ヒットでバウンド）、K回転のとどめ。最大5段。ガードを大きく削る。当たれば全段つながるが、ガードされるとJの足払いの出が遅くなり割り込まれる。</small></td><td class="cmd">→ → + K → U/I/J/K</td></tr>
           <tr><td>風車棍<small>前で棍を回して4ヒット。飛び道具を叩き落とす。</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>觔斗雲<small>宙返りで雲に乗り、少し止まってから相手の位置へ急降下。</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>宙返り蹴り<small>打ち上げの宙返り蹴り。出始めは無敵。</small></td><td class="cmd">← ← + J</td></tr>
@@ -785,7 +785,7 @@ function hipFor(p) {
 /* ================= characters ================= */
 const CHARS = {
   ninja: {
-    name: 'KURO', title: 'Shadow Ninja', nameJa: 'クロ', titleJa: '影の忍者', scale: 1, walk: 3.4, back: 2.8, jumpX: 4.4,
+    name: 'KURO', title: 'Shadow Ninja', nameJa: 'クロ', titleJa: '影の忍者', jugDmg: 1.15, scale: 1, walk: 3.4, back: 2.8, jumpX: 4.4,
     pDmg: 0.9, kDmg: 0.92, pReach: 1, kReach: 1.08, chargeRate: 0.5, auraCol: '185,145,255',
     sp: { fP: 'shadowCharge', fPH: 'swordSlash', fK: 'cloneStrike', fKH: 'teleKick', bP: 'flame', bPH: 'fireballs', bK: 'vanishSlide', bKH: 'vanishDrop' }, sup: 'shadowArmy',
     heavy: {
@@ -835,7 +835,7 @@ const CHARS = {
     meterCol: ['#d98a1c', '#ffe28a'], bannerCol: 'rgba(200,120,20,.88)', idle: 'idleB', chargePose: 'chargeB', winPose: 'winB', atkCD: 8, recoverT: 8, hitFx: 'star',
   },
   psychic: {
-    name: 'LYRA', title: 'Psychic Sage', nameJa: 'ライラ', titleJa: '超能力の賢者', dmgMul: 1.15, slowTech: 9, normalPre: 2, pushMul: 1.5, reachMul: 1.22, prePose: 'psyCast', jugDmg: 1.0, jugHitMul: 1.2, scale: 1.0, walk: 3.0, back: 3.1, jumpX: 4.0, hover: true, orbs: true,
+    name: 'LYRA', title: 'Psychic Sage', nameJa: 'ライラ', titleJa: '超能力の賢者', dmgMul: 1.15, slowTech: 9, normalPre: 2, pushMul: 1.5, reachMul: 1.22, stringDelay: 7, prePose: 'psyCast', jugDmg: 1.0, jugHitMul: 1.2, scale: 1.0, walk: 3.0, back: 3.1, jumpX: 4.0, hover: true, orbs: true,
     pDmg: 0.9, kDmg: 0.9, pReach: 1.15, kReach: 1.0, chargeRate: 0.48, auraCol: '200,160,255', fxCol: '210,190,255',
     sp: { fP: 'phantomFist', fPH: 'crushFist', fK: 'psyLift', fKH: 'forceWave', bP: 'orbBurst', bPH: 'tripleRay', bK: 'orbStrong', bKH: 'orbLong' }, sup: 'thousandFists',
     heavy: {
@@ -900,6 +900,7 @@ function normalMove(ch, kind, str, stance) {
   const mv = normalMoveBase(ch, kind, str, stance);
   const nl = mv && ch.normalLook && ch.normalLook[stance + kind + str]; if (nl) Object.assign(mv, nl);
   stretchReach(mv, ch.reachMul);
+  if (mv && ch.stringDelay && !mv.air && mv.str === 0) mv.recovery += ch.stringDelay; // Lyra: a pause after each light U / J before the next one
   if (mv && ch.slowTech && !mv.air) { mv.startup += 1; mv.recovery = Math.round(mv.recovery * 1.1); } // Mei and Lyra swing a little slower
   if (mv && ch.normalPre && !mv.air) mv.pre = ch.normalPre; // Lyra gathers her power for a moment before every attack
   if (mv && mv.floorGlyph && ch.normalLook) { mv.low = true; mv.lunge = null; } // a fighter's own animation for this button
@@ -1005,7 +1006,7 @@ function specialMoveBase(id) {
       hitbox: [10,88,40,130], dmg: 62, stun: 20, bstun: 12, push: 2, stunT: 62, stunKind: 'shadow', type: 'mid', hitstop: 10, gdrain: 10,
       trail: { cx: 15, cy: 105, r: 72, a0: 70, a1: -30, col: '200,170,255' } };
     case 'swordSlash': return { id, label: 'Iai Slash', startup: 16, active: 8, recovery: 26, wind: 'iaiStance', pose: 'iaiDash', sword: true, iai: true, slow: true, selfMove: true, noPush: true,
-      hitbox: [-60,60,30,130], dmg: 100, stun: 20, bstun: 12, push: 0, slash: true, type: 'mid', hitstop: 12, gdrain: 20,
+      hitbox: [-60,60,30,130], dmg: 80, stun: 20, bstun: 12, push: 0, slash: true, type: 'mid', hitstop: 12, gdrain: 20,
       poseFn(f, mf) {
         if (mf <= 16) return lerpPose(f.prevPose, POSES.iaiStance, Math.min(1, mf / 6));
         if (mf <= 24) return POSES.iaiDash;
@@ -1200,7 +1201,7 @@ function specialMoveBase(id) {
       trail: { cx: 20, cy: 90, r: 120, a0: -40, a1: 100, col: '255,205,110' },
       follow: { from: 5, to: 22, at: 13, opts: { hp: 'srVault', lk: 'srSweep2', hk: 'srSlam' } },
       onFrame(f, o, mf) { if (mf <= 6 && Math.abs(o.x - f.x) > 90) f.vx = f.facing * 5; else f.vx *= 0.6; } };
-    case 'srSweep2': return { id, label: 'Dance: Second Sweep', rushTag: true, startup: 6, active: 6, recovery: 16, wind: 'crouch', pose: 'staffSweep', spinStaff: true, selfMove: true,
+    case 'srSweep2': return { id, label: 'Dance: Second Sweep', rushTag: true, guardGap: 14, startup: 6, active: 6, recovery: 16, wind: 'crouch', pose: 'staffSweep', spinStaff: true, selfMove: true,
       hitbox: [0,190,0,44], low: true, dmg: 26, stun: 22, bstun: 14, push: 2, type: 'mid', hitstop: 7, gdrain: 14,
       trail: { cx: 40, cy: 18, r: 100, a0: -70, a1: 40, col: '255,205,110' },
       follow: { from: 6, to: 22, at: 14, opts: { lp: 'srPoke', hp: 'srVault', hk: 'srSlam' } },
@@ -1226,7 +1227,8 @@ function specialMoveBase(id) {
       hitbox: [20,235,80,125], dmg: 32, stun: 22, bstun: 14, push: 4, type: 'mid', hitstop: 7, gdrain: 14,
       rushTag: true, follow: { from: 6, to: 22, at: 14, opts: { hp: 'mrCrash', lk: 'mrSweep', hk: 'mrFinish' } },
       onFrame(f, o, mf) { if (mf <= 8 && Math.abs(o.x - f.x) > 90) f.vx = f.facing * 6; else f.vx *= 0.6; if (mf === 6) sfx('slash'); } };
-    case 'mrSweep': return { id, label: 'Rush: Low Sweep', startup: 6, active: 6, recovery: 16, wind: 'crouch', pose: 'staffSweep', selfMove: true, spinStaff: true,
+    // the J sweep combos on a hit, but after a guarded part it winds up slowly (guardGap): the opponent can hit Mei before it comes out
+    case 'mrSweep': return { id, label: 'Rush: Low Sweep', guardGap: 14, startup: 6, active: 6, recovery: 16, wind: 'crouch', pose: 'staffSweep', selfMove: true, spinStaff: true,
       hitbox: [0,190,0,44], low: true, dmg: 30, stun: 22, bstun: 14, push: 2, type: 'mid', hitstop: 7, gdrain: 14,
       trail: { cx: 40, cy: 18, r: 100, a0: -70, a1: 40, col: '255,205,110' },
       rushTag: true, follow: { from: 6, to: 22, at: 14, opts: { lp: 'mrThrust', hp: 'mrCrash', hk: 'mrFinish' } },
@@ -2233,7 +2235,14 @@ function runMove(f, o, inp) {
   if (mv.follow && inp.btn && !f.followQ && f.mf >= mv.follow.from && f.mf <= mv.follow.to && mv.follow.opts[inp.btn] && !(mv.follow.notOnHit && f.lastResult === 'hit')
       && (!mv.rushTag || (f.rushN || 0) < 4 || FINISHERS.has(mv.follow.opts[inp.btn]))) f.followQ = mv.follow.opts[inp.btn]; // a rush allows four parts, then only its finisher
   if (f.followQ && mv.follow && mv.follow.notOnHit && f.lastResult === 'hit') f.followQ = null; // it connected: juggle instead
-  if (f.followQ && f.mf >= (mv.follow.at || 0)) { const id = f.followQ; f.followQ = null; startMove(f, specialMove(id), f.str); return; }
+  if (f.followQ && f.mf >= (mv.follow.at || 0)) {
+    const id = f.followQ, nm = specialMove(id); f.followQ = null;
+    if (nm.guardGap && f.lastResult === 'block') { // guarded: a gap before this part (its own follow-ups move back to match)
+      nm.startup += nm.guardGap;
+      if (nm.follow) nm.follow = { ...nm.follow, from: nm.follow.from + nm.guardGap, to: nm.follow.to + nm.guardGap, at: nm.follow.at + nm.guardGap };
+    }
+    startMove(f, nm, f.str); return;
+  }
   if (mv.normal && mv.stance === 's' && f.mf <= 2 && (inp.ffNow || inp.bbNow)) {
     // leniency: the second tap arrived a frame or two after the button
     const sid = resolveSpecial(f, o, { btn: (mv.str ? 'h' : 'l') + mv.kind, ff: inp.ffNow, bb: inp.bbNow, sup: false });
@@ -2485,6 +2494,10 @@ function counterVanish(d, a) {
   popText(d.x, GROUND - 170, 'COUNTER VANISH!', '200,170,255'); sfx('vanish');
   game.freeze = Math.max(game.freeze, 6);
 }
+// a strong technique (any special, including its rising / juggle version, or a standing I / K technique), as opposed to the
+// combo tools: juggle punches and kicks, chains, rush strings and supers
+const isTech = mv => !!mv.lunge || (!mv.normal && !mv.super && !mv.rushTag);
+const TECH_DMG = 0.8, AIR_TECH = 0.6; // strong techniques do a little less, and much less on a juggled opponent: combos beat a few big hits
 function applyHit(a, d, h, side, hb, hu) {
   if (a.ch.dmgMul && h.dmg) h = { ...h, dmg: Math.round(h.dmg * a.ch.dmgMul) }; // a fighter-wide power boost (Mei, Lyra)
   if (a.ch.jugHitMul && h.dmg && d.state === 'knock' && d.juggle) h = { ...h, dmg: Math.round(h.dmg * a.ch.jugHitMul) }; // Lyra: everything she lands on a juggled opponent (crystals, orbs, rays too) hits harder
@@ -2527,7 +2540,7 @@ function applyHit(a, d, h, side, hb, hu) {
   const holding = d.inp.h === side || (!h.noGrace && d.inp.h !== 0 && game.frame - d.sideT <= 10)
     || (h.proj && d.inp.h === -(Math.sign(a.x - d.x) || -d.facing)); // projectiles from behind or above (clones, rays, crystals) are guarded by holding away from the attacker
   if (canGuard && holding) {
-    const pushB = (h.bpush != null ? h.bpush : (h.push || 1) * 0.9) * (a.ch.pushMul || 1);
+    const pushB = (h.bpush != null ? h.bpush : (h.push || 1) * 0.9) * (h.rushTag ? 1 : a.ch.pushMul || 1); // (rush strings keep their own spacing)
     d.guard -= (h.gdrain || 0) * 1.2; d.guardIdle = 0; // a bigger guard meter: guarded hits drain less
     if (d.guard <= 0) {
       d.guard = 0; setState(d, 'gbreak'); d.stun = h.gbstun || 45; d.vx = side * 3; d.move = null;
@@ -2556,7 +2569,9 @@ function applyHit(a, d, h, side, hb, hu) {
   const nl = h.neutralLaunch && !juggling; // Fire Spout / Qi Geyser launch someone who isn't juggled yet
   if (d.state === 'gbreak') d.guard = 50;
   d.combo = inCombo ? d.combo + 1 : 1;
-  const dmg = Math.max(1, Math.round(h.dmg * Math.max(h.superHit ? 0.8 : 0.3, 1 - 0.1 * (d.combo - 1))));
+  const tech = h.tech || (h.proj && !h.juggle && !h.superHit), airTech = tech && juggling;
+  const scale = tech ? Math.max(h.superHit ? 0.8 : 0.3, 1 - 0.1 * (d.combo - 1)) : Math.max(h.superHit ? 0.8 : 0.5, 1 - 0.05 * (d.combo - 1)); // combo hits lose less per hit
+  const dmg = Math.max(1, Math.round(h.dmg * scale * (tech ? (airTech ? AIR_TECH : TECH_DMG) : 1)));
   d.hp = Math.max(0, d.hp - dmg);
   if (game.training && d.hp <= 0) d.hp = 1;
   d.flash = 7; d.move = null; d.hidden = false; d.shadow = false; d.shadowRun = false;
@@ -2592,7 +2607,7 @@ function applyHit(a, d, h, side, hb, hu) {
     setState(d, 'knock'); d.juggle = air; d.jug = air ? 2 : 0;
     d.vy = h.kd ? (h.kdVy || 8.5) : 6.5; d.vx = side * (h.kd ? (h.kdVx || 4) : 2.6); d.y = Math.max(d.y, 1);
   }
-  else { setState(d, 'hitstun'); d.stun = h.stun; d.crouchHit = low; d.vx = side * (h.push || 1) * 3 * (a.ch.pushMul || 1); } // knocked back by the hit (further by Mei and Lyra)
+  else { setState(d, 'hitstun'); d.stun = h.stun; d.crouchHit = low; d.vx = side * (h.push || 1) * 3 * (h.rushTag ? 1 : a.ch.pushMul || 1); } // knocked back by the hit (further by Mei and Lyra, except in Mei's rush strings)
   if (!h.proj) wallPush(a, d, side); // pinned at the wall: the attacker is pushed back the same way instead
   // Lightning Ball / Fire Breath: once the hit wears off they're left stunned (once until they're back on their feet)
   if (d.state === 'hitstun' && h.stunT && !d.stunUsed && d.hp > 0) { d.pendingStun = Math.max(d.pendingStun || 0, h.stunT); d.stunKind = h.stunKind; }
@@ -2648,7 +2663,7 @@ function checkHits(a, o) {
     push: (multi > 1 && last && mv.lastPush) ? mv.lastPush : mv.push,
     kd: multi > 1 ? (last && mv.kd) : mv.kd,
     type: mv.type, hitstop: mv.hitstop, chip: mv.chip, str: mv.str != null ? mv.str : a.str, proj: false,
-    gdrain: mv.gdrain != null ? mv.gdrain : (multi > 1 ? 2 : 8), label: mv.label || '', slash: !!mv.slash, iai: !!mv.iai, heavy: !!(mv.normal && mv.str === 1), kdVx: mv.kdVx, kdVy: mv.kdVy, noGrace: !!mv.noGrace, launch: multi > 1 ? (last && !!mv.launch) : !!mv.launch, launchVy: mv.launchVy, bounce: !!mv.bounce, cpLaunch: !!mv.cpLaunch, jugVy: (multi > 1 && last && mv.lastJugVy) ? mv.lastJugVy : mv.jugVy, fixedLift: !!mv.fixedLift, meteor: !!mv.meteor, stunT: mv.stunT, stunKind: mv.stunKind, neutralLaunch: multi > 1 ? (last && !!mv.neutralLaunch) : !!mv.neutralLaunch, relaunch: !!mv.relaunch, slashMark: !!mv.slashMark,
+    gdrain: mv.gdrain != null ? mv.gdrain : (multi > 1 ? 2 : 8), rushTag: !!mv.rushTag, tech: isTech(mv), label: mv.label || '', slash: !!mv.slash, iai: !!mv.iai, heavy: !!(mv.normal && mv.str === 1), kdVx: mv.kdVx, kdVy: mv.kdVy, noGrace: !!mv.noGrace, launch: multi > 1 ? (last && !!mv.launch) : !!mv.launch, launchVy: mv.launchVy, bounce: !!mv.bounce, cpLaunch: !!mv.cpLaunch, jugVy: (multi > 1 && last && mv.lastJugVy) ? mv.lastJugVy : mv.jugVy, fixedLift: !!mv.fixedLift, meteor: !!mv.meteor, stunT: mv.stunT, stunKind: mv.stunKind, neutralLaunch: multi > 1 ? (last && !!mv.neutralLaunch) : !!mv.neutralLaunch, relaunch: !!mv.relaunch, slashMark: !!mv.slashMark,
   };
   if (mv.normal && !mv.air) {
     // stun is counted from the attacker's remaining frames, so the advantage per strength is always the same
@@ -2862,6 +2877,7 @@ function chainMove(id, f) {
   const mv = chainMoveBase(id, f);
   const look = LOOKS[f.key]; if (mv && look && look[id]) Object.assign(mv, look[id]);
   stretchReach(mv, f.ch.reachMul);
+  if (mv && f.ch.stringDelay && !mv.air && !KURO_STRONG.has(id)) { mv.startup += f.ch.stringDelay; mv.recovery += f.ch.stringDelay; } // Lyra: each hit of a string comes out later (juggle hits keep their pace)
   if (mv && f.key === 'ninja' && mv.recovery < 90) mv.recovery = Math.max(5, Math.round(mv.recovery * 0.75)); // Kuro recovers faster
   if (mv && KURO_STRONG.has(id)) { const k = 1.3 * (f.ch.jugDmg || 1); mv.dmg = Math.round(mv.dmg * k); if (mv.lastDmg) mv.lastDmg = Math.round(mv.lastDmg * k); } // juggle and air hits hit harder (scaled per fighter)
   return mv;
@@ -2978,7 +2994,7 @@ function orbHold(p) {
   p.y = f.y + (158 + (p.idx === 1 ? 16 : 0) + Math.sin(globalT * 0.2 + p.idx) * 3) * s;
 }
 function spawnOrb(f, idx) {
-  const p = { id: ++serial, type: 'homing', owner: f, idx, hold: true, x: 0, y: 0, vx: 0, vy: 0, r: 13, dmg: 40, stun: 16, bstun: 10, push: 3, hitstop: 6,
+  const p = { id: ++serial, type: 'homing', owner: f, idx, hold: true, x: 0, y: 0, vx: 0, vy: 0, r: 13, dmg: 34, stun: 16, bstun: 10, push: 3, hitstop: 6,
     stunT: 70, stunKind: 'shock', life: 200, chip: true, air: true, dir: f.facing };
   orbHold(p); projs.push(p); sfx('zap');
 }
