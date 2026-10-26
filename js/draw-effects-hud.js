@@ -226,6 +226,12 @@ function drawParts() {
       ctx.strokeStyle = `rgba(125,235,255,${0.9 * a})`; ctx.lineWidth = 2.4;
       for (const ray of p.rays) { ctx.beginPath(); ray.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke(); }
       ctx.restore();
+    } else if (p.type === 'htag') { // training: how high an attack reached
+      ctx.save(); ctx.globalAlpha = Math.min(1, a * 3); ctx.font = `15px ${HUD}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const w = ctx.measureText(p.text).width + 18, h = 24, x0 = clamp(p.side < 0 ? p.x - w : p.x, 8, W - 8 - w); // (beside them, on the far side from the attacker)
+      ctx.fillStyle = 'rgba(20,10,30,.8)'; ctx.strokeStyle = `rgb(${p.col})`; ctx.lineWidth = 2;
+      ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x0, p.y - h / 2, w, h, 7); else ctx.rect(x0, p.y - h / 2, w, h); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = `rgb(${p.col})`; ctx.fillText(p.text, x0 + w / 2, p.y + 1); ctx.restore();
     } else if (p.type === 'text') {
       ctx.font = `20px ${HUD}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
       ctx.lineWidth = 5; ctx.strokeStyle = `rgba(26,7,16,${a})`; ctx.strokeText(p.text, p.x, p.y);

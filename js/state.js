@@ -10,7 +10,8 @@ const JA_POP = { 'TOSS!': '投げ！', 'AEGIS': 'イージス', 'NO MP': 'MP不�
 const JA_SUPER = { 'ANGEL POSSESSION!': '天使憑依！', 'DEVIL POSSESSION!': '悪魔憑依！', 'GREAT FLOOD': '大洪水', 'HIGH NOON': '真昼の決闘', 'DEADLINE RUSH': '締め切りラッシュ', "HEAVEN'S GATE": '天国の門', 'INFERNAL CONTRACT': '地獄の契約', 'SANCTUARY': '聖域', 'HOLY JUDGEMENT': '聖なる審判', 'SHADOW ARMY': '影分身・軍勢', 'GREAT QI CANNON': '大気功砲', 'GREAT SAGE PILLAR': '斉天大聖の柱', 'CRYSTAL STORM': '水晶の嵐' };
 const game = { mode: 'menu', paused: false, vsCPU: true, p1Char: 'ninja', p2Char: 'brawler', lang: (() => { try { return localStorage.getItem('sq-lang') || 'ja'; } catch (e) { return 'ja'; } })(), diff: (() => { try { return localStorage.getItem('sq-diff') || 'medium'; } catch (e) { return 'medium'; } })(), round: 1, phase: 'intro', phaseT: 0, timer: 99 * 60,
   frame: 0, freeze: 0, slow: 0, shake: 0, combo: null, superFlash: null, roundWinner: null,
-  training: false, watch: false, dummyMode: 'stand', mpFull: true, track: null, advInfo: null };
+  training: false, watch: false, dummyMode: 'stand', mpFull: true, track: null, advInfo: null,
+  heights: (() => { try { return localStorage.getItem('sq-heights') !== '0'; } catch (e) { return true; } })() }; // training: show each attack's height
 let fighters = [];
 const projs = [], parts = [];
 const other = f => fighters[0] === f ? fighters[1] : fighters[0];
@@ -23,7 +24,7 @@ function resetFighter(f) {
     airAttacked: false, airShuri: false, invul: 0, stun: 0, combo: 0, flash: 0, inp: EMPTY, hidden: false, landT: 0,
     ko: false, cguard: false, crouchHit: false, backHeld: false, walkPh: 0, pose: { ...POSES.idle }, prevPose: { ...POSES.idle },
     hipUp: null, serial: 0, jumpSerial: 0, guard: 100, guardIdle: 0, lastToward: 0, sideT: -99, calm: 0,
-    shadow: false, followQ: null, lastResult: null, shadowRun: false, atkCD: 0,
+    shadow: false, followQ: null, lastResult: null, shadowRun: false, atkCD: 0, resting: 0,
   });
   if (f.ctrl.reset) f.ctrl.reset();
 }
@@ -113,7 +114,7 @@ function startMove(f, mv, str, keepBuffer) {
   if (f.pre) sfx('charge');
   else if (mv.onStart) mv.onStart(f, other(f));
 }
-function tryAttack(f, o, inp) {
+function tryAttack(f, o, inp, noLight) { // (noLight: anything but a light attack — a string can't start itself over)
   if (!inp.btn) return false;
   const str = STR[inp.btn[0]], isP = inp.btn[1] === 'p';
   const sid = resolveSpecial(f, o, inp);
@@ -132,6 +133,7 @@ function tryAttack(f, o, inp) {
     const jm = chainMove(inp.btn === 'lp' ? 'jPalm' : inp.btn === 'hp' ? 'jRise' : 'jSpin', f);
     startMove(f, jm, jm.str); return true;
   }
+  if (noLight && str === 0) return false;
   startMove(f, normalMove(f.ch, isP ? 'p' : 'k', str, inp.down ? 'c' : 's'), str);
   return true;
 }
@@ -142,8 +144,23 @@ function startJump(f, inp) {
 function endMove(f) {
   const mv = f.move; f.move = null; f.shadow = false; f.hidden = false; f.shadowRun = false;
   if (mv && mv.normal && mv.str === 1 && !mv.launch) f.atkCD = f.ch.atkCD || 14; // heavy attacks: a short wait before the next attack (not after a launcher, so you can juggle)
+  if (mv && !mv.air && !mv.jug) {
+    if (mv.chainDepth) restAfter(f, STRING_REST, true);
+    else if (mv.normal && mv.str === 0 && (reeling(other(f)) || projs.some(p => p.owner === f && !p.dead))) restAfter(f, JAB_REST, false);
+  }
   if (f.y > 0) { setState(f, 'jump'); f.airAttacked = !(mv && mv.airFollow); } // Air Cyclone leaves him free to attack in the air
   else setState(f, (mv && mv.crouch && f.inp.down) ? 'crouch' : 'stand');
+}
+// No endless U: after a ground string (U U, U U U, U U U U K, J J K, or a technique it went into) its user stops for breath, and after a
+// single U or J that hit or was guarded they wait a moment too. Either way they can't attack again until the opponent has been out of
+// hit-stun or guard for that long (shots still in the air included), so the opponent always gets a moment to act.
+const STRING_REST = 12, JAB_REST = 6;
+const reeling = o => o.state === 'hitstun' || o.state === 'blockstun' || o.state === 'recover';
+function restAfter(f, n, breath) {
+  const o = other(f), s = f.ch.scale;
+  if ((o.state === 'knock' && o.juggle) || o.state === 'stunned') return; // (launched or stunned: the combo goes on)
+  f.resting = n; f.atkCD = Math.max(f.atkCD || 0, n);
+  if (breath) for (let i = 0; i < 3; i++) parts.push({ type: 'smoke', x: f.x + f.facing * (16 + i * 6) * s, y: GROUND - f.y - 124 * s, vx: f.facing * 0.7, vy: -0.3, r: 3 + i, vr: 0.3, life: 20, max: 20, col: '235,240,250', delay: i * 3 });
 }
 function runMove(f, o, inp) {
   const mv = f.move;
@@ -167,10 +184,11 @@ function runMove(f, o, inp) {
     // only the press that queued this hit is used up, so a quick next press still counts for the following hit
     if (nm) { nm.chainDepth = (mv.chainDepth || 0) + 1; nm.fiveEnder = nm.chainDepth >= 4 && !nm.air && !nm.jug; startMove(f, nm, nm.str, true); if (f.ctrl.consumeIf) f.ctrl.consumeIf(f.chainBt); return; } // (the fifth hit of a string: punishable when guarded)
   }
-  // natural combos (Tekken style): a light attack that hit or was guarded can go straight into any other attack
+  // natural combos (Tekken style): a light attack that hit or was guarded can go straight into any other attack —
+  // into another light one only from the first hit, so U and J strings can't run into each other over and over
   if (mv.normal && mv.str === 0 && !mv.air && f.y <= 0 && f.hitConnected && inp.btn && !f.chainQ && !(mv.chain && mv.chain[inp.btn])
       && !inp.ff && !inp.bb && !inp.sup && f.mf >= mv.startup + mv.active) {
-    if (tryAttack(f, o, inp)) return;
+    if (tryAttack(f, o, inp, !!mv.chainDepth)) { f.move.chainDepth = (mv.chainDepth || 0) + 1; return; }
   }
   // follow-ups (Shadow Ambush, Sky Drop Kick): a button inside the window queues the next move
   if (mv.follow && inp.btn && !f.followQ && f.mf >= mv.follow.from && f.mf <= mv.follow.to && mv.follow.opts[inp.btn] && !(mv.follow.notOnHit && f.lastResult === 'hit')
@@ -197,7 +215,7 @@ function runMove(f, o, inp) {
       const sid = resolveSpecial(f, o, inp);
       if (sid && (!early || sid === f.ch.sup)) {
         const s2 = specialMove(sid);
-        if (s2 && !s2.air && (!s2.proj || countProj(f, s2.proj) < s2.limit)) { startMove(f, s2, STR[inp.btn[0]]); return; }
+        if (s2 && !s2.air && (!s2.proj || countProj(f, s2.proj) < s2.limit)) { if (mv.chainDepth) s2.chainDepth = mv.chainDepth + 1; startMove(f, s2, STR[inp.btn[0]]); return; } // (out of a string: still a string, so it ends with a rest)
       }
     }
   }
@@ -257,6 +275,7 @@ function update(f, o, inp) {
   if (f.orbCD) for (let i = 0; i < f.orbCD.length; i++) if (f.orbCD[i] > 0) f.orbCD[i]--;
   if (f.sorbs && f.sorbs.length) { for (const q of f.sorbs) { q.life--; if (q.cd > 0) q.cd--; } f.sorbs = f.sorbs.filter(q => q.life > 0); }
   if (f.ch.orbs && game.phase === 'fight') haloFire(f);
+  if (f.resting) { if (reeling(o)) f.atkCD = Math.max(f.atkCD, f.resting); else if (f.atkCD <= 0) f.resting = 0; } // (the rest after a U or a string)
   if (f.atkCD > 0) f.atkCD--;
   if (f.flash > 0) f.flash--;
   const toward = Math.sign(o.x - f.x) || f.facing;

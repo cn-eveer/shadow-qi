@@ -113,6 +113,35 @@ const STUN_DECAY_AFTER = 6; // hits in a combo before ground hit-stun starts to 
 const COMBO_DECAY = 0.08, COMBO_DECAY_TECH = 0.1, COMBO_FLOOR = 0.25, COMBO_FLOOR_TECH = 0.2; // each hit after the second in a combo does 8% less (10% for techniques), down to a quarter (a fifth for techniques)
 const AFTER_TWO_RISES = 0.6; // hits after the combo's second lift or bounce do 60%
 const BOUNCE_DMG = 1.3; // a bounce (slammed into the floor and back up) hits 30% harder
+// How high an attack hits, from its animation (where its hitbox reaches when it connects) and what it does:
+//   'low'     legs only (sweeps, slides, floor shockwaves): a crouching guard stops it, a standing one doesn't; jump over it
+//   'midlow'  reaches the legs and the body (launchers rising off the floor, bounces and drops crashing down to it,
+//             big low swings, supers that fill the screen): it hits a crouching guard; a standing guard stops it; jump over it
+//   'mid'     the body, or the body and the head: both guards stop it (punches and anything higher pass over a crouching fighter)
+const LOW_TOP = 45, SHIN = 24; // (in game units from the floor)
+const fromAbove = m => !!(m && (m.bounce || m.meteor || m.overhead)), rising = m => !!(m && (m.launch || m.relaunch || m.neutralLaunch));
+function heightClass(h, hb) {
+  if (fromAbove(h) || (hb && hb.y1 - hb.y0 >= 390)) return 'midlow'; // bounces, drops and overheads crashing down; column hits (supers, crystals, pillars)
+  if (h.low) return 'low'; // slides and sweeps along the floor, even the ones that scoop them up into a juggle
+  if (rising(h)) return 'midlow'; // launchers rising off the floor
+  if (hb && hb.y1 <= LOW_TOP) return 'low';
+  if (hb && hb.y0 < SHIN) return 'midlow'; // a swing that sweeps the legs as well as the body
+  return 'mid';
+}
+// Training: each attack's height, shown where it lands (Settings → attack heights). A mid is split by how far up it reaches on them:
+// high (passes over a crouching fighter), high + mid (from the body to above the head, so it can't be ducked or jumped early) and mid (the body)
+const HEIGHT_TAGS = { high: ['HIGH', '上段', '150,205,255'], highmid: ['HIGH + MID', '上中段', '140,235,215'], mid: ['MID', '中段', '255,226,120'], midlow: ['MID + LOW', '中下段', '255,165,90'], low: ['LOW', '下段', '255,125,160'] };
+function heightTag(h, hb, d) {
+  const c = heightClass(h, hb), s = d.ch.scale;
+  return c !== 'mid' || !hb ? c : hb.y0 >= 95 * s ? 'high' : hb.y1 > 135 * s ? 'highmid' : 'mid'; // (a crouching fighter is 95 tall, a standing one 135)
+}
+function showHeight(d, side, hb, h, miss) {
+  if (!game.training || game.demo || !game.heights || !hb || d.state === 'knock' || d.state === 'down') return; // (not on a juggle or someone lying down)
+  const t = HEIGHT_TAGS[heightTag(h, hb, d)], s = d.ch.scale;
+  for (const q of parts) if (q.type === 'htag' && q.who === d) q.life = 0; // (one at a time)
+  parts.push({ type: 'htag', who: d, side, x: d.x + side * 34 * s, y: GROUND - clamp((Math.max(hb.y0, 0) + Math.min(hb.y1, d.y + 135 * s)) / 2, 14, 210), vx: 0, vy: -0.25, life: 70, max: 70,
+    text: L(t[0], t[1]) + (miss ? L(' (miss)', '（空振り）') : ''), col: t[2] });
+}
 function applyHit(a, d, h, side, hb, hu) {
   if (d.jugSpent && d.state === 'knock') return null; // the juggle limit was reached: nothing can pick them up again before they land (no infinite juggles)
   if (a.ch.dmgMul && h.dmg) h = { ...h, dmg: Math.round(h.dmg * a.ch.dmgMul) }; // a fighter-wide power boost (Mei, Lyra)
@@ -186,7 +215,10 @@ function applyHit(a, d, h, side, hb, hu) {
   const autoBlock = d.ch.autoBlock && !d.ch.noGuard && d.state === 'stand' && d.y <= 0 && d.st >= 10 && Math.abs(d.vx) < 0.5 && !(d.inp && (d.inp.h || d.inp.btn || d.inp.down)) && !h.grab
     && !(d.ctrl instanceof Dummy && game.dummyMode !== 'guard'); // (a training dummy set to stand still stays hittable, for practising combos)
   if (autoBlock && !holding) popTextOnce(d, L('AUTO GUARD', 'オートガード'));
-  const lowHit = (!!h.low && !low && !airGuard) || (!!h.overhead && low && !airGuard); // a low attack needs a crouching guard; an overhead (coming down from above) a standing one
+  // a crouching guard stops lows and mids but not a mid + low attack; a standing guard stops mids and mid + lows but not lows
+  const hc = heightClass(h, hb), lowHit = !airGuard && ((hc === 'low' && !low) || (hc === 'midlow' && low));
+  showHeight(d, side, hb, h);
+  if (hc === 'midlow' && low && !airGuard && canGuard && holding) popText(d.x, GROUND - d.y - 175, L('MID + LOW!', '中下段！'), '255,200,120'); // (crouch-guarding a mid + low: it hits)
   if (canGuard && (holding || autoBlock) && !lowHit) {
     const pushB = (h.bpush != null ? h.bpush : (h.push || 1) * 0.9) * (h.rushTag ? 1 : a.ch.pushMul || 1); // (rush strings keep their own spacing)
     d.guard -= (h.gdrain || 0) * 0.6 * (d.ch.guardMul || 1) * (a.ch.guardDmgMul || 1); d.guardIdle = 0; // the guard meter lasts twice as long as it used to
@@ -205,7 +237,7 @@ function applyHit(a, d, h, side, hb, hu) {
       trackAdv(a, d, 'block', h.label); game.freeze = Math.max(game.freeze, 3); techGuardLag(a, d, h);
       return 'block';
     }
-    setState(d, 'blockstun'); d.stun = h.bstun; d.cguard = low; d.vx = side * pushB;
+    setState(d, 'blockstun'); d.stun = h.bstun || 10; d.cguard = low; d.vx = side * pushB;
     techGuardLag(a, d, h); // a technique that's guarded leaves its user open
     if (h.chip) d.hp = Math.max(1, d.hp - Math.ceil(h.dmg * 0.075)); // chip damage through the guard: half what it was
     if (!h.proj) wallPush(a, d, side); // guarded against the wall: the attacker slides back instead
@@ -289,7 +321,7 @@ function applyHit(a, d, h, side, hb, hu) {
     setState(d, 'knock'); d.juggle = air; d.jug = air ? (wasKnock ? Math.max(d.jug || 0, 2) : 2) : 0; // (still flying from this combo: the juggle count carries on, it doesn't start over)
     d.vy = h.kd ? (h.kdVy || 8.5) : 6.5; d.vx = side * (h.kd ? (h.kdVx || 4) : 1.4); d.y = Math.max(d.y, 1); // (hit out of the air: a smaller push unless it knocks them away)
   }
-  else { setState(d, 'hitstun'); d.stun = Math.max(5, h.stun - Math.max(0, d.combo - STUN_DECAY_AFTER) * 3); d.crouchHit = low; /* (hit-stun decay: past the first few hits each one stuns less, so a string can't loop forever) */ d.vx = side * (h.push || 1) * 3 * (h.rushTag ? 1 : a.ch.pushMul || 1) * (d.ch.sturdy ? 0.5 : 1); } // knocked back by the hit (further by Mei and Lyra, except in Mei's rush strings)
+  else { setState(d, 'hitstun'); d.stun = Math.max(5, (h.stun || 16) - Math.max(0, d.combo - STUN_DECAY_AFTER) * 3); d.crouchHit = low; /* (hit-stun decay: past the first few hits each one stuns less, so a string can't loop forever) */ d.vx = side * (h.push || 1) * 3 * (h.rushTag ? 1 : a.ch.pushMul || 1) * (d.ch.sturdy ? 0.5 : 1); } // knocked back by the hit (further by Mei and Lyra, except in Mei's rush strings)
   if (!h.proj) wallPush(a, d, side); // pinned at the wall: the attacker is pushed back the same way instead
   // Lightning Ball / Fire Breath: once the hit wears off they're left stunned (once until they're back on their feet)
   if (d.state === 'hitstun' && h.stunT && !d.stunUsed && d.hp > 0) { d.pendingStun = Math.max(d.pendingStun || 0, h.stunT); d.stunKind = h.stunKind; }
@@ -337,7 +369,11 @@ function checkHits(a, o) {
     return;
   }
   const hu = hurtbox(o, !!mv.juggle, !!mv.low);
-  if (!hu || !overlap(hb, hu)) return;
+  if (!hu || !overlap(hb, hu)) {
+    if (hu && hb.x0 < hu.x1 && hb.x1 > hu.x0) mv.passed = hb; // (in reach, but over or under them)
+    if (mv.passed && !a.hitConnected && a.mf === mv.startup + mv.active) showHeight(o, Math.sign(o.x - a.x) || a.facing, mv.passed, mv, true);
+    return;
+  }
   const last = a.hitCount === multi - 1;
   const hit = {
     dmg: (multi > 1 && last && mv.lastDmg) ? mv.lastDmg : mv.dmg,
@@ -350,8 +386,8 @@ function checkHits(a, o) {
   if (mv.normal && !mv.air) {
     // stun is counted from the attacker's remaining frames, so the advantage per strength is always the same
     const remaining = mv.startup + mv.active + mv.recovery - a.mf;
-    hit.stun = remaining + mv.advHit;
-    hit.bstun = Math.max(4, remaining + mv.advBlock);
+    hit.stun = remaining + (mv.advHit != null ? mv.advHit : 3); // (a move that doesn't say: slightly plus, like a finisher)
+    hit.bstun = Math.max(4, remaining + (mv.advBlock != null ? mv.advBlock : -2));
     hit.gbstun = remaining + 30;
     hit.bpush = mv.bpush;
   }

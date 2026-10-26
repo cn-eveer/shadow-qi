@@ -993,7 +993,7 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { if (mf > 7 && mf <= 29 && mf % 3 === 0) auraParticle(f); } };
     case 'parryStrike': return { id, label: 'Parry Palm', startup: 4, active: 4, recovery: 16, wind: 'palmW', pose: 'palm', hitbox: [10,95,40,160], burst: [80, 108],
       dmg: 50, stun: 20, bstun: 12, push: 3, launch: true, launchVy: 13, noGrace: true, type: 'mid', hitstop: 12, gdrain: 10 };
-    case 'stomp': return { id, label: 'Earth Stomp', projInvul: [0, 32], pre: 7, startup: 12, active: 2, recovery: 18, wind: 'stompW', pose: 'stompDown', proj: 'wave', limit: 1,
+    case 'stomp': return { id, label: 'Earth Stomp', low: true, projInvul: [0, 32], pre: 7, startup: 12, active: 2, recovery: 18, wind: 'stompW', pose: 'stompDown', proj: 'wave', limit: 1, // (low: its shockwave runs along the floor)
       onFrame(f, o, mf) { if (mf === 12) { spawnWave(f); dustAt(f.x + f.facing * 40, true); cracks(f.x + f.facing * 22); game.shake = Math.max(game.shake, 4); sfx('land'); } } };
     case 'tornado': return { id, label: 'Cyclone Lariat', projInvul: [1, 34], pre: 7, startup: 12, active: 21, recovery: 12, wind: 'lariatW', pose: 'lariat', fx: 'cyclone', manualY: true, noPush: true, selfMove: true, spin: [13, 33],
       hitbox: [-20,100,20,140], multi: 3, interval: 5, dmg: 22, lastDmg: 34, stun: 18, bstun: 10, push: 1.5, lastPush: 3, launch: true, launchVy: 12, type: 'mid', hitstop: 6, gdrain: 10,
@@ -1038,7 +1038,7 @@ function specialMoveBase(id) {
     case 'qiBlast': return { id, label: 'Qi Blast', pre: 8, startup: 13, active: 2, recovery: 22, wind: 'blastW', pose: 'blast', proj: 'qi', limit: 1, aura: true,
       onFrame(f, o, mf) { if (mf === 13) spawnQi(f); } };
     case 'risingFist': return { id, label: 'Rising Fist', startup: 3, active: 14, recovery: 99, untilLand: true, landT: 12, wind: 'uppercutW', pose: 'dragonFist', spin: [4, 11], fx: 'helix', aura: true,
-      hitbox: [0,52,80,170], dmg: 85, stun: 20, bstun: 16, push: 4, launch: true, launchVy: 14, type: 'mid', hitstop: 10, chip: true, gdrain: 8,
+      hitbox: [0,52,40,170], dmg: 85, stun: 20, bstun: 16, push: 4, launch: true, launchVy: 14, type: 'mid', hitstop: 10, chip: true, gdrain: 8,
       onStart(f) { f.invul = 5; },
       onFrame(f, o, mf) {
         if (mf === 4) { f.vy = 12.5; f.y = 0.5; f.vx = f.facing * 3.5; sfx('rise'); }

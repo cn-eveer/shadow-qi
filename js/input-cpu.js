@@ -47,12 +47,13 @@ class Human {
 
 /* ================= CPU ================= */
 function threatOfLowDummy() {}
-const isLowAtk = o => !!(o && o.state === 'attack' && o.move && (o.move.low || /low|Low|slide|Sweep|sweep|Belly/.test(o.move.pose || ''))) || // (a low attack — or one aimed low — is coming)
-  projs.some(p => p.owner === o && ((p.h && p.h.low) || p.low)); // (a low attack coming: guard crouching)
+// a low is coming (guard crouching)? judged like the hit itself (heightClass): anything else is guarded standing
+const isLowAtk = o => !!(o && o.state === 'attack' && o.move && (o.move.hitbox ? heightClass(o.move, boxOf(o, o.move.hitbox)) === 'low' : (!fromAbove(o.move) && (o.move.low || (!rising(o.move) && /low|Low|slide|Sweep|sweep|Belly/.test(o.move.pose || '')))))) ||
+  projs.some(p => p.owner === o && p.type !== 'decoy' && p.type !== 'guardShadow' && (p.h ? heightClass(p.h, projBox(p)) : (p.low && !fromAbove(p) ? 'low' : 'mid')) === 'low'); // (a shockwave along the floor, a shot at the feet...; a ring that rises into a column isn't)
 function threatOf(f, o) {
   const dist = Math.abs(o.x - f.x);
   if (o.state === 'attack' && o.move && o.move.hitbox && o.mf <= o.move.startup + o.move.active && dist < 210)
-    return { key: 'm' + o.serial, kind: o.y > 0 ? 'air' : o.move.high ? 'high' : o.move.low ? 'low' : 'mid' };
+    return { key: 'm' + o.serial, kind: o.y > 0 ? 'air' : o.move.high ? 'high' : isLowAtk(o) ? 'low' : 'mid' };
   if (o.state === 'jump' && dist < 200 && o.vx !== 0 && Math.sign(o.vx) === Math.sign(f.x - o.x))
     return { key: 'j' + o.jumpSerial, kind: 'air' };
   for (const p of projs) {

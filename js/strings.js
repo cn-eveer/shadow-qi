@@ -649,6 +649,7 @@ function pjUpdate(p) {
   if (p.n >= p.hits || p.t - p.last < p.interval) return;
   if (p.type === 'puddle' && p.t < 8) return; // (the coffee spreads for a moment before it's slippery: time to see it and crouch)
   const hu = hurtbox(tgt, true), hb = projBox(p); // (fast ones sweep the stretch they crossed)
+  if (hu && !p.n && !p.passed && !overlap(hb, hu) && hb.x0 < hu.x1 && hb.x1 > hu.x0 && p.h) { p.passed = true; showHeight(tgt, Math.sign(p.vx) || p.dir, hb, p.h, true); } // (over or under them)
   if (hu && overlap(hb, hu)) {
     if (p.explode) { pjExplode(p); p.dead = true; return; }
     const pr = applyHit(own, tgt, { type: 'mid', chip: true, proj: true, str: 1, hitstop: 5, ...p.h }, Math.sign(p.vx) || p.dir, hb, hu);

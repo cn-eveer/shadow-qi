@@ -216,6 +216,7 @@ let drawerTab = 'ctl', drawerMode = 'settings'; // the drawer shows either the s
 function toggleSound() { sound = !sound; initAudio(); if (!sound) musicStop(); else if (music) musicStart(); applyLang(); }
 function toggleMusic() { music = !music; initAudio(); if (music && sound) musicStart(); else musicStop(); applyLang(); }
 function setLang(l) { game.lang = l; try { localStorage.setItem('sq-lang', l); } catch (e) {} applyLang(); if (game.mode === 'menu') showMenu(); else if (game.mode === 'result') showResult(game.lastWinner); else if (game.paused) refreshPause(); else if (game.netMenu) netMenu(true); updateTbar(); }
+function toggleHeights() { game.heights = !game.heights; try { localStorage.setItem('sq-heights', game.heights ? '1' : '0'); } catch (e) {} if (!game.heights) parts.forEach(q => { if (q.type === 'htag') q.life = 0; }); applyLang(); }
 function setDiff(k) { game.diff = k; try { localStorage.setItem('sq-diff', k); } catch (e) {} applyLang(); if (game.mode === 'menu') showMenu(); }
 function applyLang() { // header, drawer, tabs and which language of the command lists shows
   if (document.documentElement) document.documentElement.lang = game.lang;
@@ -223,6 +224,7 @@ function applyLang() { // header, drawer, tabs and which language of the command
   [sndBtn, document.getElementById('sndD')].forEach(b => { b.textContent = on(sound, 'Sound', 'サウンド'); b.setAttribute('aria-pressed', String(sound)); });
   [bgmBtn, document.getElementById('bgmD')].forEach(b => { b.textContent = on(music, 'Music', 'BGM'); b.setAttribute('aria-pressed', String(music)); });
   [langBtn, document.getElementById('langD')].forEach(b => { b.textContent = game.lang === 'ja' ? 'English' : '日本語'; b.lang = game.lang === 'ja' ? 'en' : 'ja'; });
+  const hgt = document.getElementById('hgtD'); hgt.textContent = L(game.heights ? 'On' : 'Off', game.heights ? 'オン' : 'オフ'); hgt.setAttribute('aria-pressed', String(game.heights));
   setBtn.textContent = L('⚙ Settings', '⚙ 設定');
   document.getElementById('dTitle').textContent = drawerMode === 'settings' ? L('Settings', '設定') : L('Move list', '技表');
   drawer.querySelectorAll('[data-l]').forEach(el => { const [en, ja] = el.dataset.l.split('|'); el.textContent = L(en, ja); });
@@ -246,6 +248,7 @@ bgmBtn.addEventListener('click', toggleMusic); document.getElementById('bgmD').a
 langBtn.addEventListener('click', () => setLang(game.lang === 'ja' ? 'en' : 'ja')); document.getElementById('langD').addEventListener('click', () => setLang(game.lang === 'ja' ? 'en' : 'ja'));
 setBtn.addEventListener('click', () => openDrawer(drawer.hidden || drawerMode !== 'settings', 'settings'));
 document.getElementById('movesD').addEventListener('click', () => { drawerTab = fighters[0] && game.mode === 'fight' ? fighters[0].key : game.p1Char; openDrawer(true, 'moves'); });
+document.getElementById('hgtD').addEventListener('click', () => { initAudio(); toggleHeights(); sfx('select'); });
 document.getElementById('dClose').addEventListener('click', () => openDrawer(false));
 drawer.querySelectorAll('[data-diff]').forEach(b => b.addEventListener('click', () => { initAudio(); setDiff(b.dataset.diff); sfx('select'); }));
 drawer.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => { drawerTab = b.dataset.tab; applyLang(); }));

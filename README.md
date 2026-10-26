@@ -33,7 +33,7 @@ Eight fighters · combos & supers · CPU battles (4 difficulties) · training ·
 - **Combos and supers** — strings, launchers, juggles, bounces, charge attacks and a super for every fighter
 - **Readable fights** — technique tells, armor, counters, punish windows, high / low guarding, visible wake-up invincibility
 - **CPU battles** on four difficulties: かんたん / ふつう / むずかしい / 地獄 (Easy / Medium / Hard / Hell)
-- **Training** with a move card that shows one move at a time (name and command) to practise each one
+- **Training** with a move card that shows one move at a time (name and command) to practise each one, and a label on every hit showing how high the attack reached (上段 / 上中段 / 中段 / 中下段 / 下段 — it can be switched off in ⚙ Settings)
 - **Sample combos and punishes** for every fighter, played out with the inputs on screen — including a *max combo* for each
 - **Online battles** — random match or a room number, browser to browser
 - An **opening movie** drawn live in the game engine, **entrance poses** before every round, and **victory animations**: three per fighter by health left, plus a match-win celebration
@@ -57,7 +57,8 @@ A combo can **lift** (L) and **bounce** (B) the opponent only in these orders, e
 - **U, U, I** in a juggle is a lift. It only raises them while it fits the patterns above; past that, they drop out of the combo (“LIFT LIMIT” / “BOUNCE LIMIT”) and can't be hit until they land.
 - **U, U** in the air doesn't raise them: it holds them for a moment (less with every attack), and after the second lift it brings them down — only the finisher is left.
 - **Damage drops as the combo goes on**: the first hit is full, the second does 90%, then 8% less per hit; hits after the second lift or bounce do 60% on top of that.
-- No juggle lasts more than 5 seconds, and ground strings can't be looped (hit-stun shrinks after the first few hits).
+- No juggle lasts more than 5 seconds, and ground strings can't be looped: hit-stun shrinks after the first few hits, a string (U, U, U, U, K or a shorter one, J, J, K) can't be started over into itself, and when it ends its user stops for breath and can't attack until the opponent has been free for a moment. A single U or J that hits or is guarded leaves a short gap too.
+- **Guarding is a guess**, by attack height: *high* attacks pass over a crouching fighter; *high + mid* and *mid* ones are stopped by either guard; *mid + low* ones — launchers rising off the floor, rising juggles, bounces and drops, and swings that reach the legs — hit a crouching guard (“MID + LOW!”); *low* ones — sweeps and slides, even those that launch — need a crouching guard. Mid, mid + low and low attacks can all be jumped over. Training shows each attack's height as it lands.
 
 Every fighter's sample combos (title screen → *combos*) show these patterns, the max combos included.
 
@@ -67,7 +68,7 @@ Every fighter's sample combos (title screen → *combos*) show these patterns, t
 
 | Move | Keys |
 |---|---|
-| Walk / jump / crouch | A D / W / S — or the arrow keys (hold back to guard; back + down to guard lows) |
+| Walk / jump / crouch | A D / W / S — or the arrow keys (hold back to guard standing: everything but lows; back + down to guard crouching: lows and mids, but not mid + lows) |
 | Light / heavy punch | U / I |
 | Light / heavy kick | J / K |
 | Techniques | tap forward twice (→ →) or back twice (← ←) + a button; some also have ↑, ↓ or → versions |
@@ -76,7 +77,7 @@ Every fighter's sample combos (title screen → *combos*) show these patterns, t
 
 **Phone or tablet** (hold it sideways): the pad on the left moves you (tap it twice quickly for → → or ← ←), the U I / J K buttons are on the right, and ❚❚ pauses. On most phones (wider than 16:9) the controls sit in panels beside the game, not over it; on 16:9 phones and tablets they sit over the game. The game keeps the same size in menus, fights and pauses, and menus shrink to fit if the screen is small.
 
-**⚙ Settings**: sound, music (BGM), language, CPU difficulty, and each fighter's full move list.
+**⚙ Settings**: sound, music (BGM), language, attack heights in training (on or off), CPU difficulty, and each fighter's full move list.
 
 ## Put it online with GitHub Pages
 
@@ -105,8 +106,8 @@ The scripts are plain `<script>` files that share one scope, loaded in the order
 | `js/moves.js` | every move's timing, hitboxes and effects |
 | `js/input-cpu.js` | keyboard input, the CPU opponent and its difficulty levels |
 | `js/demos.js` | sample combos and punishes |
-| `js/state.js` | game state, the fighter update, and the lift / bounce rules (`RISE_PATTERNS`) |
-| `js/hits.js` | hit detection, guarding, damage and combo scaling |
+| `js/state.js` | game state, the fighter update, the lift / bounce rules (`RISE_PATTERNS`) and the rest after a string |
+| `js/hits.js` | hit detection, guarding by attack height, damage and combo scaling, the training height labels |
 | `js/projectiles.js` | projectiles and special-move helpers |
 | `js/strings.js` | each fighter's combo strings |
 | `js/particles-rounds.js` | particles and the round flow |
