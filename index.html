@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -63,7 +63,13 @@
 
   <aside class="drawer" id="drawer" hidden aria-label="Settings">
     <div class="dhead"><h2 id="dTitle">Settings</h2><button class="pill" id="dClose" aria-label="Close">✕</button></div>
-    <div class="setrow"><button class="pill" id="sndD">Sound on</button><button class="pill" id="bgmD">Music on</button><button class="pill" id="langD">日本語</button></div>
+    <div class="setrow">
+      <div class="srow"><span data-l="Sound|サウンド">Sound</span><button class="pill" id="sndD">Sound on</button></div>
+      <div class="srow"><span data-l="Music (BGM)|BGM">Music (BGM)</span><button class="pill" id="bgmD">Music on</button></div>
+      <div class="srow"><span data-l="Language|言語">Language</span><button class="pill" id="langD">日本語</button></div>
+      <div class="srow"><span data-l="CPU difficulty|CPUの強さ">CPU difficulty</span><span class="dseg"><button class="pill" data-diff="easy">Easy</button><button class="pill" data-diff="medium">Medium</button><button class="pill" data-diff="hard">Hard</button><button class="pill" data-diff="hell">Hell</button></span></div>
+      <div class="srow"><span data-l="Moves and controls|技と操作">Moves and controls</span><button class="pill" id="movesD" data-l="Open the move list|技表を見る">Open the move list</button></div>
+    </div>
     <div class="tabs" role="tablist">
       <button data-tab="ctl" class="on">Controls</button><button data-tab="ninja">Kuro</button><button data-tab="brawler">Tetsu</button><button data-tab="staff">Mei</button><button data-tab="psychic">Lyra</button><button data-tab="paladin">Aldric</button><button data-tab="kappa">Kappa</button><button data-tab="gunman">Jesse</button><button data-tab="salary">Tanaka</button>
     </div>

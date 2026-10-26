@@ -34,9 +34,11 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>4. Meteor Fist<small>One juggle: → → + I, U, ← ← + K (Air Cyclone), U, U, K. Two juggles: → → + I, U, ← ← + K, U, ↓ + K (Meteor Knee bounces them again), K.</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>5. Counter Axe<small>The heavy kick launches when it catches an attack starting up. One juggle: K, U, U, K. Two juggles: K, U, ← ← + U (Qi Spiral), W, U, ↓ + K (Meteor Knee), K.</small></td><td class="cmd">K</td></tr>
           <tr><td>6. Qi Parry<small>Parry an attack; the palm launches them. One juggle: U, U, K. Two juggles: U, U, I (Rising Dragon Fist), Punch + Kick (Great Qi Cannon, needs a full MP gauge).</small></td><td class="cmd">← ← + I</td></tr>
+          <tr><td>7. Max combo: lift, lift, bounce<small>↓ + I, U, I (Qi Geyser Palm), → → + I (Hammer Spike), U, U, K.</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>8. Max combo: lift, bounce, lift<small>↓ + I, U, → → + I (Hammer Spike), U, I (Qi Geyser Palm), → → + K (Shoulder Rocket).</small></td><td class="cmd">↓ + I</td></tr>
         </tbody>
       </table></div>
-      <p class="note">Like Kuro, a combo can lift the opponent up only twice; a third lift barely raises them. While the opponent is launched, Tetsu’s → → + U, → → + I, → → + K, ← ← + U and ← ← + K turn into juggle versions. To watch all twelve (each starter with one juggle, then with two), pick Tetsu combos on the title screen.</p>
+      <p class="note">Like Kuro, a combo can lift (L) and bounce (B) the opponent only as B L L, B L B, B B, L B L or L L B. While the opponent is launched, Tetsu’s → → + U, → → + I, → → + K, ← ← + U and ← ← + K turn into juggle versions. To watch them all (each starter with one juggle, then with two, and the two max combos), pick Tetsu combos on the title screen.</p>
       <h3>Combo techniques on their own</h3>
       <div class="scroll"><table>
         <tbody>
@@ -115,6 +117,8 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>4. 流星拳<small>1回：→→+I、U、←←+K（空中旋風）、U、U、K。2回：→→+I、U、←←+K、U、↓+K（流星膝）、K。</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>5. カウンター踵落とし<small>1回：K、U、U、K。2回：K、U、←←+U（気の螺旋）、W、U、↓+K、K。</small></td><td class="cmd">K</td></tr>
           <tr><td>6. 気の受け流し<small>1回：U、U、K。2回：U、U、I、P+K（大気功砲、MP満タン）。</small></td><td class="cmd">← ← + I</td></tr>
+          <tr><td>7. 最大コンボ：打ち上げ・打ち上げ・バウンド<small>↓+I、U、I（気柱掌）、→→+I（鉄槌落とし）、U、U、K。</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>8. 最大コンボ：打ち上げ・バウンド・打ち上げ<small>↓+I、U、→→+I（鉄槌落とし）、U、I（気柱掌）、→→+K（肩ロケット）。</small></td><td class="cmd">↓ + I</td></tr>
         </tbody>
       </table></div>
       <p class="note">空中の相手に→→+U・→→+I・→→+K・←←+U・←←+Kを使うと追撃版（気柱・鉄槌落とし・肩ロケット・気の螺旋・空中旋風）になる。↓を押しながら使うと単体でも出る。</p>

@@ -37,6 +37,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>4. Triple Ray<small>A stun, not a lift. One juggle: ↓ + I, U, U, K. Two juggles: ↓ + I, U, I (Rising Star), W, U, K.</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>5. Counter Gravity Well<small>The heavy kick launches when it catches an attack starting up. One juggle: K, U, U, K. Two juggles: K, U, W, U, ↓ + K (Psy Meteor bounces them again), K.</small></td><td class="cmd">K</td></tr>
           <tr><td>6. Orb summons<small>One juggle: ← ← + J (strong orbs), → → + J, U, U, K. Two juggles: ← ← + K (long orbs), → → + J, U, I, U, U, K. The orbs add rays to every hit.</small></td><td class="cmd">← ← + J / K</td></tr>
+          <tr><td>7. Max combo: lift, lift, bounce<small>→ → + J (Psychic Lift), U, I (Crystal Meteor), → → + I (Falling Star), U, U, K.</small></td><td class="cmd">→ → + J</td></tr>
         </tbody>
       </table></div>
       <p class="note">U, U, K in a juggle is lifting glyph, spirit glyph and force push. While they’re launched, → → + U, → → + I, → → + J and → → + K turn into juggle versions: Shard Flurry, Falling Star, Levitate and Spirit Fist Burst. Hold ↓ with the button to use them on their own.</p>
@@ -109,6 +110,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>4. 三連光線<small>気絶は打ち上げに数えない。1回：↓+I、U、U、K。2回：↓+I、U、I、W、U、K。</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>5. カウンター重力井戸<small>1回：K、U、U、K。2回：K、U、W、U、↓+K（念動流星）、K。</small></td><td class="cmd">K</td></tr>
           <tr><td>6. オーブ召喚<small>1回：←←+J（強オーブ）、→→+J、U、U、K。2回：←←+K（長オーブ）、→→+J、U、I、U、U、K。オーブがすべての攻撃に光線を加える。</small></td><td class="cmd">← ← + J / K</td></tr>
+          <tr><td>7. 最大コンボ：打ち上げ・打ち上げ・バウンド<small>→→+J（念動浮上）、U、I（水晶流星）、→→+I（落ちる星）、U、U、K。</small></td><td class="cmd">→ → + J</td></tr>
         </tbody>
       </table></div>
       <p class="note">空中の相手に→→+U・→→+I・→→+J・→→+Kを使うと追撃版（欠片の連打・落ちる星・浮揚・霊気の拳の噴出）になる。↓を押しながら使うと単体でも出る。</p>

@@ -223,7 +223,7 @@ const SHOW = {
   salary: { intro: [['sBow', 60], ['sTie', 115]], introLine: ['Pleased to meet you... please go easy on me.', 'よろしくお願いします…お手柔らかに。'], win: [['sBow', 70], ['sDogeza', 110], ['sIdle', 999]], winLine: ['Thank you for your hard work!', 'お疲れ様でした！'] },
 };
 const DOUBLE_RING = 1;
-const showOn = () => !game.training && !game.demo && game.round === 1 && game.phase === 'intro';
+const showOn = () => !game.training && !game.demo && game.phase === 'intro'; // every round opens with the fighters' entrance poses
 function showPose(f, seq, t) { // walk through the key poses, blending into each
   const sh = SHOW[f.key]; if (!sh) return null; const list = sh[seq];
   let prev = POSES[f.ch.idle || 'idle'] || POSES.idle, from = 0;
@@ -267,15 +267,20 @@ function step() {
   if (game.routeName && --game.routeName.t <= 0) game.routeName = null;
   if (game.phase === 'intro') {
     if (showOn()) for (const f of fighters) showFX(f, 'intro', game.phaseT - (f.side ? 8 : 0));
+    if (!game.training && game.phaseT === 4) { const fin = a.wins === 1 && b.wins === 1; announce(fin ? 'Final round!' : `Round ${game.round}!`, fin ? 'ファイナルラウンド！' : `ラウンド${game.round}！`); }
     if (!game.training && COUNT_AT.includes(game.phaseT)) sfx('count');
-    if (game.phaseT >= (game.training ? 40 : INTRO_T)) { game.phase = 'fight'; game.phaseT = 0; if (!game.training) sfx('go'); }
+    if (game.phaseT >= (game.training ? 40 : INTRO_T)) { game.phase = 'fight'; game.phaseT = 0; if (!game.training) { sfx('go'); announce('Fight!', 'ファイト！'); } }
   }
   else if (game.phase === 'fight') {
     const dead = fighters.filter(f => f.hp <= 0);
-    if (dead.length) { game.phase = 'ko'; game.phaseT = 0; game.slow = 50; game.roundWinner = dead.length === 2 ? null : (dead[0] === a ? b : a); sfx('ko'); }
-    else if (!game.training && --game.timer <= 0) { game.timer = 0; game.phase = 'time'; game.phaseT = 0; game.roundWinner = a.hp === b.hp ? null : (a.hp > b.hp ? a : b); }
+    if (dead.length) { game.phase = 'ko'; game.phaseT = 0; game.slow = 50; game.roundWinner = dead.length === 2 ? null : (dead[0] === a ? b : a); sfx('ko'); if (!game.training) announce('K.O.!', 'ケーオー！'); }
+    else if (!game.training && --game.timer <= 0) { game.timer = 0; game.phase = 'time'; game.phaseT = 0; game.roundWinner = a.hp === b.hp ? null : (a.hp > b.hp ? a : b); announce('Time!', 'タイムアップ！'); }
   } else {
     const w = game.roundWinner;
+    if (game.phaseT === 100 && !game.training) { // with the WINS banner
+      const cpu = w && w.side === 1 && !game.watch && !game.online;
+      if (!w) announce('Draw!', '引き分け！'); else if (cpu) announce('CPU wins!', 'CPUの勝ち！'); else announce(`Player ${w.side + 1} wins!`, `プレイヤー${w.side + 1}の勝ち！`);
+    }
     if (game.phaseT === 1) game.finalWin = w && w.wins >= 1 && !game.training ? w : null; // this round wins the match: play the closing pose
     if (game.phaseT >= 70 && w && ['stand','crouch','guard','land'].includes(w.state)) { setState(w, 'win'); w.vx = 0; w.winTier = winTierOf(w); }
     if (w && w.state === 'win') winFX(w, w.st); // (victory.js: three round wins by health left, and the match win)

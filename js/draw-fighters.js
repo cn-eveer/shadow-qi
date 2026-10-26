@@ -889,7 +889,7 @@ function drawFighter(f) {
   drawBody(f.key, f.pose, f.x + (f.animDX || 0), GROUND - f.y - dance - (f.ch.hover ? hoverOf(f) : 0), f.facing, f.hipUp, { hideMini: f.state === 'attack' && f.move ? (f.move.toDouble ? 'both' : f.move.id === 'smAngel' ? 'angel' : f.move.id === 'smDevil' ? 'devil' : null) : null, gunOut, rot, sx: (turn === null ? 1 : Math.cos(2 * Math.PI * turn)) * tailSx, flash: f.flash > 3 || (wakeInv && Math.floor(globalT / 3) % 2 === 0), aura, blade, sword, speed: Math.abs(f.vx), alpha: blink ? 0.6 : 1, staffExt, staffSpin, alt: f.alt, shieldSpin: !!(mv && mv.shieldSpin), aegisRing: !!(mv && mv.aegisRing), bladeHalo: !!(mv && mv.bladeHalo), shieldOut: !!f.shieldOut, possess: f.ch.possess, plateOut: !!f.plateOut, face: f.state, edgeA: excalAura(f, mv), wrist: f.state === 'charge' ? 0 : mv ? (mv.wrist != null ? mv.wrist : 0.25) : 0.6 });
   if (f.brands > 0) drawBrands(f);
   drawHeavyFX(f);
-  if (SHOW[f.key]) { const sh = SHOW[f.key]; if (showOn()) { const t = game.phaseT - (f.side ? 8 : 0); drawSpeech(f, L(...sh.introLine), clamp((t - 14) / 8, 0, 1) * clamp((130 - t) / 10, 0, 1)); }
+  if (SHOW[f.key]) { const sh = SHOW[f.key]; if (showOn() && game.round === 1) { /* (the greeting line only before the first round) */ const t = game.phaseT - (f.side ? 8 : 0); drawSpeech(f, L(...sh.introLine), clamp((t - 14) / 8, 0, 1) * clamp((130 - t) / 10, 0, 1)); }
     }
   if (f.state === 'win') { const ln = winLine(f); if (ln) drawSpeech(f, ln, clamp((f.st - 20) / 10, 0, 1)); }
   if (mv && f.state === 'attack' && f.pre > 0 && mv.tellPre && (mv.preTotal - f.pre) < mv.tellPre) drawTellFX(f, mv, mv.preTotal - f.pre);

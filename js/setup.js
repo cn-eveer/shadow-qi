@@ -125,7 +125,7 @@ const POSES = {
   stompDown: P(16, 45,118, 20,105, 38,8, -38,-12),
   parryStance: P(6, 96,150, 58,145, 40,0, -40,-10),
   // Mei: both hands on the staff; the staff runs from the back hand through the front hand
-  idleB: P(8, 74,96, 14,44, 38,0, -32,-14),   // a bo stance: front hand forward at the chest, back hand low at the hip, the staff across her body
+  idleB: P(16, 50,74, 10,64, 46,6, -22,-40), // a bo guard: both hands on the staff at the waist, the tip angled toward the opponent, knees bent
   // Aldric, the paladin: sword in the front hand, shield on the back arm
   // Kappa: little claws up, cute and ready
   kIdle: P(36, 62,96, 52,86, 72,-48, -2,-84),               // crouched low like an animal, claws held low and ready
@@ -180,7 +180,7 @@ const POSES = {
   lStaffBack: P(-4, 30,-40, 70,100, 30,4, -30,-12),
   sTie: P(10, 150,120, 40,60, 34,4, -34,-12),
   sShove: P(30, 40,80, 90,95, 52,6, -45,-30),
-  idleP: P(2, 34,152, 66,98, 22,3, -20,-9),                 // a knight's guard: standing tall, shield before him, the sword held uprighted at the opponent
+  idleP: P(8, 40,112, 70,100, 34,2, -18,-36), // a knight's guard: the greatsword angled forward over the shield, knees bent, weight forward
   chargeP: P(14, 28,-10, 40,70, ...CL),                    // kneeling in prayer over the planted sword
   pPlant: P(26, 40,-20, 50,80, 60,-10, -30,-50),
   pQuake: P(36, 20,30, 50,-10, 80,-20, -20,-70),
@@ -239,7 +239,7 @@ const POSES = {
   staffLow: P(30, 70,45, 46,35, 50,4, -45,-30),
   staffLowCrouch: P(45, 75,50, 52,40, 85,-15, 20,-90),
   // Lyra: upright and calm; her hands do the work
-  idleL: P(2, 70,112, 28,122, 14,2, -14,-6),
+  idleL: P(2, 22,172, 34,96, 12,2, -12,-6), // a mage's stance: the staff held upright beside her, the other hand open toward the opponent
   chargeL: P(-4, 140,160, 120,150, 12,2, -12,-4),
   winL: P(0, 40,140, 38,142, 10,2, -10,-4),
   psyW: P(-4, -20,60, 30,110, 18,2, -18,-6),

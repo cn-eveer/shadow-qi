@@ -21,7 +21,7 @@ const OP_BATTLE = [ // a highlight reel: each clip starts right at the action (f
 const OP_BAT0 = OP_PRO, OP_CLASH0 = OP_BAT0 + OP_BATTLE.reduce((n, c) => n + c.len, 0); // (no slow roster cuts or clashes any more: straight into the action)
 const OP_GROUP = OP_CLASH0, OP_END = OP_GROUP + 260;
 function opClipAt(t) { let s0 = OP_BAT0; for (let i = 0; i < OP_BATTLE.length; i++) { if (t < s0 + OP_BATTLE[i].len) return t >= s0 ? { i, k: t - s0 } : null; s0 += OP_BATTLE[i].len; } return null; }
-function opSim() { game.mode = 'fight'; fightTick(); game.mode = 'opening'; }
+function opSim() { game.freeze = Math.min(game.freeze, 2); game.mode = 'fight'; fightTick(); game.mode = 'opening'; } // (short hit-stops only: in a movie a long one reads as a stutter)
 function opStartClip(i) { // set up the real game behind the scenes and run it to the moment the combo starts
   const c = OP_BATTLE[i];
   OP.muted = true;
@@ -30,7 +30,7 @@ function opStartClip(i) { // set up the real game behind the scenes and run it t
   for (let n = 0; n < 900; n++) { opSim(); if (game.phase === 'fight' && fighters[0].state === 'attack' && (game.demoState.i >= (c.from || 0))) break; }
   OP.muted = false; OP.clip = i; OP.z = null; OP.cx = null; OP.cy = null; OP.punch = 0; OP.slowT = 0; OP.lastHp = fighters[1].hp; OP.half = false;
 }
-function opRenderClip(i, k) { // the live game, filmed: zoomed in on the action, letterboxed, with a name tag and the hit counter
+function opRenderClip(i, k) { // the live game, filmed: zoomed in on the action, letterboxed, with a title tag and the hit counter
   const c = OP_BATTLE[i], r = OP_ROSTER.find(q => q.key === c.key), [a, b] = fighters;
   // the camera: close, punching in on the big moments — but always wide enough to keep BOTH fighters in shot (the attacker too, when the other is launched high)
   const zt = game.superFlash || OP.punch > 0 ? 1.95 : 1.5;
@@ -55,11 +55,11 @@ function opRenderClip(i, k) { // the live game, filmed: zoomed in on the action,
   drawParts();
   ctx.restore();
   if (game.superFlash) drawSuperFX(true);
-  // a slanted tag with the fighter's name, and the hit counter
+  // a slanted tag with the fighter's title (not their name), and the hit counter
   const tk = ease(k / 14);
   ctx.save(); ctx.translate(-260 * (1 - tk), 0);
   ctx.fillStyle = `rgba(${r.col},0.85)`; ctx.beginPath(); ctx.moveTo(0, 50); ctx.lineTo(300, 50); ctx.lineTo(270, 100); ctx.lineTo(0, 100); ctx.closePath(); ctx.fill();
-  opBigText(nm(CHARS[c.key]), 24, 76, 30, '#ffffff', 1, 'left', true); ctx.restore();
+  opBigText(L(CHARS[c.key].title, CHARS[c.key].titleJa).toUpperCase(), 24, 76, 30, '#ffffff', 1, 'left', true); ctx.restore();
   if ((game.superFlash && fighters[0].move && fighters[0].move.super) || (c.sup && OP.punch > 0 && fighters[0].move && fighters[0].move.super)) { /* only a real super gets the SUPER! banner */ opSpeedLines(r.col, 0.5, fighters[0].facing > 0 ? 1 : -1, 18); opBigText(L('SUPER!', '超必殺！'), W / 2, H - 80, 46, '#ffd23f', 1, 'center', true); }
   { const vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.85); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.55)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H); } // a vignette: the eye goes to the action
   const cb = game.combo;
@@ -97,7 +97,7 @@ function openingTick() { // the sound cues of the movie
     const b = fighters[1]; if (b && b.hp < OP.lastHp - 30) { OP.slowT = 14; OP.punch = 18; } if (b) OP.lastHp = b.hp; // a heavy hit: punch in and slow down
     if (game.superFlash) OP.punch = 20;
     OP.half = !OP.half; if (OP.slowT > 0) OP.slowT--; if (OP.punch > 0) OP.punch--;
-    if (!(OP.slowT > 0 && OP.half)) opSim(); // (slow motion: the action runs at half speed)
+    opSim(); // (no slow motion: running every other frame looked choppy; the camera punches in on the big hits instead)
   } else OP.clip = -1;
   const d = t - OP_CLASH0, di = Math.floor(d / OP_CLASH), dk = d - di * OP_CLASH;
   if (d >= 0 && di < OP_CLASHES.length) { if (dk === 0) sfx('swing'); if (dk === 34) { sfx('hitH'); sfx('break'); } }
@@ -225,16 +225,27 @@ function opSky(k, warm) { // a night of wonders: aurora, a great moon, stars, dr
   for (let i = 0; i < 60; i++) { const sp = 0.4 + (i % 5) * 0.15, x = (i * 151 + Math.sin(globalT * 0.01 + i) * 40) % W, y = H - ((globalT * sp + i * 67) % (H + 40)); ctx.fillStyle = `rgba(${motes[i % 8]},${0.55})`; ctx.beginPath(); ctx.arc(x, y, 1.5 + (i % 3), 0, Math.PI * 2); ctx.fill(); }
   ctx.restore();
 }
+// the closing hero stances: the near arm (drawn over the head) stays forward or low so every face shows; flourishes go on the far arm
+Object.assign(POSES, {
+  opNinja: P(18, 85,100, -70,-40, 65,0, -50,-68),     // a low lunge, one hand thrust forward, the other swept back
+  opBrawler: P(6, 90,92, -35,85, 50,4, -50,-6),       // horse stance: palm out, the other fist chambered at the hip
+  opStaff: P(6, 95,95, 160,172, 95,-10, 4,-4),        // crane stance on one leg, the staff raised across her
+  opPsychic: P(-4, 40,140, -60,-25, 28,-18, -8,-40),  // floating, the wand held high
+  opPaladin: P(4, 112,132, 40,80, 48,2, -46,-14),     // the sword raised forward, the shield before him
+  opKappa: P(14, 105,145, 125,160, 60,0, -60,-4),     // a wide sumo stance, claws up
+  opGunman: P(-4, 90,90, 150,170, 38,0, -38,-14),     // one gun aimed, the other pointed at the sky
+  opSalary: P(-6, 90,90, 155,170, 38,0, -38,-12),     // the briefcase held high, a hand thrust forward
+});
 // the closing shot: everyone arrives in their own way and holds their own pose, at different depths around the logo
-const OP_TEAM = [ // back row first (drawn behind), then the front row
-  { key: 'psychic', pose: 'idleL', x: 150, y: -70, sc: 0.8, f: 1, enter: 'fade', fx: 'orbs' },
-  { key: 'paladin', pose: 'vSalute', x: 360, y: -40, sc: 0.84, f: 1, enter: 'drop', fx: 'wings' },
-  { key: 'salary', pose: 'sTie', x: 620, y: -40, sc: 0.84, f: -1, enter: 'slide', fx: 'papers' },
-  { key: 'staff', pose: 'cloudSit', x: 815, y: -95, sc: 0.8, f: -1, enter: 'drop', fx: 'cloud' },
-  { key: 'kappa', pose: 'kIdle', x: 95, y: 0, sc: 1, f: 1, enter: 'jump', fx: 'water' },
-  { key: 'ninja', pose: 'iaiStance', x: 265, y: 0, sc: 1, f: 1, enter: 'smoke', fx: 'shadow' },
-  { key: 'brawler', pose: 'twinPalm', x: 690, y: 0, sc: 1, f: -1, enter: 'drop', fx: 'qi' },
-  { key: 'gunman', pose: 'vTipHat', x: 870, y: 0, sc: 1, f: -1, enter: 'slide', fx: 'dust' },
+const OP_TEAM = [ // back row first (drawn behind, a little higher up the ridge), then the front row; evenly spaced so nobody hides anybody
+  { key: 'psychic', pose: 'opPsychic', x: 200, y: -34, sc: 0.88, f: 1, enter: 'fade', fx: 'orbs' },
+  { key: 'paladin', pose: 'opPaladin', x: 404, y: -44, sc: 0.88, f: 1, enter: 'drop', fx: 'wings' },
+  { key: 'staff', pose: 'opStaff', x: 670, y: -40, sc: 0.88, f: -1, enter: 'drop', fx: 'spin' },
+  { key: 'salary', pose: 'opSalary', x: 872, y: -30, sc: 0.88, f: -1, enter: 'slide', fx: 'papers' },
+  { key: 'kappa', pose: 'opKappa', x: 88, y: 0, sc: 1, f: 1, enter: 'jump', fx: 'water' },
+  { key: 'ninja', pose: 'opNinja', x: 312, y: -10, sc: 1, f: 1, enter: 'smoke', fx: 'shadow' },
+  { key: 'brawler', pose: 'opBrawler', x: 566, y: -10, sc: 1, f: -1, enter: 'drop', fx: 'qi' },
+  { key: 'gunman', pose: 'opGunman', x: 772, y: 0, sc: 1, f: -1, enter: 'slide', fx: 'dust' },
 ];
 function opGroup(k) { // everyone together, then the logo
   const gy = H - 70;
@@ -253,13 +264,12 @@ function opGroup(k) { // everyone together, then the logo
     if (m.enter === 'slide') x = m.x - m.f * (1 - ee) * 500;
     if (m.enter === 'jump') y = baseY - Math.sin(Math.PI * e) * 120 - (1 - ee) * 60, x = m.x - m.f * (1 - ee) * 160;
     if (m.enter === 'fade' || m.enter === 'smoke') a = ee;
-    const life = k - t0, bob = m.key === 'psychic' || m.key === 'staff' ? Math.sin(globalT * 0.06 + i) * 6 : 0;
+    const life = k - t0, bob = m.key === 'psychic' ? Math.sin(globalT * 0.06 + i) * 6 : 0;
     const p = { ...POSES[m.pose] }; p.t += Math.sin(globalT * 0.07 + i) * 1.2; // breathing
     ctx.save(); ctx.translate(x, y + bob); ctx.scale(m.sc, m.sc); ctx.translate(-x, -(y + bob));
     if (m.fx === 'wings' && life > 16) drawWingsAt(x - m.f * 6, y - 160 * ch.scale, clamp((life - 16) / 20, 0, 1));
-    if (m.fx === 'cloud') for (let c = 0; c < 6; c++) { ctx.fillStyle = c % 2 ? '#fff6e6' : '#ffe9c4'; ctx.globalAlpha = 0.92 * ee; ctx.beginPath(); ctx.arc(x - 55 + c * 22, y - 54 + Math.sin(globalT * 0.08 + c) * 3, 19 - Math.abs(c - 2.5) * 2, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
-    if (m.fx === 'qi' && life > 16) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const r = 80 + 6 * Math.sin(globalT * 0.25); const qg = ctx.createRadialGradient(x - m.f * 70, y - 110, 4, x - m.f * 70, y - 110, r); qg.addColorStop(0, 'rgba(220,250,255,.8)'); qg.addColorStop(1, 'rgba(125,235,255,0)'); ctx.fillStyle = qg; ctx.beginPath(); ctx.arc(x - m.f * 70, y - 110, r, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
-    if (m.fx === 'shadow' && life > 10) for (let c = 2; c >= 1; c--) opPose(m.key, p, x - m.f * c * 34, y, m.f, { tint: SHADOW_TINT, alpha: 0.16 * (3 - c) * ee });
+    if (m.fx === 'qi' && life > 16) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const r = 80 + 6 * Math.sin(globalT * 0.25); const qg = ctx.createRadialGradient(x, y - 110, 4, x, y - 110, r); qg.addColorStop(0, 'rgba(220,250,255,.8)'); qg.addColorStop(1, 'rgba(125,235,255,0)'); ctx.fillStyle = qg; ctx.beginPath(); ctx.arc(x, y - 110, r, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+    if (m.fx === 'shadow' && life > 10) for (let c = 2; c >= 1; c--) opPose(m.key, p, x - m.f * c * 22, y, m.f, { tint: SHADOW_TINT, alpha: 0.16 * (3 - c) * ee });
     const glow = ctx.createRadialGradient(x, y, 2, x, y, 90); glow.addColorStop(0, `rgba(${col},${0.45 * ee})`); glow.addColorStop(1, `rgba(${col},0)`); ctx.fillStyle = glow; ctx.beginPath(); ctx.ellipse(x, y, 90, 18, 0, 0, Math.PI * 2); ctx.fill();
     opPose(m.key, p, x, y, m.f, { alpha: a * (back ? 0.93 : 1), aura: life > 30, wrist: 0.6, gunOut: true, staffSpin: m.key === 'staff' && life < 30 ? globalT * 0.7 : null });
     if (m.fx === 'orbs') { ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (let o = 0; o < 5; o++) { const an = globalT * 0.05 + o * 1.256; ctx.fillStyle = o % 2 ? 'rgba(130,190,255,.9)' : 'rgba(255,130,220,.9)'; ctx.beginPath(); ctx.arc(x + Math.cos(an) * 70, y - 100 + Math.sin(an) * 24, 6, 0, Math.PI * 2); ctx.fill(); } ctx.restore(); }
@@ -348,7 +358,9 @@ function render() {
 let last = performance.now(), acc = 0;
 const STEP = 1000 / 60;
 function loop(now) {
-  acc += Math.min(100, now - last); last = now;
+  let dt = Math.min(100, now - last); last = now;
+  if (Math.abs(dt - STEP) < 1.5) dt = STEP; else if (Math.abs(dt - STEP / 2) < 1) dt = STEP / 2; // snap to the screen's refresh, so a frame that arrives a hair early or late doesn't run zero or two game steps
+  acc += dt;
   if (NET.on && game.mode === 'fight') { while (acc >= STEP) { if (!netStep()) { acc = Math.min(acc, STEP); break; } acc -= STEP; } }
   else while (acc >= STEP) { tick(); acc -= STEP; }
   render();

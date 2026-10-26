@@ -71,7 +71,7 @@ function hurtbox(d, juggle, low) {
   if (d.invul > 0 || d.hidden || d.ko || d.state === 'getup' || d.state === 'roll' || d.state === 'slashed') return null;
   // lying down: only a low attack can still reach, once per knockdown
   if (d.state === 'down') return (low && !d.otgUsed && d.st > 4) ? { x0: d.x - 58, x1: d.x + 58, y0: 0, y1: 28 } : null;
-  if (d.state === 'knock' && !juggle && !d.juggle) return null; // launched opponents can be hit by anything
+  if (d.state === 'knock' && (d.jugSpent || (!juggle && !d.juggle))) return null; // launched opponents can be hit by anything (until the juggle is spent)
   const s = d.ch.scale;
   let h = 135;
   const crouching = d.state === 'crouch' || (d.state === 'blockstun' && d.cguard) || (d.state === 'hitstun' && d.crouchHit) || (d.state === 'attack' && d.move && d.move.crouch);
@@ -108,8 +108,13 @@ function counterVanish(d, a) {
 // combo tools: juggle punches and kicks, chains, rush strings and supers
 const isTech = mv => !!mv.lunge || (!mv.normal && !mv.super && !mv.rushTag);
 const TECH_DMG = 0.8, AIR_TECH = 0.6; // strong techniques do a little less, and much less on a juggled opponent: combos beat a few big hits
+const JUG_HOLD = 2, JUG_FLOAT = 22; // an ordinary juggle hit doesn't raise them: it barely pushes them up, and they hang (light gravity) for a moment
+const STUN_DECAY_AFTER = 6; // hits in a combo before ground hit-stun starts to shrink
+const BOUNCE_DMG = 1.3; // a bounce (slammed into the floor and back up) hits 30% harder
 function applyHit(a, d, h, side, hb, hu) {
+  if (d.jugSpent && d.state === 'knock') return null; // the juggle limit was reached: nothing can pick them up again before they land (no infinite juggles)
   if (a.ch.dmgMul && h.dmg) h = { ...h, dmg: Math.round(h.dmg * a.ch.dmgMul) }; // a fighter-wide power boost (Mei, Lyra)
+  if (h.dmg && a.ctrl instanceof CPU && !game.watch && !game.training && !game.online) h = { ...h, dmg: Math.round(h.dmg * dif().dmg) }; // the CPU hits softer on Easy, harder on Hard and Hell
   if (d.ch.possess === 'double') h = { ...h, dmg: Math.round((h.dmg || 0) * 0.5), launch: false, relaunch: false, bounce: false, wallSplat: false }; // double possession: he can't guard, so he takes half damage and can't be launched into a juggle
   if (a.ch.jugHitMul && h.dmg && d.state === 'knock' && d.juggle) h = { ...h, dmg: Math.round(h.dmg * a.ch.jugHitMul) }; // Lyra: everything she lands on a juggled opponent (crystals, orbs, rays too) hits harder
   const cx = (Math.max(hb.x0, hu.x0) + Math.min(hb.x1, hu.x1)) / 2;
@@ -227,7 +232,7 @@ function applyHit(a, d, h, side, hb, hu) {
   // a quick jab (about 15 frames from start to finish) keeps 72%, a heavy blow (about 40) 93%, a big technique 95%
   const cm = a.move, frames = cm ? Math.min(cm.startup, 60) + (cm.active || 0) + Math.min(cm.recovery || 0, 60) : 30;
   const comboScale = d.combo > 1 && a.serial !== d.comboSerial && !h.fullDmg ? clamp(0.6 + frames / 120, 0.65, 0.95) : 1; // (a few big, separate heavy techniques keep it all)
-  const dmg = Math.max(1, Math.round(h.dmg * scale * comboScale * (tech ? (airTech ? AIR_TECH : TECH_DMG) : 1)));
+  const dmg = Math.max(1, Math.round(h.dmg * scale * comboScale * (tech ? (airTech ? AIR_TECH : TECH_DMG) : 1) * (h.bounce && h.launch ? BOUNCE_DMG : 1)));
   d.hp = Math.max(0, d.hp - dmg);
   if (a.y > 0 && a.state === 'attack' && a.move && a.move.air && d.juggle && !a.move.manualY && a.move.chain && Object.values(a.move.chain).some(Boolean)) a.vy = Math.max(a.vy, 3.2); // an air combo: hitting them keeps him hanging in the air a moment
   if (a.key === 'kappa' && d.lastVenom !== a.serial) { // the kappa's claws carry river venom
@@ -248,10 +253,15 @@ function applyHit(a, d, h, side, hb, hu) {
     d.mBounced = true; setState(d, 'knock'); d.juggle = true; d.jug = d.jug || 0; d.bounceOnLand = true; d.vy = -12; d.vx = side * 0.6; d.y = Math.max(d.y, 1);
   }
   else if (h.launch || cpl || nl) { // launcher: pop them high so they can be juggled
-    const weak = registerUp(d, a);
-    setState(d, 'knock'); d.juggle = true; d.relaunched = false; d.relaunchN = 0; d.vy = weak ? 5 : (h.launchVy || 12.5); d.vx = side * 0.4; d.y = Math.max(d.y, 1);
+    const weak = h.bounce ? registerBounce(d) : registerUp(d, a); // (a bounce counts on its own, not as a lift)
+    setState(d, 'knock'); d.juggle = true; d.relaunched = false; d.relaunchN = 0; d.vy = weak ? 5 : (h.launchVy || 12.5); d.vx = side * 0.4; d.y = Math.max(d.y, 1); // (same height as before: combos are timed to it)
     if (!weak) d.jug = 0;
-    if (h.bounce) { dustAt(d.x, true); parts.push({ type: 'ering', x: d.x, y: GROUND, r: 8, vr: 7, life: 14, max: 14, col: '255,200,140' }); game.shake = Math.max(game.shake, 5); }
+    if (h.bounce) { // a bounce slams them into the floor: a crater of dust, two shockwaves, a heavy shake and a deep boom
+      dustAt(d.x, true); dustAt(d.x + 30, true); dustAt(d.x - 30, true);
+      parts.push({ type: 'ering', x: d.x, y: GROUND, r: 10, vr: 11, life: 18, max: 18, col: '255,200,140' }, { type: 'ering', x: d.x, y: GROUND, r: 4, vr: 6, life: 22, max: 22, col: '255,240,200' });
+      for (let i = 0; i < 10; i++) parts.push({ type: 'spark', x: d.x + rnd(-40, 40), y: GROUND - 4, vx: rnd(-6, 6), vy: -rnd(4, 10), life: 16, max: 16, col: '255,220,160' });
+      game.shake = Math.max(game.shake, 11); game.freeze = Math.max(game.freeze, 4); sfx('bounce');
+    }
     if (!weak) popText(cx, cy - 50, cpl ? 'COUNTER LAUNCH!' : h.bounce ? 'BOUNCE!' : 'LAUNCH!', '255,190,90');
   }
   else if (juggling && !h.kd) { // juggle hit: lift them again, a little less each time
@@ -259,17 +269,17 @@ function applyHit(a, d, h, side, hb, hu) {
     const re = h.relaunch && (!d.relaunched || (a.ch.possess === 'angel' && (d.relaunchN || 0) < 2)); // (the angel can relaunch twice: a triple juggle) // Rising Kunai / Rising Dragon Fist: a fresh lift, gentler the higher they already are
     const lift = re ? clamp(13 - d.y / 25, 8, 12) : h.fixedLift ? h.jugVy : (h.jugVy || 7) * (a.key === 'ninja' ? Math.max(0.62, 1 - 0.045 * d.jug) : Math.max(0.55, 1 - 0.06 * d.jug)); // juggle attacks keep a steady lift (Kuro's fade slower)
     if (h.relaunch) { d.relaunched = true; d.relaunchN = (d.relaunchN || 0) + 1; }
-    const big = re || lift >= 9.5, weak = big && registerUp(d, a); // a big lift (Rising Kunai, Fire Spout, Qi Geyser...) counts as one of the two
-    d.vy = Math.max(d.vy, weak ? 5 : lift); d.vx = side * ((h.str >= 1 || h.kd) ? 1.2 : 0.6) * (h.jugVy ? 0.75 : 1); d.y = Math.max(d.y, 1); // pushed away in the air only a little (more for heavy hits), so juggles stay together
+    const big = re || h.relaunch || lift >= 9.5, weak = big && registerUp(d, a); // a big lift (Rising Kunai, Fire Spout, Qi Geyser...) counts as a lift — every time, so U, U, I can't keep lifting them
+    d.vy = Math.max(d.vy, weak ? 5 : big ? lift : Math.min(lift, JUG_HOLD)); if (!big && !weak) d.floatT = JUG_FLOAT + (a.ch.slowTech || 0) * 2; /* (slower fighters' hits hold them a little longer) */ // only a real lift raises them; other juggle hits (U, U, crystals...) just hold them in the air a moment d.vx = side * ((h.str >= 1 || h.kd) ? 1.2 : 0.6) * (h.jugVy ? 0.75 : 1); d.y = Math.max(d.y, 1); // pushed away in the air only a little (more for heavy hits), so juggles stay together
     if (h.hold) { d.vy = 0.8; d.y = Math.max(1, d.y + (35 - d.y) * 0.3); d.vx = side * 0.3; } // the beam holds a juggled opponent inside it
-    if (d.jug >= (a.key === 'ninja' ? 14 : a.ch.possess === 'angel' ? 18 : 10)) d.juggle = false; // Kuro can juggle longer
+    if (d.jug >= (a.key === 'ninja' ? 14 : a.key === 'psychic' ? 16 : a.ch.possess === 'angel' ? 18 : 10)) { d.juggle = false; d.jugSpent = true; } // Kuro (and Lyra, whose crystals each count as a hit) can juggle longer // (spent: they drop out, untouchable until they land)
   }
   else if (h.kd || d.y > 0 || d.state === 'knock') {
-    const air = d.y > 0 && !h.kd; // a hit on a jumping opponent can be juggled too
-    setState(d, 'knock'); d.juggle = air; d.jug = air ? 2 : 0;
+    const air = d.y > 0 && !h.kd, wasKnock = d.state === 'knock'; // a hit on a jumping opponent can be juggled too
+    setState(d, 'knock'); d.juggle = air; d.jug = air ? (wasKnock ? Math.max(d.jug || 0, 2) : 2) : 0; // (still flying from this combo: the juggle count carries on, it doesn't start over)
     d.vy = h.kd ? (h.kdVy || 8.5) : 6.5; d.vx = side * (h.kd ? (h.kdVx || 4) : 1.4); d.y = Math.max(d.y, 1); // (hit out of the air: a smaller push unless it knocks them away)
   }
-  else { setState(d, 'hitstun'); d.stun = h.stun; d.crouchHit = low; d.vx = side * (h.push || 1) * 3 * (h.rushTag ? 1 : a.ch.pushMul || 1) * (d.ch.sturdy ? 0.5 : 1); } // knocked back by the hit (further by Mei and Lyra, except in Mei's rush strings)
+  else { setState(d, 'hitstun'); d.stun = Math.max(5, h.stun - Math.max(0, d.combo - STUN_DECAY_AFTER) * 3); d.crouchHit = low; /* (hit-stun decay: past the first few hits each one stuns less, so a string can't loop forever) */ d.vx = side * (h.push || 1) * 3 * (h.rushTag ? 1 : a.ch.pushMul || 1) * (d.ch.sturdy ? 0.5 : 1); } // knocked back by the hit (further by Mei and Lyra, except in Mei's rush strings)
   if (!h.proj) wallPush(a, d, side); // pinned at the wall: the attacker is pushed back the same way instead
   // Lightning Ball / Fire Breath: once the hit wears off they're left stunned (once until they're back on their feet)
   if (d.state === 'hitstun' && h.stunT && !d.stunUsed && d.hp > 0) { d.pendingStun = Math.max(d.pendingStun || 0, h.stunT); d.stunKind = h.stunKind; }
@@ -279,7 +289,7 @@ function applyHit(a, d, h, side, hb, hu) {
   if (punish) popText(cx, cy - 46, 'PUNISH!', '255,210,90');
   else if (counter) popText(cx, cy - 46, 'COUNTER!', '255,160,90');
   const big = h.kd || h.str >= 2 || h.heavy;
-  sparks(cx, cy, big ? 'big' : 'hit'); sfx(big ? 'hitH' : 'hit');
+  sparks(cx, cy, big ? 'big' : 'hit'); hitSound(a, h, big); // (audio.js: each fighter's hits sound like their weapon)
   if (d.ch.orbs) psyRetaliate(d, a);
   hitFX(a, cx, cy, big, side); // each fighter's hits burst in their own style
   game.freeze = Math.max(game.freeze, h.hitstop || 6);

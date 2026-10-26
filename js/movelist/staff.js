@@ -37,6 +37,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>4. Somersault Kick<small>One juggle: ← ← + J, U, U, K. Two juggles: ← ← + J, U, ← ← + I (Cloud Chase), U, ↓ + K (Staff Meteor), K.</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>5. Counter Round Swing<small>The round swing launches when it catches an attack starting up. One juggle: K, U, U, K. Two juggles: K, U, → → + I (Vault Spike bounces them again), K.</small></td><td class="cmd">K</td></tr>
           <tr><td>6. Jump-in Falling Staff<small>Jump toward them, I on the way down. One juggle: U, U, K. Two juggles: U, Punch + Kick (Great Sage Pillar up close), U, K.</small></td><td class="cmd">W ↗, I</td></tr>
+          <tr><td>7. Max combo: lift, lift, bounce<small>↓ + I, U, U, I (Pinwheel Rise), → → + I (Vault Spike), U, U, K.</small></td><td class="cmd">↓ + I</td></tr>
         </tbody>
       </table></div>
       <p class="note">Samples 13 and 14 show both rushes against a guard. U, U, K in a juggle is staff jab, swing and whirl. While they’re launched, → → + U, → → + I, → → + K, ← ← + U and ← ← + I turn into juggle versions: Staff Lift, Vault Spike, Pole Rocket Kick, Rising Windmill and Cloud Chase. Hold ↓ with the button to use them on their own.</p>
@@ -109,6 +110,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>4. 宙返り蹴り<small>1回：←←+J、U、U、K。2回：←←+J、U、←←+I（雲乗り）、U、↓+K、K。</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>5. カウンター大回転<small>1回：K、U、U、K。2回：K、U、→→+I（跳び叩き）、K。</small></td><td class="cmd">K</td></tr>
           <tr><td>6. 飛び込み落とし棍<small>相手に向かってジャンプし落ち際にI。1回：U、U、K。2回：U、P+K（至近の斉天大聖の柱）、U、K。</small></td><td class="cmd">W ↗ → I</td></tr>
+          <tr><td>7. 最大コンボ：打ち上げ・打ち上げ・バウンド<small>↓+I、U、U、I（風車昇り）、→→+I（棒高跳び叩き）、U、U、K。</small></td><td class="cmd">↓ + I</td></tr>
         </tbody>
       </table></div>
       <p class="note">見本の13と14は、二つの連続技をガードされたときの例。空中の相手に→→+U・→→+I・→→+K・←←+U・←←+Iを使うと追撃版になる。↓を押しながら使うと単体でも出る。</p>

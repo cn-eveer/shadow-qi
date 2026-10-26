@@ -54,7 +54,14 @@ table.fd td.pu.bad{color:#d94a5a;font-weight:700}
 table.fd td.pu.mid{color:#c27a1a;font-weight:600}
 table.fd td.pu.ok{color:#2f9a5a;font-weight:600}
 table.fd td.pu.tw{color:#7a5ad9;font-weight:600}
-.setrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 14px 0;font-weight:700}
+.setrow{display:flex;flex-direction:column;gap:2px;padding:10px 14px;font-weight:700}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.srow:last-child{border-bottom:0}
+.dseg{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.dseg .pill.on{background:var(--text);color:var(--surface);border-color:var(--text)}
+/* the drawer is either the settings (sound, music, language) or the move list (fighter tabs and cards), never both */
+.drawer.settings .tabs,.drawer.settings .dbody{display:none}
+.drawer:not(.settings) .setrow{display:none}
 canvas{display:block;width:100%;height:100%}
 .overlay{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;padding:2.5%;overflow:auto;
   background:linear-gradient(180deg,rgba(14,10,30,.30),rgba(14,10,30,.72))}
@@ -98,6 +105,13 @@ canvas{display:block;width:100%;height:100%}
 .panel.menu .ghost{font-size:clamp(10px,1.35cqw,16px);padding:.3em .8em}
 .panel.menu .hint{font-size:clamp(10px,1.15cqw,13px)}
 body.mobile .panel.menu .hint{display:none}
+/* phones have no header: language and settings sit in the corner of the title screen */
+.mtop{position:absolute;top:8px;right:8px;display:flex;gap:6px;z-index:2}
+.mtop .ghost.sm{background:rgba(14,12,32,.55);font-size:12px}
+/* Japanese names and labels run longer: keep them on one line */
+html[lang="ja"] .panel.menu .pick b{font-size:clamp(10px,1.6cqw,20px);white-space:nowrap}
+.pmrow button{white-space:nowrap}
+html[lang="ja"] .pmrow button{font-size:clamp(11px,1.5cqw,16px)}
 .pick.ninja.on{border-color:#b394ff;box-shadow:0 0 0 3px rgba(179,148,255,.28)}
 .pick.brawler.on{border-color:#55d6ef;box-shadow:0 0 0 3px rgba(85,214,239,.28)}
 .pick.staff.on{border-color:#ffc24a;box-shadow:0 0 0 3px rgba(255,194,74,.28)}

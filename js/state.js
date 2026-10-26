@@ -4,11 +4,11 @@ const CHAR_ORDER = ['ninja', 'brawler', 'staff', 'psychic', 'paladin', 'kappa', 
 const L = (en, ja) => game.lang === 'ja' ? ja : en; // English or Japanese
 const nm = ch => game.lang === 'ja' ? ch.nameJa : ch.name;
 const JA_POP = { 'TOSS!': '投げ！', 'AEGIS': 'イージス', 'NO MP': 'MP不足', 'BRAND': '烙印', 'DEFLECT!': '弾いた！', 'SHIELD': '盾', 'LAUNCH!': '打ち上げ！', 'BOUNCE!': 'バウンド！', 'COUNTER!': 'カウンター！', 'COUNTER LAUNCH!': 'カウンター打ち上げ！', 'PUNISH!': '確定反撃！',
-  'GUARD BREAK!': 'ガードブレイク！', 'STUNNED!': '気絶！', 'INTERRUPTED!': '中断！', 'LIFT LIMIT': '打ち上げ上限', 'GROUND HIT': 'ダウン追い打ち', 'PARRY!': '受け流し！',
+  'GUARD BREAK!': 'ガードブレイク！', 'STUNNED!': '気絶！', 'INTERRUPTED!': '中断！', 'LIFT LIMIT': '打ち上げ上限', 'BOUNCE LIMIT': 'バウンド上限', 'GROUND HIT': 'ダウン追い打ち', 'PARRY!': '受け流し！',
   'ARMOR': 'アーマー', 'PASS': 'すり抜け', 'REFLECT!': '反射！', 'CLONE BROKEN': '分身破壊', 'DECOY!': '身代わり！', 'COUNTER VANISH!': 'カウンター消失！',
   '3 STRONG ORBS': '強オーブ×3', '5 LONG ORBS': '長オーブ×5', 'RAY': '光線', 'BARRIER': 'バリア' };
 const JA_SUPER = { 'ANGEL POSSESSION!': '天使憑依！', 'DEVIL POSSESSION!': '悪魔憑依！', 'GREAT FLOOD': '大洪水', 'HIGH NOON': '真昼の決闘', 'DEADLINE RUSH': '締め切りラッシュ', "HEAVEN'S GATE": '天国の門', 'INFERNAL CONTRACT': '地獄の契約', 'SANCTUARY': '聖域', 'HOLY JUDGEMENT': '聖なる審判', 'SHADOW ARMY': '影分身・軍勢', 'GREAT QI CANNON': '大気功砲', 'GREAT SAGE PILLAR': '斉天大聖の柱', 'CRYSTAL STORM': '水晶の嵐' };
-const game = { mode: 'menu', paused: false, vsCPU: true, p1Char: 'ninja', p2Char: 'brawler', lang: (() => { try { return localStorage.getItem('sq-lang') || 'en'; } catch (e) { return 'en'; } })(), round: 1, phase: 'intro', phaseT: 0, timer: 99 * 60,
+const game = { mode: 'menu', paused: false, vsCPU: true, p1Char: 'ninja', p2Char: 'brawler', lang: (() => { try { return localStorage.getItem('sq-lang') || 'ja'; } catch (e) { return 'ja'; } })(), diff: (() => { try { return localStorage.getItem('sq-diff') || 'medium'; } catch (e) { return 'medium'; } })(), round: 1, phase: 'intro', phaseT: 0, timer: 99 * 60,
   frame: 0, freeze: 0, slow: 0, shake: 0, combo: null, superFlash: null, roundWinner: null,
   training: false, watch: false, dummyMode: 'stand', mpFull: true, track: null, advInfo: null };
 let fighters = [];
@@ -29,16 +29,24 @@ function resetFighter(f) {
 }
 function setState(f, s) {
   f.state = s; f.st = 0;
+  if (s !== 'knock') f.jugSpent = false; // back on the floor (or hit out of it): a new juggle can start
   if (s === 'stand' || s === 'crouch') f.stunUsed = false;
-  if (s === 'stand' || s === 'crouch' || s === 'down') f.ups = 0; // the combo is over: lifts start counting again
+  if (s === 'stand' || s === 'crouch' || s === 'down') { f.ups = 0; f.bounces = 0; f.rises = ''; } // the combo is over: lifts and bounces start counting again
 }
 // each combo can lift the opponent up twice (a launch, a relaunch or a bounce); the third one barely raises them
-function registerUp(d, a) {
-  d.ups = (d.ups || 0) + 1;
-  if (d.ups <= (a && a.ch.possess === 'angel' ? 3 : 2)) return false; // (the angel can lift them a third time)
-  popText(d.x, GROUND - d.y - 200, 'LIFT LIMIT', '205,205,220');
+// The only ways a combo can lift (L) and bounce (B) them:  B L L,  B L B,  B B,  L B L,  L L B  (and the start of any of these).
+// Anything else (a third lift, L B B, B B then anything...) and they drop out of the combo, untouchable until they land.
+const RISE_PATTERNS = ['BLL', 'BLB', 'BB', 'LBL', 'LLB'];
+const RISE_OK = new Set(RISE_PATTERNS.flatMap(p => [...p].map((_, i) => p.slice(0, i + 1))));
+function registerRise(d, kind, a) {
+  const seq = (d.rises || '') + kind, angel = a && a.ch.possess === 'angel' && seq === 'LLL'; // (the angel can lift them a third time)
+  if (kind === 'L') d.ups = (d.ups || 0) + 1; else d.bounces = (d.bounces || 0) + 1;
+  if (RISE_OK.has(seq) || angel) { d.rises = seq; return false; }
+  popText(d.x, GROUND - d.y - 200, kind === 'L' ? 'LIFT LIMIT' : 'BOUNCE LIMIT', '205,205,220'); d.jugSpent = true;
   return true;
 }
+const registerUp = (d, a) => registerRise(d, 'L', a);
+const registerBounce = d => registerRise(d, 'B');
 function pjHitFX(p, tgt) {
   const x = tgt.x, y = GROUND - tgt.y - 40;
   if (p.type === 'puddle') { popText(x, GROUND - 190, L('SLIP!', 'ツルッ！'), '200,150,90'); for (let i = 0; i < 10; i++) parts.push({ type: 'aura', x: x + vrnd(-30, 30), y: GROUND - 6, vx: vrnd(-3, 3), vy: -vrnd(2, 6), life: 18, max: 18, r: 3.5, col: '120,75,40' }); } // coffee everywhere
@@ -217,10 +225,10 @@ function land(f) {
     if (f.move && (f.move.air || f.move.untilLand)) { const lt = f.move.landT || 4; f.move = null; setState(f, 'land'); f.landT = lt; f.vx = 0; dustAt(f.x, false); }
   } else if (f.state === 'knock') {
     if (f.bounceOnLand && !f.ko) { // ground bounce from Shadow Meteor: back up into the air, still juggleable
-      const weak = registerUp(f);
+      const weak = registerBounce(f);
       f.bounceOnLand = false; f.y = 1; f.vy = weak ? 4 : 9.5; f.jug = Math.max(0, (f.jug || 0) - 3);
-      dustAt(f.x, true); parts.push({ type: 'ering', x: f.x, y: GROUND, r: 10, vr: 8, life: 16, max: 16, col: '190,150,255' });
-      game.shake = Math.max(game.shake, 6); if (!weak) popText(f.x, GROUND - 130, 'BOUNCE!', '255,190,90'); sfx('land');
+      dustAt(f.x, true); parts.push({ type: 'ering', x: f.x, y: GROUND, r: 10, vr: 11, life: 18, max: 18, col: '190,150,255' }, { type: 'ering', x: f.x, y: GROUND, r: 4, vr: 6, life: 22, max: 22, col: '240,220,255' });
+      game.shake = Math.max(game.shake, 10); if (!weak) popText(f.x, GROUND - 130, 'BOUNCE!', '255,190,90'); sfx('bounce');
       return;
     }
     setState(f, 'down'); f.vx *= 0.35; f.otgUsed = false; f.juggle = false; f.mBounced = false; f.bounceOnLand = false; f.kdSerial = ++serial; dustAt(f.x, true); game.shake = Math.max(game.shake, 4); sfx('land');
@@ -359,7 +367,8 @@ function update(f, o, inp) {
     case 'gbreak': if (f.st >= f.stun) { setState(f, 'stand'); f.guard = 70; } break; // back on their feet with most of the guard meter
   }
   if ((f.y > 0 || f.vy > 0) && !(f.state === 'attack' && f.move && f.move.manualY)) {
-    f.vy -= (f.state === 'knock' && f.juggle) ? G * 0.62 : G; f.y += f.vy; // launched opponents float a little, like in Tekken
+    const hang = f.state === 'knock' && f.floatT > 0 ? (f.floatT--, 0.25) : 1; // held by a juggle hit: they hang in the air for a moment (without rising)
+    f.vy -= ((f.state === 'knock' && f.juggle) ? G * 0.62 : G) * hang; f.y += f.vy; // launched opponents float a little, like in Tekken
     if (f.y <= 0) { f.y = 0; f.vy = 0; land(f); }
   }
   f.x += f.vx;

@@ -4,12 +4,13 @@ function bindOverlay() {
   ov.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => {
     initAudio();
     const d = btn.dataset;
+    if (d.diff) { setDiff(d.diff); sfx('select'); return; }
     if (d.char) { game.p1Char = d.char; sfx('select'); showMenu(); }
     if (d.vs) { game.p2Char = d.vs; sfx('select'); showMenu(); }
     else if (d.act === 'start') startMatch(false, false);
     else if (d.act === 'online') showOnline();
     else if (d.act === 'opening') startOpening();
-    else if (d.act === 'moves') { drawerTab = game.p1Char; openDrawer(true); } // the selected fighter's full move list
+    else if (d.act === 'moves') { drawerTab = game.p1Char; openDrawer(true, 'moves'); } // the selected fighter's full move list
     else if (d.act === 'skipop') { initAudio(); try { localStorage.setItem('sq-opening', '1'); } catch (x) {} showMenu(); }
     else if (d.act === 'rematch') startMatch(false, game.watch);
     else if (d.act === 'watch') startMatch(false, true);
@@ -19,9 +20,11 @@ function bindOverlay() {
     else if (d.act === 'menu') showMenu();
     else if (d.act === 'resume') togglePause(false);
     else if (d.act === 'restart') startMatch(game.training && !game.demo, game.watch, game.demo);
-    else if (d.act === 'moves') { drawerTab = game.demo ? game.p1Char : (fighters[0] ? fighters[0].key : 'ctl'); openDrawer(true); }
+    else if (d.act === 'moves') { drawerTab = game.demo ? game.p1Char : (fighters[0] ? fighters[0].key : 'ctl'); openDrawer(true, 'moves'); }
     else if (d.act === 'sound') { toggleSound(); refreshPause(); }
     else if (d.act === 'music') { toggleMusic(); refreshPause(); }
+    else if (d.act === 'lang') setLang(game.lang === 'ja' ? 'en' : 'ja'); // (redraws the menu or pause screen in the new language)
+    else if (d.act === 'settings') openDrawer(true, 'settings');
     else if (d.act === 'netLeave') { netSend({ t: 'bye' }); netEnd(); showMenu(); }
     else if (d.act === 'netBack') netMenu(false);
   }));
@@ -61,7 +64,7 @@ function showMenu() {
   const blurbs = {}; // each fighter's explanation, shown in full for the one you've picked
   const pick = (k, blurb, ja) => { blurbs[k] = L(blurb, ja); return `<button class="pick ${k} ${c === k ? 'on' : ''}" data-char="${k}" aria-pressed="${c === k}"><b>${nm(CHARS[k])}</b><small>${L(CHARS[k].title, CHARS[k].titleJa)}</small></button>`; };
   ov.hidden = false;
-  ov.innerHTML = `<div class="panel menu">
+  ov.innerHTML = `${IS_MOBILE ? `<div class="mtop"><button class="ghost sm" data-act="lang" lang="${game.lang === 'ja' ? 'en' : 'ja'}">${game.lang === 'ja' ? 'English' : '日本語'}</button><button class="ghost sm" data-act="settings">${L('⚙ Settings', '⚙ 設定')}</button></div>` : ''}<div class="panel menu">
     <div class="logo">SHADOW <span class="x">✕</span> QI</div>
     <div class="lbl">${L('Pick your fighter.', 'キャラクターを選んでください')}</div>
     <div class="picks">
@@ -76,6 +79,7 @@ function showMenu() {
     </div>
     <div class="pickinfo"><span><b>${nm(CHARS[c])}</b> ${blurbs[c]}</span><button class="ghost sm" data-act="moves">${L('Move list', '技表')}</button></div>
     <div class="vsrow">${L('CPU opponent:', 'CPUの相手：')} ${CHAR_ORDER.filter(k => k !== c).map(k => `<button class="${game.p2Char === k ? 'on' : ''}" data-vs="${k}" aria-pressed="${game.p2Char === k}">${nm(CHARS[k])}</button>`).join('')}</div>
+    <div class="vsrow">${L('Difficulty:', '難易度：')} ${DIFF_ORDER.map(k => `<button class="${game.diff === k ? 'on' : ''}" data-diff="${k}" aria-pressed="${game.diff === k}">${L(...DIFF_NAMES[k])}</button>`).join('')}</div>
     <div class="row"><button class="go" data-act="start">${L('FIGHT', '対戦')}</button><button class="ghost" data-act="training">${L('Training', 'トレーニング')}</button><button class="ghost" data-act="watch">${L('CPU vs CPU', 'CPU対CPU')}</button><button class="ghost" data-act="online">${L('Online', 'オンライン')}</button><button class="ghost" data-act="opening">${L('Opening', 'オープニング')}</button><button class="ghost" data-act="demo" data-who="${c}">${L(CHARS[c].name[0] + CHARS[c].name.slice(1).toLowerCase() + ' combos', nm(CHARS[c]) + 'のコンボ見本')}</button><button class="ghost" data-act="punish" data-who="${c}">${L(CHARS[c].name[0] + CHARS[c].name.slice(1).toLowerCase() + ' punishes', nm(CHARS[c]) + 'の反撃見本')}</button></div>
     <div class="hint">${L('A and D pick your fighter, W and S pick the opponent. Enter to fight, T for training, C to watch CPU vs CPU, V for your fighter’s sample combos, P for punish samples.', 'A・Dでキャラ選択、W・Sで相手を選択。Enterで対戦、Tでトレーニング、CでCPU対CPU、Vでコンボ見本、Pで反撃見本。')}</div>
   </div>`;
@@ -114,7 +118,7 @@ function pauseMenuHTML() {
         <button class="go" data-act="resume">${L('RESUME', '再開')}</button>
         <button class="ghost" data-act="restart">${game.demo ? (game.demoSet === 'punish' ? L('Restart punishes', '反撃見本を最初から') : L('Restart combos', 'コンボを最初から')) : game.training ? L('Restart training', 'トレーニングをやり直す') : L('Restart match', '試合をやり直す')}</button>
         <button class="ghost" data-act="moves">${L('Move list', '技表')}</button>
-        <div class="pmrow"><button class="ghost" data-act="sound">${on(sound, 'Sound', 'サウンド')}</button><button class="ghost" data-act="music">${on(music, 'Music', 'BGM')}</button></div>
+        <div class="pmrow"><button class="ghost" data-act="sound">${on(sound, 'Sound', 'サウンド')}</button><button class="ghost" data-act="music">${on(music, 'Music', 'BGM')}</button><button class="ghost" data-act="lang" lang="${game.lang === 'ja' ? 'en' : 'ja'}">${game.lang === 'ja' ? 'English' : '日本語'}</button></div>
         <button class="ghost" data-act="menu">${L('Quit to menu', 'メニューへ')}</button>
       </div>
       <div class="hint">${game.training ? L('T changes the dummy, M turns MP refill on or off, R resets positions. ', 'Tでダミー切替、MでMP回復のオン・オフ、Rで位置リセット。') : ''}${L('↑ ↓ to choose, Enter to select, Esc to resume.', '↑↓で選択、Enterで決定、Escで再開。')}</div>
@@ -208,10 +212,11 @@ window.addEventListener('keyup', e => keys.delete(e.code));
 window.addEventListener('blur', () => keys.clear());
 const sndBtn = document.getElementById('snd'), bgmBtn = document.getElementById('bgm'), langBtn = document.getElementById('lang'), setBtn = document.getElementById('setBtn');
 const drawer = document.getElementById('drawer');
-let drawerTab = 'ctl';
+let drawerTab = 'ctl', drawerMode = 'settings'; // the drawer shows either the settings or the move list
 function toggleSound() { sound = !sound; initAudio(); if (!sound) musicStop(); else if (music) musicStart(); applyLang(); }
 function toggleMusic() { music = !music; initAudio(); if (music && sound) musicStart(); else musicStop(); applyLang(); }
 function setLang(l) { game.lang = l; try { localStorage.setItem('sq-lang', l); } catch (e) {} applyLang(); if (game.mode === 'menu') showMenu(); else if (game.mode === 'result') showResult(game.lastWinner); else if (game.paused) refreshPause(); else if (game.netMenu) netMenu(true); updateTbar(); }
+function setDiff(k) { game.diff = k; try { localStorage.setItem('sq-diff', k); } catch (e) {} applyLang(); if (game.mode === 'menu') showMenu(); }
 function applyLang() { // header, drawer, tabs and which language of the command lists shows
   if (document.documentElement) document.documentElement.lang = game.lang;
   const on = (v, en, ja) => L(en + (v ? ' on' : ' off'), ja + (v ? ' オン' : ' オフ'));
@@ -219,13 +224,16 @@ function applyLang() { // header, drawer, tabs and which language of the command
   [bgmBtn, document.getElementById('bgmD')].forEach(b => { b.textContent = on(music, 'Music', 'BGM'); b.setAttribute('aria-pressed', String(music)); });
   [langBtn, document.getElementById('langD')].forEach(b => { b.textContent = game.lang === 'ja' ? 'English' : '日本語'; b.lang = game.lang === 'ja' ? 'en' : 'ja'; });
   setBtn.textContent = L('⚙ Settings', '⚙ 設定');
-  document.getElementById('dTitle').textContent = L('Settings and moves', '設定と技表');
+  document.getElementById('dTitle').textContent = drawerMode === 'settings' ? L('Settings', '設定') : L('Move list', '技表');
+  drawer.querySelectorAll('[data-l]').forEach(el => { const [en, ja] = el.dataset.l.split('|'); el.textContent = L(en, ja); });
+  drawer.querySelectorAll('[data-diff]').forEach(b => { b.textContent = L(...DIFF_NAMES[b.dataset.diff]); b.classList.toggle('on', b.dataset.diff === game.diff); b.setAttribute('aria-pressed', String(b.dataset.diff === game.diff)); });
   document.getElementById('tagline').textContent = IS_MOBILE ? L('Eight fighters. Touch controls: the pad on the left, U I J K on the right.', '8人のファイター。タッチ操作：左のパッドで移動、右のU・I・J・Kで攻撃。') : L('Eight fighters. You against the CPU, plus training, CPU vs CPU and sample combos. Keyboard required.', '8人のファイター。CPU対戦、トレーニング、CPU対CPU、コンボ見本。キーボードで操作します。');
   const tabNames = { ctl: ['Controls', '操作'], ninja: ['Kuro', 'クロ'], brawler: ['Tetsu', 'テツ'], staff: ['Mei', 'メイ'], psychic: ['Lyra', 'ライラ'], paladin: ['Aldric', 'アルドリック'], kappa: ['Kappa', 'カッパ'], gunman: ['Jesse', 'ジェシー'], salary: ['Tanaka', '田中'] };
   drawer.querySelectorAll('.tabs button').forEach(b => { b.textContent = L(...tabNames[b.dataset.tab]); b.classList.toggle('on', b.dataset.tab === drawerTab); b.setAttribute('aria-selected', String(b.dataset.tab === drawerTab)); });
   drawer.querySelectorAll('article.card').forEach(a => { a.hidden = !(a.dataset.tab === drawerTab && a.dataset.lang === game.lang); });
 }
-function openDrawer(open) {
+function openDrawer(open, mode) {
+  if (mode) drawerMode = mode; drawer.classList.toggle('settings', drawerMode === 'settings');
   drawer.hidden = !open; setBtn.setAttribute('aria-expanded', String(open));
   if (open && game.mode === 'fight' && !game.paused && !NET.on) togglePause(); // look things up without the fight running on
   if (open) applyLang();
@@ -234,8 +242,10 @@ function openDrawer(open) {
 sndBtn.addEventListener('click', toggleSound); document.getElementById('sndD').addEventListener('click', toggleSound);
 bgmBtn.addEventListener('click', toggleMusic); document.getElementById('bgmD').addEventListener('click', toggleMusic);
 langBtn.addEventListener('click', () => setLang(game.lang === 'ja' ? 'en' : 'ja')); document.getElementById('langD').addEventListener('click', () => setLang(game.lang === 'ja' ? 'en' : 'ja'));
-setBtn.addEventListener('click', () => openDrawer(drawer.hidden));
+setBtn.addEventListener('click', () => openDrawer(drawer.hidden || drawerMode !== 'settings', 'settings'));
+document.getElementById('movesD').addEventListener('click', () => { drawerTab = fighters[0] && game.mode === 'fight' ? fighters[0].key : game.p1Char; openDrawer(true, 'moves'); });
 document.getElementById('dClose').addEventListener('click', () => openDrawer(false));
+drawer.querySelectorAll('[data-diff]').forEach(b => b.addEventListener('click', () => { initAudio(); setDiff(b.dataset.diff); sfx('select'); }));
 drawer.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => { drawerTab = b.dataset.tab; applyLang(); }));
 applyLang();
 

@@ -31,6 +31,13 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="note">His juggles are aimed shots: juggle shot, twin juggle shot, finishing blast.</p>
       <p class="note"><b>Combo strings.</b> U, U, U, U, K: second shot, cross draw, spin shot, point-blank blast. I from any point: Sky Shot launches; K ends with a heavy shot. J, J, K: low shot, ground shot. In a juggle: juggle shot, twin juggle shot, finishing blast.</p>
           <p class="note"><b>In mid-air.</b> In a juggle, U, U, I relaunches and U, U, K finishes with moves different from the ground string (juggle shot, twin juggle shot, coin shot, six-shooter finale). Jumping after them, U, U, I and U, U, K become: air shot, air twin shot, air fan, diving volley.</p>
+      <h3>Max combos</h3>
+      <div class="scroll"><table>
+        <tbody>
+          <tr><td>9. Max combo: lift, lift, bounce<small>↓ + I, U, I (Coin Shot), W, U, ↓ + K (Dive Shot), K.</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>10. Max combo: lift, bounce, lift<small>↓ + I, U, W, U, ↓ + K (Dive Shot), U, I (Coin Shot), K.</small></td><td class="cmd">↓ + I</td></tr>
+        </tbody>
+      </table></div>
       <h3>Frame data</h3>
 <p class="note"><b>Frame data.</b> Measured from the game itself at 60 frames a second. <b>Startup</b>: frames from pressing the button until it hits (for a string, the frames that hit takes after the previous one; for moves that travel, at the distance shown). <b>On guard / On hit</b>: who recovers first after it connects — plus means the attacker can act first, minus means the defender can. <b>After</b>: frames from the moment it hits until he can guard again (if it misses). <b>Total</b>: frames from the press until he can guard again if it misses (startup + after). <b>Damage</b>: what it does when it hits (for a string, the whole string; later hits in a combo keep 65–95% depending on how long they take). Until then he can’t guard, so a whiffed or guarded move with a big minus can be punished: a light punch (U) hits on frame 4–8 and a launcher (↓+I) on frame 13–16, and how far they reach depends on the fighter: U reaches about 80–95px for Kappa, Kuro, Tanaka and Tetsu, 160–185px for Lyra, Mei and Aldric, and further with Jesse’s shot; ↓+I reaches 85–95px for Kuro, Tanaka and Tetsu and 120–225px for the others. <b>Punish</b> combines the minus with the distance left after the pushback. Tetsu’s armor shrugs off light hits while he attacks, so punish him with a heavy attack.</p>
       <div class="scroll"><table class="fd">
@@ -96,6 +103,13 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="note">空中追撃は狙い撃ち：追い撃ち・二丁追い撃ち・とどめの一発。</p>
       <p class="note"><b>連続技。</b> U、U、U、U、K：二発目・クロスドロー・回転撃ち・至近距離の一撃。途中のIでスカイショット（打ち上げ）、Kでヘビーショット。J、J、K：ロウショット・グラウンドショット。空中追撃：追い撃ち・二丁追い撃ち・とどめの一発。</p>
           <p class="note"><b>空中。</b> 空中追撃では、U、U、Iで再打ち上げ、U、U、Kで締める地上とは違う技（追い撃ち、二丁追い撃ち、コイン撃ち、六連発フィナーレ）。ジャンプして追うと、U、U、IとU、U、Kは：空中射撃、空中二丁撃ち、空中ファニング、急降下連射。</p>
+      <h3>最大コンボ</h3>
+      <div class="scroll"><table>
+        <tbody>
+          <tr><td>9. 最大コンボ：打ち上げ・打ち上げ・バウンド<small>↓+I、U、I（コインショット）、W、U、↓+K（ダイブショット）、K。</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>10. 最大コンボ：打ち上げ・バウンド・打ち上げ<small>↓+I、U、W、U、↓+K（ダイブショット）、U、I（コインショット）、K。</small></td><td class="cmd">↓ + I</td></tr>
+        </tbody>
+      </table></div>
       <h3>フレームデータ</h3>
 <p class="note"><b>フレームデータ。</b> ゲーム本体で計測（1秒＝60フレーム）。<b>発生</b>：ボタンを押してから当たるまで（連続技は前の攻撃からの間隔、飛ぶ技は表示の距離で計測）。<b>ガード時／ヒット時</b>：当たった後どちらが先に動けるか。＋は攻撃側、－は防御側が先に動ける。<b>ヒット後</b>：当たる瞬間から再びガードできるまで（空振り時）。<b>全体</b>：空振りした場合、押してから再びガードできるまで（発生＋ヒット後）。 <b>ダメージ</b>：当たったときのダメージ（連続技は全体の合計。コンボの後半の攻撃は、時間のかかる技ほど65〜95%が残る）。それまではガードできないので、大きく不利な技は反撃される。弱パンチ（U）は4〜8フレーム目、打ち上げ（↓+I）は13〜16フレーム目に当たり、届く距離はキャラごとに違う：Uはカッパ・クロ・田中・テツが約80〜95px、ライラ・メイ・アルドリックが160〜185px、ジェシーの射撃はさらに遠く。↓+Iはクロ・田中・テツが85〜95px、他は120〜225px。<b>反撃</b>は不利フレームと押し返し後の距離から判定。テツは攻撃中アーマーで弱攻撃を受け流すので、強攻撃で反撃すること。</p>
       <div class="scroll"><table class="fd">

@@ -48,7 +48,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
         <tbody>
           <tr><td>Uppercut launcher<small>Kuro’s crouching heavy punch. Pops the opponent into the air. Slow, and punishable if guarded.</small></td><td class="cmd">↓ + I</td></tr>
           <tr><td>Rising Fist<small>Tetsu’s launcher, invincible as it starts.</small></td><td class="cmd">↓ + I</td></tr>
-          <tr><td>Juggle<small>While a launched opponent is in the air, U, I and K turn into juggle attacks with their own moves: Rising Palm, Elbow Lift and Uppercut on U, a rising strike on I that lifts them high again, and a Spin Kick on K to finish. Jump near them for air attacks: U, U, K is an air string, and K on its own smashes them down. Try ↓ + I, then U, U, K.</small></td><td class="cmd">hit them in the air</td></tr>
+          <tr><td>Juggle<small>While a launched opponent is in the air, U, I and K turn into juggle attacks with their own moves: Rising Palm, Elbow Lift and Uppercut on U, a rising strike on I that lifts them high again, and a Spin Kick on K to finish. A combo can lift (L) and bounce (B) the opponent only in these orders: B L L, B L B, B B, L B L or L L B. U, U, I in a juggle counts as a lift. One more lift or bounce than that and they drop out of the combo (“LIFT LIMIT” / “BOUNCE LIMIT”) and can’t be hit again until they land. Jump near them for air attacks: U, U, K is an air string, and K on its own smashes them down. Try ↓ + I, then U, U, K.</small></td><td class="cmd">hit them in the air</td></tr>
         </tbody>
       </table></div>
       <h3>Knockdowns</h3>
@@ -101,7 +101,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
         </tbody>
       </table></div>
       <h3>打ち上げと追撃</h3>
-      <p class="note">打ち上げた相手が空中にいる間、U・I・Kは追撃技になる。近くでジャンプすると空中連続技。1回のコンボで打ち上げられるのは2回まで。3回目はほとんど浮かない（「打ち上げ上限」）。気絶は打ち上げに数えない。</p>
+      <p class="note">打ち上げた相手が空中にいる間、U・I・Kは追撃技になる。近くでジャンプすると空中連続技。1回のコンボで打ち上げ（L）とバウンド（B）ができる順番は、B・L・L、B・L・B、B・B、L・B・L、L・L・B のみ。空中追撃のU、U、Iも打ち上げに数える。それを超えると相手はコンボから外れ（「打ち上げ上限」／「バウンド上限」）、着地するまで当たらない。気絶は数えない。</p>
       <h3>ダウンと起き上がり</h3>
       <p class="note">大きな攻撃を受けるとダウンする。倒れた相手には下段蹴りが一度だけ当たる。起き上がりは無敵。倒れている間に←か→で転がって移動、起き上がり中に攻撃を押すとすぐ反撃。</p>
       <h3>弱・強とガード</h3>

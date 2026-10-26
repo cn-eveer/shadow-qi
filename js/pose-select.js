@@ -1,14 +1,20 @@
 'use strict';
 /* ================= pose selection ================= */
+const STEADY_IDLE = { staff: true, paladin: true, psychic: true };
 function idlePose(phase, key, ch) { // (a possessed salaryman stands the angel's or the devil's way)
   const c = ch || CHARS[key], s = Math.sin(globalT * 0.09 + phase), p = { ...POSES[(c && c.idle) || 'idle'] };
+  if (STEADY_IDLE[c && c.key]) { // a weapon held in both hands (or upright): the whole arm rises and falls with the breath, so the weapon doesn't wave about
+    p.t += s * 1.2; p.a1u += s * 2; p.a1l += s * 2; p.a2u += s * 1.6; p.a2l += s * 1.6; p.l1u += s * 1.2; p.l1l -= s * 2; p.l2u -= s * 0.8; p.l2l -= s * 2;
+    return p;
+  }
   p.t += s * 2; p.a1l += s * 5; p.a2l += s * 4; p.l1u += s * 1.5; p.l1l -= s * 3; p.l2u -= s * 1; p.l2l -= s * 3; // breathing: the knees give a little with each breath
   return p;
 }
 function walkPose(f) {
   const p = { ...POSES[f.ch.idle || 'idle'] }, s = Math.sin(f.walkPh), c = Math.cos(f.walkPh);
-  p.l1u = 10 + s * 24; p.l2u = -10 - s * 24;
-  p.l1l = p.l1u - 10 - Math.max(0, c) * 22; p.l2l = p.l2u - 10 - Math.max(0, -c) * 22;
+  const k = f.ch.hover ? 0.35 : 1; // Lyra glides more than she walks
+  p.l1u = 10 + s * 24 * k; p.l2u = -10 - s * 24 * k;
+  p.l1l = p.l1u - 10 - Math.max(0, c) * 22 * k; p.l2l = p.l2u - 10 - Math.max(0, -c) * 22 * k;
   p.t += 4;
   return p;
 }

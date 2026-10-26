@@ -40,11 +40,13 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>4. Sky Drop Kick<small>One juggle: → → + K, U, U, K. Two juggles: → → + K, U, W, U, ↓ + K (Shadow Meteor bounces them again), K.</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>5. Counter Crescent<small>The heavy kick launches when it catches an attack starting up. One juggle: K, U, U, K. Two juggles: K, U, U, I, K.</small></td><td class="cmd">K</td></tr>
           <tr><td>6. Lightning stun<small>Lightning Volley stuns them; dash in and launch. One juggle: ↓ + I, U, U, K. Two juggles: ↓ + I, U, Punch + Kick (Shadow Army up close bounces them again), U, K.</small></td><td class="cmd">← ← + I, then ↓ + I</td></tr>
+          <tr><td>7. Max combo: lift, lift, bounce<small>→ → + U, U, I (Shadow Clone Rise), W, U, ↓ + K (Shadow Meteor), K.</small></td><td class="cmd">→ → + U</td></tr>
+          <tr><td>8. Max combo: bounce, lift, lift<small>→ → + K (Sky Drop Kick), U, ← ← + U (Fire Spout), U, I (Shadow Clone Rise), K.</small></td><td class="cmd">→ → + K</td></tr>
         </tbody>
       </table></div>
-      <p class="note">A combo can lift the opponent up twice: the starter counts as the first lift, and a launch, relaunch or bounce inside the combo is the second. A third lift barely raises them (“LIFT LIMIT”). A stun doesn’t count as a lift. Other starters: U then ↓ + I, Vanish Slide (← ← + J), Vanish Drop Kick (← ← + K), Fire Breath’s stun (← ← + U) and Shadow Army up close.</p>
+      <p class="note">A combo can lift (L) and bounce (B) the opponent only in these orders: B L L, B L B, B B, L B L or L L B. U, U, I in a juggle counts as a lift. One more lift or bounce than that and they drop out of the combo (“LIFT LIMIT” / “BOUNCE LIMIT”) and can’t be hit again until they land. A stun doesn’t count. Other starters: U then ↓ + I, Vanish Slide (← ← + J), Vanish Drop Kick (← ← + K), Fire Breath’s stun (← ← + U) and Shadow Army up close.</p>
       <p class="note">While the opponent is launched, Kuro’s ← ← + U, ← ← + I, → → + J, → → + I and ← ← + K turn into these juggle versions. In the air near them, U starts the air string, I the kunai flurry, K the Air Smash, and ↓ + K the Shadow Meteor, which bounces them off the ground so you can keep going (once per combo).</p>
-      <p class="note">Press each button as the previous hit lands. To watch all twelve (each starter with one juggle, then with two) with the inputs on screen, pick Kuro combos on the title screen.</p>
+      <p class="note">Press each button as the previous hit lands. To watch them all (each starter with one juggle, then with two, and the two max combos) with the inputs on screen, pick Kuro combos on the title screen.</p>
       <h3>Combo techniques on their own</h3>
       <div class="scroll"><table>
         <tbody>
@@ -127,6 +129,8 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>4. 天落蹴り<small>1回：→→+K、U、U、K。2回：→→+K、U、W、U、↓+K（影流星）、K。</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>5. カウンター三日月蹴り<small>出がかりの攻撃を潰すと打ち上げ。1回：K、U、U、K。2回：K、U、U、I、K。</small></td><td class="cmd">K</td></tr>
           <tr><td>6. 雷で気絶<small>雷球で気絶させてダッシュ。1回：↓+I、U、U、K。2回：↓+I、U、P+K（至近の影分身）、U、K。</small></td><td class="cmd">← ← + I → ↓ + I</td></tr>
+          <tr><td>7. 最大コンボ：打ち上げ・打ち上げ・バウンド<small>→→+U、U、I（影分身昇り）、W、U、↓+K（影流星）、K。</small></td><td class="cmd">→ → + U</td></tr>
+          <tr><td>8. 最大コンボ：バウンド・打ち上げ・打ち上げ<small>→→+K（天落蹴り）、U、←←+U（火柱）、U、I（影分身昇り）、K。</small></td><td class="cmd">→ → + K</td></tr>
         </tbody>
       </table></div>
       <p class="note">空中の相手に←←+U・←←+I・→→+J・→→+I・←←+Kを使うと追撃版（火柱・雷の雨・分身中継・空中居合・消身踵）になる。ボタンと一緒に↓を押すと単体でも使える。空中で↓+Kは影流星（急降下蹴り）。</p>

@@ -62,6 +62,17 @@ function threatOf(f, o) {
   }
   return null;
 }
+// CPU difficulty: how fast it reacts, how often it guards, how often it thinks, how often it goes for combos and punishes,
+// and how hard it hits (CPU vs CPU always plays its own way)
+const DIFFS = {
+  easy: { react: [26, 44], block: 0.45, think: [60, 100], combo: 0.25, punish: 0.1, dmg: 0.8 },
+  medium: { react: [10, 22], block: 0.8, think: [32, 72], combo: 1, punish: 0.35, dmg: 1 },
+  hard: { react: [6, 12], block: 0.9, think: [16, 36], combo: 1.8, punish: 0.65, dmg: 1.15 },
+  hell: { react: [2, 6], block: 0.96, think: [10, 24], combo: 2.6, punish: 0.9, dmg: 1.3 },
+};
+const DIFF_ORDER = ['easy', 'medium', 'hard', 'hell'], DIFF_NAMES = { easy: ['Easy', 'かんたん'], medium: ['Medium', 'ふつう'], hard: ['Hard', 'むずかしい'], hell: ['Hell', '地獄'] };
+const dif = () => DIFFS[game.diff] || DIFFS.medium;
+const cpuP = (p, watchP) => game.watch ? watchP : Math.min(0.95, p * dif().combo); // chance of going for a combo route
 class CPU {
   constructor() { this.reset(); }
   reset() { this.plan = {}; this.next = 0; this.def = null; this.threatKey = null; this.reactAt = 0; this.chargeUntil = 0; this.cancelTried = false; this.punishKey = null; }
@@ -101,7 +112,7 @@ class CPU {
       const mv = f.move;
       if (mv.normal && mv.str === 0 && f.hitConnected && f.lastResult === 'hit' && f.y <= 0 && this.confirmFor !== f.serial && o.state === 'hitstun') {
         this.confirmFor = f.serial; // hit-confirm: the jab landed, so go for a launcher combo
-        if (Math.random() < (game.watch ? 0.7 : 0.3)) { const r = pickRoute(f, 'confirm', dist); if (r) { this.route = r; return out; } }
+        if (Math.random() < cpuP(0.3, 0.7)) { const r = pickRoute(f, 'confirm', dist); if (r) { this.route = r; return out; } }
       }
       // keep a juggle going with quick hits, finish with a kick
       if (o.state === 'knock' && o.juggle && mv.normal && mv.str === 0 && f.hitConnected && f.mf >= mv.startup + mv.active && dist < 120) {
@@ -133,11 +144,11 @@ class CPU {
     this.cancelTried = false;
     if (o.state === 'knock' && o.juggle && (f.state === 'stand' || f.state === 'crouch' || f.state === 'guard') && this.jugFor !== o.kdSerial + ':' + (o.ups || 0)) {
       this.jugFor = o.kdSerial + ':' + (o.ups || 0); // they're launched: finish with one of the sample combos
-      if ((o.ups || 0) <= 1 && Math.random() < (game.watch ? 0.85 : 0.4)) { const r = pickRoute(f, 'juggle', dist); if (r) { this.route = r; return out; } }
+      if ((o.ups || 0) <= 1 && Math.random() < cpuP(0.4, 0.85)) { const r = pickRoute(f, 'juggle', dist); if (r) { this.route = r; return out; } }
     }
     if (o.state === 'stunned' && (f.state === 'stand' || f.state === 'crouch' || f.state === 'guard') && this.stunFor !== o.serial + ':' + o.st0) {
       this.stunFor = o.serial + ':' + o.st0;
-      if (Math.random() < (game.watch ? 0.9 : 0.5)) { const r = pickRoute(f, 'stun', dist); if (r) { this.route = r; return out; } }
+      if (Math.random() < cpuP(0.5, 0.9)) { const r = pickRoute(f, 'stun', dist); if (r) { this.route = r; return out; } }
     }
     if (o.state === 'knock' && o.juggle && (f.state === 'stand' || f.state === 'crouch' || f.state === 'guard') && dist < 150) { // juggle a launched opponent
       if (dist > 72) { if (dist > 130 && f.state !== 'dash') out.dashTap = 1; else out.h = fwd; return out; } // chase them down
@@ -149,7 +160,7 @@ class CPU {
       this.routeReact = o.serial;
       const early = o.mf <= Math.min(3, o.move.startup);
       const kind = (!N && early && o.move.startup >= 12 && Math.random() < 0.5) ? 'parry' : (dist < 130 && o.move.startup - o.mf >= 8) ? 'counter' : null;
-      if (kind && Math.random() < (game.watch ? 0.45 : 0.2)) { const r = pickRoute(f, kind, dist); if (r) { this.route = r; return out; } }
+      if (kind && Math.random() < cpuP(0.2, 0.45)) { const r = pickRoute(f, kind, dist); if (r) { this.route = r; return out; } }
     }
     if (canAct && o.state === 'stunned' && f.atkCD <= 0) { // stunned: close in and launch them
       if (dist > 85) { if (dist > 170 && Math.random() < 0.15) out.dashTap = 1; else out.h = fwd; return out; }
@@ -166,8 +177,8 @@ class CPU {
     const th = threatOf(f, o);
     if (th) {
       if (this.threatKey !== th.key) {
-        this.threatKey = th.key; this.reactAt = frame + (game.watch ? 4 + Math.random() * 7 : 10 + Math.random() * 12) | 0; // reacts later against a player
-        const r = Math.random(), jumpProj = game.watch ? 0.7 : 0.85, blockP = game.watch ? 0.62 : 0.8; // (more defensive: guards most attacks) // watching: a little less perfect defense, so more combos land
+        this.threatKey = th.key; this.reactAt = frame + (game.watch ? 4 + Math.random() * 7 : dif().react[0] + Math.random() * (dif().react[1] - dif().react[0])) | 0; // reacts later against a player
+        const r = Math.random(), jumpProj = game.watch ? 0.7 : 0.85, blockP = game.watch ? 0.62 : dif().block; // (more defensive: guards most attacks) // watching: a little less perfect defense, so more combos land
         this.def = (th.kind === 'high' && r < 0.3) ? 'duck' : r < blockP ? 'block' : (th.kind === 'proj' && r < jumpProj) ? 'jump' : (th.kind === 'air' && !N && r < 0.72) ? 'dp' : (th.kind === 'air' && r < 0.88) ? 'aa' : 'none';
         this.duckHit = false;
       }
@@ -201,10 +212,10 @@ class CPU {
     if (actionable && !th && o.state === 'attack' && o.move && dist < 140 && o.mf <= o.move.startup && Math.random() < 0.5) { out.h = -fwd; if (isLowAtk(o)) out.down = true; return out; } // they're starting something nearby: guard first
     if (actionable && !th && o.state === 'attack' && o.move && o.move.normal && !o.move.air && o.mf > o.move.startup + o.move.active && dist < 105 && this.punishKey !== o.serial) {
       this.punishKey = o.serial;
-      if (Math.random() < (game.watch ? 0.65 : 0.35)) { out.btn = dist < 82 ? 'lp' : 'lk'; this.chargeUntil = 0; return out; }
+      if (Math.random() < (game.watch ? 0.65 : dif().punish)) { out.btn = dist < 82 ? 'lp' : 'lk'; this.chargeUntil = 0; return out; }
     }
     if (frame < this.chargeUntil && f.meter < 100 && actionable && !th) { out.charge = true; return out; }
-    if (frame >= this.next) { this.plan = this.decide(f, o, dist); this.next = frame + (game.watch ? 16 + Math.random() * 26 : 32 + Math.random() * 40) | 0; } // thinks less often against a player (and attacks less recklessly)
+    if (frame >= this.next) { this.plan = this.decide(f, o, dist); this.next = frame + (game.watch ? 16 + Math.random() * 26 : dif().think[0] + Math.random() * (dif().think[1] - dif().think[0])) | 0; } // thinks less often against a player (and attacks less recklessly)
     const p = this.plan;
     if (p.walk) out.h = p.walk * fwd;
     if (p.crouch) out.down = true;
@@ -222,7 +233,7 @@ class CPU {
   }
   decide(f, o, dist) {
     const N = f.key === 'ninja', r = Math.random(), s = Math.random() < 0.5 ? 'l' : 'h';
-    if (Math.random() < (game.watch ? (dist < 95 ? 0.1 : 0.5) : 0.18)) { const rt = pickRoute(f, 'neutral', dist); if (rt) { this.route = rt; return {}; } } // go for one of the sample combos
+    if (Math.random() < (game.watch ? (dist < 95 ? 0.1 : 0.5) : Math.min(0.6, 0.18 * dif().combo))) { const rt = pickRoute(f, 'neutral', dist); if (rt) { this.route = rt; return {}; } } // go for one of the sample combos
     if (f.meter >= 100 && dist < 520 && r < 0.3) return { btn: 'hp', sup: true };
     if (dist < 330 && Math.random() < 0.07) { // rising versions used on their own
       const opts = N ? (dist < 110 ? [{ btn: 'lp', bb: true, down: true }, { btn: 'hk', bb: true, down: true }] : [{ btn: 'hp', bb: true, down: true }, { btn: 'lk', ff: true, down: true }, { btn: 'hp', ff: true, down: true }])

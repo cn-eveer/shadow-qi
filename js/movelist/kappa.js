@@ -29,6 +29,13 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="note">In the air, J drops a ball of water. His juggles are all claws: rake lift, double rake, frenzy finish.</p>
       <p class="note"><b>Combo strings.</b> U, U, U, U, then K: backhand claw, beak bite, double rake, and the string ends in the Whirlpool Toss, a throw that launches them. I from any point: Upward Rake launches; K early ends with a shell slam. In a juggle: rake lift, beak peck (three pecks), rising rake, shell cannonball. In the air: rake, peck, claw flurry, shell spin.</p>
           <p class="note"><b>In mid-air.</b> In a juggle, U, U, I relaunches and U, U, K finishes with moves different from the ground string (rake lift, beak peck, geyser hop, shell cannonball). Jumping after them, U, U, I and U, U, K become: air rake, air peck, rain claws, waterfall dive.</p>
+      <h3>Max combos</h3>
+      <div class="scroll"><table>
+        <tbody>
+          <tr><td>9. Max combo: lift, lift, bounce<small>↓ + I, U, U, I (Geyser Hop), W, U, ↓ + K (Belly Flop), K.</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>10. Max combo: lift, bounce, lift<small>↓ + I, U, W, U, ↓ + K (Belly Flop), U, I (Geyser Hop), K.</small></td><td class="cmd">↓ + I</td></tr>
+        </tbody>
+      </table></div>
       <h3>Frame data</h3>
 <p class="note"><b>Frame data.</b> Measured from the game itself at 60 frames a second. <b>Startup</b>: frames from pressing the button until it hits (for a string, the frames that hit takes after the previous one; for moves that travel, at the distance shown). <b>On guard / On hit</b>: who recovers first after it connects — plus means the attacker can act first, minus means the defender can. <b>After</b>: frames from the moment it hits until he can guard again (if it misses). <b>Total</b>: frames from the press until he can guard again if it misses (startup + after). <b>Damage</b>: what it does when it hits (for a string, the whole string; later hits in a combo keep 65–95% depending on how long they take). Until then he can’t guard, so a whiffed or guarded move with a big minus can be punished: a light punch (U) hits on frame 4–8 and a launcher (↓+I) on frame 13–16, and how far they reach depends on the fighter: U reaches about 80–95px for Kappa, Kuro, Tanaka and Tetsu, 160–185px for Lyra, Mei and Aldric, and further with Jesse’s shot; ↓+I reaches 85–95px for Kuro, Tanaka and Tetsu and 120–225px for the others. <b>Punish</b> combines the minus with the distance left after the pushback. Tetsu’s armor shrugs off light hits while he attacks, so punish him with a heavy attack.</p>
       <div class="scroll"><table class="fd">
@@ -87,6 +94,13 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="note">空中のJは水玉を落とす。空中追撃もすべて爪：かき上げ追撃・二連かき・狂乱の締め。</p>
       <p class="note"><b>連続技。</b> U、U、U、U、K：裏爪・くちばし噛み・二連かき、締めは2つ目の投げ「渦巻き投げ」で打ち上げ。途中のIで爪かき上げ、早めのKで甲羅叩き。空中追撃：かき上げ・くちばし3連突き・昇りかき・甲羅砲弾。</p>
           <p class="note"><b>空中。</b> 空中追撃では、U、U、Iで再打ち上げ、U、U、Kで締める地上とは違う技（かき上げ、くちばし突き、間欠泉ジャンプ、甲羅砲弾）。ジャンプして追うと、U、U、IとU、U、Kは：空中かき、空中つつき、雨の爪、滝下り。</p>
+      <h3>最大コンボ</h3>
+      <div class="scroll"><table>
+        <tbody>
+          <tr><td>9. 最大コンボ：打ち上げ・打ち上げ・バウンド<small>↓+I、U、U、I（間欠泉ホップ）、W、U、↓+K（腹打ち）、K。</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>10. 最大コンボ：打ち上げ・バウンド・打ち上げ<small>↓+I、U、W、U、↓+K（腹打ち）、U、I（間欠泉ホップ）、K。</small></td><td class="cmd">↓ + I</td></tr>
+        </tbody>
+      </table></div>
       <h3>フレームデータ</h3>
 <p class="note"><b>フレームデータ。</b> ゲーム本体で計測（1秒＝60フレーム）。<b>発生</b>：ボタンを押してから当たるまで（連続技は前の攻撃からの間隔、飛ぶ技は表示の距離で計測）。<b>ガード時／ヒット時</b>：当たった後どちらが先に動けるか。＋は攻撃側、－は防御側が先に動ける。<b>ヒット後</b>：当たる瞬間から再びガードできるまで（空振り時）。<b>全体</b>：空振りした場合、押してから再びガードできるまで（発生＋ヒット後）。 <b>ダメージ</b>：当たったときのダメージ（連続技は全体の合計。コンボの後半の攻撃は、時間のかかる技ほど65〜95%が残る）。それまではガードできないので、大きく不利な技は反撃される。弱パンチ（U）は4〜8フレーム目、打ち上げ（↓+I）は13〜16フレーム目に当たり、届く距離はキャラごとに違う：Uはカッパ・クロ・田中・テツが約80〜95px、ライラ・メイ・アルドリックが160〜185px、ジェシーの射撃はさらに遠く。↓+Iはクロ・田中・テツが85〜95px、他は120〜225px。<b>反撃</b>は不利フレームと押し返し後の距離から判定。テツは攻撃中アーマーで弱攻撃を受け流すので、強攻撃で反撃すること。</p>
       <div class="scroll"><table class="fd">
