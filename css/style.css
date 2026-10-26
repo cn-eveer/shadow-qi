@@ -24,10 +24,12 @@
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--text);font:500 16px/1.45 var(--body)}
 main{max-width:1680px;margin:0 auto;padding:12px clamp(8px,2vw,20px) 24px}
-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:nowrap;margin-bottom:12px} /* always one row, so the game below never gets pushed down */
+header h1{flex:none}
 h1{font-family:var(--hud);font-weight:400;font-size:clamp(24px,3.6vw,36px);line-height:1;margin:0;letter-spacing:.01em}
-.hdr-r{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.tag{color:var(--muted);font-weight:600}
+.hdr-r{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:nowrap;flex:1;min-width:0}
+.hdr-r .pill{flex:none}
+.tag{color:var(--muted);font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} /* (shortened with … on a narrow window; the full text shows on hover) */
 .pill{font:700 14px var(--body);color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer}
 .tbar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
 .tbar[hidden]{display:none}
