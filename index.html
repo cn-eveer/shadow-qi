@@ -105,6 +105,24 @@ canvas{display:block;width:100%;height:100%}
 @container (max-height: 560px){.pick{padding:clamp(5px,1vw,10px)}.lbl{margin:6px 0 6px}.row{margin-top:8px}}
 @container (max-height: 420px){.pick small{display:none}.hint{display:none}}
 @container (max-height: 400px){.logo{font-size:24px}.pick b{font-size:15px}.go{font-size:16px}.ghost{font-size:12px}}
+/* character select: a narrower panel between the two fighters, so both stay in view behind it */
+.overlay:has(.panel.menu){background:linear-gradient(180deg,rgba(14,10,30,.18),rgba(14,10,30,.38))}
+.panel.menu{width:min(640px,52cqw)}
+.panel.menu .logo{font-size:clamp(18px,4.4cqw,52px)}
+.panel.menu .lbl{margin:clamp(4px,1.2cqw,14px) 0 clamp(4px,.8cqw,8px)}
+.panel.menu .picks{gap:clamp(4px,.8cqw,10px)}
+.panel.menu .pick{padding:clamp(4px,.8cqw,10px) clamp(5px,1cqw,12px);border-radius:10px}
+.panel.menu .pick b{font-size:clamp(11px,1.9cqw,22px)}
+.panel.menu .pick small{font-size:clamp(9px,1.05cqw,12px)}
+.panel.menu .pickinfo{font-size:clamp(10px,1.2cqw,13px);padding:clamp(4px,.8cqw,8px) clamp(6px,1cqw,12px)}
+.panel.menu .pickinfo b{font-size:clamp(11px,1.4cqw,15px)}
+.panel.menu .vsrow,.panel.menu .vsrow button{font-size:clamp(10px,1.2cqw,13px)}
+.panel.menu .vsrow button{padding:2px 9px}
+.panel.menu .row{gap:clamp(4px,.8cqw,10px);margin-top:clamp(6px,1.2cqw,14px)}
+.panel.menu .go{font-size:clamp(13px,2.1cqw,24px)}
+.panel.menu .ghost{font-size:clamp(10px,1.35cqw,16px);padding:.3em .8em}
+.panel.menu .hint{font-size:clamp(10px,1.15cqw,13px)}
+body.mobile .panel.menu .hint{display:none}
 .pick.ninja.on{border-color:#b394ff;box-shadow:0 0 0 3px rgba(179,148,255,.28)}
 .pick.brawler.on{border-color:#55d6ef;box-shadow:0 0 0 3px rgba(85,214,239,.28)}
 .pick.staff.on{border-color:#ffc24a;box-shadow:0 0 0 3px rgba(255,194,74,.28)}
@@ -160,28 +178,38 @@ kbd{display:inline-block;min-width:1.75em;text-align:center;padding:1px 6px;font
 /* touch controls for phones and tablets: see-through, out of the way of the action */
 .touch{position:absolute;inset:0;pointer-events:none;z-index:6;user-select:none;-webkit-user-select:none}
 .touch[hidden]{display:none}
-.tpad{pointer-events:auto;position:absolute;left:2.5%;bottom:5%;width:27%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.06),rgba(255,255,255,.14));border:2px solid rgba(255,255,255,.32);touch-action:none;box-shadow:0 0 18px rgba(0,0,0,.25) inset}
+.tpad{pointer-events:auto;position:absolute;left:2.5%;bottom:5%;width:15%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.06),rgba(255,255,255,.14));border:2px solid rgba(255,255,255,.32);touch-action:none;box-shadow:0 0 18px rgba(0,0,0,.25) inset}
 .tknob{position:absolute;left:50%;top:50%;width:38%;height:38%;margin:-19% 0 0 -19%;border-radius:50%;background:rgba(255,255,255,.32);border:2px solid rgba(255,255,255,.55);box-shadow:0 4px 12px rgba(0,0,0,.3);transition:transform .05s}
-.tpad .ar{position:absolute;color:rgba(255,255,255,.55);font-size:clamp(9px,2.2cqw,18px);line-height:1}
+.tpad .ar{position:absolute;color:rgba(255,255,255,.55);font-size:clamp(8px,1.7cqw,14px);line-height:1}
 .ar.au{top:5%;left:50%;transform:translateX(-50%)} .ar.ad{bottom:5%;left:50%;transform:translateX(-50%)} .ar.al{left:6%;top:50%;transform:translateY(-50%)} .ar.arr{right:6%;top:50%;transform:translateY(-50%)}
-.tbtns{pointer-events:auto;position:absolute;right:2.5%;bottom:5%;width:25%;aspect-ratio:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:9%;touch-action:none}
-.tbtns button{border-radius:50%;background:rgba(255,255,255,.13);border:2px solid rgba(255,255,255,.4);color:rgba(255,255,255,.92);font:400 clamp(13px,3.4cqw,30px) var(--hud);text-shadow:0 2px 4px rgba(0,0,0,.5);touch-action:none;padding:0;cursor:pointer}
+.tbtns{pointer-events:auto;position:absolute;right:2.5%;bottom:5%;width:14%;aspect-ratio:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:9%;touch-action:none}
+.tbtns button{border-radius:50%;background:rgba(255,255,255,.13);border:2px solid rgba(255,255,255,.4);color:rgba(255,255,255,.92);font:400 clamp(11px,2.5cqw,22px) var(--hud);text-shadow:0 2px 4px rgba(0,0,0,.5);touch-action:none;padding:0;cursor:pointer}
 .tbtns button.on{background:rgba(255,255,255,.42);transform:scale(.94)}
 .tbtns button[data-k="lp"],.tbtns button[data-k="hp"]{border-color:rgba(255,190,120,.6)} .tbtns button[data-k="lk"],.tbtns button[data-k="hk"]{border-color:rgba(140,200,255,.6)}
-.tpause{pointer-events:auto;position:absolute;right:1.5%;top:22%;width:6.5%;aspect-ratio:1;border-radius:50%;background:rgba(0,0,0,.28);border:2px solid rgba(255,255,255,.35);color:#fff;font:700 clamp(10px,2cqw,18px) var(--body);padding:0;touch-action:none}
+.tpause{pointer-events:auto;position:absolute;right:1.5%;top:22%;width:4%;aspect-ratio:1;border-radius:50%;background:rgba(0,0,0,.28);border:2px solid rgba(255,255,255,.35);color:#fff;font:700 clamp(9px,1.6cqw,15px) var(--body);padding:0;touch-action:none}
 .rotate{position:fixed;inset:0;z-index:100;background:linear-gradient(160deg,#1a1036,#07050f);display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;padding:24px}
 .rotate[hidden]{display:none}
 .rbox p{font:400 22px var(--hud);margin:18px 0 6px;letter-spacing:.02em} .rbox small{font:600 15px var(--body);opacity:.75}
 .rphone{font-size:72px;display:inline-block;animation:rot 2.2s ease-in-out infinite}
 @keyframes rot{0%,20%{transform:rotate(0)}50%,75%{transform:rotate(-90deg)}100%{transform:rotate(0)}}
-/* phones held sideways: a compact header, and the game as big as the screen allows */
-body.mobile .tag{display:none}
-@media (orientation:landscape) and (max-height:560px){
-  body.mobile main{padding:4px 8px 0}
-  body.mobile header{margin-bottom:4px} body.mobile header h1{font-size:18px}
-  body.mobile .pill{font-size:12px;padding:3px 9px}
-  body.mobile .stage{width:min(100%, calc((100vh - 44px) * 16 / 9));border-radius:8px}
-}
+/* phones and tablets: no header (sound, music, language and settings are in the menus' Move list panel), no scrolling,
+   and the game as big as the screen allows */
+html:has(body.mobile),body.mobile{height:100%;overflow:hidden;overscroll-behavior:none}
+body.mobile header{display:none}
+body.mobile main{height:100dvh;padding:0;display:flex;align-items:center;justify-content:center}
+body.mobile .stage{width:min(100vw - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px), 100dvh * 16 / 9);border-radius:0;box-shadow:none}
+body.mobile .tbar{position:fixed;bottom:max(4px,env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:8;margin:0;flex-wrap:nowrap}
+body.mobile .tbar .pill{font-size:11px;padding:3px 8px;opacity:.85;white-space:nowrap}
+/* the move list on a phone: full screen, just each move's name and command */
+body.mobile .drawer{width:100vw;border-left:0}
+body.mobile .drawer :is(small,.blurb,.note,h3,.scroll:has(table.fd),.scroll.combo){display:none}
+/* training: the fighter's moves over the game, to try each one */
+.tlist{position:absolute;left:1%;top:17%;max-height:50%;width:min(27%,280px);overflow-y:auto;z-index:7;background:rgba(8,6,26,.5);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:3px 7px;color:#fff;font:600 clamp(9px,1.5cqw,13px)/1.3 var(--body);touch-action:pan-y;overscroll-behavior:contain}
+.tlist[hidden]{display:none}
+.tlist div{display:flex;justify-content:space-between;gap:10px;padding:2px 0;border-bottom:1px solid rgba(255,255,255,.1)}
+.tlist div:last-child{border-bottom:0}
+.tlist b{font-weight:600} .tlist span{white-space:nowrap;color:#ffd98a}
+.tlist div.fol b{padding-left:10px;font-weight:500;opacity:.9}
 </style>
 </head>
 <body>
@@ -208,10 +236,12 @@ body.mobile .tag{display:none}
     <button class="pill" data-t="reset">Reset to start position (R)</button>
     <button class="pill" data-t="dummy">Dummy: Stand still (T)</button>
     <button class="pill" data-t="mp">MP refill: on (M)</button>
+    <button class="pill" data-t="list" aria-pressed="false">Moves (L)</button>
   </div>
   <div class="stage">
     <canvas id="game" aria-label="Fighting game screen"></canvas>
     <div class="overlay" id="overlay"></div>
+    <div class="tlist" id="tlist" hidden></div>
     <div class="touch" id="touch" hidden aria-hidden="true">
       <div class="tpad" id="tpad"><span class="ar au">▲</span><span class="ar ad">▼</span><span class="ar al">◀</span><span class="ar arr">▶</span><div class="tknob" id="tknob"></div></div>
       <div class="tbtns" id="tbtns"><button data-k="lp">U</button><button data-k="hp">I</button><button data-k="lk">J</button><button data-k="hk">K</button></div>
@@ -9188,7 +9218,7 @@ function loop(now) {
   if (NET.on && game.mode === 'fight') { while (acc >= STEP) { if (!netStep()) { acc = Math.min(acc, STEP); break; } acc -= STEP; } }
   else while (acc >= STEP) { tick(); acc -= STEP; }
   render();
-  if ((++touchTick & 7) === 0) updateTouchUI(); // (the touch controls and the rotate screen, checked a few times a second)
+  if ((++touchTick & 7) === 0) { updateTouchUI(); updateMoveList(); } // (the touch controls and the rotate screen, checked a few times a second)
   requestAnimationFrame(loop);
 }
 let touchTick = 0;
@@ -9573,14 +9603,17 @@ function updateTbar() {
   tbar.querySelector('[data-t="dummy"]').textContent = L(`Dummy: ${DUMMY_LABEL[game.dummyMode]} (T)`, `ダミー：${DUMMY_LABEL[game.dummyMode]} (T)`);
   tbar.querySelector('[data-t="mp"]').textContent = L(`MP refill: ${game.mpFull ? 'on' : 'off'} (M)`, `MP回復：${game.mpFull ? 'オン' : 'オフ'} (M)`);
   tbar.querySelector('[data-t="reset"]').textContent = L('Reset to start position (R)', '初期位置に戻す (R)');
+  const lb = tbar.querySelector('[data-t="list"]'); lb.textContent = L(`Moves: ${game.moveList ? 'on' : 'off'} (L)`, `技表：${game.moveList ? 'オン' : 'オフ'} (L)`); lb.setAttribute('aria-pressed', String(!!game.moveList));
   const dl = game.demoSet === 'punish' ? { prev: ['Previous punish (A)', '前の反撃 (A)'], replay: ['Replay (R)', 'もう一度 (R)'], next: ['Next punish (D)', '次の反撃 (D)'], switch: ['Switch fighter (F)', 'キャラ切替 (F)'] }
     : { prev: ['Previous combo (A)', '前のコンボ (A)'], replay: ['Replay (R)', 'もう一度 (R)'], next: ['Next combo (D)', '次のコンボ (D)'], switch: ['Switch fighter (F)', 'キャラ切替 (F)'] };
   dbar.querySelectorAll('button').forEach(b => { const t = dl[b.dataset.d]; if (t) b.textContent = L(t[0], t[1]); });
+  if (IS_MOBILE) [...tbar.children, ...dbar.children].forEach(b => { b.textContent = b.textContent.replace(/ \([A-Z]\)$/, ''); }); // no keyboard on a phone
 }
 function trainingAction(t) {
   if (t === 'dummy') game.dummyMode = DUMMY_MODES[(DUMMY_MODES.indexOf(game.dummyMode) + 1) % DUMMY_MODES.length];
   else if (t === 'mp') game.mpFull = !game.mpFull;
   else if (t === 'reset') resetPositions();
+  else if (t === 'list') game.moveList = !game.moveList;
   sfx('select'); updateTbar();
 }
 tbar.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { initAudio(); trainingAction(b.dataset.t); b.blur(); }));
@@ -9591,7 +9624,7 @@ function showMenu() {
   const blurbs = {}; // each fighter's explanation, shown in full for the one you've picked
   const pick = (k, blurb, ja) => { blurbs[k] = L(blurb, ja); return `<button class="pick ${k} ${c === k ? 'on' : ''}" data-char="${k}" aria-pressed="${c === k}"><b>${nm(CHARS[k])}</b><small>${L(CHARS[k].title, CHARS[k].titleJa)}</small></button>`; };
   ov.hidden = false;
-  ov.innerHTML = `<div class="panel">
+  ov.innerHTML = `<div class="panel menu">
     <div class="logo">SHADOW <span class="x">✕</span> QI</div>
     <div class="lbl">${L('Pick your fighter.', 'キャラクターを選んでください')}</div>
     <div class="picks">
@@ -9728,6 +9761,7 @@ window.addEventListener('keydown', e => {
       if (e.code === 'KeyT') trainingAction('dummy');
       else if (e.code === 'KeyM') trainingAction('mp');
       else if (e.code === 'KeyR') trainingAction('reset');
+      else if (e.code === 'KeyL') trainingAction('list');
     }
   }
 });
@@ -9800,6 +9834,24 @@ function updateTouchUI() { // shown only on a phone or tablet, during play (not 
   if (portrait) { const ja = game.lang === 'ja'; document.getElementById('rotTxt').textContent = ja ? 'スマホを横向きにしてください' : 'Turn your phone sideways to play'; document.getElementById('rotSub').textContent = ja ? 'Shadow ✕ Qi は横画面でプレイします' : 'Shadow ✕ Qi plays in landscape'; }
 }
 updateTouchUI();
+// training: each move's name and command, shown over the game (taken from the move list, without the explanations,
+// sample combos or frame data)
+document.querySelectorAll('.card .scroll').forEach(d => { const c = d.querySelector('tbody td'); if (c && /^\d+\./.test(c.textContent.trim())) d.classList.add('combo'); });
+const tlistUI = document.getElementById('tlist'); let tlistKey = '';
+function updateMoveList() {
+  const show = !!game.moveList && game.mode === 'fight' && game.training && !game.demo && !game.paused && drawer.hidden;
+  if (tlistUI.hidden === show) tlistUI.hidden = !show;
+  if (!show) return;
+  const ch = fighters[0] ? fighters[0].key : game.p1Char, key = ch + game.lang;
+  if (key === tlistKey) return; tlistKey = key;
+  const card = document.querySelector(`article.card[data-tab="${ch}"][data-lang="${game.lang}"]`); if (!card) return;
+  const esc = t => t.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]);
+  tlistUI.innerHTML = [...card.querySelectorAll('.scroll:not(.combo) table:not(.fd) tbody tr')].map(tr => {
+    const td = tr.querySelectorAll('td'); if (td.length < 2) return '';
+    const name = [...td[0].childNodes].filter(n => !(n.nodeType === 1 && n.tagName === 'SMALL')).map(n => n.textContent).join('').trim();
+    return `<div class="${tr.classList.contains('sub') ? 'fol' : ''}"><b>${esc(name)}</b><span>${esc(td[td.length - 1].textContent.trim())}</span></div>`;
+  }).join('');
+}
 requestAnimationFrame(loop);
 })();
 </script>
