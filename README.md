@@ -76,7 +76,7 @@ Every fighter's sample combos (title screen → *combos*) show these patterns, t
 
 **Phone or tablet** (hold it sideways): the pad on the left moves you (tap it twice quickly for → → or ← ←), the U I / J K buttons are on the right, and ❚❚ pauses. On most phones (wider than 16:9) the controls sit in panels beside the game, not over it; on 16:9 phones and tablets they sit over the game. The game keeps the same size in menus, fights and pauses, and menus shrink to fit if the screen is small.
 
-**⚙ Settings**: sound, music (BGM), language, CPU difficulty, and each fighter's full move list (with frame data on a computer).
+**⚙ Settings**: sound, music (BGM), language, CPU difficulty, and each fighter's full move list.
 
 ## Put it online with GitHub Pages
 

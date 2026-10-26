@@ -42,38 +42,6 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       </table></div>
       <p class="note">U, U, K in a juggle is lifting glyph, spirit glyph and force push. While they’re launched, → → + U, → → + I, → → + J and → → + K turn into juggle versions: Shard Flurry, Falling Star, Levitate and Spirit Fist Burst. Hold ↓ with the button to use them on their own.</p>
       <p class="note"><b>Combo strings.</b> Every hit comes from her staff. U, U, U, U, K: glyph spark, crystal needle, floor rune, starburst. I from any point: a Levitation Rune lifts them; K ends with Repulse. J, J, K: floor glyph, glyph trip. In a juggle: lifting rune, crystal rain, spirit rune, gravity slam. In the air: rune, crystal, crystal storm, starburst.</p>
-      <h3>Frame data</h3>
-<p class="note"><b>Frame data.</b> Measured from the game itself at 60 frames a second. <b>Startup</b>: frames from pressing the button until it hits (for a string, the frames that hit takes after the previous one; for moves that travel, at the distance shown). <b>On guard / On hit</b>: who recovers first after it connects — plus means the attacker can act first, minus means the defender can. <b>After</b>: frames from the moment it hits until he can guard again (if it misses). <b>Total</b>: frames from the press until he can guard again if it misses (startup + after). <b>Damage</b>: what it does when it hits (for a string, the whole string; later hits in a combo keep 65–95% depending on how long they take). Until then he can’t guard, so a whiffed or guarded move with a big minus can be punished: a light punch (U) hits on frame 4–8 and a launcher (↓+I) on frame 13–16, and how far they reach depends on the fighter: U reaches about 80–95px for Kappa, Kuro, Tanaka and Tetsu, 160–185px for Lyra, Mei and Aldric, and further with Jesse’s shot; ↓+I reaches 85–95px for Kuro, Tanaka and Tetsu and 120–225px for the others. <b>Punish</b> combines the minus with the distance left after the pushback. Tetsu’s armor shrugs off light hits while he attacks, so punish him with a heavy attack.</p>
-      <div class="scroll"><table class="fd">
-        <thead><tr><th>Command</th><th>Move</th><th>Damage</th><th>Startup</th><th>After</th><th>On guard</th><th>On hit</th><th>Total</th><th>Punish</th></tr></thead>
-        <tbody>
-          <tr><td class="cmd">U</td><td>Ripple</td><td><b>33</b></td><td>12</td><td>19</td><td class="pos">+2</td><td>+5</td><td>31</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">I</td><td>Glyph Burst</td><td><b>62</b></td><td>24</td><td>24</td><td class="neg">−10</td><td>+3</td><td>48</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (117px)</td></tr>
-          <tr><td class="cmd">J</td><td>Floor Glyph</td><td><b>37</b></td><td>13</td><td>21</td><td class="pos">+2</td><td>+5</td><td>34</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">K</td><td>Gravity Well</td><td><b>66</b></td><td>21</td><td>24</td><td class="neg">−10</td><td>knockdown</td><td>45</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (107px)</td></tr>
-          <tr><td class="cmd">↓+U</td><td>Low Punch</td><td><b>33</b></td><td>12</td><td>19</td><td class="pos">+2</td><td>+5</td><td>31</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">↓+I</td><td>Ground Burst</td><td><b>78</b></td><td>20</td><td>21</td><td class="neg">−10</td><td>launch</td><td>41</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (116px)</td></tr>
-          <tr><td class="cmd">↓+J</td><td>Crouch Floor Glyph</td><td><b>37</b></td><td>13</td><td>21</td><td class="pos">+2</td><td>+5</td><td>34</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">↓+K</td><td>Glyph Trip</td><td><b>83</b></td><td>17</td><td>26</td><td class="neg">−10</td><td>knockdown</td><td>43</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (117px)</td></tr>
-          <tr><td class="cmd">U U</td><td>Glyph Spark</td><td><b>55</b></td><td>16</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">U U U</td><td>Crystal Needle</td><td><b>76</b></td><td>16</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">U U U U</td><td>Floor Rune</td><td><b>100</b></td><td>16</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">U U U U K</td><td>Starburst</td><td><b>149</b></td><td>21</td><td>—</td><td class="neg">−48</td><td>knockdown</td><td>—</td><td class="pu ok">Minus, but out of reach (287px)</td></tr>
-          <tr><td class="cmd">U U K</td><td>Constellation Burst</td><td><b>98</b></td><td>26</td><td>—</td><td class="neg">−18</td><td>knockdown</td><td>—</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (179px)</td></tr>
-          <tr><td class="cmd">U U I</td><td>Crystal Ascension</td><td><b>86</b></td><td>22</td><td>—</td><td class="neg">−20</td><td>launch</td><td>—</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (167px)</td></tr>
-          <tr><td class="cmd">J J</td><td>Floor Glyph 2</td><td><b>64</b></td><td>16</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">J J K</td><td>Glyph Trip</td><td><b>106</b></td><td>21</td><td>—</td><td class="neg">−12</td><td>knockdown</td><td>—</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (157px)</td></tr>
-          <tr><td class="cmd">→→+U</td><td>Crystal Shard</td><td><b>37</b></td><td>25</td><td>29</td><td class="neg">−8</td><td>−11</td><td>54</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (134px)</td></tr>
-          <tr><td class="cmd">→→+I</td><td>Falling Star</td><td><b>46</b></td><td>48</td><td>13</td><td class="neg">−48</td><td>launch</td><td>61</td><td class="pu ok">Minus, but out of reach (223px)</td></tr>
-          <tr><td class="cmd">→→+J</td><td>Psychic Lift</td><td><b>42</b></td><td>39</td><td>21</td><td class="neg">−48</td><td>launch</td><td>60</td><td class="pu ok">Minus, but out of reach (216px)</td></tr>
-          <tr><td class="cmd">→→+K</td><td>Spirit Fist</td><td><b>54</b></td><td>25</td><td>28</td><td class="neg">−36</td><td>knockdown</td><td>53</td><td class="pu ok">Minus, but out of reach (262px)</td></tr>
-          <tr><td class="cmd">←←+U</td><td>Orb Burst</td><td><b>18</b></td><td>26</td><td>36</td><td class="neg">−37</td><td>−17</td><td>62</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (165px)</td></tr>
-          <tr><td class="cmd">←←+I</td><td>Triple Ray</td><td><b>56</b></td><td>28</td><td>26</td><td class="neg">−37</td><td>stun</td><td>54</td><td class="pu ok">Minus, but out of reach (185px)</td></tr>
-          <tr><td class="cmd">←←+J</td><td>Strong Orbs</td><td><b>—</b></td><td>—</td><td>—</td><td class="">—</td><td>—</td><td>44</td><td class="pu nx">No attack (stance / buff)</td></tr>
-          <tr><td class="cmd">←←+K</td><td>Long Orbs</td><td><b>—</b></td><td>—</td><td>—</td><td class="">—</td><td>—</td><td>46</td><td class="pu nx">No attack (stance / buff)</td></tr>
-          <tr><td class="cmd">U+J (super)</td><td>Crystal Storm</td><td><b>171</b></td><td>63</td><td>117</td><td class="pos">+6</td><td>launch</td><td>180</td><td class="pu ok">Safe</td></tr>
-        </tbody>
-      </table></div>
     </article>
     <article class="card psychic" data-tab="psychic" data-lang="ja" hidden>
       <h2>ライラ<span>超能力の賢者</span></h2>
@@ -115,37 +83,5 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       </table></div>
       <p class="note">空中の相手に→→+U・→→+I・→→+J・→→+Kを使うと追撃版（欠片の連打・落ちる星・浮揚・霊気の拳の噴出）になる。↓を押しながら使うと単体でも出る。</p>
       <p class="note"><b>連続技。</b> すべて杖から放つ。U、U、U、U、K：紋の火花・水晶の針・床の紋・星の爆発。途中のIで浮遊の紋（打ち上げ）、Kで反発。J、J、K：床の紋・紋の足払い。空中追撃：持ち上げの紋・水晶の雨・霊の紋・重力落とし。</p>
-      <h3>フレームデータ</h3>
-<p class="note"><b>フレームデータ。</b> ゲーム本体で計測（1秒＝60フレーム）。<b>発生</b>：ボタンを押してから当たるまで（連続技は前の攻撃からの間隔、飛ぶ技は表示の距離で計測）。<b>ガード時／ヒット時</b>：当たった後どちらが先に動けるか。＋は攻撃側、－は防御側が先に動ける。<b>ヒット後</b>：当たる瞬間から再びガードできるまで（空振り時）。<b>全体</b>：空振りした場合、押してから再びガードできるまで（発生＋ヒット後）。 <b>ダメージ</b>：当たったときのダメージ（連続技は全体の合計。コンボの後半の攻撃は、時間のかかる技ほど65〜95%が残る）。それまではガードできないので、大きく不利な技は反撃される。弱パンチ（U）は4〜8フレーム目、打ち上げ（↓+I）は13〜16フレーム目に当たり、届く距離はキャラごとに違う：Uはカッパ・クロ・田中・テツが約80〜95px、ライラ・メイ・アルドリックが160〜185px、ジェシーの射撃はさらに遠く。↓+Iはクロ・田中・テツが85〜95px、他は120〜225px。<b>反撃</b>は不利フレームと押し返し後の距離から判定。テツは攻撃中アーマーで弱攻撃を受け流すので、強攻撃で反撃すること。</p>
-      <div class="scroll"><table class="fd">
-        <thead><tr><th>コマンド</th><th>技</th><th>ダメージ</th><th>発生</th><th>ヒット後</th><th>ガード時</th><th>ヒット時</th><th>全体</th><th>反撃</th></tr></thead>
-        <tbody>
-          <tr><td class="cmd">U</td><td>Ripple</td><td><b>33</b></td><td>12</td><td>19</td><td class="pos">+2</td><td>+5</td><td>31</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">I</td><td>Glyph Burst</td><td><b>62</b></td><td>24</td><td>24</td><td class="neg">−10</td><td>+3</td><td>48</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー (117px)</td></tr>
-          <tr><td class="cmd">J</td><td>Floor Glyph</td><td><b>37</b></td><td>13</td><td>21</td><td class="pos">+2</td><td>+5</td><td>34</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">K</td><td>Gravity Well</td><td><b>66</b></td><td>21</td><td>24</td><td class="neg">−10</td><td>ダウン</td><td>45</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー (107px)</td></tr>
-          <tr><td class="cmd">↓+U</td><td>Low Punch</td><td><b>33</b></td><td>12</td><td>19</td><td class="pos">+2</td><td>+5</td><td>31</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">↓+I</td><td>Ground Burst</td><td><b>78</b></td><td>20</td><td>21</td><td class="neg">−10</td><td>打ち上げ</td><td>41</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー (116px)</td></tr>
-          <tr><td class="cmd">↓+J</td><td>Crouch Floor Glyph</td><td><b>37</b></td><td>13</td><td>21</td><td class="pos">+2</td><td>+5</td><td>34</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">↓+K</td><td>Glyph Trip</td><td><b>83</b></td><td>17</td><td>26</td><td class="neg">−10</td><td>ダウン</td><td>43</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー (117px)</td></tr>
-          <tr><td class="cmd">U U</td><td>Glyph Spark</td><td><b>55</b></td><td>16</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">U U U</td><td>Crystal Needle</td><td><b>76</b></td><td>16</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">U U U U</td><td>Floor Rune</td><td><b>100</b></td><td>16</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">U U U U K</td><td>Starburst</td><td><b>149</b></td><td>21</td><td>—</td><td class="neg">−48</td><td>ダウン</td><td>—</td><td class="pu ok">不利だが届かない (287px)</td></tr>
-          <tr><td class="cmd">U U K</td><td>Constellation Burst</td><td><b>98</b></td><td>26</td><td>—</td><td class="neg">−18</td><td>ダウン</td><td>—</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー (179px)</td></tr>
-          <tr><td class="cmd">U U I</td><td>Crystal Ascension</td><td><b>86</b></td><td>22</td><td>—</td><td class="neg">−20</td><td>打ち上げ</td><td>—</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー (167px)</td></tr>
-          <tr><td class="cmd">J J</td><td>Floor Glyph 2</td><td><b>64</b></td><td>16</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">J J K</td><td>Glyph Trip</td><td><b>106</b></td><td>21</td><td>—</td><td class="neg">−12</td><td>ダウン</td><td>—</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー (157px)</td></tr>
-          <tr><td class="cmd">→→+U</td><td>Crystal Shard</td><td><b>37</b></td><td>25</td><td>29</td><td class="neg">−8</td><td>−11</td><td>54</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー (134px)</td></tr>
-          <tr><td class="cmd">→→+I</td><td>Falling Star</td><td><b>46</b></td><td>48</td><td>13</td><td class="neg">−48</td><td>打ち上げ</td><td>61</td><td class="pu ok">不利だが届かない (223px)</td></tr>
-          <tr><td class="cmd">→→+J</td><td>Psychic Lift</td><td><b>42</b></td><td>39</td><td>21</td><td class="neg">−48</td><td>打ち上げ</td><td>60</td><td class="pu ok">不利だが届かない (216px)</td></tr>
-          <tr><td class="cmd">→→+K</td><td>Spirit Fist</td><td><b>54</b></td><td>25</td><td>28</td><td class="neg">−36</td><td>ダウン</td><td>53</td><td class="pu ok">不利だが届かない (262px)</td></tr>
-          <tr><td class="cmd">←←+U</td><td>Orb Burst</td><td><b>18</b></td><td>26</td><td>36</td><td class="neg">−37</td><td>−17</td><td>62</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー (165px)</td></tr>
-          <tr><td class="cmd">←←+I</td><td>Triple Ray</td><td><b>56</b></td><td>28</td><td>26</td><td class="neg">−37</td><td>気絶</td><td>54</td><td class="pu ok">不利だが届かない (185px)</td></tr>
-          <tr><td class="cmd">←←+J</td><td>Strong Orbs</td><td><b>—</b></td><td>—</td><td>—</td><td class="">—</td><td>—</td><td>44</td><td class="pu nx">攻撃なし（構え・強化）</td></tr>
-          <tr><td class="cmd">←←+K</td><td>Long Orbs</td><td><b>—</b></td><td>—</td><td>—</td><td class="">—</td><td>—</td><td>46</td><td class="pu nx">攻撃なし（構え・強化）</td></tr>
-          <tr><td class="cmd">U+J （超必殺）</td><td>Crystal Storm</td><td><b>171</b></td><td>63</td><td>117</td><td class="pos">+6</td><td>打ち上げ</td><td>180</td><td class="pu ok">安全</td></tr>
-        </tbody>
-      </table></div>
     </article>
 `);

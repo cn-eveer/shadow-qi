@@ -52,38 +52,6 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
         </tbody>
       </table></div>
       <p class="note"><b>Combo strings.</b> U, U, U, U, K: qi straight, body blow, elbow smash, twin qi palms. I from any point: Rising Dragon launches; K ends with an axe kick. J, J, K: low kick, sweeping stomp. In a juggle: twin palm lift, hammer fist, body upper, qi explosion. In the air: palm, elbow, qi flurry, qi burst; I alone is an air hammer fist.</p>
-      <h3>Frame data</h3>
-<p class="note"><b>Frame data.</b> Measured from the game itself at 60 frames a second. <b>Startup</b>: frames from pressing the button until it hits (for a string, the frames that hit takes after the previous one; for moves that travel, at the distance shown). <b>On guard / On hit</b>: who recovers first after it connects — plus means the attacker can act first, minus means the defender can. <b>After</b>: frames from the moment it hits until he can guard again (if it misses). <b>Total</b>: frames from the press until he can guard again if it misses (startup + after). <b>Damage</b>: what it does when it hits (for a string, the whole string; later hits in a combo keep 65–95% depending on how long they take). Until then he can’t guard, so a whiffed or guarded move with a big minus can be punished: a light punch (U) hits on frame 4–8 and a launcher (↓+I) on frame 13–16, and how far they reach depends on the fighter: U reaches about 80–95px for Kappa, Kuro, Tanaka and Tetsu, 160–185px for Lyra, Mei and Aldric, and further with Jesse’s shot; ↓+I reaches 85–95px for Kuro, Tanaka and Tetsu and 120–225px for the others. <b>Punish</b> combines the minus with the distance left after the pushback. Tetsu’s armor shrugs off light hits while he attacks, so punish him with a heavy attack.</p>
-      <div class="scroll"><table class="fd">
-        <thead><tr><th>Command</th><th>Move</th><th>Damage</th><th>Startup</th><th>After</th><th>On guard</th><th>On hit</th><th>Total</th><th>Punish</th></tr></thead>
-        <tbody>
-          <tr><td class="cmd">U</td><td>Light Punch</td><td><b>45</b></td><td>9</td><td>8</td><td class="pos">+2</td><td>+5</td><td>17</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">I</td><td>Qi Palm</td><td><b>84</b></td><td>17</td><td>22</td><td class="neg">−10</td><td>+3</td><td>39</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (light hits bounce off his armor: use a heavy) (112px)</td></tr>
-          <tr><td class="cmd">J</td><td>Light Kick</td><td><b>43</b></td><td>9</td><td>10</td><td class="pos">+2</td><td>+5</td><td>19</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">K</td><td>Axe Kick</td><td><b>77</b></td><td>17</td><td>22</td><td class="neg">−10</td><td>knockdown</td><td>39</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (light hits bounce off his armor: use a heavy) (83px)</td></tr>
-          <tr><td class="cmd">↓+U</td><td>Low Punch</td><td><b>45</b></td><td>9</td><td>8</td><td class="pos">+2</td><td>+5</td><td>17</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">↓+I</td><td>Rising Fist</td><td><b>68</b></td><td>4</td><td>44</td><td class="neg">−32</td><td>launch</td><td>48</td><td class="pu bad">Launcher punish: Lyra, Aldric, Jesse, Kappa · U punish: Mei, Lyra, Aldric, Jesse (light hits bounce off his armor: use a heavy)</td></tr>
-          <tr><td class="cmd">↓+J</td><td>Low Kick</td><td><b>43</b></td><td>9</td><td>10</td><td class="pos">+2</td><td>+5</td><td>19</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">↓+K</td><td>Sweep</td><td><b>96</b></td><td>17</td><td>24</td><td class="neg">−10</td><td>knockdown</td><td>41</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (light hits bounce off his armor: use a heavy) (112px)</td></tr>
-          <tr><td class="cmd">U U</td><td>Qi Straight</td><td><b>71</b></td><td>10</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">U U U</td><td>Body Blow</td><td><b>96</b></td><td>10</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">U U U U</td><td>Elbow Smash</td><td><b>128</b></td><td>11</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">U U U U K</td><td>Twin Qi Palms</td><td><b>197</b></td><td>15</td><td>—</td><td class="neg">−32</td><td>knockdown</td><td>—</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (light hits bounce off his armor: use a heavy) (171px)</td></tr>
-          <tr><td class="cmd">U U K</td><td>Mountain Splitter</td><td><b>149</b></td><td>18</td><td>—</td><td class="neg">−12</td><td>knockdown</td><td>—</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (light hits bounce off his armor: use a heavy) (118px)</td></tr>
-          <tr><td class="cmd">U U I</td><td>Ascending Dragon</td><td><b>122</b></td><td>14</td><td>—</td><td class="neg">−15</td><td>launch</td><td>—</td><td class="pu bad">Launcher punish: Lyra, Aldric, Jesse, Kappa · U punish: Mei, Lyra, Aldric, Jesse (light hits bounce off his armor: use a heavy)</td></tr>
-          <tr><td class="cmd">J J</td><td>Low Kick</td><td><b>69</b></td><td>10</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">J J K</td><td>Sweeping Stomp</td><td><b>118</b></td><td>15</td><td>—</td><td class="neg">−12</td><td>knockdown</td><td>—</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (light hits bounce off his armor: use a heavy) (114px)</td></tr>
-          <tr><td class="cmd">→→+U</td><td>Qi Blast</td><td><b>60</b></td><td>27</td><td>24</td><td class="neg">−20</td><td>−4</td><td>51</td><td class="pu bad">Launcher punish: Lyra, Aldric, Jesse, Kappa · U punish: Mei, Lyra, Aldric, Jesse (light hits bounce off his armor: use a heavy)</td></tr>
-          <tr><td class="cmd">→→+I</td><td>Meteor Fist</td><td><b>50</b></td><td>43</td><td>27</td><td class="neg">−32</td><td>launch</td><td>70</td><td class="pu bad">Launcher punish: Lyra, Aldric, Jesse, Kappa · U punish: Mei, Lyra, Aldric, Jesse (light hits bounce off his armor: use a heavy)</td></tr>
-          <tr><td class="cmd">→→+J</td><td>Qi Sweep</td><td><b>38</b></td><td>29</td><td>29</td><td class="neg">−32</td><td>launch</td><td>58</td><td class="pu bad">Launcher punish: Lyra, Aldric, Jesse, Kappa · U punish: Mei, Lyra, Aldric, Jesse (light hits bounce off his armor: use a heavy)</td></tr>
-          <tr><td class="cmd">→→+K</td><td>Shoulder Charge</td><td><b>56</b></td><td>27</td><td>29</td><td class="neg">−20</td><td>knockdown</td><td>56</td><td class="pu bad">Launcher punish: Lyra, Aldric, Jesse, Kappa · U punish: Mei, Lyra, Aldric, Jesse (light hits bounce off his armor: use a heavy)</td></tr>
-          <tr><td class="cmd">←←+U</td><td>Qi Orb</td><td><b>57</b></td><td>26</td><td>20</td><td class="pos">+6</td><td>knockdown</td><td>46</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">←←+I</td><td>Qi Parry</td><td><b>—</b></td><td>—</td><td>—</td><td class="">—</td><td>—</td><td>49</td><td class="pu nx">No attack (stance / buff)</td></tr>
-          <tr><td class="cmd">←←+J</td><td>Earth Stomp</td><td><b>32</b></td><td>32</td><td>20</td><td class="neg">−32</td><td>knockdown</td><td>52</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (light hits bounce off his armor: use a heavy) (155px)</td></tr>
-          <tr><td class="cmd">←←+K</td><td>Cyclone Lariat</td><td><b>56</b></td><td>33</td><td>32</td><td class="neg">−32</td><td>launch</td><td>65</td><td class="pu bad">Launcher punish: Lyra, Aldric, Jesse, Kappa · U punish: Mei, Lyra, Aldric, Jesse (light hits bounce off his armor: use a heavy)</td></tr>
-          <tr><td class="cmd">U+J (super)</td><td>Qi Cannon</td><td><b>274</b></td><td>71</td><td>123</td><td class="pos">+1</td><td>knockdown</td><td>194</td><td class="pu ok">Safe</td></tr>
-        </tbody>
-      </table></div>
     </article>
     <article class="card brawler" data-tab="brawler" data-lang="ja" hidden>
       <h2>テツ<span>気の拳士</span></h2>
@@ -123,37 +91,5 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       </table></div>
       <p class="note">空中の相手に→→+U・→→+I・→→+K・←←+U・←←+Kを使うと追撃版（気柱・鉄槌落とし・肩ロケット・気の螺旋・空中旋風）になる。↓を押しながら使うと単体でも出る。</p>
       <p class="note"><b>連続技。</b> U、U、U、U、K：気のストレート・ボディブロー・肘打ち・双気掌。途中のIで昇龍（打ち上げ）、Kで踵落とし。J、J、K：ローキック・踏みつけ払い。空中追撃：双掌上げ・鉄槌・ボディアッパー・気の爆発。空中ではIで空中鉄槌。</p>
-      <h3>フレームデータ</h3>
-<p class="note"><b>フレームデータ。</b> ゲーム本体で計測（1秒＝60フレーム）。<b>発生</b>：ボタンを押してから当たるまで（連続技は前の攻撃からの間隔、飛ぶ技は表示の距離で計測）。<b>ガード時／ヒット時</b>：当たった後どちらが先に動けるか。＋は攻撃側、－は防御側が先に動ける。<b>ヒット後</b>：当たる瞬間から再びガードできるまで（空振り時）。<b>全体</b>：空振りした場合、押してから再びガードできるまで（発生＋ヒット後）。 <b>ダメージ</b>：当たったときのダメージ（連続技は全体の合計。コンボの後半の攻撃は、時間のかかる技ほど65〜95%が残る）。それまではガードできないので、大きく不利な技は反撃される。弱パンチ（U）は4〜8フレーム目、打ち上げ（↓+I）は13〜16フレーム目に当たり、届く距離はキャラごとに違う：Uはカッパ・クロ・田中・テツが約80〜95px、ライラ・メイ・アルドリックが160〜185px、ジェシーの射撃はさらに遠く。↓+Iはクロ・田中・テツが85〜95px、他は120〜225px。<b>反撃</b>は不利フレームと押し返し後の距離から判定。テツは攻撃中アーマーで弱攻撃を受け流すので、強攻撃で反撃すること。</p>
-      <div class="scroll"><table class="fd">
-        <thead><tr><th>コマンド</th><th>技</th><th>ダメージ</th><th>発生</th><th>ヒット後</th><th>ガード時</th><th>ヒット時</th><th>全体</th><th>反撃</th></tr></thead>
-        <tbody>
-          <tr><td class="cmd">U</td><td>Light Punch</td><td><b>45</b></td><td>9</td><td>8</td><td class="pos">+2</td><td>+5</td><td>17</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">I</td><td>Qi Palm</td><td><b>84</b></td><td>17</td><td>22</td><td class="neg">−10</td><td>+3</td><td>39</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー（アーマーで弱攻撃は効かない：強攻撃で） (112px)</td></tr>
-          <tr><td class="cmd">J</td><td>Light Kick</td><td><b>43</b></td><td>9</td><td>10</td><td class="pos">+2</td><td>+5</td><td>19</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">K</td><td>Axe Kick</td><td><b>77</b></td><td>17</td><td>22</td><td class="neg">−10</td><td>ダウン</td><td>39</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー（アーマーで弱攻撃は効かない：強攻撃で） (83px)</td></tr>
-          <tr><td class="cmd">↓+U</td><td>Low Punch</td><td><b>45</b></td><td>9</td><td>8</td><td class="pos">+2</td><td>+5</td><td>17</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">↓+I</td><td>Rising Fist</td><td><b>68</b></td><td>4</td><td>44</td><td class="neg">−32</td><td>打ち上げ</td><td>48</td><td class="pu bad">打ち上げで確定：ライラ・アルドリック・ジェシー・カッパ／Uで確定：メイ・ライラ・アルドリック・ジェシー（アーマーで弱攻撃は効かない：強攻撃で）</td></tr>
-          <tr><td class="cmd">↓+J</td><td>Low Kick</td><td><b>43</b></td><td>9</td><td>10</td><td class="pos">+2</td><td>+5</td><td>19</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">↓+K</td><td>Sweep</td><td><b>96</b></td><td>17</td><td>24</td><td class="neg">−10</td><td>ダウン</td><td>41</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー（アーマーで弱攻撃は効かない：強攻撃で） (112px)</td></tr>
-          <tr><td class="cmd">U U</td><td>Qi Straight</td><td><b>71</b></td><td>10</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">U U U</td><td>Body Blow</td><td><b>96</b></td><td>10</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">U U U U</td><td>Elbow Smash</td><td><b>128</b></td><td>11</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">U U U U K</td><td>Twin Qi Palms</td><td><b>197</b></td><td>15</td><td>—</td><td class="neg">−32</td><td>ダウン</td><td>—</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー（アーマーで弱攻撃は効かない：強攻撃で） (171px)</td></tr>
-          <tr><td class="cmd">U U K</td><td>Mountain Splitter</td><td><b>149</b></td><td>18</td><td>—</td><td class="neg">−12</td><td>ダウン</td><td>—</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー（アーマーで弱攻撃は効かない：強攻撃で） (118px)</td></tr>
-          <tr><td class="cmd">U U I</td><td>Ascending Dragon</td><td><b>122</b></td><td>14</td><td>—</td><td class="neg">−15</td><td>打ち上げ</td><td>—</td><td class="pu bad">打ち上げで確定：ライラ・アルドリック・ジェシー・カッパ／Uで確定：メイ・ライラ・アルドリック・ジェシー（アーマーで弱攻撃は効かない：強攻撃で）</td></tr>
-          <tr><td class="cmd">J J</td><td>Low Kick</td><td><b>69</b></td><td>10</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">J J K</td><td>Sweeping Stomp</td><td><b>118</b></td><td>15</td><td>—</td><td class="neg">−12</td><td>ダウン</td><td>—</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー（アーマーで弱攻撃は効かない：強攻撃で） (114px)</td></tr>
-          <tr><td class="cmd">→→+U</td><td>Qi Blast</td><td><b>60</b></td><td>27</td><td>24</td><td class="neg">−20</td><td>−4</td><td>51</td><td class="pu bad">打ち上げで確定：ライラ・アルドリック・ジェシー・カッパ／Uで確定：メイ・ライラ・アルドリック・ジェシー（アーマーで弱攻撃は効かない：強攻撃で）</td></tr>
-          <tr><td class="cmd">→→+I</td><td>Meteor Fist</td><td><b>50</b></td><td>43</td><td>27</td><td class="neg">−32</td><td>打ち上げ</td><td>70</td><td class="pu bad">打ち上げで確定：ライラ・アルドリック・ジェシー・カッパ／Uで確定：メイ・ライラ・アルドリック・ジェシー（アーマーで弱攻撃は効かない：強攻撃で）</td></tr>
-          <tr><td class="cmd">→→+J</td><td>Qi Sweep</td><td><b>38</b></td><td>29</td><td>29</td><td class="neg">−32</td><td>打ち上げ</td><td>58</td><td class="pu bad">打ち上げで確定：ライラ・アルドリック・ジェシー・カッパ／Uで確定：メイ・ライラ・アルドリック・ジェシー（アーマーで弱攻撃は効かない：強攻撃で）</td></tr>
-          <tr><td class="cmd">→→+K</td><td>Shoulder Charge</td><td><b>56</b></td><td>27</td><td>29</td><td class="neg">−20</td><td>ダウン</td><td>56</td><td class="pu bad">打ち上げで確定：ライラ・アルドリック・ジェシー・カッパ／Uで確定：メイ・ライラ・アルドリック・ジェシー（アーマーで弱攻撃は効かない：強攻撃で）</td></tr>
-          <tr><td class="cmd">←←+U</td><td>Qi Orb</td><td><b>57</b></td><td>26</td><td>20</td><td class="pos">+6</td><td>ダウン</td><td>46</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">←←+I</td><td>Qi Parry</td><td><b>—</b></td><td>—</td><td>—</td><td class="">—</td><td>—</td><td>49</td><td class="pu nx">攻撃なし（構え・強化）</td></tr>
-          <tr><td class="cmd">←←+J</td><td>Earth Stomp</td><td><b>32</b></td><td>32</td><td>20</td><td class="neg">−32</td><td>ダウン</td><td>52</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー（アーマーで弱攻撃は効かない：強攻撃で） (155px)</td></tr>
-          <tr><td class="cmd">←←+K</td><td>Cyclone Lariat</td><td><b>56</b></td><td>33</td><td>32</td><td class="neg">−32</td><td>打ち上げ</td><td>65</td><td class="pu bad">打ち上げで確定：ライラ・アルドリック・ジェシー・カッパ／Uで確定：メイ・ライラ・アルドリック・ジェシー（アーマーで弱攻撃は効かない：強攻撃で）</td></tr>
-          <tr><td class="cmd">U+J （超必殺）</td><td>Qi Cannon</td><td><b>274</b></td><td>71</td><td>123</td><td class="pos">+1</td><td>ダウン</td><td>194</td><td class="pu ok">安全</td></tr>
-        </tbody>
-      </table></div>
     </article>
 `);

@@ -53,43 +53,6 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>14. Max combo: bounce, bounce<small>→ → + K (Crusader Leap), U, U, → → + J (Windmill Crash), U, K.</small></td><td class="cmd">→ → + K</td></tr>
         </tbody>
       </table></div>
-      <h3>Frame data</h3>
-<p class="note"><b>Frame data.</b> Measured from the game itself at 60 frames a second. <b>Startup</b>: frames from pressing the button until it hits (for a string, the frames that hit takes after the previous one; for moves that travel, at the distance shown). <b>On guard / On hit</b>: who recovers first after it connects — plus means the attacker can act first, minus means the defender can. <b>After</b>: frames from the moment it hits until he can guard again (if it misses). <b>Total</b>: frames from the press until he can guard again if it misses (startup + after). <b>Damage</b>: what it does when it hits (for a string, the whole string; later hits in a combo keep 65–95% depending on how long they take). Until then he can’t guard, so a whiffed or guarded move with a big minus can be punished: a light punch (U) hits on frame 4–8 and a launcher (↓+I) on frame 13–16, and how far they reach depends on the fighter: U reaches about 80–95px for Kappa, Kuro, Tanaka and Tetsu, 160–185px for Lyra, Mei and Aldric, and further with Jesse’s shot; ↓+I reaches 85–95px for Kuro, Tanaka and Tetsu and 120–225px for the others. <b>Punish</b> combines the minus with the distance left after the pushback. Tetsu’s armor shrugs off light hits while he attacks, so punish him with a heavy attack.</p>
-      <div class="scroll"><table class="fd">
-        <thead><tr><th>Command</th><th>Move</th><th>Damage</th><th>Startup</th><th>After</th><th>On guard</th><th>On hit</th><th>Total</th><th>Punish</th></tr></thead>
-        <tbody>
-          <tr><td class="cmd">U</td><td>Pommel Strike</td><td><b>44</b></td><td>9</td><td>9</td><td class="pos">+2</td><td>+5</td><td>18</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">I</td><td>Heavy Cleave</td><td><b>86</b></td><td>18</td><td>29</td><td class="neg">−10</td><td>knockdown</td><td>47</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (112px)</td></tr>
-          <tr><td class="cmd">J</td><td>Low Cut</td><td><b>47</b></td><td>10</td><td>11</td><td class="pos">+2</td><td>+5</td><td>21</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">K</td><td>Short Thrust</td><td><b>75</b></td><td>16</td><td>20</td><td class="neg">−10</td><td>+3</td><td>36</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (99px)</td></tr>
-          <tr><td class="cmd">↓+U</td><td>Low Punch</td><td><b>44</b></td><td>9</td><td>9</td><td class="pos">+2</td><td>+5</td><td>18</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">↓+I</td><td>Rising Shield</td><td><b>103</b></td><td>19</td><td>21</td><td class="neg">−10</td><td>launch</td><td>40</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (112px)</td></tr>
-          <tr><td class="cmd">↓+J</td><td>Crouch Sword Poke</td><td><b>47</b></td><td>10</td><td>11</td><td class="pos">+2</td><td>+5</td><td>21</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">↓+K</td><td>Shield Trip</td><td><b>104</b></td><td>17</td><td>27</td><td class="neg">−10</td><td>knockdown</td><td>44</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (112px)</td></tr>
-          <tr><td class="cmd">U U</td><td>Shield Bash</td><td><b>70</b></td><td>11</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">U U U</td><td>Rising Slash</td><td><b>100</b></td><td>11</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">U U U U</td><td>Overhead Cleave</td><td><b>133</b></td><td>12</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">U U U U K</td><td>Holy Thrust</td><td><b>192</b></td><td>16</td><td>—</td><td class="neg">−48</td><td>knockdown</td><td>—</td><td class="pu ok">Minus, but out of reach (221px)</td></tr>
-          <tr><td class="cmd">U U K</td><td>Bulwark Breaker</td><td><b>150</b></td><td>16</td><td>—</td><td class="neg">−12</td><td>knockdown</td><td>—</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (136px)</td></tr>
-          <tr><td class="cmd">U U I</td><td>Heaven&#x27;s Rise</td><td><b>122</b></td><td>16</td><td>—</td><td class="neg">−12</td><td>launch</td><td>—</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (127px)</td></tr>
-          <tr><td class="cmd">J J</td><td>Low Cut 2</td><td><b>76</b></td><td>11</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">J J K</td><td>Shield Sweep</td><td><b>132</b></td><td>16</td><td>—</td><td class="neg">−12</td><td>knockdown</td><td>—</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (115px)</td></tr>
-          <tr><td class="cmd">→→+U</td><td>Rampart Slam</td><td><b>83</b></td><td>15</td><td>62</td><td class="neg">−36</td><td>knockdown</td><td>77</td><td class="pu ok">Minus, but out of reach (193px)</td></tr>
-          <tr><td class="cmd">→→+I</td><td>Judgement Thrust</td><td><b>60</b></td><td>39</td><td>31</td><td class="neg">−48</td><td>launch</td><td>70</td><td class="pu ok">Minus, but out of reach (219px)</td></tr>
-          <tr><td class="cmd">→→+J</td><td>Windmill Crash</td><td><b>46</b></td><td>15</td><td>65</td><td class="neg">−48</td><td>launch</td><td>80</td><td class="pu ok">Minus, but out of reach (221px)</td></tr>
-          <tr><td class="cmd">→→+K</td><td>Crusader Leap</td><td><b>73</b></td><td>51</td><td>45</td><td class="neg">−32</td><td>launch</td><td>96</td><td class="pu bad">Launcher punish: Lyra, Aldric, Jesse, Kappa · U punish: Mei, Lyra, Aldric, Jesse</td></tr>
-          <tr><td class="cmd">←←+U</td><td>Parry</td><td><b>—</b></td><td>—</td><td>—</td><td class="">—</td><td>—</td><td>43</td><td class="pu nx">No attack (stance / buff)</td></tr>
-          <tr><td class="cmd">←←+I</td><td>Shield Parry</td><td><b>—</b></td><td>—</td><td>—</td><td class="">—</td><td>—</td><td>43</td><td class="pu nx">No attack (stance / buff)</td></tr>
-          <tr><td class="cmd">←←+J</td><td>Aegis</td><td><b>—</b></td><td>—</td><td>—</td><td class="">—</td><td>—</td><td>31</td><td class="pu nx">No attack (stance / buff)</td></tr>
-          <tr><td class="cmd">←←+K</td><td>Lay on Hands</td><td><b>—</b></td><td>—</td><td>—</td><td class="">—</td><td>—</td><td>29</td><td class="pu nx">No attack (stance / buff)</td></tr>
-          <tr><td class="cmd">U+J (super)</td><td>Sanctuary</td><td><b>185</b></td><td>66</td><td>58</td><td class="pos">+5</td><td>knockdown</td><td>124</td><td class="pu ok">Safe</td></tr>
-          <tr><td class="cmd">I (held 3s, Lv3)</td><td>Heaven Splitter</td><td><b>116</b></td><td>190</td><td>29</td><td class="neg">−10</td><td>launch</td><td>219</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (112px)</td></tr>
-          <tr><td class="cmd">K (held 3s, Excalibur)</td><td>Excalibur</td><td><b>117</b></td><td>190</td><td>31</td><td class="neg">−10</td><td>launch</td><td>221</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (113px)</td></tr>
-          <tr><td class="cmd">K (held 1s)</td><td>Excalibur Lv1</td><td><b>87</b></td><td>75</td><td>31</td><td class="neg">−10</td><td>knockdown</td><td>106</td><td class="pu mid">Only long-reach U punishes: Mei, Lyra, Aldric, Jesse (113px)</td></tr>
-          <tr><td class="cmd">→→+U (held)</td><td>Rampart Slam</td><td><b>83</b></td><td>15</td><td>76</td><td class="neg">−36</td><td>knockdown</td><td>91</td><td class="pu ok">Minus, but out of reach (193px)</td></tr>
-          <tr><td class="cmd">→→+J (held)</td><td>Windmill Crash</td><td><b>60</b></td><td>15</td><td>93</td><td class="neg">−48</td><td>launch</td><td>108</td><td class="pu ok">Minus, but out of reach (230px)</td></tr>
-        </tbody>
-      </table></div>
     </article>
     <article class="card paladin" data-tab="paladin" data-lang="ja" hidden>
       <h2>アルドリック<span>聖騎士</span></h2>
@@ -140,43 +103,6 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
         <tbody>
           <tr><td>13. 最大コンボ：打ち上げ・打ち上げ・バウンド<small>↓+I、U、U、I（昇天）、→→+J（風車の叩きつけ）、K。</small></td><td class="cmd">↓ + I</td></tr>
           <tr><td>14. 最大コンボ：バウンド・バウンド<small>→→+K（聖戦の跳躍）、U、U、→→+J（風車の叩きつけ）、U、K。</small></td><td class="cmd">→ → + K</td></tr>
-        </tbody>
-      </table></div>
-      <h3>フレームデータ</h3>
-<p class="note"><b>フレームデータ。</b> ゲーム本体で計測（1秒＝60フレーム）。<b>発生</b>：ボタンを押してから当たるまで（連続技は前の攻撃からの間隔、飛ぶ技は表示の距離で計測）。<b>ガード時／ヒット時</b>：当たった後どちらが先に動けるか。＋は攻撃側、－は防御側が先に動ける。<b>ヒット後</b>：当たる瞬間から再びガードできるまで（空振り時）。<b>全体</b>：空振りした場合、押してから再びガードできるまで（発生＋ヒット後）。 <b>ダメージ</b>：当たったときのダメージ（連続技は全体の合計。コンボの後半の攻撃は、時間のかかる技ほど65〜95%が残る）。それまではガードできないので、大きく不利な技は反撃される。弱パンチ（U）は4〜8フレーム目、打ち上げ（↓+I）は13〜16フレーム目に当たり、届く距離はキャラごとに違う：Uはカッパ・クロ・田中・テツが約80〜95px、ライラ・メイ・アルドリックが160〜185px、ジェシーの射撃はさらに遠く。↓+Iはクロ・田中・テツが85〜95px、他は120〜225px。<b>反撃</b>は不利フレームと押し返し後の距離から判定。テツは攻撃中アーマーで弱攻撃を受け流すので、強攻撃で反撃すること。</p>
-      <div class="scroll"><table class="fd">
-        <thead><tr><th>コマンド</th><th>技</th><th>ダメージ</th><th>発生</th><th>ヒット後</th><th>ガード時</th><th>ヒット時</th><th>全体</th><th>反撃</th></tr></thead>
-        <tbody>
-          <tr><td class="cmd">U</td><td>Pommel Strike</td><td><b>44</b></td><td>9</td><td>9</td><td class="pos">+2</td><td>+5</td><td>18</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">I</td><td>Heavy Cleave</td><td><b>86</b></td><td>18</td><td>29</td><td class="neg">−10</td><td>ダウン</td><td>47</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー (112px)</td></tr>
-          <tr><td class="cmd">J</td><td>Low Cut</td><td><b>47</b></td><td>10</td><td>11</td><td class="pos">+2</td><td>+5</td><td>21</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">K</td><td>Short Thrust</td><td><b>75</b></td><td>16</td><td>20</td><td class="neg">−10</td><td>+3</td><td>36</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー (99px)</td></tr>
-          <tr><td class="cmd">↓+U</td><td>Low Punch</td><td><b>44</b></td><td>9</td><td>9</td><td class="pos">+2</td><td>+5</td><td>18</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">↓+I</td><td>Rising Shield</td><td><b>103</b></td><td>19</td><td>21</td><td class="neg">−10</td><td>打ち上げ</td><td>40</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー (112px)</td></tr>
-          <tr><td class="cmd">↓+J</td><td>Crouch Sword Poke</td><td><b>47</b></td><td>10</td><td>11</td><td class="pos">+2</td><td>+5</td><td>21</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">↓+K</td><td>Shield Trip</td><td><b>104</b></td><td>17</td><td>27</td><td class="neg">−10</td><td>ダウン</td><td>44</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー (112px)</td></tr>
-          <tr><td class="cmd">U U</td><td>Shield Bash</td><td><b>70</b></td><td>11</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">U U U</td><td>Rising Slash</td><td><b>100</b></td><td>11</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">U U U U</td><td>Overhead Cleave</td><td><b>133</b></td><td>12</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">U U U U K</td><td>Holy Thrust</td><td><b>192</b></td><td>16</td><td>—</td><td class="neg">−48</td><td>ダウン</td><td>—</td><td class="pu ok">不利だが届かない (221px)</td></tr>
-          <tr><td class="cmd">U U K</td><td>Bulwark Breaker</td><td><b>150</b></td><td>16</td><td>—</td><td class="neg">−12</td><td>ダウン</td><td>—</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー (136px)</td></tr>
-          <tr><td class="cmd">U U I</td><td>Heaven&#x27;s Rise</td><td><b>122</b></td><td>16</td><td>—</td><td class="neg">−12</td><td>打ち上げ</td><td>—</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー (127px)</td></tr>
-          <tr><td class="cmd">J J</td><td>Low Cut 2</td><td><b>76</b></td><td>11</td><td>—</td><td class="pos">±0</td><td>+8</td><td>—</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">J J K</td><td>Shield Sweep</td><td><b>132</b></td><td>16</td><td>—</td><td class="neg">−12</td><td>ダウン</td><td>—</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー (115px)</td></tr>
-          <tr><td class="cmd">→→+U</td><td>Rampart Slam</td><td><b>83</b></td><td>15</td><td>62</td><td class="neg">−36</td><td>ダウン</td><td>77</td><td class="pu ok">不利だが届かない (193px)</td></tr>
-          <tr><td class="cmd">→→+I</td><td>Judgement Thrust</td><td><b>60</b></td><td>39</td><td>31</td><td class="neg">−48</td><td>打ち上げ</td><td>70</td><td class="pu ok">不利だが届かない (219px)</td></tr>
-          <tr><td class="cmd">→→+J</td><td>Windmill Crash</td><td><b>46</b></td><td>15</td><td>65</td><td class="neg">−48</td><td>打ち上げ</td><td>80</td><td class="pu ok">不利だが届かない (221px)</td></tr>
-          <tr><td class="cmd">→→+K</td><td>Crusader Leap</td><td><b>73</b></td><td>51</td><td>45</td><td class="neg">−32</td><td>打ち上げ</td><td>96</td><td class="pu bad">打ち上げで確定：ライラ・アルドリック・ジェシー・カッパ／Uで確定：メイ・ライラ・アルドリック・ジェシー</td></tr>
-          <tr><td class="cmd">←←+U</td><td>Parry</td><td><b>—</b></td><td>—</td><td>—</td><td class="">—</td><td>—</td><td>43</td><td class="pu nx">攻撃なし（構え・強化）</td></tr>
-          <tr><td class="cmd">←←+I</td><td>Shield Parry</td><td><b>—</b></td><td>—</td><td>—</td><td class="">—</td><td>—</td><td>43</td><td class="pu nx">攻撃なし（構え・強化）</td></tr>
-          <tr><td class="cmd">←←+J</td><td>Aegis</td><td><b>—</b></td><td>—</td><td>—</td><td class="">—</td><td>—</td><td>31</td><td class="pu nx">攻撃なし（構え・強化）</td></tr>
-          <tr><td class="cmd">←←+K</td><td>Lay on Hands</td><td><b>—</b></td><td>—</td><td>—</td><td class="">—</td><td>—</td><td>29</td><td class="pu nx">攻撃なし（構え・強化）</td></tr>
-          <tr><td class="cmd">U+J （超必殺）</td><td>Sanctuary</td><td><b>185</b></td><td>66</td><td>58</td><td class="pos">+5</td><td>ダウン</td><td>124</td><td class="pu ok">安全</td></tr>
-          <tr><td class="cmd">I（3秒長押し、Lv3）</td><td>Heaven Splitter</td><td><b>116</b></td><td>190</td><td>29</td><td class="neg">−10</td><td>打ち上げ</td><td>219</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー (112px)</td></tr>
-          <tr><td class="cmd">K（3秒長押し、エクスカリバー）</td><td>Excalibur</td><td><b>117</b></td><td>190</td><td>31</td><td class="neg">−10</td><td>打ち上げ</td><td>221</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー (113px)</td></tr>
-          <tr><td class="cmd">K（1秒長押し）</td><td>Excalibur Lv1</td><td><b>87</b></td><td>75</td><td>31</td><td class="neg">−10</td><td>ダウン</td><td>106</td><td class="pu mid">リーチの長いUのみ確定：メイ・ライラ・アルドリック・ジェシー (113px)</td></tr>
-          <tr><td class="cmd">→→+U （長押し）</td><td>Rampart Slam</td><td><b>83</b></td><td>15</td><td>76</td><td class="neg">−36</td><td>ダウン</td><td>91</td><td class="pu ok">不利だが届かない (193px)</td></tr>
-          <tr><td class="cmd">→→+J （長押し）</td><td>Windmill Crash</td><td><b>60</b></td><td>15</td><td>93</td><td class="neg">−48</td><td>打ち上げ</td><td>108</td><td class="pu ok">不利だが届かない (230px)</td></tr>
         </tbody>
       </table></div>
     </article>

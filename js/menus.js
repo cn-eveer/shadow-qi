@@ -330,7 +330,7 @@ const tlistUI = document.getElementById('tlist'); let tlistCh = '', tlistKey = '
 function moveListOf(ch) {
   const card = document.querySelector(`article.card[data-tab="${ch}"][data-lang="${game.lang}"]`); if (!card) return [];
   const out = []; let parent = null;
-  card.querySelectorAll('.scroll:not(.combo) table:not(.fd) tbody tr').forEach(tr => {
+  card.querySelectorAll('.scroll:not(.combo) table tbody tr').forEach(tr => {
     const td = tr.querySelectorAll('td'); if (td.length < 2) return;
     const name = [...td[0].childNodes].filter(n => !(n.nodeType === 1 && n.tagName === 'SMALL')).map(n => n.textContent).join('').trim();
     const cmd = td[td.length - 1].textContent.trim();

@@ -47,15 +47,6 @@ h1{font-family:var(--hud);font-weight:400;font-size:clamp(24px,3.6vw,36px);line-
 .dbody{overflow:auto;padding:12px 14px 24px;flex:1}
 .dbody .card{border-radius:12px}
 .dbody .card[hidden]{display:none}
-table.fd{font-size:12.5px}
-table.fd th{text-align:left;font-weight:700;opacity:.75;padding:4px 6px;border-bottom:1px solid var(--line)}
-table.fd td{padding:4px 6px;vertical-align:top}
-table.fd td.neg{color:#d94a5a;font-weight:700}
-table.fd td.pos{color:#2f9a5a;font-weight:700}
-table.fd td.pu.bad{color:#d94a5a;font-weight:700}
-table.fd td.pu.mid{color:#c27a1a;font-weight:600}
-table.fd td.pu.ok{color:#2f9a5a;font-weight:600}
-table.fd td.pu.tw{color:#7a5ad9;font-weight:600}
 .setrow{display:flex;flex-direction:column;gap:2px;padding:10px 14px;font-weight:700}
 .srow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
 .srow:last-child{border-bottom:0}
@@ -195,7 +186,7 @@ body.mobile .tbar{position:fixed;bottom:max(4px,env(safe-area-inset-bottom,0px))
 body.mobile .tbar .pill{font-size:11px;padding:3px 8px;opacity:.85;white-space:nowrap}
 /* the move list on a phone: full screen, just each move's name and command */
 body.mobile .drawer{width:100vw;border-left:0}
-body.mobile .drawer :is(small,.blurb,.note,h3,.scroll:has(table.fd),.scroll.combo){display:none}
+body.mobile .drawer :is(small,.blurb,.note,h3,.scroll.combo){display:none}
 /* training: the fighter's moves over the game, to try each one */
 .tlist{position:absolute;left:50%;top:19%;transform:translateX(-50%);z-index:7;display:flex;align-items:center;gap:8px;background:rgba(8,6,26,.6);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:5px 6px;color:#fff;font:600 clamp(11px,1.6cqw,15px)/1.25 var(--body);text-align:center;user-select:none;-webkit-user-select:none}
 .tlist[hidden]{display:none}
