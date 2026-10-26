@@ -88,7 +88,7 @@ Every fighter's sample combos (title screen → *combos*) show these patterns, t
 
 To update later, upload the changed files over the old ones — and raise the version number in `index.html` (every `?v=…` after a `.js` or `.css` file name), so browsers load the new files instead of the ones they kept from last time.
 
-> If your address isn't `cn-eveer.github.io/shadow-qi`, change the two `og:` addresses near the top of `index.html` so link previews show the cover image.
+> If your address isn't `cn-eveer.github.io/shadow-qi`, change the addresses near the top of `index.html` (`canonical`, `og:url`, `og:image` and `twitter:image`) so link previews show the cover image.
 
 ## Where things are
 

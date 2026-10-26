@@ -1,13 +1,19 @@
 {
   "name": "Shadow ✕ Qi",
   "short_name": "Shadow✕Qi",
-  "description": "A 2D browser fighting game: eight fighters, combos, supers, CPU and online battles.",
+  "description": "8人のファイターが戦うブラウザの2D格闘ゲーム：コンボと超必殺技、CPU戦、トレーニング、オンライン対戦。 / A 2D browser fighting game: eight fighters, combos, supers, CPU battles, training and online battles.",
+  "lang": "ja",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
   "orientation": "landscape",
   "background_color": "#08061a",
   "theme_color": "#120c26",
+  "categories": [
+    "games",
+    "entertainment"
+  ],
   "icons": [
     {
       "src": "assets/icon-192.png",
