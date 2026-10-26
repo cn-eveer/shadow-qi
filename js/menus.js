@@ -276,7 +276,8 @@ function vKey(code, down) { window.dispatchEvent(new KeyboardEvent(down ? 'keydo
   touchUI.addEventListener('touchstart', e => e.preventDefault(), { passive: false }); // no scrolling or zooming while playing
 })();
 // phones held sideways: the pad and the buttons sit in panels beside the game (not over it), big, in the lower middle of
-// each panel; the game is narrowed a little to make room. Squarer screens (tablets) keep them over the game, but bigger.
+// each panel; the game is narrowed a little to make room — always the same size, in menus and in play. Squarer screens
+// (tablets) keep them over the game, but bigger.
 const stageEl = document.querySelector('.stage');
 let safeProbe = null;
 function safeInsets() { // the notch and rounded corners (env(safe-area-inset-*)), read through a hidden probe
@@ -286,8 +287,8 @@ function safeInsets() { // the notch and rounded corners (env(safe-area-inset-*)
 function layoutTouch() {
   if (!IS_MOBILE) return;
   if (touchUI.parentNode !== document.body) document.body.appendChild(touchUI); // (out of the game panel, so it can sit beside it)
-  const vw = innerWidth, vh = innerHeight, ins = safeInsets(), usable = vw - ins.l - ins.r, playing = !touchUI.hidden; // (menus keep the full width: the panels are only needed in play)
-  const side = playing && usable / vh >= 1.6 ? Math.min(usable * 0.21, Math.max((usable - vh * 16 / 9) / 2, usable * 0.17)) : 0; // width of each side panel (0: no room, controls go over the game)
+  const vw = innerWidth, vh = innerHeight, ins = safeInsets(), usable = vw - ins.l - ins.r;
+  const side = usable / vh >= 1.9 ? Math.min(usable * 0.21, Math.max((usable - vh * 16 / 9) / 2, usable * 0.17)) : 0; // width of each side panel: only on phones wider than the game (most are ~19.5:9); a 16:9 screen keeps the controls over the game
   stageEl.style.width = (side ? usable - side * 2 : Math.min(usable, vh * 16 / 9)) + 'px';
   const pad = document.getElementById('tpad'), btns = document.getElementById('tbtns'), pause = document.getElementById('tpause');
   let size, padL, btnL, top;
@@ -302,9 +303,19 @@ function layoutTouch() {
   fitCanvas();
 }
 if (IS_MOBILE) { layoutTouch(); addEventListener('resize', layoutTouch); addEventListener('orientationchange', () => setTimeout(layoutTouch, 200)); }
+// a menu taller (or wider) than the game screen is scaled down to fit, so nothing is ever cut off
+function fitOverlay() {
+  const panel = ov.querySelector(':scope > .panel'); if (!panel || ov.hidden) return;
+  panel.style.zoom = ''; panel.style.transform = '';
+  const cs = getComputedStyle(ov), availH = ov.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom), availW = ov.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const k = Math.min(1, availH / panel.scrollHeight, availW / panel.scrollWidth); if (k >= 0.999) return;
+  if ('zoom' in panel.style) panel.style.zoom = k.toFixed(3); else { panel.style.transformOrigin = 'top center'; panel.style.transform = `scale(${k.toFixed(3)})`; }
+}
+new MutationObserver(() => requestAnimationFrame(fitOverlay)).observe(ov, { childList: true });
+addEventListener('resize', () => requestAnimationFrame(fitOverlay));
 function updateTouchUI() { // shown only on a phone or tablet, during play (not in menus, pauses or the sample viewer)
   const show = IS_MOBILE && game.mode === 'fight' && !game.paused && !game.netMenu && !game.demo && !game.watch && drawer.hidden;
-  if (touchUI.hidden === show) { touchUI.hidden = !show; layoutTouch(); if (!show) for (const k of ['left', 'right', 'up', 'down', 'lp', 'hp', 'lk', 'hk']) keys.delete(MAPS.p1[k]); }
+  if (touchUI.hidden === show) { touchUI.hidden = !show; if (!show) for (const k of ['left', 'right', 'up', 'down', 'lp', 'hp', 'lk', 'hk']) keys.delete(MAPS.p1[k]); }
   const portrait = IS_MOBILE && innerHeight > innerWidth;
   if (rotUI.hidden === portrait) { rotUI.hidden = !portrait; if (portrait && game.mode === 'fight' && !game.paused && !NET.on && !game.demo) togglePause(true); } // turned upright mid-fight: pause
   if (portrait) { const ja = game.lang === 'ja'; document.getElementById('rotTxt').textContent = ja ? 'スマホを横向きにしてください' : 'Turn your phone sideways to play'; document.getElementById('rotSub').textContent = ja ? 'Shadow ✕ Qi は横画面でプレイします' : 'Shadow ✕ Qi plays in landscape'; }

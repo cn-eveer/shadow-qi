@@ -21,29 +21,49 @@ const OP_BATTLE = [ // a highlight reel: each clip starts right at the action (f
 const OP_BAT0 = OP_PRO, OP_CLASH0 = OP_BAT0 + OP_BATTLE.reduce((n, c) => n + c.len, 0); // (no slow roster cuts or clashes any more: straight into the action)
 const OP_GROUP = OP_CLASH0, OP_END = OP_GROUP + 260;
 function opClipAt(t) { let s0 = OP_BAT0; for (let i = 0; i < OP_BATTLE.length; i++) { if (t < s0 + OP_BATTLE[i].len) return t >= s0 ? { i, k: t - s0 } : null; s0 += OP_BATTLE[i].len; } return null; }
-function opSim() { game.freeze = Math.min(game.freeze, 2); game.mode = 'fight'; fightTick(); game.mode = 'opening'; } // (short hit-stops only: in a movie a long one reads as a stutter)
-function opStartClip(i) { // set up the real game behind the scenes and run it to the moment the combo starts
-  const c = OP_BATTLE[i];
+function opSim() { for (const f of fighters) { f.ox = f.x; f.oy = f.y; } game.freeze = Math.min(game.freeze, 2); game.mode = 'fight'; fightTick(); game.mode = 'opening'; } // (short hit-stops only: in a movie a long one reads as a stutter; ox/oy: where they were, for drawing in between steps)
+function opPrepClip(i) { // set up the real game behind the scenes for clip i (the run-up to the combo comes after: opRunUp)
+  const c = OP_BATTLE[i]; OP.prep = { i, n: 0, done: false };
   OP.muted = true;
   game.p1Char = c.key; startMatch(true, false, true); setupDemo(c.demo);
   game.mode = 'opening'; updateTbar(); ov.hidden = true;
-  game.phase = 'fight'; game.phaseT = 0; if (game.demoState) { game.demoState.phase = 'run'; game.demoState.t = 0; } // (skip the round and sample intros nobody sees: far less to simulate in one frame)
-  for (let n = 0; n < 900; n++) { opSim(); if (game.phase === 'fight' && fighters[0].state === 'attack' && (game.demoState.i >= (c.from || 0))) break; }
-  parts.length = 0; // (the set-up's particles are never seen)
-  OP.muted = false; OP.clip = i; OP.z = null; OP.cx = null; OP.cy = null; OP.punch = 0; OP.slowT = 0; OP.lastHp = fighters[1].hp; OP.half = false;
+  game.phase = 'fight'; game.phaseT = 0; if (game.demoState) { game.demoState.phase = 'run'; game.demoState.t = 0; } // (skip the round and sample intros nobody sees: far less to simulate)
+  OP.muted = false;
 }
-function opRenderClip(i, k) { // the live game, filmed: zoomed in on the action, letterboxed, with a title tag and the hit counter
-  const c = OP_BATTLE[i], r = OP_ROSTER.find(q => q.key === c.key), [a, b] = fighters;
-  // the camera: close, punching in on the big moments — but always wide enough to keep BOTH fighters in shot (the attacker too, when the other is launched high)
-  const zt = game.superFlash || OP.punch > 0 ? 1.95 : 1.5;
-  const minX = Math.min(a.x, b.x) - 80 - (a.state === 'attack' && a.move && /^sm(Angel|Devil)$/.test(a.move.id || '') ? 120 : 0), maxX = Math.max(a.x, b.x) + 80 + (a.state === 'attack' && a.move && /^sm(Angel|Devil)$/.test(a.move.id || '') ? 120 : 0);
-  const poss = a.state === 'attack' && a.move && (a.move.id === 'smAngel' || a.move.id === 'smDevil') && a.mf < 54; // (a possession: room for the spirits on both sides, half again his height)
+function opRunUp(max) { // run the prepared clip up to the moment its combo starts, at most `max` steps now (so it can be spread over frames)
+  const p = OP.prep, c = OP_BATTLE[p.i]; OP.muted = true;
+  for (let k = 0; k < max && !p.done; k++) { opSim(); p.n++; if ((game.phase === 'fight' && fighters[0].state === 'attack' && game.demoState.i >= (c.from || 0)) || p.n >= 900) p.done = true; }
+  OP.muted = false; return p.done;
+}
+function opStartClip(i) {
+  if (!OP.prep || OP.prep.i !== i) opPrepClip(i);
+  opRunUp(900);
+  parts.length = 0; // (the set-up's particles are never seen)
+  OP.prep = null; OP.clip = i; OP.z = null; OP.cx = null; OP.cy = null; OP.cam = null; OP.pcam = null; OP.punch = 0; OP.slowT = 0; OP.lastHp = fighters[1].hp; OP.half = false;
+  for (const f of fighters) { f.ox = f.x; f.oy = f.y; }
+  opCamUpdate();
+}
+function opCamUpdate() { // once per game step: where the camera wants to be (close, punching in on the big moments, always keeping BOTH fighters in shot), eased toward it
+  const [a, b] = fighters, zt = game.superFlash || OP.punch > 0 ? 1.95 : 1.5;
+  const wide = a.state === 'attack' && a.move && /^sm(Angel|Devil)$/.test(a.move.id || '') ? 120 : 0; // (a possession: room for the spirits on both sides)
+  const minX = Math.min(a.x, b.x) - 80 - wide, maxX = Math.max(a.x, b.x) + 80 + wide;
+  const poss = a.state === 'attack' && a.move && (a.move.id === 'smAngel' || a.move.id === 'smDevil') && a.mf < 54;
   const topY = poss ? GROUND - 360 : GROUND - Math.max(a.y + 200 * a.ch.scale, b.y + 200 * b.ch.scale) - 24, botY = GROUND + 16;
   const zFit = Math.min(W / (maxX - minX), (H - 80) / (botY - topY)), zWant = Math.max(1, Math.min(zt, zFit));
   OP.z = (OP.z || zWant) + (zWant - (OP.z || zWant)) * 0.2; const z = Math.min(OP.z, zFit < 1 ? 1 : zFit + 0.001);
   const cxT = clamp((minX + maxX) / 2, W / 2 / z, W - W / 2 / z), cyT = clamp((topY + botY) / 2, H / 2 / z, H - H / 2 / z);
   OP.cx = OP.cx == null ? cxT : OP.cx + (cxT - OP.cx) * 0.25; OP.cy = OP.cy == null ? cyT : OP.cy + (cyT - OP.cy) * 0.25;
-  const mx = clamp(OP.cx, W / 2 / z, W - W / 2 / z), my = clamp(OP.cy, H / 2 / z, H - H / 2 / z), sh = game.shake;
+  OP.pcam = OP.cam || null;
+  OP.cam = { z, mx: clamp(OP.cx, W / 2 / z, W - W / 2 / z), my: clamp(OP.cy, H / 2 / z, H - H / 2 / z) };
+  if (!OP.pcam) OP.pcam = OP.cam;
+}
+function opRenderClip(i, k) { // the live game, filmed: zoomed in on the action, letterboxed, with a title tag and the hit counter
+  const c = OP_BATTLE[i], r = OP_ROSTER.find(q => q.key === c.key);
+  if (!OP.cam) opCamUpdate();
+  const A = RENDER_ALPHA, c0 = OP.pcam, c1 = OP.cam; // drawn in between the last two game steps (smooth on 90–144 Hz screens)
+  const z = lerp(c0.z, c1.z, A), mx = lerp(c0.mx, c1.mx, A), my = lerp(c0.my, c1.my, A), sh = game.shake * 0.5; // (half the shake: the camera already punches in)
+  const held = fighters.map(f => [f.x, f.y]);
+  for (const f of fighters) if (f.ox != null) { f.x = lerp(f.ox, f.x, A); f.y = lerp(f.oy, f.y, A); }
   ctx.save(); ctx.translate(sh ? vrnd(-sh, sh) : 0, sh ? vrnd(-sh, sh) * 0.6 : 0);
   ctx.translate(W / 2, H / 2); ctx.scale(z, z); ctx.translate(-mx, -my);
   ctx.drawImage(bg, 0, 0, W, H);
@@ -56,6 +76,7 @@ function opRenderClip(i, k) { // the live game, filmed: zoomed in on the action,
   for (const p of projs) if (!behind(p.type)) drawProj(p);
   drawParts();
   ctx.restore();
+  fighters.forEach((f, n) => { f.x = held[n][0]; f.y = held[n][1]; }); // (back to where the game has them)
   if (game.superFlash) drawSuperFX(true);
   // a slanted tag with the fighter's title (not their name), and the hit counter
   const tk = ease(k / 14);
@@ -82,16 +103,18 @@ function warmOpening() { // prepare the opening's titles ahead of time, a few pe
     ...OP_BATTLE.map(c => [L(CHARS[c.key].title, CHARS[c.key].titleJa).toUpperCase(), 32, '#ffffff', true])];
   for (let n = 2; n <= 24; n++) jobs.push([L(`${n} HITS`, `${n} ヒット`), 40, '#ffd23f', true]);
   jobs.push([L('COMBO', 'コンボ'), 16, '#ffffff', false]);
+  jobs.push(() => { const c = document.createElement('canvas'); c.width = c.height = 32; const x = c.getContext('2d'); x.font = `18px ${HUD}`; x.fillText('ᚠᚢᚦᚨᚱᚲᚷᚹ', 0, 20); }); // the prologue's runes (the browser has to find a font for them)
+  jobs.push(() => { ctx.save(); ctx.globalAlpha = 0.004; ctx.drawImage(bg, 0, 0, 2, 2); ctx.restore(); }); // the stage picture, sent to the graphics card once before the first clip needs it
   const t0 = performance.now(); let i = 0;
   const next = () => { // one title per frame; the movie's clock waits until they're all ready (2 seconds at most)
-    if (i < jobs.length && performance.now() - t0 < 2000) { try { textBitmap(...jobs[i++]); } catch (e) { i++; } requestAnimationFrame(next); } else OP.ready = true;
+    if (i < jobs.length && performance.now() - t0 < 2000) { const j = jobs[i++]; try { if (typeof j === 'function') j(); else textBitmap(...j); } catch (e) {} requestAnimationFrame(next); } else OP.ready = true;
   };
   requestAnimationFrame(next);
 }
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(warmOpening); else warmOpening();
 function startOpening() { warmOpening();
   if (game.mode !== 'opening') OP.save = { p1: game.p1Char, p2: game.p2Char }; // the footage borrows the fighter picks; put them back afterwards
-  initAudio(); game.mode = 'opening'; OP.t = 0; OP.clip = -1; ov.hidden = true; ov.innerHTML = '';
+  initAudio(); game.mode = 'opening'; OP.t = 0; OP.clip = -1; OP.prep = null; ov.hidden = true; ov.innerHTML = '';
   try { localStorage.setItem('sq-opening', '1'); } catch (e) {}
 }
 function endOpening() { if (game.mode !== 'opening') return; if (OP.save) { game.p1Char = OP.save.p1; game.p2Char = OP.save.p2; } game.demo = false; game.training = false; showMenu(); }
@@ -115,8 +138,9 @@ function openingTick() { // the sound cues of the movie
     const b = fighters[1]; if (b && b.hp < OP.lastHp - 30) { OP.slowT = 14; OP.punch = 18; } if (b) OP.lastHp = b.hp; // a heavy hit: punch in and slow down
     if (game.superFlash) OP.punch = 20;
     OP.half = !OP.half; if (OP.slowT > 0) OP.slowT--; if (OP.punch > 0) OP.punch--;
-    opSim(); // (no slow motion: running every other frame looked choppy; the camera punches in on the big hits instead)
+    opSim(); opCamUpdate(); // (no slow motion: running every other frame looked choppy; the camera punches in on the big hits instead)
   } else OP.clip = -1;
+  if (t >= OP_PRO - 40 && t < OP_PRO) { if (!OP.prep || OP.prep.i !== 0) opPrepClip(0); opRunUp(8); } // the first clip is set up a little at a time during the end of the prologue, not all in one frame
   const d = t - OP_CLASH0, di = Math.floor(d / OP_CLASH), dk = d - di * OP_CLASH;
   if (d >= 0 && di < OP_CLASHES.length) { if (dk === 0) sfx('swing'); if (dk === 34) { sfx('hitH'); sfx('break'); } }
   if (t === OP_GROUP + 2) sfx('rise');
@@ -327,32 +351,37 @@ function opGroup(k) { // everyone together, then the logo
   }
   if (k > L0 + 40 && globalT % 50 < 32) opBigText(IS_MOBILE ? L('TAP TO START', 'タップで開始') : L('PRESS ENTER', 'Enterキーで開始'), W / 2, H - 22, 20, '#ffffff', 1);
 }
-function renderOpening() {
-  const t = OP.t;
-  ctx.fillStyle = '#05040f'; ctx.fillRect(0, 0, W, H);
-  if (t < OP_PRO) { // prologue: a magic circle draws itself across the night sky, its eight runes lighting up one by one
-    opSky(t, false);
-    const cx = W / 2, cy = H / 2 + 10, R0 = 170, draw = ease(t / 40), spin = t * 0.01, z = 1 + easeIn(clamp((t - (OP_PRO - 30)) / 30, 0, 1)) * 2.4;
-    ctx.save(); ctx.translate(cx, cy); ctx.scale(z, z); ctx.rotate(spin); ctx.globalCompositeOperation = 'lighter';
-    ctx.strokeStyle = 'rgba(255,215,150,.85)'; ctx.lineWidth = 3; ctx.shadowColor = 'rgba(255,200,120,.9)'; ctx.shadowBlur = 12;
+function opPrologue(t) { // prologue: a magic circle draws itself across the night sky, its eight runes lighting up one by one (t can fall between steps)
+  opSky(t, false);
+  const cx = W / 2, cy = H / 2 + 10, R0 = 170, draw = ease(t / 40), spin = t * 0.01, z = 1 + easeIn(clamp((t - (OP_PRO - 30)) / 30, 0, 1)) * 2.4;
+  ctx.save(); ctx.translate(cx, cy); ctx.scale(z, z); ctx.rotate(spin); ctx.globalCompositeOperation = 'lighter';
+  for (const [lw, col] of [[11, 'rgba(255,190,110,.18)'], [3, 'rgba(255,215,150,.9)']]) { // a soft glow under a bright line (cheaper than a canvas blur)
+    ctx.strokeStyle = col; ctx.lineWidth = lw;
     ctx.beginPath(); ctx.arc(0, 0, R0, 0, Math.PI * 2 * draw); ctx.stroke();
     ctx.beginPath(); ctx.arc(0, 0, R0 * 0.82, Math.PI, Math.PI + Math.PI * 2 * draw); ctx.stroke();
-    if (t > 14) { const sk = ease((t - 14) / 30); ctx.beginPath(); for (let i = 0; i <= 8; i++) { const an = -Math.PI / 2 + i * Math.PI * 2 * 3 / 8; const pt = [Math.cos(an) * R0 * 0.82, Math.sin(an) * R0 * 0.82]; if (i === 0) ctx.moveTo(...pt); else if (i / 8 <= sk) ctx.lineTo(...pt); } ctx.stroke(); } // an eight-pointed star
-    ctx.font = `18px ${HUD}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    OP_ROSTER.forEach((r, i) => { const on = t > 20 + i * 7, an = -Math.PI / 2 + i * Math.PI / 4, x = Math.cos(an) * R0, y = Math.sin(an) * R0;
-      if (!on) return; const a = clamp((t - 20 - i * 7) / 6, 0, 1);
-      const g = ctx.createRadialGradient(x, y, 1, x, y, 34); g.addColorStop(0, `rgba(255,255,255,${a})`); g.addColorStop(0.4, `rgba(${r.col},${a})`); g.addColorStop(1, `rgba(${r.col},0)`); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 34, 0, Math.PI * 2); ctx.fill();
-      ctx.save(); ctx.translate(x, y); ctx.rotate(-spin); ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fillText('ᚠᚢᚦᚨᚱᚲᚷᚹ'[i], 0, 1); ctx.restore(); });
-    ctx.restore();
-    const l1 = clamp((t - 74) / 10, 0, 1) * clamp((OP_PRO - 6 - t) / 8, 0, 1), sc = 1 + 0.25 * (1 - ease((t - 74) / 14));
-    opBigText(L('EIGHT WARRIORS. ONE STAGE.', '八人の戦士、ひとつの舞台。'), W / 2, H / 2 + 10, 46 * sc, '#ffe7b0', l1, 'center', true);
-    if (t > OP_PRO - 14) opFlash((t - (OP_PRO - 14)) / 14);
-  } else if (t < OP_CLASH0) {
+  }
+  ctx.strokeStyle = 'rgba(255,215,150,.9)'; ctx.lineWidth = 3;
+  if (t > 14) { const sk = ease((t - 14) / 30); ctx.beginPath(); for (let i = 0; i <= 8; i++) { const an = -Math.PI / 2 + i * Math.PI * 2 * 3 / 8; const pt = [Math.cos(an) * R0 * 0.82, Math.sin(an) * R0 * 0.82]; if (i === 0) ctx.moveTo(...pt); else if (i / 8 <= sk) ctx.lineTo(...pt); } ctx.stroke(); } // an eight-pointed star
+  ctx.font = `18px ${HUD}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  OP_ROSTER.forEach((r, i) => { const on = t > 20 + i * 7, an = -Math.PI / 2 + i * Math.PI / 4, x = Math.cos(an) * R0, y = Math.sin(an) * R0;
+    if (!on) return; const a = clamp((t - 20 - i * 7) / 6, 0, 1);
+    const g = ctx.createRadialGradient(x, y, 1, x, y, 34); g.addColorStop(0, `rgba(255,255,255,${a})`); g.addColorStop(0.4, `rgba(${r.col},${a})`); g.addColorStop(1, `rgba(${r.col},0)`); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 34, 0, Math.PI * 2); ctx.fill();
+    ctx.save(); ctx.translate(x, y); ctx.rotate(-spin); ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fillText('ᚠᚢᚦᚨᚱᚲᚷᚹ'[i], 0, 1); ctx.restore(); });
+  ctx.restore();
+  const l1 = clamp((t - 74) / 10, 0, 1) * clamp((OP_PRO - 6 - t) / 8, 0, 1), sc = 1 + 0.25 * (1 - ease((t - 74) / 14));
+  opBigText(L('EIGHT WARRIORS. ONE STAGE.', '八人の戦士、ひとつの舞台。'), W / 2, H / 2 + 10, 46 * sc, '#ffe7b0', l1, 'center', true);
+  if (t > OP_PRO - 14) opFlash((t - (OP_PRO - 14)) / 14);
+}
+function renderOpening() {
+  const t = OP.t, tf = OP.ready ? t + RENDER_ALPHA : t; // tf: the movie's time between game steps, for smooth drawing on fast screens
+  ctx.fillStyle = '#05040f'; ctx.fillRect(0, 0, W, H);
+  if (t < OP_PRO) opPrologue(tf);
+  else if (t < OP_CLASH0) {
     const cl = opClipAt(t);
-    if (cl && OP.clip === cl.i && fighters.length) opRenderClip(cl.i, cl.k); else { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); }
+    if (cl && OP.clip === cl.i && fighters.length) opRenderClip(cl.i, cl.k + (tf - t)); else { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); }
   } else if (t < OP_GROUP) {
     const d = t - OP_CLASH0, i = Math.floor(d / OP_CLASH); opClash(OP_CLASHES[i], d - i * OP_CLASH);
-  } else opGroup(t - OP_GROUP);
+  } else opGroup(tf - OP_GROUP);
   // letterbox, and how to skip
   ctx.fillStyle = '#000'; if (t < OP_GROUP) { ctx.fillRect(0, 0, W, 34); ctx.fillRect(0, H - 34, W, 34); }
   if (t < OP_GROUP) { ctx.font = SMALL; ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fillText(OP.soundAsked ? L('🔇 Click or press a key for sound', '🔇 クリックかキーでサウンドON') : L('Any key: skip', '何かキーでスキップ'), W - 14, H - 12); }
@@ -388,7 +417,7 @@ function render() {
   if (!game.paused) drawAnnounce(); // keep round banners from showing through the pause menu
   if (game.superFlash) drawSuperFX(true);
 }
-let last = performance.now(), acc = 0, slowAvg = 1000 / 60, qT = 0;
+let last = performance.now(), acc = 0, slowAvg = 1000 / 60, qT = 0, RENDER_ALPHA = 0; // RENDER_ALPHA: how far between two game steps this frame is drawn (0–1)
 const STEP = 1000 / 60;
 function loop(now) {
   let dt = Math.min(100, now - last); last = now;
@@ -398,6 +427,7 @@ function loop(now) {
   acc += dt;
   if (NET.on && game.mode === 'fight') { while (acc >= STEP) { if (!netStep()) { acc = Math.min(acc, STEP); break; } acc -= STEP; } }
   else while (acc >= STEP) { tick(); acc -= STEP; }
+  RENDER_ALPHA = clamp(acc / STEP, 0, 1);
   render();
   if ((++touchTick & 7) === 0) { updateTouchUI(); updateMoveList(); } // (the touch controls and the rotate screen, checked a few times a second)
   requestAnimationFrame(loop);

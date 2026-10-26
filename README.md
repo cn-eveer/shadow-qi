@@ -5,7 +5,7 @@
 <h1 align="center">Shadow ✕ Qi</h1>
 
 <p align="center"><b>A 2D fighting game that runs in your browser.</b><br>
-Eight fighters · combos & supers · CPU battles · training · real-time online battles · English / 日本語</p>
+Eight fighters · combos & supers · CPU battles (4 difficulties) · training · real-time online battles · 日本語 / English</p>
 
 <p align="center"><a href="https://cn-eveer.github.io/shadow-qi/"><b>▶ Play now</b></a></p>
 
@@ -30,15 +30,40 @@ Eight fighters · combos & supers · CPU battles · training · real-time online
 
 ## Features
 
-- **Combos and supers** — strings, launchers, juggles, charge attacks and a super for every fighter
-- **Readable fights** — technique tells, armor, counters, punish windows, high / low / overhead guarding, visible wake-up invincibility
-- **Sample combos and punishes** for every fighter, played out for you to copy
-- **CPU battles, training mode** with frame data, and **online battles** (random match or room number)
-- An **opening movie** drawn live in the game engine, and entrance / victory poses
-- Sharp at any size: the game renders at 2× (or your screen's full resolution)
-- **Plays on phones and tablets** — on-screen pad and U I J K buttons (hold the phone sideways); add it to your home screen to play full screen
+- **Combos and supers** — strings, launchers, juggles, bounces, charge attacks and a super for every fighter
+- **Readable fights** — technique tells, armor, counters, punish windows, high / low guarding, visible wake-up invincibility
+- **CPU battles** on four difficulties: かんたん / ふつう / むずかしい / 地獄 (Easy / Medium / Hard / Hell)
+- **Training** with a move card that shows one move at a time (name and command) to practise each one
+- **Sample combos and punishes** for every fighter, played out with the inputs on screen — including a *max combo* for each
+- **Online battles** — random match or a room number, browser to browser
+- An **opening movie** drawn live in the game engine, **entrance poses** before every round, and **victory animations**: three per fighter by health left, plus a match-win celebration
+- **Sound** — a piano score that builds into a climax as the round heats up, an announcer (“Round 1! Fight! … Player 1 wins!”), and hit sounds that match each fighter's weapon
+- **Japanese by default**, English one tap away
+- **Plays on phones and tablets** — hold the phone sideways; add it to your home screen to play full screen
 
-## Controls (default)
+## How combos work
+
+A combo can **lift** (L) and **bounce** (B) the opponent only in these orders, each followed by a finisher:
+
+| | Pattern |
+|---|---|
+| lift → lift + finisher | L L |
+| lift → lift → bounce + finisher | L L B |
+| lift → bounce + finisher | L B |
+| lift → bounce → lift + finisher | L B L |
+| bounce → bounce + finisher | B B |
+| bounce → lift + finisher | B L |
+
+- **U, U, I** in a juggle is a lift. It only raises them while it fits the patterns above; past that, they drop out of the combo (“LIFT LIMIT” / “BOUNCE LIMIT”) and can't be hit until they land.
+- **U, U** in the air doesn't raise them: it holds them for a moment (less with every attack), and after the second lift it brings them down — only the finisher is left.
+- **Damage drops as the combo goes on**: the first hit is full, the second does 90%, then 8% less per hit; hits after the second lift or bounce do 60% on top of that.
+- No juggle lasts more than 5 seconds, and ground strings can't be looped (hit-stun shrinks after the first few hits).
+
+Every fighter's sample combos (title screen → *combos*) show these patterns, the max combos included.
+
+## Controls
+
+**Keyboard**
 
 | Move | Keys |
 |---|---|
@@ -46,11 +71,12 @@ Eight fighters · combos & supers · CPU battles · training · real-time online
 | Light / heavy punch | U / I |
 | Light / heavy kick | J / K |
 | Techniques | tap forward twice (→ →) or back twice (← ←) + a button; some also have ↑, ↓ or → versions |
-| Super | U + J together (when the MP bar is full) |
+| Super | U + J together (when the MP gauge is full: it turns gold and reads **MP MAX**) |
+| Pause | Esc |
 
-On a phone: the pad at the bottom left moves you, the 2×2 buttons on the right are U I / J K, and ❚❚ pauses.
+**Phone or tablet** (hold it sideways): the pad on the left moves you (tap it twice quickly for → → or ← ←), the U I / J K buttons are on the right, and ❚❚ pauses. On most phones (wider than 16:9) the controls sit in panels beside the game, not over it; on 16:9 phones and tablets they sit over the game. The game keeps the same size in menus, fights and pauses, and menus shrink to fit if the screen is small.
 
-All keys can be changed in ⚙ Settings, where each fighter's full move list and frame data are also shown.
+**⚙ Settings**: sound, music (BGM), language, CPU difficulty, and each fighter's full move list (with frame data on a computer).
 
 ## Put it online with GitHub Pages
 
@@ -60,23 +86,27 @@ All keys can be changed in ⚙ Settings, where each fighter's full move list and
 3. Open **Settings → Pages**, set **Source: Deploy from a branch**, **Branch: main**, folder **/ (root)**, and **Save**.
 4. After a minute the game is live at `https://<your-name>.github.io/<repository>/`.
 
-To update later, upload the changed files over the old ones.
+To update later, upload the changed files over the old ones — and raise the version number in `index.html` (every `?v=…` after a `.js` or `.css` file name), so browsers load the new files instead of the ones they kept from last time.
+
+> If your address isn't `cn-eveer.github.io/shadow-qi`, change the two `og:` addresses near the top of `index.html` so link previews show the cover image.
 
 ## Where things are
+
+The scripts are plain `<script>` files that share one scope, loaded in the order below — there's no build step: open `index.html` and play.
 
 | File | What's in it |
 |---|---|
 | `index.html` | the page itself: header, game screen, training buttons and the settings drawer |
-| `js/movelist/*.js` | each fighter's move list, English and Japanese (one file per fighter, plus `controls.js`) |
 | `css/style.css` | all styles, including the phone layout and touch controls |
+| `js/movelist/*.js` | each fighter's move list, English and Japanese (one file per fighter, plus `controls.js`) |
 | `js/setup.js` | constants, the skeleton and every pose |
 | `js/charge-attacks.js` | held (charged) heavy attacks |
 | `js/characters.js` | the eight fighters: stats, colours, move sets |
 | `js/moves.js` | every move's timing, hitboxes and effects |
-| `js/input-cpu.js` | keyboard input and the CPU opponent |
+| `js/input-cpu.js` | keyboard input, the CPU opponent and its difficulty levels |
 | `js/demos.js` | sample combos and punishes |
-| `js/state.js` | game state and the fighter update |
-| `js/hits.js` | hit detection, guarding, damage |
+| `js/state.js` | game state, the fighter update, and the lift / bounce rules (`RISE_PATTERNS`) |
+| `js/hits.js` | hit detection, guarding, damage and combo scaling |
 | `js/projectiles.js` | projectiles and special-move helpers |
 | `js/strings.js` | each fighter's combo strings |
 | `js/particles-rounds.js` | particles and the round flow |
@@ -86,12 +116,8 @@ To update later, upload the changed files over the old ones.
 | `js/draw-effects-hud.js` | drawing effects, the stage and the HUD |
 | `js/opening.js` | the render loop and the opening movie (prologue, highlight reel, finale) |
 | `js/online.js` | online play (PeerJS / WebRTC) |
-| `js/audio.js` | sound effects and music |
+| `js/audio.js` | sound effects, the announcer and the music |
 | `js/menus.js` | menus, keyboard, settings, touch controls, training move card |
-
-The scripts are plain `<script>` files loaded in this order and share one scope, so there's no build step: open `index.html` and play.
-
-> If your address isn't `cn-eveer.github.io/shadow-qi`, change the two `og:` addresses near the top of `index.html` so link previews show the cover image.
 
 ---
 
