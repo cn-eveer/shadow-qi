@@ -36,6 +36,7 @@ Eight fighters · combos & supers · CPU battles · training · real-time online
 - **CPU battles, training mode** with frame data, and **online battles** (random match or room number)
 - An **opening movie** drawn live in the game engine, and entrance / victory poses
 - Sharp at any size: the game renders at 2× (or your screen's full resolution)
+- **Plays on phones and tablets** — on-screen pad and U I J K buttons (hold the phone sideways); add it to your home screen to play full screen
 
 ## Controls (default)
 
@@ -47,12 +48,14 @@ Eight fighters · combos & supers · CPU battles · training · real-time online
 | Techniques | tap forward twice (→ →) or back twice (← ←) + a button; some also have ↑, ↓ or → versions |
 | Super | U + J together (when the MP bar is full) |
 
+On a phone: the pad at the bottom left moves you, the 2×2 buttons on the right are U I / J K, and ❚❚ pauses.
+
 All keys can be changed in ⚙ Settings, where each fighter's full move list and frame data are also shown.
 
 ## Put it online with GitHub Pages
 
 1. Create a new **public** repository (for example `shadow-qi`).
-2. Upload **everything in this folder** — `index.html`, `.nojekyll`, `README.md` and the `assets` folder — to the root of the repository (*Add file → Upload files → Commit*).
+2. Upload **everything in this folder** — `index.html`, `manifest.webmanifest`, `.nojekyll`, `README.md` and the `assets` folder — to the root of the repository (*Add file → Upload files → Commit*).
    Tip: `.nojekyll` starts with a dot, so your computer may hide it; it is fine to skip it if you can't see it.
 3. Open **Settings → Pages**, set **Source: Deploy from a branch**, **Branch: main**, folder **/ (root)**, and **Save**.
 4. After a minute the game is live at `https://<your-name>.github.io/<repository>/`.
