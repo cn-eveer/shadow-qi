@@ -34,7 +34,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <h3>Max combos</h3>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>9. Max combo: lift, lift, bounce<small>↓ + I, U, I (Coin Shot), W, U, ↓ + K (Dive Shot), K.</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>9. Max combo: lift, lift<small>↓ + I, U, I (Coin Shot), K.</small></td><td class="cmd">↓ + I</td></tr>
           <tr><td>10. Max combo: lift, bounce, lift<small>↓ + I, U, W, U, ↓ + K (Dive Shot), U, I (Coin Shot), K.</small></td><td class="cmd">↓ + I</td></tr>
         </tbody>
       </table></div>
@@ -106,7 +106,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <h3>最大コンボ</h3>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>9. 最大コンボ：打ち上げ・打ち上げ・バウンド<small>↓+I、U、I（コインショット）、W、U、↓+K（ダイブショット）、K。</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>9. 最大コンボ：打ち上げ・打ち上げ<small>↓+I、U、I（コインショット）、K。</small></td><td class="cmd">↓ + I</td></tr>
           <tr><td>10. 最大コンボ：打ち上げ・バウンド・打ち上げ<small>↓+I、U、W、U、↓+K（ダイブショット）、U、I（コインショット）、K。</small></td><td class="cmd">↓ + I</td></tr>
         </tbody>
       </table></div>

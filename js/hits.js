@@ -110,6 +110,8 @@ const isTech = mv => !!mv.lunge || (!mv.normal && !mv.super && !mv.rushTag);
 const TECH_DMG = 0.8, AIR_TECH = 0.6; // strong techniques do a little less, and much less on a juggled opponent: combos beat a few big hits
 const JUG_HOLD = 2, JUG_FLOAT = 22; // an ordinary juggle hit doesn't raise them: it barely pushes them up, and they hang (light gravity) for a moment
 const STUN_DECAY_AFTER = 6; // hits in a combo before ground hit-stun starts to shrink
+const COMBO_DECAY = 0.08, COMBO_DECAY_TECH = 0.1, COMBO_FLOOR = 0.25, COMBO_FLOOR_TECH = 0.2; // each hit after the second in a combo does 8% less (10% for techniques), down to a quarter (a fifth for techniques)
+const AFTER_TWO_RISES = 0.6; // hits after the combo's second lift or bounce do 60%
 const BOUNCE_DMG = 1.3; // a bounce (slammed into the floor and back up) hits 30% harder
 function applyHit(a, d, h, side, hb, hu) {
   if (d.jugSpent && d.state === 'knock') return null; // the juggle limit was reached: nothing can pick them up again before they land (no infinite juggles)
@@ -226,13 +228,16 @@ function applyHit(a, d, h, side, hb, hu) {
   d.combo = inCombo ? d.combo + 1 : 1;
   if (d.combo === 1) d.comboSerial = a.serial; // the move that started the combo
   const tech = h.tech || (h.proj && !h.juggle && !h.superHit), airTech = tech && juggling;
-  const scale = tech ? Math.max(h.superHit ? 0.8 : 0.3, 1 - 0.1 * (d.combo - 1)) : Math.max(h.superHit ? 0.8 : 0.5, 1 - 0.05 * (d.combo - 1)); // combo hits lose less per hit
+  // the longer the combo, the less each hit does: the first hit is full, the second 90%, then 8% less for every hit after
+  // (never below a floor), and once the combo has used its second lift or bounce every hit after that does less again
+  const scale = d.combo <= 1 ? 1 : Math.max(h.superHit ? 0.5 : tech ? COMBO_FLOOR_TECH : COMBO_FLOOR, 0.9 - (tech ? COMBO_DECAY_TECH : COMBO_DECAY) * (d.combo - 2));
+  const riseScale = (d.rises || '').length >= 2 ? AFTER_TWO_RISES : 1;
   // a single attack does its full damage (all of its own hits); every attack that follows it in the same combo does half
   // the attack that starts a combo does full damage; each following attack keeps 65–95% of its damage depending on how long it takes:
   // a quick jab (about 15 frames from start to finish) keeps 72%, a heavy blow (about 40) 93%, a big technique 95%
   const cm = a.move, frames = cm ? Math.min(cm.startup, 60) + (cm.active || 0) + Math.min(cm.recovery || 0, 60) : 30;
   const comboScale = d.combo > 1 && a.serial !== d.comboSerial && !h.fullDmg ? clamp(0.6 + frames / 120, 0.65, 0.95) : 1; // (a few big, separate heavy techniques keep it all)
-  const dmg = Math.max(1, Math.round(h.dmg * scale * comboScale * (tech ? (airTech ? AIR_TECH : TECH_DMG) : 1) * (h.bounce && h.launch ? BOUNCE_DMG : 1)));
+  const dmg = Math.max(1, Math.round(h.dmg * scale * riseScale * comboScale * (tech ? (airTech ? AIR_TECH : TECH_DMG) : 1) * (h.bounce && h.launch ? BOUNCE_DMG : 1)));
   d.hp = Math.max(0, d.hp - dmg);
   if (a.y > 0 && a.state === 'attack' && a.move && a.move.air && d.juggle && !a.move.manualY && a.move.chain && Object.values(a.move.chain).some(Boolean)) a.vy = Math.max(a.vy, 3.2); // an air combo: hitting them keeps him hanging in the air a moment
   if (a.key === 'kappa' && d.lastVenom !== a.serial) { // the kappa's claws carry river venom
@@ -254,8 +259,8 @@ function applyHit(a, d, h, side, hb, hu) {
   }
   else if (h.launch || cpl || nl) { // launcher: pop them high so they can be juggled
     const weak = h.bounce ? registerBounce(d) : registerUp(d, a); // (a bounce counts on its own, not as a lift)
-    setState(d, 'knock'); d.juggle = true; d.relaunched = false; d.relaunchN = 0; d.vy = weak ? 5 : (h.launchVy || 12.5); d.vx = side * 0.4; d.y = Math.max(d.y, 1); // (same height as before: combos are timed to it)
-    if (!weak) d.jug = 0;
+    setState(d, 'knock'); d.juggle = true; d.relaunched = false; d.relaunchN = 0; d.vy = weak ? Math.min(d.vy, 0) : (h.launchVy || 12.5); d.vx = side * 0.4; d.y = Math.max(d.y, 1); // (same height as before: combos are timed to it)
+    if (!weak) { d.jug = 0; d.jugMoves = 0; }
     if (h.bounce) { // a bounce slams them into the floor: a crater of dust, two shockwaves, a heavy shake and a deep boom
       dustAt(d.x, true); dustAt(d.x + 30, true); dustAt(d.x - 30, true);
       parts.push({ type: 'ering', x: d.x, y: GROUND, r: 10, vr: 11, life: 18, max: 18, col: '255,200,140' }, { type: 'ering', x: d.x, y: GROUND, r: 4, vr: 6, life: 22, max: 22, col: '255,240,200' });
@@ -266,11 +271,16 @@ function applyHit(a, d, h, side, hb, hu) {
   }
   else if (juggling && !h.kd) { // juggle hit: lift them again, a little less each time
     if (!h.hold) d.jug++; setState(d, 'knock');
+    if (a.serial !== d.jugMoveSerial) { d.jugMoveSerial = a.serial; d.jugMoves = (d.jugMoves || 0) + 1; } // (juggle decay counts attacks, not hits: a four-crystal rune chain is one attack)
     const re = h.relaunch && (!d.relaunched || (a.ch.possess === 'angel' && (d.relaunchN || 0) < 2)); // (the angel can relaunch twice: a triple juggle) // Rising Kunai / Rising Dragon Fist: a fresh lift, gentler the higher they already are
-    const lift = re ? clamp(13 - d.y / 25, 8, 12) : h.fixedLift ? h.jugVy : (h.jugVy || 7) * (a.key === 'ninja' ? Math.max(0.62, 1 - 0.045 * d.jug) : Math.max(0.55, 1 - 0.06 * d.jug)); // juggle attacks keep a steady lift (Kuro's fade slower)
+    const lift = re ? clamp(12.5 - d.y / 25, 8, 11.5) : h.fixedLift ? h.jugVy : (h.jugVy || 7) * (a.key === 'ninja' ? Math.max(0.62, 1 - 0.045 * d.jug) : Math.max(0.55, 1 - 0.06 * d.jug)); // juggle attacks keep a steady lift (Kuro's fade slower)
     if (h.relaunch) { d.relaunched = true; d.relaunchN = (d.relaunchN || 0) + 1; }
     const big = re || h.relaunch || lift >= 9.5, weak = big && registerUp(d, a); // a big lift (Rising Kunai, Fire Spout, Qi Geyser...) counts as a lift — every time, so U, U, I can't keep lifting them
-    d.vy = Math.max(d.vy, weak ? 5 : big ? lift : Math.min(lift, JUG_HOLD)); if (!big && !weak) d.floatT = JUG_FLOAT + (a.ch.slowTech || 0) * 2; /* (slower fighters' hits hold them a little longer) */ // only a real lift raises them; other juggle hits (U, U, crystals...) just hold them in the air a moment d.vx = side * ((h.str >= 1 || h.kd) ? 1.2 : 0.6) * (h.jugVy ? 0.75 : 1); d.y = Math.max(d.y, 1); // pushed away in the air only a little (more for heavy hits), so juggles stay together
+    const liftsUsed = ((d.rises || '').match(/L/g) || []).length;
+    if (weak) d.vy = Math.min(d.vy, 0); // past the rules: U, U, I doesn't raise them at all
+    else if (big) d.vy = Math.max(d.vy, lift); // a lift within the rules (U, U, I, Rising Kunai...) raises them
+    else if (liftsUsed >= 2) { d.vy = Math.min(d.vy, 0); d.floatT = 0; } // after the second lift, U, U only brings them down: just the finisher is left
+    else { d.vy = Math.max(d.vy, Math.min(lift, JUG_HOLD)); d.floatT = Math.max(0, JUG_FLOAT - 3 * (d.jugMoves || 0)); } // before that, U, U only holds them a moment (each attack a little less) // only a real lift raises them; other juggle hits (U, U, crystals...) just hold them in the air a moment d.vx = side * ((h.str >= 1 || h.kd) ? 1.2 : 0.6) * (h.jugVy ? 0.75 : 1); d.y = Math.max(d.y, 1); // pushed away in the air only a little (more for heavy hits), so juggles stay together
     if (h.hold) { d.vy = 0.8; d.y = Math.max(1, d.y + (35 - d.y) * 0.3); d.vx = side * 0.3; } // the beam holds a juggled opponent inside it
     if (d.jug >= (a.key === 'ninja' ? 14 : a.key === 'psychic' ? 16 : a.ch.possess === 'angel' ? 18 : 10)) { d.juggle = false; d.jugSpent = true; } // Kuro (and Lyra, whose crystals each count as a hit) can juggle longer // (spent: they drop out, untouchable until they land)
   }

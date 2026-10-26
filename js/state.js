@@ -29,19 +29,21 @@ function resetFighter(f) {
 }
 function setState(f, s) {
   f.state = s; f.st = 0;
-  if (s !== 'knock') f.jugSpent = false; // back on the floor (or hit out of it): a new juggle can start
+  if (s !== 'knock') { f.jugSpent = false; f.airT = 0; } // back on the floor (or hit out of it): a new juggle can start
   if (s === 'stand' || s === 'crouch') f.stunUsed = false;
   if (s === 'stand' || s === 'crouch' || s === 'down') { f.ups = 0; f.bounces = 0; f.rises = ''; } // the combo is over: lifts and bounces start counting again
 }
 // each combo can lift the opponent up twice (a launch, a relaunch or a bounce); the third one barely raises them
-// The only ways a combo can lift (L) and bounce (B) them:  B L L,  B L B,  B B,  L B L,  L L B  (and the start of any of these).
-// Anything else (a third lift, L B B, B B then anything...) and they drop out of the combo, untouchable until they land.
-const RISE_PATTERNS = ['BLL', 'BLB', 'BB', 'LBL', 'LLB'];
+// The only ways a combo can lift (L) and bounce (B) them, each followed by a finisher:
+//   L L,  L L B,  L B,  L B L,  B B,  B L   (and the start of any of these)
+// Anything else (a third lift, B L L, L B B, B B L...) and they drop out of the combo, untouchable until they land.
+const RISE_PATTERNS = ['LLB', 'LBL', 'BB', 'BL'];
+const AIR_MAX = 300; // frames (5 seconds) a juggle can keep them in the air
 const RISE_OK = new Set(RISE_PATTERNS.flatMap(p => [...p].map((_, i) => p.slice(0, i + 1))));
 function registerRise(d, kind, a) {
-  const seq = (d.rises || '') + kind, angel = a && a.ch.possess === 'angel' && seq === 'LLL'; // (the angel can lift them a third time)
+  const seq = (d.rises || '') + kind;
   if (kind === 'L') d.ups = (d.ups || 0) + 1; else d.bounces = (d.bounces || 0) + 1;
-  if (RISE_OK.has(seq) || angel) { d.rises = seq; return false; }
+  if (RISE_OK.has(seq)) { d.rises = seq; return false; }
   popText(d.x, GROUND - d.y - 200, kind === 'L' ? 'LIFT LIMIT' : 'BOUNCE LIMIT', '205,205,220'); d.jugSpent = true;
   return true;
 }
@@ -226,7 +228,7 @@ function land(f) {
   } else if (f.state === 'knock') {
     if (f.bounceOnLand && !f.ko) { // ground bounce from Shadow Meteor: back up into the air, still juggleable
       const weak = registerBounce(f);
-      f.bounceOnLand = false; f.y = 1; f.vy = weak ? 4 : 9.5; f.jug = Math.max(0, (f.jug || 0) - 3);
+      f.bounceOnLand = false; f.y = 1; f.vy = weak ? 0.5 : 9.5; f.jug = Math.max(0, (f.jug || 0) - 3);
       dustAt(f.x, true); parts.push({ type: 'ering', x: f.x, y: GROUND, r: 10, vr: 11, life: 18, max: 18, col: '190,150,255' }, { type: 'ering', x: f.x, y: GROUND, r: 4, vr: 6, life: 22, max: 22, col: '240,220,255' });
       game.shake = Math.max(game.shake, 10); if (!weak) popText(f.x, GROUND - 130, 'BOUNCE!', '255,190,90'); sfx('bounce');
       return;
@@ -368,7 +370,9 @@ function update(f, o, inp) {
   }
   if ((f.y > 0 || f.vy > 0) && !(f.state === 'attack' && f.move && f.move.manualY)) {
     const hang = f.state === 'knock' && f.floatT > 0 ? (f.floatT--, 0.25) : 1; // held by a juggle hit: they hang in the air for a moment (without rising)
-    f.vy -= ((f.state === 'knock' && f.juggle) ? G * 0.62 : G) * hang; f.y += f.vy; // launched opponents float a little, like in Tekken
+    const jugG = G * (0.62 + 0.04 * Math.min(f.jugMoves || 0, 10)); // the longer the juggle (in attacks), the faster they fall
+    f.vy -= ((f.state === 'knock' && f.juggle) ? jugG : G) * hang; f.y += f.vy; // launched opponents float a little, like in Tekken
+    if (f.state === 'knock' && f.juggle && !f.jugSpent && ++f.airT > AIR_MAX) { f.jugSpent = true; f.juggle = false; popText(f.x, GROUND - f.y - 200, 'LIFT LIMIT', '205,205,220'); } // no juggle lasts longer than this, whatever is used
     if (f.y <= 0) { f.y = 0; f.vy = 0; land(f); }
   }
   f.x += f.vx;

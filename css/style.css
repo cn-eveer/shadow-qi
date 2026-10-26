@@ -167,6 +167,7 @@ kbd{display:inline-block;min-width:1.75em;text-align:center;padding:1px 6px;font
 /* touch controls for phones and tablets: see-through, out of the way of the action */
 .touch{position:absolute;inset:0;pointer-events:none;z-index:6;user-select:none;-webkit-user-select:none}
 .touch[hidden]{display:none}
+body.mobile .touch{position:fixed;inset:0;z-index:20} /* (moved beside the game panel on phones: see layoutTouch) */
 .tpad{pointer-events:auto;position:absolute;left:2.5%;bottom:5%;width:15%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.06),rgba(255,255,255,.14));border:2px solid rgba(255,255,255,.32);touch-action:none;box-shadow:0 0 18px rgba(0,0,0,.25) inset}
 .tknob{position:absolute;left:50%;top:50%;width:38%;height:38%;margin:-19% 0 0 -19%;border-radius:50%;background:rgba(255,255,255,.32);border:2px solid rgba(255,255,255,.55);box-shadow:0 4px 12px rgba(0,0,0,.3);transition:transform .05s}
 .tpad .ar{position:absolute;color:rgba(255,255,255,.55);font-size:clamp(8px,1.7cqw,14px);line-height:1}
@@ -185,7 +186,7 @@ kbd{display:inline-block;min-width:1.75em;text-align:center;padding:1px 6px;font
    and the game as big as the screen allows */
 html:has(body.mobile),body.mobile{height:100%;overflow:hidden;overscroll-behavior:none}
 body.mobile header{display:none}
-body.mobile main{height:100dvh;padding:0;display:flex;align-items:center;justify-content:center}
+body.mobile main{height:100dvh;padding:0 env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px);display:flex;align-items:center;justify-content:center}
 body.mobile .stage{width:min(100vw - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px), 100dvh * 16 / 9);border-radius:0;box-shadow:none}
 body.mobile .tbar{position:fixed;bottom:max(4px,env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:8;margin:0;flex-wrap:nowrap}
 body.mobile .tbar .pill{font-size:11px;padding:3px 8px;opacity:.85;white-space:nowrap}

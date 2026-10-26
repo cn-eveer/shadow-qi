@@ -275,9 +275,36 @@ function vKey(code, down) { window.dispatchEvent(new KeyboardEvent(down ? 'keydo
   document.getElementById('tpause').addEventListener('pointerdown', e => { e.preventDefault(); vKey('Escape', true); vKey('Escape', false); });
   touchUI.addEventListener('touchstart', e => e.preventDefault(), { passive: false }); // no scrolling or zooming while playing
 })();
+// phones held sideways: the pad and the buttons sit in panels beside the game (not over it), big, in the lower middle of
+// each panel; the game is narrowed a little to make room. Squarer screens (tablets) keep them over the game, but bigger.
+const stageEl = document.querySelector('.stage');
+let safeProbe = null;
+function safeInsets() { // the notch and rounded corners (env(safe-area-inset-*)), read through a hidden probe
+  if (!safeProbe) { safeProbe = document.createElement('div'); safeProbe.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)'; document.body.appendChild(safeProbe); }
+  const cs = getComputedStyle(safeProbe); return { l: parseFloat(cs.paddingLeft) || 0, r: parseFloat(cs.paddingRight) || 0 };
+}
+function layoutTouch() {
+  if (!IS_MOBILE) return;
+  if (touchUI.parentNode !== document.body) document.body.appendChild(touchUI); // (out of the game panel, so it can sit beside it)
+  const vw = innerWidth, vh = innerHeight, ins = safeInsets(), usable = vw - ins.l - ins.r, playing = !touchUI.hidden; // (menus keep the full width: the panels are only needed in play)
+  const side = playing && usable / vh >= 1.6 ? Math.min(usable * 0.21, Math.max((usable - vh * 16 / 9) / 2, usable * 0.17)) : 0; // width of each side panel (0: no room, controls go over the game)
+  stageEl.style.width = (side ? usable - side * 2 : Math.min(usable, vh * 16 / 9)) + 'px';
+  const pad = document.getElementById('tpad'), btns = document.getElementById('tbtns'), pause = document.getElementById('tpause');
+  let size, padL, btnL, top;
+  if (side) { size = Math.min(side - 14, vh * 0.42); padL = ins.l + (side - size) / 2; btnL = vw - ins.r - side + (side - size) / 2; top = vh * 0.62 - size / 2; }
+  else { const r = stageEl.getBoundingClientRect(); size = Math.min(r.width * 0.19, r.height * 0.36); padL = r.left + r.width * 0.025; btnL = r.right - r.width * 0.025 - size; top = r.bottom - r.height * 0.05 - size; }
+  for (const [el, l] of [[pad, padL], [btns, btnL]]) Object.assign(el.style, { left: l + 'px', top: top + 'px', width: size + 'px', height: size + 'px', right: 'auto', bottom: 'auto' });
+  btns.querySelectorAll('button').forEach(b => { b.style.fontSize = Math.round(size * 0.19) + 'px'; });
+  pad.querySelectorAll('.ar').forEach(a => { a.style.fontSize = Math.round(size * 0.12) + 'px'; });
+  const ps = Math.max(36, Math.min(48, size * 0.36));
+  Object.assign(pause.style, side ? { left: (vw - ins.r - side / 2 - ps / 2) + 'px', top: '14px', width: ps + 'px', height: ps + 'px', right: 'auto', fontSize: Math.round(ps * 0.38) + 'px' }
+    : (() => { const r = stageEl.getBoundingClientRect(); return { left: (r.right - ps - 10) + 'px', top: (r.top + r.height * 0.2) + 'px', width: ps + 'px', height: ps + 'px', right: 'auto', fontSize: Math.round(ps * 0.38) + 'px' }; })());
+  fitCanvas();
+}
+if (IS_MOBILE) { layoutTouch(); addEventListener('resize', layoutTouch); addEventListener('orientationchange', () => setTimeout(layoutTouch, 200)); }
 function updateTouchUI() { // shown only on a phone or tablet, during play (not in menus, pauses or the sample viewer)
   const show = IS_MOBILE && game.mode === 'fight' && !game.paused && !game.netMenu && !game.demo && !game.watch && drawer.hidden;
-  if (touchUI.hidden === show) { touchUI.hidden = !show; if (!show) for (const k of ['left', 'right', 'up', 'down', 'lp', 'hp', 'lk', 'hk']) keys.delete(MAPS.p1[k]); }
+  if (touchUI.hidden === show) { touchUI.hidden = !show; layoutTouch(); if (!show) for (const k of ['left', 'right', 'up', 'down', 'lp', 'hp', 'lk', 'hk']) keys.delete(MAPS.p1[k]); }
   const portrait = IS_MOBILE && innerHeight > innerWidth;
   if (rotUI.hidden === portrait) { rotUI.hidden = !portrait; if (portrait && game.mode === 'fight' && !game.paused && !NET.on && !game.demo) togglePause(true); } // turned upright mid-fight: pause
   if (portrait) { const ja = game.lang === 'ja'; document.getElementById('rotTxt').textContent = ja ? 'スマホを横向きにしてください' : 'Turn your phone sideways to play'; document.getElementById('rotSub').textContent = ja ? 'Shadow ✕ Qi は横画面でプレイします' : 'Shadow ✕ Qi plays in landscape'; }

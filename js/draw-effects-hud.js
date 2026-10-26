@@ -300,9 +300,10 @@ function paintStage() {
   g.addColorStop(0, 'rgba(8,4,20,0)'); g.addColorStop(1, 'rgba(8,4,20,.42)');
   b.fillStyle = g; b.fillRect(0, 0, W, H);
 }
+let QMAX = 3; // the highest resolution allowed; lowered if the frame rate drops (see loop)
 function fitCanvas() { // render at the real screen resolution so edges stay crisp at any window size
   const w = canvas.getBoundingClientRect().width || W;
-  const s = clamp(Math.max(2, w * (window.devicePixelRatio || 1) / W), 2, 3); // HQ: at least 2× (supersampled), so lines and effects stay smooth and clear
+  const s = Math.min(QMAX, clamp(Math.max(2, w * (window.devicePixelRatio || 1) / W), 2, 3)); // HQ: at least 2× (supersampled), so lines and effects stay smooth and clear — unless the device can't keep up (QMAX)
   if (canvas.width === Math.round(W * s) && Math.abs(s - DPR) < 0.02) return;
   DPR = s;
   canvas.width = bg.width = Math.round(W * DPR); canvas.height = bg.height = Math.round(H * DPR);

@@ -27,7 +27,9 @@ function opStartClip(i) { // set up the real game behind the scenes and run it t
   OP.muted = true;
   game.p1Char = c.key; startMatch(true, false, true); setupDemo(c.demo);
   game.mode = 'opening'; updateTbar(); ov.hidden = true;
+  game.phase = 'fight'; game.phaseT = 0; if (game.demoState) { game.demoState.phase = 'run'; game.demoState.t = 0; } // (skip the round and sample intros nobody sees: far less to simulate in one frame)
   for (let n = 0; n < 900; n++) { opSim(); if (game.phase === 'fight' && fighters[0].state === 'attack' && (game.demoState.i >= (c.from || 0))) break; }
+  parts.length = 0; // (the set-up's particles are never seen)
   OP.muted = false; OP.clip = i; OP.z = null; OP.cx = null; OP.cy = null; OP.punch = 0; OP.slowT = 0; OP.lastHp = fighters[1].hp; OP.half = false;
 }
 function opRenderClip(i, k) { // the live game, filmed: zoomed in on the action, letterboxed, with a title tag and the hit counter
@@ -72,7 +74,22 @@ function opRenderClip(i, k) { // the live game, filmed: zoomed in on the action,
   }
 }
 const OP = { t: 0, clip: -1, muted: false };
-function startOpening() {
+function warmOpening() { // prepare the opening's titles ahead of time, a few per frame, so none is drawn for the first time mid-movie
+  if (OP.warm) return; OP.warm = true;
+  const line = L('EIGHT WARRIORS. ONE STAGE.', '八人の戦士、ひとつの舞台。'), tag = L('EIGHT WARRIORS. ONE STAGE.', '八人の戦士。ひとつの舞台。');
+  const jobs = [[line, 48, '#ffe7b0', true], [line, 52, '#ffe7b0', true], [line, 56, '#ffe7b0', true], [line, 60, '#ffe7b0', true], ['SHADOW', 84, '#ffffff', false], ['✕', 72, '#ff6b8a', false], ['QI', 84, '#ffffff', false],
+    [tag, 24, '#ffd27a', false], [L('SUPER!', '超必殺！'), 48, '#ffd23f', true], [L('PRESS ENTER', 'Enterキーで開始'), 20, '#ffffff', false], [L('TAP TO START', 'タップで開始'), 20, '#ffffff', false],
+    ...OP_BATTLE.map(c => [L(CHARS[c.key].title, CHARS[c.key].titleJa).toUpperCase(), 32, '#ffffff', true])];
+  for (let n = 2; n <= 24; n++) jobs.push([L(`${n} HITS`, `${n} ヒット`), 40, '#ffd23f', true]);
+  jobs.push([L('COMBO', 'コンボ'), 16, '#ffffff', false]);
+  const t0 = performance.now(); let i = 0;
+  const next = () => { // one title per frame; the movie's clock waits until they're all ready (2 seconds at most)
+    if (i < jobs.length && performance.now() - t0 < 2000) { try { textBitmap(...jobs[i++]); } catch (e) { i++; } requestAnimationFrame(next); } else OP.ready = true;
+  };
+  requestAnimationFrame(next);
+}
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(warmOpening); else warmOpening();
+function startOpening() { warmOpening();
   if (game.mode !== 'opening') OP.save = { p1: game.p1Char, p2: game.p2Char }; // the footage borrows the fighter picks; put them back afterwards
   initAudio(); game.mode = 'opening'; OP.t = 0; OP.clip = -1; ov.hidden = true; ov.innerHTML = '';
   try { localStorage.setItem('sq-opening', '1'); } catch (e) {}
@@ -80,6 +97,7 @@ function startOpening() {
 function endOpening() { if (game.mode !== 'opening') return; if (OP.save) { game.p1Char = OP.save.p1; game.p2Char = OP.save.p2; } game.demo = false; game.training = false; showMenu(); }
 function skipOpening() { if (OP.t < OP_GROUP) { OP.t = OP_GROUP; OP.clip = -1; } else if (OP.t > OP_GROUP + 110) endOpening(); }
 function openingTick() { // the sound cues of the movie
+  if (!OP.ready) return; // (still preparing the titles: the movie hasn't started)
   const t = ++OP.t;
   if (t === 1) sfx('charge');
 
@@ -117,10 +135,25 @@ function opSpeedLines(col, a, dir = -1, n = 26) { // streaks racing across the s
   }
   ctx.restore();
 }
+// big titles are drawn once into a small image and reused: drawing large text (Japanese especially) straight onto the
+// canvas makes the browser rasterize the glyphs anew at every size, which stalled the opening for a moment
+const TEXT_CACHE = new Map();
+function textBitmap(txt, size, col, italic) {
+  const q = Math.max(8, Math.round(size / 4) * 4), key = txt + '|' + q + '|' + col + '|' + (italic ? 1 : 0); // (made at the resolution of the moment and reused even if it drops later)
+  let b = TEXT_CACHE.get(key); if (b) return b;
+  if (TEXT_CACHE.size > 160) TEXT_CACHE.clear();
+  const c = document.createElement('canvas'), x = c.getContext('2d'), font = `${italic ? 'italic ' : ''}${q}px ${HUD}`;
+  x.font = font; const pad = q * 0.3, w = x.measureText(txt).width + pad * 2, h = q * 1.7;
+  c.width = Math.max(1, Math.ceil(w * DPR)); c.height = Math.ceil(h * DPR); x.scale(DPR, DPR);
+  x.font = font; x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineWidth = q / 7; x.strokeStyle = 'rgba(10,6,24,.9)';
+  x.strokeText(txt, w / 2, h / 2); x.fillStyle = col; x.fillText(txt, w / 2, h / 2);
+  b = { c, w, h, q, pad }; TEXT_CACHE.set(key, b); return b;
+}
 function opBigText(txt, x, y, size, col, a = 1, align = 'center', italic = false) {
-  ctx.save(); ctx.globalAlpha = a; ctx.textAlign = align; ctx.textBaseline = 'middle';
-  ctx.font = `${italic ? 'italic ' : ''}${size}px ${HUD}`; ctx.lineWidth = size / 7; ctx.strokeStyle = 'rgba(10,6,24,.9)'; ctx.strokeText(txt, x, y);
-  ctx.fillStyle = col; ctx.fillText(txt, x, y); ctx.restore();
+  if (a <= 0) return;
+  const b = textBitmap(String(txt), size, col, italic), k = size / b.q, w = b.w * k, h = b.h * k;
+  const left = align === 'left' ? x - b.pad * k : align === 'right' ? x - w + b.pad * k : x - w / 2;
+  ctx.save(); ctx.globalAlpha = a; ctx.drawImage(b.c, left, y - h / 2, w, h); ctx.restore();
 }
 function opFlash(a) { if (a > 0) { ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fillRect(0, 0, W, H); } }
 function opShock(x, y, r, col, a) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(${col},${a})`; ctx.lineWidth = 6 * a + 1; ctx.beginPath(); ctx.ellipse(x, y, r, r * 0.35, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
@@ -355,10 +388,12 @@ function render() {
   if (!game.paused) drawAnnounce(); // keep round banners from showing through the pause menu
   if (game.superFlash) drawSuperFX(true);
 }
-let last = performance.now(), acc = 0;
+let last = performance.now(), acc = 0, slowAvg = 1000 / 60, qT = 0;
 const STEP = 1000 / 60;
 function loop(now) {
   let dt = Math.min(100, now - last); last = now;
+  if (dt < 100 && (game.mode === 'fight' || game.mode === 'opening')) { slowAvg = slowAvg * 0.96 + dt * 0.04; // too slow for 60 fps? render at a lower resolution
+    if (++qT > 120 && slowAvg > 21 && DPR > 1.3) { QMAX = Math.max(1.25, DPR - 0.5); fitCanvas(); qT = 0; slowAvg = STEP; } }
   if (Math.abs(dt - STEP) < 1.5) dt = STEP; else if (Math.abs(dt - STEP / 2) < 1) dt = STEP / 2; // snap to the screen's refresh, so a frame that arrives a hair early or late doesn't run zero or two game steps
   acc += dt;
   if (NET.on && game.mode === 'fight') { while (acc >= STEP) { if (!netStep()) { acc = Math.min(acc, STEP); break; } acc -= STEP; } }

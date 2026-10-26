@@ -31,9 +31,9 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <h3>Six combos, each with one or two juggles</h3>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>1. Rising Staff<small>One juggle: ↓ + I, U, U, K. Two juggles: ↓ + I, U, I (Soaring Staff lifts them again), K as they come down.</small></td><td class="cmd">↓ + I</td></tr>
-          <tr><td>2. Sweeping Staff<small>One juggle: → → + J, U, U, K. Two juggles: → → + J, U, → → + U (Staff Lift raises them again), W, U, I, K.</small></td><td class="cmd">→ → + J</td></tr>
-          <tr><td>3. Pole Vault Smash<small>One juggle: → → + I, U, U, K. Two juggles: → → + I, U, W, U, ↓ + K (Staff Meteor bounces them again), K.</small></td><td class="cmd">→ → + I</td></tr>
+          <tr><td>1. Rising Staff<small>One juggle: ↓ + I, U, U, K. Two juggles: ↓ + I, U, U, I (Pinwheel Rise lifts them again), K.</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>2. Sweeping Staff<small>One juggle: → → + J, U, U. Two juggles: → → + J, I (Pinwheel Rise lifts them again), K.</small></td><td class="cmd">→ → + J</td></tr>
+          <tr><td>3. Pole Vault Smash<small>One juggle: → → + I, U, U, K. Two juggles: → → + I, U, U, → → + I (Vault Spike bounces them again), U, K.</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>4. Somersault Kick<small>One juggle: ← ← + J, U, U, K. Two juggles: ← ← + J, U, ← ← + I (Cloud Chase), U, ↓ + K (Staff Meteor), K.</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>5. Counter Round Swing<small>The round swing launches when it catches an attack starting up. One juggle: K, U, U, K. Two juggles: K, U, → → + I (Vault Spike bounces them again), K.</small></td><td class="cmd">K</td></tr>
           <tr><td>6. Jump-in Falling Staff<small>Jump toward them, I on the way down. One juggle: U, U, K. Two juggles: U, Punch + Kick (Great Sage Pillar up close), U, K.</small></td><td class="cmd">W ↗, I</td></tr>
@@ -104,9 +104,9 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <h3>6つのコンボ（1回打ち上げ／2回打ち上げ）</h3>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>1. 昇り棍<small>1回：↓+I、U、U、K。2回：↓+I、U、I（飛翔棍）、落ちてきたらK。</small></td><td class="cmd">↓ + I</td></tr>
-          <tr><td>2. 足払い棍<small>1回：→→+J、U、U、K。2回：→→+J、U、→→+U（棍上げ）、W、U、I、K。</small></td><td class="cmd">→ → + J</td></tr>
-          <tr><td>3. 棒高跳び叩き<small>1回：→→+I、U、U、K。2回：→→+I、U、W、U、↓+K（棍流星）、K。</small></td><td class="cmd">→ → + I</td></tr>
+          <tr><td>1. 昇り棍<small>1回：↓+I、U、U、K。2回：↓+I、U、U、I（風車昇り）、K。</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>2. 足払い棍<small>1回：→→+J、U、U。2回：→→+J、I（風車昇り）、K。</small></td><td class="cmd">→ → + J</td></tr>
+          <tr><td>3. 棒高跳び叩き<small>1回：→→+I、U、U、K。2回：→→+I、U、U、→→+I（もう一度バウンド）、U、K。</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>4. 宙返り蹴り<small>1回：←←+J、U、U、K。2回：←←+J、U、←←+I（雲乗り）、U、↓+K、K。</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>5. カウンター大回転<small>1回：K、U、U、K。2回：K、U、→→+I（跳び叩き）、K。</small></td><td class="cmd">K</td></tr>
           <tr><td>6. 飛び込み落とし棍<small>相手に向かってジャンプし落ち際にI。1回：U、U、K。2回：U、P+K（至近の斉天大聖の柱）、U、K。</small></td><td class="cmd">W ↗ → I</td></tr>

@@ -107,7 +107,7 @@ const STRINGS = {
     jElbow: SJ('p', 'Beak Peck', 'kIdle', 'kPeckUp', { hop: 'tgt', multi: 3, interval: 3, dmg: 10, lastDmg: 12, hitbox: [5,90,40,230], recovery: 12,
       onFrame: (f, o, mf) => { const k = mf - f.move.startup; if (k === 1 || k === 4 || k === 7) { parts.push({ type: 'ring', x: o.x - f.facing * 6, y: GROUND - o.y - 70 * o.ch.scale, r: 4, vr: 3, life: 8, max: 8, col: '255,210,90' }); sfx('block'); } } }),
     jUpper: SJ('p', 'Rising Rake', 'kClawDown', 'kClawUp', { hop: 80, hitbox: [5,95,20,240], dmg: 30, jugVy: 8, claw: [0, 0, -1.3, 72, null, 'tgt'] }),
-    jRise: { kind: 'p', str: 1, label: 'Geyser Hop', wind: 'kClawDown', pose: 'kClawUp', jug: true, hop: 115, startup: 6, active: 5, recovery: 14, dmg: 34, hitbox: [5,100,20,240],
+    jRise: { kind: 'p', str: 1, label: 'Geyser Hop', wind: 'kClawDown', pose: 'kClawUp', jug: true, hop: 115, startup: 6, active: 5, recovery: 17, dmg: 34, hitbox: [5,100,20,240],
       relaunch: true, jugVy: 8, advHit: 4, advBlock: -10, hitstop: 9, claw: [0, 0, -1.4, 76, null, 'tgt'],
       onFrame: (f, o, mf) => { if (mf === 2) { parts.push({ type: 'wcol', x: f.x, w: 36, life: 16, max: 16, col: '150,215,255' }); sfx('flame'); } } },
     jSpin: SJF('Shell Cannonball', 'kCurl', 'kCurl', { hop: 'tgt', spin: [1, 12], hitbox: [-30,95,0,150], kdVx: 14, recovery: 14,
@@ -187,7 +187,7 @@ STRINGS.kappa.$start.k = null; // the kappa's J is a throw, not the start of a s
 /* ================= U U I and U U K in the air: each fighter's own aerial versions =================
    In a juggle (they're up, you're on the ground): U, U, I relaunches and U, U, K finishes, each different from the ground string.
    Jumping (both in the air): U, U, I is a flurry and U, U, K an aerial finisher. */
-const JR = (label, wind, pose, o = {}) => ({ kind: 'p', str: 1, label, wind, pose, jug: true, startup: 7, active: 4, recovery: 14, dmg: 34, hitbox: [5,100,45,255], relaunch: true, jugVy: 8, advHit: 4, advBlock: -10, hitstop: 9, ...o });
+const JR = (label, wind, pose, o = {}) => ({ kind: 'p', str: 1, label, wind, pose, jug: true, startup: 7, active: 4, recovery: 17, dmg: 34, hitbox: [5,100,45,255], relaunch: true, jugVy: 8, advHit: 4, advBlock: -10, hitstop: 9, ...o });
 const AK = (label, pose, o = {}) => ({ kind: 'p', str: 1, stance: 'j', air: true, hover: true, label, wind: 'jump', pose, startup: 4, active: 9, recovery: 8, multi: 3, interval: 3, dmg: 12, lastDmg: 20, hitbox: [5,92,0,135], jugVy: 3.5, ...o });
 const atO = (o, dy = 70) => [o.x, GROUND - o.y - dy * o.ch.scale];
 Object.assign(STRINGS.ninja, {
@@ -234,7 +234,7 @@ Object.assign(STRINGS.staff, {
     drawFX(f) { if (f.mf > 14) return; fxLighter(() => { ctx.strokeStyle = 'rgba(255,210,110,.75)'; ctx.lineWidth = 6; ctx.beginPath(); ctx.ellipse(f.x, GROUND - f.y - 80, 120, 40, 0, f.mf * 0.7, f.mf * 0.7 + 4.4); ctx.stroke(); }); } }),
 });
 Object.assign(STRINGS.psychic, {
-  jRise: { kind: 'p', str: 1, label: 'Crystal Meteor', wind: 'psyRaise', pose: 'psyCast', jug: true, stay: true, startup: 19, active: 3, recovery: 14, dmg: 0, hitbox: null, relaunch: true, // a great magic circle opens high above them and a giant crystal meteor falls out of it
+  jRise: { kind: 'p', str: 1, label: 'Crystal Meteor', wind: 'psyRaise', pose: 'psyCast', jug: true, stay: true, startup: 19, active: 3, recovery: 17, dmg: 0, hitbox: null, relaunch: true, // a great magic circle opens high above them and a giant crystal meteor falls out of it
     onFrame: (f, o, mf) => { f.vx = 0; const S = f.move.startup; if (mf === 2) sfx('charge');
       if (mf === S && Math.abs(o.x - f.x) <= LYRA_RANGE) { const y = GROUND - o.y - 70 * o.ch.scale;
         columnHit(f, o, { dmg: 36, stun: 24, bstun: 12, push: 0.4, juggle: true, jugVy: 10, relaunch: true, hitstop: 12, label: 'Crystal Meteor' });
@@ -520,7 +520,7 @@ function chainMoveBase(id, f) {
       jugVy: 7.5, advHit: 6, advBlock: 0, wind: 'jabW', pose: 'elbowUp', selfMove: true, onFrame: juggleStep, chain: { lp: 'jUpper', hk: 'jSpin', hp: 'jRise' } };
     case 'jUpper': return { ...base, kind: 'p', str: 0, label: 'Uppercut', startup: 5, active: 4, recovery: 12, dmg: 30, hitbox: [5,80,45,240],
       jugVy: 8, advHit: 6, advBlock: -2, wind: 'uppercutW', pose: 'uppercut', selfMove: true, onFrame: juggleStep, chain: { hk: 'jSpin', hp: 'jRise' } };
-    case 'jRise': return { ...base, kind: 'p', str: 1, label: K ? 'Rising Kunai' : 'Rising Qi Fist', startup: 7, active: 4, recovery: 14, dmg: 34, hitbox: [5,92,45,240],
+    case 'jRise': return { ...base, kind: 'p', str: 1, label: K ? 'Rising Kunai' : 'Rising Qi Fist', startup: 7, active: 4, recovery: 17, dmg: 34, hitbox: [5,92,45,240],
       relaunch: true, jugVy: 8, blade: K, aura: !K, advHit: 4, advBlock: -10, hitstop: 9, wind: 'uppercutW', pose: 'kunaiRise', selfMove: true, onFrame: juggleStep,
       trail: { cx: 10, cy: 90, r: 95, a0: -30, a1: 95, col: K ? '225,235,255' : FXC }, chain: { hk: 'jSpin' } };
     case 'jSpin': return { ...base, kind: 'k', str: 1, label: 'Spin Kick', startup: 7, active: 4, recovery: 16, dmg: 40, hitbox: [10,104,30,270],

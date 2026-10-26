@@ -49,8 +49,8 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <h3>Max combos</h3>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>13. Max combo: lift, lift, bounce<small>↓ + I, U, U, I (Ascension), → → + J (Windmill Crash), U, K.</small></td><td class="cmd">↓ + I</td></tr>
-          <tr><td>14. Max combo: bounce, lift, bounce<small>→ → + K (Crusader Leap), U, U, I (Ascension), → → + J (Windmill Crash), U, K.</small></td><td class="cmd">→ → + K</td></tr>
+          <tr><td>13. Max combo: lift, lift, bounce<small>↓ + I, U, U, I (Ascension), → → + J (Windmill Crash), K.</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>14. Max combo: bounce, bounce<small>→ → + K (Crusader Leap), U, U, → → + J (Windmill Crash), U, K.</small></td><td class="cmd">→ → + K</td></tr>
         </tbody>
       </table></div>
       <h3>Frame data</h3>
@@ -138,8 +138,8 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <h3>最大コンボ</h3>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>13. 最大コンボ：打ち上げ・打ち上げ・バウンド<small>↓+I、U、U、I（昇天）、→→+J（風車の叩きつけ）、U、K。</small></td><td class="cmd">↓ + I</td></tr>
-          <tr><td>14. 最大コンボ：バウンド・打ち上げ・バウンド<small>→→+K（聖戦の跳躍）、U、U、I（昇天）、→→+J（風車の叩きつけ）、U、K。</small></td><td class="cmd">→ → + K</td></tr>
+          <tr><td>13. 最大コンボ：打ち上げ・打ち上げ・バウンド<small>↓+I、U、U、I（昇天）、→→+J（風車の叩きつけ）、K。</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>14. 最大コンボ：バウンド・バウンド<small>→→+K（聖戦の跳躍）、U、U、→→+J（風車の叩きつけ）、U、K。</small></td><td class="cmd">→ → + K</td></tr>
         </tbody>
       </table></div>
       <h3>フレームデータ</h3>

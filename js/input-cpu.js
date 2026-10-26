@@ -156,6 +156,10 @@ class CPU {
       out.btn = o.jug >= 3 ? 'hk' : (Math.random() < 0.6 ? 'lp' : 'hp'); return out;
     }
     const canAct = f.state === 'stand' || f.state === 'crouch' || f.state === 'guard';
+    // like a player, it keeps holding guard as it comes out of a hit while they're still pressing (so a string can't just be restarted on it)
+    if (f.state === 'hitstun' || f.state === 'blockstun') { if (!this.holdDecided) { this.holdDecided = true; this.holdGuard = Math.random() < (game.watch ? 0.6 : dif().block); } this.holdUntil = frame + 14; }
+    else this.holdDecided = false;
+    if (canAct && this.holdGuard && frame < this.holdUntil && dist < 170 && (o.state === 'attack' || o.atkCD > 0)) { out.h = -fwd; if (isLowAtk(o)) out.down = true; return out; }
     if (canAct && f.atkCD <= 0 && o.state === 'attack' && o.move && o.y <= 0 && this.routeReact !== o.serial && dist < 150) {
       this.routeReact = o.serial;
       const early = o.mf <= Math.min(3, o.move.startup);
