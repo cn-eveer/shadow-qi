@@ -55,12 +55,41 @@ All keys can be changed in ⚙ Settings, where each fighter's full move list and
 ## Put it online with GitHub Pages
 
 1. Create a new **public** repository (for example `shadow-qi`).
-2. Upload **everything in this folder** — `index.html`, `manifest.webmanifest`, `.nojekyll`, `README.md` and the `assets` folder — to the root of the repository (*Add file → Upload files → Commit*).
+2. Upload **everything in this folder** — `index.html`, `manifest.webmanifest`, `.nojekyll`, `README.md` and the `css`, `js` and `assets` folders — to the root of the repository (*Add file → Upload files → Commit*).
    Tip: `.nojekyll` starts with a dot, so your computer may hide it; it is fine to skip it if you can't see it.
 3. Open **Settings → Pages**, set **Source: Deploy from a branch**, **Branch: main**, folder **/ (root)**, and **Save**.
 4. After a minute the game is live at `https://<your-name>.github.io/<repository>/`.
 
-To update later, upload the new `index.html` over the old one.
+To update later, upload the changed files over the old ones.
+
+## Where things are
+
+| File | What's in it |
+|---|---|
+| `index.html` | the page itself: header, game screen, training buttons and the settings drawer |
+| `js/movelist/*.js` | each fighter's move list, English and Japanese (one file per fighter, plus `controls.js`) |
+| `css/style.css` | all styles, including the phone layout and touch controls |
+| `js/setup.js` | constants, the skeleton and every pose |
+| `js/charge-attacks.js` | held (charged) heavy attacks |
+| `js/characters.js` | the eight fighters: stats, colours, move sets |
+| `js/moves.js` | every move's timing, hitboxes and effects |
+| `js/input-cpu.js` | keyboard input and the CPU opponent |
+| `js/demos.js` | sample combos and punishes |
+| `js/state.js` | game state and the fighter update |
+| `js/hits.js` | hit detection, guarding, damage |
+| `js/projectiles.js` | projectiles and special-move helpers |
+| `js/strings.js` | each fighter's combo strings |
+| `js/particles-rounds.js` | particles and the round flow |
+| `js/pose-select.js` | which pose a fighter shows each frame |
+| `js/victory.js` | round-win animations (three per fighter, by health left) and match-win celebrations |
+| `js/draw-fighters.js` | drawing the fighters |
+| `js/draw-effects-hud.js` | drawing effects, the stage and the HUD |
+| `js/opening.js` | the render loop and the opening movie (prologue, highlight reel, finale) |
+| `js/online.js` | online play (PeerJS / WebRTC) |
+| `js/audio.js` | sound effects and music |
+| `js/menus.js` | menus, keyboard, settings, touch controls, training move card |
+
+The scripts are plain `<script>` files loaded in this order and share one scope, so there's no build step: open `index.html` and play.
 
 > If your address isn't `cn-eveer.github.io/shadow-qi`, change the two `og:` addresses near the top of `index.html` so link previews show the cover image.
 

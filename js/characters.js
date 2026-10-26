@@ -1,0 +1,251 @@
+'use strict';
+/* ================= characters ================= */
+const CHARS = {
+  ninja: {
+    name: 'KURO', title: 'Shadow Ninja', nameJa: 'クロ', titleJa: '影の忍者', jugDmg: 1.15, scale: 1, walk: 3.4, back: 2.8, jumpX: 4.4,
+    pDmg: 0.9, kDmg: 0.92, pReach: 1, kReach: 1.08, chargeRate: 0.5, auraCol: '185,145,255',
+    sp: { fP: 'shadowCharge', fPH: 'swordSlash', fK: 'cloneStrike', fKH: 'teleKick', bP: 'flame', bPH: 'fireballs', bK: 'vanishSlide', bKH: 'vanishDrop' }, sup: 'shadowArmy',
+    heavy: {
+      p: { label: 'Kunai Slash', startup: 9, active: 5, recovery: 18, hitbox: [10,104,106,140], wind: 'slashW', pose: 'slash', blade: true, lunge: [3, 9, 4.5], hitstop: 10, speedFx: true,
+        trail: { cx: 15, cy: 105, r: 80, a0: 80, a1: -35, col: '225,235,255' } },
+      k: { label: 'Crescent Kick', startup: 10, active: 5, recovery: 19, hitbox: [15,92,45,140], wind: 'crescentW', pose: 'crescent', lunge: [2, 8, 3.5], cpLaunch: true, launchVy: 13,
+        trail: { cx: 0, cy: 62, r: 78, a0: -45, a1: 95, col: '190,150,255' } },
+    },
+    colors: { cloth: '#29324d', back: '#181d2e', dark: '#0f131e', wrap: '#4a5674', glove: '#141822', accent: '#dd3a52', skin: '#f1d0aa', metal: '#8d97b0' },
+    meterCol: ['#7d4ff0', '#d8c0ff'], bannerCol: 'rgba(110,70,220,.88)', fxCol: '190,150,255', idle: 'idle', chargePose: 'seal', winPose: 'seal', atkCD: 8, recoverT: 8, hitFx: 'slash',
+  },
+  brawler: {
+    name: 'TETSU', title: 'Qi Brawler', nameJa: 'テツ', titleJa: '気の拳士', armor: 3, jugDmg: 1.2, scale: 1.08, walk: 3.0, back: 2.4, jumpX: 3.9,
+    pDmg: 1.4, kDmg: 1.2, pReach: 1.04, kReach: 0.96, chargeRate: 0.68, auraCol: '125,235,255',
+    sp: { fP: 'qiBlast', fPH: 'meteorFist', fK: 'qiSweep', fKH: 'shoulder', bP: 'qiOrb', bPH: 'qiParry', bK: 'stomp', bKH: 'tornado', dP: 'risingFist' }, sup: 'qiCannon',
+    heavy: {
+      p: { label: 'Qi Palm', startup: 10, active: 4, recovery: 19, hitbox: [20,118,106,130], wind: 'palmW', pose: 'palm', lunge: [3, 11, 5], push: 10, gdrain: 22, burst: [80, 108] },
+      k: { label: 'Axe Kick', startup: 10, active: 4, recovery: 19, hitbox: [20,104,0,150], wind: 'axeW', pose: 'axe', lunge: [3, 11, 5.5], cpLaunch: true, launchVy: 13, kd: true, stomp: [56, 0],
+        trail: { cx: 5, cy: 62, r: 72, a0: 100, a1: -20, col: '255,215,160' } },
+    },
+    colors: { skin: '#c98b5e', skinB: '#a46c45', pants: '#2d303c', pantsB: '#1e2029', vest: '#2f7d5c', vestB: '#235c44', wrap: '#f0e8d8', wrapB: '#cdc4b1', hair: '#18120e', band: '#8a5129', belt: '#5a3a1f', shoe: '#17181c', bead: '#7a4b2a', sash: '#c23b2e' },
+    meterCol: ['#14a8c8', '#b4f7ff'], bannerCol: 'rgba(16,150,190,.88)', fxCol: '125,235,255', idle: 'idleT', chargePose: 'charge', winPose: 'win', atkCD: 14, recoverT: 12, hitFx: 'hex',
+  },
+  staff: {
+    name: 'MEI', title: 'Staff Prodigy', nameJa: 'メイ', titleJa: '棍の天才', dmgMul: 0.92, guardDmgMul: 0.6, slowTech: 4, pushMul: 1.6, prePose: 'chargeB', jugDmg: 1.15, scale: 0.94, walk: 3.6, back: 3.0, jumpX: 4.8, jumpV: 19.5, doubleJump: true,
+    pDmg: 1.35, kDmg: 1.2, pReach: 1.9, kReach: 1.0, chargeRate: 0.66, auraCol: '255,200,90', fxCol: '255,205,110',
+    sp: { fP: 'extendStaff', fPH: 'vaultSmash', fK: 'sweepStaff', fKH: 'poleKick', bP: 'windmill', bPH: 'cloudLeap', bK: 'somersault', bKH: 'feint' }, sup: 'greatSage',
+    heavy: {
+      p: { label: 'Staff Sweep', startup: 10, active: 5, recovery: 18, hitbox: [10,195,50,150], wind: 'staffSwingW', pose: 'staffSwing', lunge: [3, 9, 3.5], hitstop: 10, spinWind: true,
+        trail: { cx: 20, cy: 100, r: 120, a0: 120, a1: -20, col: '255,205,110' } },
+      k: { label: 'Round Swing', startup: 11, active: 8, recovery: 18, hitbox: [-150,195,20,170], wind: 'staffSwingW', pose: 'staffWhirl', lunge: [3, 9, 3], cpLaunch: true, launchVy: 13, kd: true, kdVx: 10,
+        spin: [11, 19], spinStaff: true, trail: { cx: 0, cy: 95, r: 150, a0: -170, a1: 170, col: '255,205,110' } },
+    },
+    normalLook: {
+      sp0: { label: 'Staff Thrust', wind: 'thrustW', pose: 'thrust', staffExt: 40, hitbox: [20,175,92,128] },
+      cp1: { label: 'Rising Staff', wind: 'crouch', pose: 'staffRise', trail: { cx: 20, cy: 90, r: 110, a0: -40, a1: 100, col: '255,205,110' } },
+      jp0: { label: 'Air Staff Poke', wind: 'jump', pose: 'airStaff' },
+      sk0: { label: 'Low Thrust', wind: 'staffHighW', pose: 'staffLowThrust', staffExt: 30, hitbox: [20,165,0,60], trail: { cx: 20, cy: 85, r: 125, a0: 60, a1: -35, col: '255,205,110' } },
+      ck0: { label: 'Crouch Staff Poke', wind: 'crouch', pose: 'staffLowCrouch', hitbox: [20,150,0,30] },
+      ck1: { label: 'Staff Floor Sweep', wind: 'crouch', pose: 'staffSweep', spinStaff: true, hitbox: [20,195,0,30] },
+      jk0: { label: 'Air Staff Low Swing', wind: 'jump', pose: 'airStaffDown', hitbox: [10,135,0,60] },
+      jk1: { label: 'Air Staff Whirl', wind: 'jump', pose: 'airStaffWhirl', spinStaff: true, hitbox: [-40,145,0,90] },
+      jp1: { label: 'Falling Staff', wind: 'slamWAir', pose: 'airStaffDown', launch: true, launchVy: 10, bounce: true, hitbox: [0,145,-10,110], spinWind: true,
+        trail: { cx: 20, cy: 90, r: 110, a0: 110, a1: -40, col: '255,205,110' } },
+    },
+    colors: { jacket: '#c8322d', jacketB: '#9a231f', trim: '#f2c14e', pants: '#23252f', pantsB: '#17181f', skin: '#f2cba3', hair: '#1c1410', shoe: '#121216', sock: '#f4f1ea', staff: '#8a4f22', staffB: '#5e3416', cap: '#f2c14e' },
+    meterCol: ['#d98a1c', '#ffe28a'], bannerCol: 'rgba(200,120,20,.88)', idle: 'idleB', chargePose: 'chargeB', winPose: 'winB', atkCD: 8, recoverT: 8, hitFx: 'star',
+  },
+  psychic: {
+    name: 'LYRA', title: 'Psychic Sage', nameJa: 'ライラ', titleJa: '超能力の賢者', dmgMul: 1.15, slowTech: 13, normalPre: 6, pushMul: 1.5, reachMul: 1.22, stringDelay: 9, prePose: 'psyCast', jugDmg: 1.0, jugHitMul: 1.2, scale: 1.0, walk: 4.0, back: 4.0, jumpX: 5.0, // (her magic is the slowest to come out, but she moves quickly)
+    hover: true, orbs: true,
+    pDmg: 0.9, kDmg: 0.9, pReach: 1.15, kReach: 1.0, chargeRate: 0.48, auraCol: '200,160,255', fxCol: '210,190,255',
+    sp: { fP: 'phantomFist', fPH: 'crushFist', fK: 'psyLift', fKH: 'forceWave', bP: 'orbBurst', bPH: 'tripleRay', bK: 'orbStrong', bKH: 'orbLong' }, sup: 'thousandFists',
+    heavy: {
+      p: { label: 'Glyph Burst', startup: 12, active: 5, recovery: 18, hitbox: [40,195,85,145], wind: 'psyW', pose: 'psyPush', lunge: [2, 8, 1], hitstop: 10, push: 8, psyFist: [150, 115, 1], onStart: (f, o) => lyraReach(f, o, LYRA_RANGE, 120) },
+      k: { label: 'Gravity Well', startup: 13, active: 4, recovery: 19, hitbox: [40,185,0,170], wind: 'psyRaise', pose: 'psyDown', lunge: [2, 8, 1], cpLaunch: true, launchVy: 13, kd: true, psyFist: [130, 55, 1.15, 1], onStart: (f, o) => lyraReach(f, o, LYRA_RANGE, 110) },
+    },
+    normalLook: {
+      sp0: { label: 'Ripple', noCrystal: true, wind: 'psyW', pose: 'psyPush', hitbox: [40,138,94,132], psyFist: [100, 112, 0.55], onStart: (f, o) => lyraReach(f, o, LYRA_RANGE, 80), onFrame: (f, o, mf) => { if (mf <= f.move.startup) lyraReach(f, o, LYRA_RANGE, 80); } },
+      cp1: { label: 'Ground Burst', wind: 'psyW', pose: 'psyUp', crouch: false, hitbox: [40,175,0,200], groundBurst: 115 },
+      jp1: { label: 'Falling Glyph', pose: 'airPsyDown', hitbox: [10,115,10,100], psyFist: [85, 60, 0.8, 0.5] },
+      sk0: { label: 'Floor Glyph', wind: 'psyW', pose: 'psyLowCast', hitbox: [80,195,0,42], floorGlyph: 145, onStart: (f, o) => lyraReach(f, o, LYRA_RANGE, 110), onFrame: (f, o, mf) => { if (mf <= f.move.startup) lyraReach(f, o, LYRA_RANGE, 80); } },
+      sk1: null,
+      ck0: { label: 'Crouch Floor Glyph', wind: 'crouch', pose: 'psyLowCast', hitbox: [70,180,0,30], floorGlyph: 130 },
+      ck1: { label: 'Glyph Trip', wind: 'crouch', pose: 'psyLowCast', hitbox: [90,215,0,30], floorGlyph: 160 },
+      jk0: { label: 'Air Glyph Drop', wind: 'jump', pose: 'airPsyDown', hitbox: [10,110,0,60], psyFist: [70, 25, 0.6, 1] },
+      jk1: { label: 'Air Glyph Spin', wind: 'jump', pose: 'airPsyBoth', hitbox: [-30,120,0,90], psyFist: [60, 50, 0.75, 0.5] },
+    },
+    crouchPose: 'crouchL',
+    colors: { robe: '#4d2a72', robeB: '#2f1a48', trim: '#f4c6f0', sash: '#d6539f', skin: '#f4d6c6', hair: '#ece6fb', hairB: '#bdb3dc', shoe: '#2a1b3a', gem: '#ff7ad9' },
+    meterCol: ['#c04fd8', '#ffc3f4'], bannerCol: 'rgba(170,60,190,.88)', idle: 'idleL', chargePose: 'chargeL', winPose: 'winL', atkCD: 12, recoverT: 12, hitFx: 'ripple',
+  },
+  paladin: {
+    name: 'ALDRIC', title: 'Holy Paladin', nameJa: 'アルドリック', titleJa: '聖騎士', autoBlock: true, dmgMul: 1.3, guardDmgMul: 0.55, guardMul: 0.42, sturdy: true, jugDmg: 1.2, scale: 1.08, walk: 2.5, back: 1.9, jumpX: 3.0, jumpV: 14,
+    pDmg: 1.05, kDmg: 1.0, pReach: 1.5, kReach: 1.3, chargeRate: 0.55, auraCol: '190,225,255', fxCol: '205,232,255',
+    sp: { fP: 'plRampart', fPH: 'plJudgeThrust', fK: 'plWindmill', fKH: 'plLeap', bP: 'plParryRise', bPH: 'plParryStun', bK: 'plAegis', bKH: 'plPray' }, sup: 'plJudgement',
+    heavy: { // both heavies can be held to charge them up (three levels)
+      p: { label: 'Heavy Cleave', held: true, dmgFixed: 66, startup: 999, active: 6, recovery: 24, hitbox: [10,180,0,195], wind: 'pCleaveW', pose: 'pCleave', hitstop: 12, kd: true, kdVx: 7, gdrain: 16, onFrame: chargeCleave },
+      k: { label: 'Heavy Thrust', held: true, dmgFixed: 58, startup: 999, active: 5, recovery: 24, hitbox: [20,170,80,135], wind: 'pThrustW', pose: 'pThrust', wrist: 0, hitstop: 10, gdrain: 14, onFrame: chargeThrust, drawFX: excaliburFX,
+        poseFn: (f, mf) => !f.move.fired ? (f.move.lvl >= 1 ? POSES.pCleaveW : null) : (f.move.excal && mf < f.move.startup - 3 ? POSES.pCleaveW : null) },
+    },
+    normalLook: {
+      sp0: { label: 'Pommel Strike', wind: 'pBashW', pose: 'pSlash', hitbox: [20,150,85,140] },
+      cp1: { label: 'Rising Shield', wind: 'pQuake', pose: 'pShieldUp', hitbox: [10,135,40,200] },
+      sk0: { label: 'Low Cut', wind: 'pThrustW', pose: 'pLowCut', hitbox: [20,165,0,50] },
+      ck0: { label: 'Crouch Sword Poke', wind: 'crouch', pose: 'pLowCut', hitbox: [20,150,0,32] },
+      ck1: { label: 'Shield Trip', wind: 'crouch', pose: 'pLowCut', hitbox: [20,170,0,32] },
+      jp0: { label: 'Air Pommel', wind: 'jump', pose: 'pAir', hitbox: [10,95,40,120] },
+      jp1: { label: 'Air Slash', wind: 'jump', pose: 'pAirDown', hitbox: [10,130,0,110] },
+      jk0: { label: 'Air Shield Knee', wind: 'jump', pose: 'pAir', hitbox: [10,90,10,90] },
+      jk1: { label: 'Air Shield Drop', wind: 'jump', pose: 'pAirDown', hitbox: [0,110,0,100] },
+    },
+    crouchPose: 'crouchP',
+    colors: { plate: '#c9d1db', plateB: '#98a2b0', plateD: '#5c6675', trim: '#e8c25a', trimB: '#b8912f', tabard: '#f4f1e8', tabardB: '#d6cfbf', cross: '#2f5aa8',
+      cape: '#2f4f8f', capeB: '#203763', shield: '#2f5aa8', shieldB: '#203763', blade: '#e9eef5', grip: '#5a3a22', plume: '#c0392b', visor: '#1b1e26' },
+    meterCol: ['#d6a22c', '#fff0b8'], bannerCol: 'rgba(200,160,40,.9)', idle: 'idleP', chargePose: 'chargeP', winPose: 'winP', atkCD: 10, recoverT: 10, hitFx: 'holy',
+  },
+};
+Object.assign(CHARS, {
+  kappa: {
+    name: 'KAPPA', title: 'Mythic Kappa', nameJa: 'カッパ', titleJa: '幻獣カッパ', dmgMul: 1.3, scale: 0.86, walk: 3.3, back: 2.9, jumpX: 4.4, jumpV: 17, jugDmg: 1.1,
+    pDmg: 1.0, kDmg: 1.0, pReach: 1.1, kReach: 0.9, chargeRate: 0.62, auraCol: '120,220,200', fxCol: '140,215,255',
+    sp: { fP: 'kpPlate', fPH: 'kpCannon', fK: 'kpPounce', fKH: 'kpFrenzy', bP: 'kpBubble', bPH: 'kpGeyser', bK: 'kpShell', bKH: 'kpCucumber' }, sup: 'kpFlood',
+    heavy: { // no kicks: the K button grabs and throws
+      p: { label: 'Rending Claws', startup: 10, active: 5, recovery: 18, hitbox: [10,150,40,160], wind: 'kClawUp', pose: 'kClawX', lunge: [3, 9, 4.5], hitstop: 11, claw: [95, 110, 0.9, 70] },
+      k: { label: 'Whirlpool Toss', grab: true, startup: 7, active: 3, recovery: 26, hitbox: [10,92,20,150], wind: 'kGrab', pose: 'kToss', dmg: 58, stun: 24, launch: true, launchVy: 13, hitstop: 12, gdrain: 0, onFrame: kappaToss },
+    },
+    normalLook: {
+      sp0: { label: 'Claw Swipe', wind: 'kClawUp', pose: 'kClawDown', claw: [80, 100, 0.8, 44] },
+      sp1: { label: 'Rending Claws', claw: [95, 110, 0.9, 70] },
+      cp1: { label: 'Upward Rake', wind: 'kClawDown', pose: 'kClawUp', hitbox: [10,135,40,195], claw: [60, 140, -1.3, 70] },
+      sk0: { label: 'Sumo Toss', grab: true, wind: 'kGrab', pose: 'kToss', hitbox: [10,92,20,150], startup: 6, recovery: 22, dmg: 46, kd: true, kdVx: 6, kdVy: 9, chain: null, low: false, onFrame: kappaToss },
+      ck0: { label: 'Low Claw', wind: 'crouch', pose: 'kLowClaw', hitbox: [20,120,0,40], claw: [80, 30, 0.2, 40] },
+      ck1: { label: 'Ankle Rake', wind: 'crouch', pose: 'kLowClaw', hitbox: [20,150,0,30], claw: [95, 24, 0.1, 54] },
+      jk0: { label: 'Air Claw Drop', wind: 'jump', pose: 'kAirClaw', hitbox: [10,100,0,90], claw: [70, 70, 1.0, 50] },
+      jp0: { label: 'Air Rake', wind: 'jump', pose: 'kAirClaw', claw: [70, 90, 0.8, 44] },
+      jp1: { label: 'Air Rending Claws', wind: 'jump', pose: 'kClawDown', claw: [80, 80, 0.9, 60] },
+      jk1: { label: 'Water Drop', wind: 'jump', pose: 'kAirClaw', hitbox: [0,110,-10,80], onFrame: (f, o, mf) => { if (mf === 6) spawnPJ(f, 'water', { x: f.x + f.facing * 30, y: f.y + 60, vx: f.facing * 6, vy: -8, life: 30, r: 12, h: { dmg: 26, stun: 18, bstun: 10, push: 2, gdrain: 6, label: 'Water Drop', juggle: true, jugVy: 5 } }); } },
+    },
+    colors: { skin: '#6fc27a', skinB: '#4f9a5a', belly: '#f3e7a4', shell: '#4f8a3d', shellB: '#35652a', beak: '#f2b134', plate: '#f4f7fb', water: '#8fd3f4', hair: '#2f5d2a', claw: '#f6f0dc' },
+    meterCol: ['#3fb39a', '#b8f3ff'], bannerCol: 'rgba(40,150,130,.88)', idle: 'kIdle', chargePose: 'kEat', winPose: 'kWin', atkCD: 9, recoverT: 9, hitFx: 'claw',
+  },
+  gunman: {
+    idle: 'gHolster', name: 'JESSE', title: 'Gunslinger', nameJa: 'ジェシー', titleJa: 'ガンマン', dmgMul: 1.35, scale: 1.02, walk: 3.3, back: 2.9, jumpX: 4.4, jumpV: 17.5, jugDmg: 1.05,
+    pDmg: 0.95, kDmg: 0.95, pReach: 1.0, kReach: 1.0, chargeRate: 0.6, auraCol: '255,210,140', fxCol: '255,230,160',
+    sp: { fP: 'gnFan', fPH: 'gnQuick', fK: 'gnRoll', fKH: 'gnJumpShot', bP: 'gnDyna', bPH: 'gnDance', bK: 'gnBackflip', bKH: 'gnShowdown' }, sup: 'gnHighNoon',
+    heavy: { // no kicks: both heavies are gunshots at mid range
+      p: { label: 'Twin Shot', held: true, tapStartup: 9, startup: 999, active: 2, recovery: 20, hitbox: null, wind: 'gAim', pose: 'gTwin', onFrame: twinCharge },
+      k: { label: 'Heavy Shot', held: true, tapStartup: 13, startup: 999, active: 2, recovery: 24, hitbox: null, wind: 'gAim', pose: 'gRecoil', onFrame: heavyCharge },
+    },
+    normalLook: {
+      sp0: { label: 'Hip Shot', startup: 4, wind: 'gIdle', pose: 'gAim', hitbox: null, chain: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 120, dmg: 22, range: 270 }); } },
+      cp1: { label: 'Sky Shot', startup: 6, wind: 'gLow', pose: 'gUp', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { x: f.x + f.facing * 34, y: 84, vx: 16, vy: 8, life: 14, dmg: 34, launch: true, launchVy: 12, jugVy: 11 }); } },
+      sk0: { label: 'Low Shot', startup: 5, wind: 'gIdle', pose: 'gAimLow', hitbox: null, chain: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 34, dmg: 22, low: true, range: 260 }); } },
+      ck0: { label: 'Crouch Shot', startup: 5, wind: 'crouch', pose: 'gLow', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 30, dmg: 20, low: true, range: 290 }); } },
+      ck1: { label: 'Ground Shot', startup: 8, wind: 'crouch', pose: 'gLow', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 24, dmg: 36, low: true, kd: true, range: 310, big: true }); } },
+      jp0: { label: 'Air Hip Shot', startup: 4, wind: 'jump', pose: 'gAirDown', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { x: f.x + f.facing * 40, y: f.y + 80, vy: -8, vx: 18, life: 18, dmg: 20 }); } },
+      jp1: { label: 'Air Twin Shot', startup: 6, wind: 'jump', pose: 'gAirDown', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) { shoot(f, { x: f.x + f.facing * 40, y: f.y + 84, vy: -9, vx: 16, life: 18, dmg: 20 }); shoot(f, { x: f.x + f.facing * 40, y: f.y + 70, vy: -12, vx: 13, life: 18, dmg: 20 }); } } },
+      jk0: { label: 'Air Shot', startup: 4, wind: 'jump', pose: 'gAirDown', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { x: f.x + f.facing * 40, y: f.y + 70, vy: -10, vx: 15, life: 20, dmg: 24 }); } },
+      jk1: { label: 'Air Double Shot', startup: 6, wind: 'jump', pose: 'gAirDown', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) { shoot(f, { x: f.x + f.facing * 40, y: f.y + 70, vy: -10, vx: 15, life: 20, dmg: 22 }); shoot(f, { x: f.x + f.facing * 40, y: f.y + 60, vy: -14, vx: 11, life: 20, dmg: 22 }); } } },
+    },
+    colors: { hat: '#6b4a2b', hatB: '#4a321c', band: '#2b1d12', coat: '#8a6a4a', coatB: '#6b5038', shirt: '#d9cdb0', vest: '#3a2c22', pants: '#3a3f4a', pantsB: '#2a2e37', boots: '#4a2f1d', skin: '#e8bf98', hair: '#3a2a1a', gun: '#a8b0ba', grip: '#5a3a22', scarf: '#b8322d' },
+    meterCol: ['#d98a2c', '#ffe0a8'], bannerCol: 'rgba(170,110,40,.9)', idle: 'gIdle', chargePose: 'gUp', winPose: 'gWin', atkCD: 10, recoverT: 10, hitFx: 'gun',
+  },
+  salary: {
+    name: 'TANAKA', title: 'Salaryman', nameJa: '田中', titleJa: 'サラリーマン', autoBlock: true, dmgMul: 0.75, scale: 1.0, walk: 3.0, back: 2.7, jumpX: 4.2, jumpV: 17, jugDmg: 1.05,
+    pDmg: 0.95, kDmg: 0.95, pReach: 1.05, kReach: 1.0, chargeRate: 0.6, auraCol: '200,205,220', fxCol: '235,235,245',
+    sp: { fP: 'smCard', fPH: 'smCase', fK: 'smTackle', fKH: 'smUpper', bP: 'smCoffee', bPH: 'smAngel', bK: 'smBow', bKH: 'smDevil' }, sup: 'smDeadline',
+    heavy: {
+      p: { label: 'Briefcase Swing', startup: 11, active: 5, recovery: 19, hitbox: [10,150,40,160], wind: 'slamW', pose: 'sCase', lunge: [3, 9, 3.5], hitstop: 10, kd: true, kdVx: 8 },
+      k: { label: 'Shove and Run', startup: 9, active: 4, recovery: 20, hitbox: [10,100,50,150], wind: 'crouch', pose: 'sShove', dmg: 32, push: 8, bpush: 7, onFrame: shoveRun },
+    },
+    colors: { suit: '#2f3542', suitB: '#232833', shirt: '#f2f2f2', tie: '#c0392b', skin: '#f1c9a5', hair: '#1c1c1c', shoe: '#141414', bag: '#5a3a1e', glasses: '#222831' },
+    meterCol: ['#7f8fa6', '#dfe6f0'], bannerCol: 'rgba(90,100,120,.9)', idle: 'sIdle', chargePose: 'charge', winPose: 'win', atkCD: 10, recoverT: 10, hitFx: 'paper',
+  },
+});
+CHARS.salary.lookKey = 'salary';
+// each fighter's own heavy attack in the air (I while jumping)
+const addLook = (ch, look) => { ch.normalLook = { ...(ch.normalLook || {}), ...look }; };
+addLook(CHARS.ninja, { jp1: { label: 'Air Kunai Slash', pose: 'slash', blade: true, trail: { cx: 15, cy: 100, r: 75, a0: 70, a1: -40, col: '225,235,255' } } });
+addLook(CHARS.brawler, { jp1: { label: 'Air Hammer Fist', pose: 'tHammer', burst: [70, 70], aura: true } });
+addLook(CHARS.salary, { jp1: { label: 'Air Briefcase Drop', pose: 'sCase' }, jk1: { label: 'Air Briefcase Swing', pose: 'sCase' }, ck1: { label: 'Briefcase Trip', wind: 'crouch', pose: 'sCase', hitbox: [20,120,0,40] } });
+for (const k in CHARS) CHARS[k].key = k;
+
+// ---------- charge attacks (hold I) ----------
+makeCharged('ninja', [
+  { set: { label: 'Shadow Rush Slash', dmg: 52, hitbox: [10,125,40,175], launch: true, launchVy: 13, pose: 'slash', speedFx: true, recovery: 18, trail: { cx: 15, cy: 105, r: 90, a0: 80, a1: -40, col: '190,150,255' } }, rel: 14,
+    dash: true, act: (f, o, mf) => { const mv = f.move; if (mf <= mv.startup && mv.dashLeft > 0 && Math.abs(o.x - f.x) > 60) { f.vx = f.facing * mv.dashV; mv.dashLeft -= mv.dashV; if (mf % 2 === 0) parts.push({ type: 'smoke', x: f.x - f.facing * 20, y: GROUND - f.y - 90, vx: 0, vy: -0.4, r: 8, vr: 0.3, life: 14, max: 14, col: '120,90,190' }); } else f.vx *= 0.5; } },
+  { set: { label: 'Moon Tempest', hitbox: null, pose: 'slash', recovery: 22 }, rel: 6,
+    act: (f, o, mf) => { f.vx *= 0.6; if (mf === f.move.startup) { sfx('slash'); spawnPJ(f, 'crescent', { x: f.x + f.facing * 70, y: 70, vx: f.facing * 13, life: 40, r: 40, h: { dmg: 84, stun: 22, bstun: 14, push: 6, kd: true, kdVx: 17, kdVy: 8, gdrain: 14, label: 'Moon Tempest' } }); } } },
+]);
+makeCharged('brawler', [
+  { set: { label: 'Charged Qi Palm', dmg: 54, hitbox: [10,125,60,170], launch: true, launchVy: 13.5, pose: 'palmUp', aura: true, burst: [80, 150], recovery: 18 }, rel: 7,
+    act: (f, o, mf) => { if (mf <= f.move.startup && Math.abs(o.x - f.x) > 70) f.vx = f.facing * 6; else f.vx *= 0.6; } },
+  { set: { label: 'Mountain Qi Blast', dmg: 92, hitbox: [20,300,60,160], kd: true, kdVx: 18, kdVy: 8, push: 8, pose: 'blast', aura: true, recovery: 24, gdrain: 20 }, rel: 8,
+    act: (f, o, mf) => { f.vx *= 0.5; if (mf === f.move.startup) { sfx('qi'); game.shake = Math.max(game.shake, 6); } },
+    onFire: f => { f.move.drawFX = f => { const S = f.move.startup; if (f.mf < S - 1 || f.mf > S + 8) return; const a = 1 - Math.max(0, f.mf - S) / 9;
+      fxLighter(() => { const g = ctx.createLinearGradient(f.x, 0, f.x + f.facing * 300, 0); g.addColorStop(0, `rgba(125,235,255,${0.85 * a})`); g.addColorStop(1, 'rgba(125,235,255,0)'); ctx.fillStyle = g; ctx.fillRect(Math.min(f.x, f.x + f.facing * 300), GROUND - f.y - 150, 300, 70); }); }; } },
+]);
+makeCharged('staff', [
+  { set: { label: 'Rising Cudgel', dmg: 52, hitbox: [10,175,40,225], launch: true, launchVy: 14, pose: 'staffRise', recovery: 18, trail: { cx: 20, cy: 90, r: 130, a0: -40, a1: 100, col: '255,205,110' } }, rel: 7,
+    act: (f, o, mf) => { if (mf <= f.move.startup && Math.abs(o.x - f.x) > 80) f.vx = f.facing * 5; else f.vx *= 0.6; } },
+  { set: { label: 'Typhoon Swing', dmg: 90, hitbox: [-90,215,10,190], kd: true, kdVx: 18, kdVy: 8, push: 8, pose: 'staffSwing', spinStaff: true, spin: [0, 10], recovery: 24, gdrain: 18 }, rel: 8,
+    act: (f, o, mf) => { f.vx *= 0.5; if (mf === f.move.startup) { sfx('swing'); parts.push({ type: 'ring', x: f.x, y: GROUND - 90, r: 30, vr: 9, life: 16, max: 16, col: '255,210,110' }); for (let i = 0; i < 6; i++) parts.push({ type: 'star', x: f.x + rnd(-100, 100), y: GROUND - rnd(40, 160), vx: f.facing * rnd(2, 5), vy: -rnd(0, 2), r: 3, vr: -0.1, life: 18, max: 18, col: '255,210,110', rot: R() * 3 }); } } },
+]);
+makeCharged('psychic', [
+  { set: { label: 'Rising Glyph', dmg: 50, launch: true, launchVy: 13.5, pose: 'psyUp', recovery: 20, hitbox: [40,195,0,200], floorGlyph: 150, psyFist: null }, rel: 8, onFire: (f, o) => lyraReach(f, o, 430, 100) },
+  { set: { label: 'Nova Glyph', dmg: 90, kd: true, kdVx: 17, kdVy: 8, push: 8, pose: 'psyPush', recovery: 24, gdrain: 18, psyFist: [150, 115, 1.6], burst: [150, 115] }, rel: 9, onFire: (f, o) => lyraReach(f, o, 430, 120),
+    act: (f, o, mf) => { f.vx *= 0.6; if (mf === f.move.startup) { sfx('hitH'); game.shake = Math.max(game.shake, 5); } } },
+]);
+makeCharged('kappa', [
+  { set: { label: 'Ambush', dmg: 50, hitbox: [0,120,0,170], launch: true, launchVy: 13, pose: 'kClawUp', recovery: 18, claw: [60, 140, -1.3, 70], speedFx: true }, rel: 14, // short: he darts in low and rakes upward
+    dash: true, act: (f, o, mf) => { const mv = f.move; if (mf <= mv.startup && mv.dashLeft > 0 && Math.abs(o.x - f.x) > 55) { f.vx = f.facing * mv.dashV; mv.dashLeft -= mv.dashV; if (mf % 2 === 0) parts.push({ type: 'aura', x: f.x - f.facing * 16, y: GROUND - 6, vx: -f.facing, vy: -1.2, life: 12, max: 12, r: 3, col: '150,215,255' }); } else f.vx *= 0.5; } },
+  { set: { label: 'Dish Storm', hitbox: null, pose: 'kThrow', recovery: 24 }, rel: 6, // long: a whole stack of dishes thrown in a storm
+    act: (f, o, mf) => { f.vx *= 0.5; const k = (mf - f.move.startup) / 3;
+      if (mf >= f.move.startup && Number.isInteger(k) && k < 5) { sfx('throw'); spawnPJ(f, 'dish', { x: f.x + f.facing * 40, y: 120 + (k % 2) * 30, vx: f.facing * 12, vy: [1.5, -0.5, 2.5, 0, 1][k], g: 0.08, life: 60, r: 18,
+        h: { dmg: k === 4 ? 36 : 14, stun: 18, bstun: 10, push: k === 4 ? 8 : 1.5, gdrain: 6, label: 'Dish Storm', ...(k === 4 ? { kd: true, kdVx: 16, kdVy: 8 } : {}) } }); } } },
+]);
+Object.assign(CHARS.salary, { spLow: { fK: 'smSlide', bK: 'smSpill', fKH: 'smSkid' } });
+ // (himself; his angel and devil forms set their own)
+// Tanaka throws whatever's in his office: a pen, the stapler, his coffee mug (himself only, not when possessed)
+Object.assign(CHARS.salary, { normalLook: { ...(CHARS.salary.normalLook || {}),
+  cp0: { label: 'Pen Throw', startup: 6, active: 2, recovery: 14, wind: 'crouch', pose: 'sShove', hitbox: null, crouch: true,
+    onFrame: (f, o, mf) => { if (mf === f.move.startup) { sfx('throw'); spawnPJ(f, 'pen', { x: f.x + f.facing * 40, y: 62, vx: f.facing * 15, life: 40, r: 9, h: { dmg: 24, stun: 16, bstun: 8, push: 1.5, gdrain: 4, low: false, label: 'Pen Throw' } }); } } },
+  ck0: { label: 'Stapler Toss', startup: 9, active: 2, recovery: 16, wind: 'crouch', pose: 'sCase', hitbox: null, crouch: true,
+    onFrame: (f, o, mf) => { if (mf === f.move.startup) { sfx('throw'); spawnPJ(f, 'stapler', { x: f.x + f.facing * 36, y: 80, vx: f.facing * 8.5, vy: 6.5, g: 0.42, life: 70, r: 12, h: { dmg: 34, stun: 18, bstun: 10, push: 2, gdrain: 6, label: 'Stapler Toss' } }); } } },
+  jp1: { label: 'Mug Drop', startup: 8, active: 2, recovery: 14, wind: 'jump', pose: 'sCase', hitbox: null,
+    onFrame: (f, o, mf) => { if (mf === f.move.startup) { sfx('throw'); spawnPJ(f, 'mug', { x: f.x + f.facing * 30, y: f.y + 100, vx: f.facing * 7, vy: -7, life: 50, r: 12, h: { dmg: 38, stun: 20, bstun: 12, push: 2, gdrain: 6, label: 'Mug Drop' } }); } } },
+} });
+// the salaryman's two possessed forms: the same body, a different move set (and look) until the timer runs out
+const ANGEL_CH = { ...CHARS.salary, spLow: { bK: 'saRayLow' }, spUp: { bK: 'saRayFly' }, spFwd: { bK: 'saDive' }, possess: 'angel', dmgMul: 1.25, regen: 0.12, lookKey: 'salaryAngel', idle: 'saPray', hover: false, doubleJump: true, pDmg: 1.1, kDmg: 1.1, walk: 3.5, auraCol: '255,235,170', fxCol: '255,240,190', hitFx: 'holy', meterCol: ['#e6b84a', '#fff4c8'],
+  sp: { fP: 'saJab', fPH: 'saFist', fK: 'saGlide', fKH: 'saAscend', bP: 'saBless', bPH: 'saWard', bK: 'saRay', bKH: 'smDevil' }, sup: 'saHeaven',
+  heavy: { p: { label: 'Holy Palm', startup: 10, active: 5, recovery: 18, hitbox: [10,150,50,150], wind: 'palmW', pose: 'palm', lunge: [3, 9, 3.5], hitstop: 10, cpLaunch: true, launchVy: 13, burst: [90, 110] },
+           k: { label: 'Wing Kick', startup: 9, active: 5, recovery: 18, hitbox: [10,150,40,150], wind: 'kickW', pose: 'highKick', lunge: [3, 8, 4], cpLaunch: true, launchVy: 12 } } };
+const DOUBLE_CH_BASE = 1;
+const DEVIL_CH = { ...CHARS.salary, spLow: { fK: 'sdCrawl', bK: 'sdTail', fKH: 'sdTrail' }, spUp: { bK: 'sdTailDrop' }, spFwd: { bK: 'sdChainB' }, possess: 'devil', dmgMul: 1.875, drain: 0.1, lookKey: 'salaryDevil', idle: 'sdIdle', walk: 3.9, back: 3.4, fastAtk: true, crouchPose: 'sdIdle', pDmg: 0.95, kDmg: 0.95, auraCol: '255,90,70', fxCol: '255,120,60', hitFx: 'flame', meterCol: ['#b8322d', '#ffb08a'],
+  sp: { fP: 'sdLunge', fPH: 'sdMaul', fK: 'sdTailLash', fKH: 'sdTailUpper', bP: 'sdBeckon', bPH: 'smAngel', bK: 'sdWhip', bKH: 'sdDrain' }, sup: 'sdInferno',
+  heavy: { p: { label: 'Hellclaw', startup: 10, active: 6, recovery: 18, hitbox: [10,160,40,170], wind: 'palmW', pose: 'kClaw', lunge: [3, 9, 4], hitstop: 11, kd: true, kdVx: 9 },
+           k: { label: 'Demon Kick', startup: 10, active: 5, recovery: 18, hitbox: [10,150,30,130], wind: 'kickW', pose: 'highKick', lunge: [3, 8, 4], cpLaunch: true, launchVy: 12 } } };
+const DOUBLE_CH = { ...DEVIL_CH, possess: 'double', lookKey: 'salaryDevil', dmgMul: 1.6, drain: 0.12, regen: 0, noGuard: true, doubleJump: true, auraCol: '255,170,200', fxCol: '255,190,160', meterCol: ['#d0607a', '#ffe0c0'], // angel and devil both: wings and halo, horns and tail
+  sp: { fP: 'saJab', fPH: 'sdMaul', fK: 'sdTailLash', fKH: 'sdTailUpper', bP: 'sdBeckon', bPH: 'saFist', bK: 'saRay', bKH: 'sdDrain' },
+  spLow: { bK: 'saRayLow', fK: 'sdCrawl', fKH: 'sdTrail' }, spUp: { bK: 'saRayFly' }, spFwd: { bK: 'sdChainB' } };
+Object.assign(DEVIL_CH, { normalLook: { // the devil's kicks are all tail now, and reach further
+  sk0: { label: 'Tail Flick', low: false, wind: 'sdIdle', pose: 'sdIdle', hitbox: [30,165,60,130], tail: { a0: 2.4, a1: 0.1, len: 150, h: 95 } },
+  sk1: { label: 'Tail Crack', low: false, wind: 'sdIdle', pose: 'sdIdle', hitbox: [30,200,50,140], tail: { a0: 2.8, a1: -0.1, len: 180, h: 100 } },
+  ck0: { label: 'Low Tail Flick', wind: 'sdIdle', pose: 'sdIdle', hitbox: [30,160,0,44], low: true, tail: { a0: 2.9, a1: -0.25, len: 150, h: 40 } },
+  ck1: { label: 'Tail Trip', wind: 'sdIdle', pose: 'sdIdle', hitbox: [30,190,0,40], low: true, kd: true, tail: { a0: 3.0, a1: -0.3, len: 180, h: 36 } },
+} });
+ANGEL_CH.normalLook = { ...(CHARS.salary.normalLook || {}), jp1: { label: 'Air Light Fist', pose: 'blast', burst: [80, 90] }, sp0: { label: 'Light Jab', burst: [70, 120] }, ck1: { label: 'Feather Sweep', wind: 'crouch', pose: 'slideKick', hitbox: [20,120,0,34] }, jk1: { label: 'Air Wing Kick', pose: 'roundhouse' } };
+DEVIL_CH.normalLook = { ...(CHARS.salary.normalLook || {}), ...(DEVIL_CH.normalLook || {}), jp1: { label: 'Air Hellclaw', pose: 'kClawDown', claw: [80, 80, 0.9, 60, '255,120,90'] }, sp0: { label: 'Devil Swipe', pose: 'kClawDown', claw: [70, 100, 0.8, 40, '255,120,90'] }, ck1: { label: 'Tail Sweep', wind: 'crouch', pose: 'slideKick', hitbox: [20,130,0,34] }, jk1: { label: 'Air Tail Lash', pose: 'roundhouse' } };
+// second palette, used when both online players pick the same fighter
+CHARS.gunman.idle = 'gHolster'; CHARS.gunman.crouchPose = CHARS.gunman.crouchPose || 'crouch'; // Jesse stands with his hands resting on the holstered guns
+Object.assign(CHARS.kappa, { altColors: { ...CHARS.kappa.colors, skin: '#7fb6e6', skinB: '#5a8fc0', shell: '#3d5f8a', shellB: '#2a4466', hair: '#24456b' } });
+Object.assign(CHARS.gunman, { altColors: { ...CHARS.gunman.colors, hat: '#2b2b2b', hatB: '#1a1a1a', coat: '#3a3a42', coatB: '#2a2a30', scarf: '#2a6bb8', vest: '#5a1f1f' } });
+Object.assign(CHARS.salary, { altColors: { ...CHARS.salary.colors, suit: '#7a5a3a', suitB: '#5c4229', tie: '#2a6bb8', shirt: '#e6eeff', bag: '#2b2b33' } });
+Object.assign(CHARS.paladin, { altColors: { ...CHARS.paladin.colors, plate: '#585e6c', plateB: '#3f4450', plateD: '#2a2e37', tabard: '#2b2b33', tabardB: '#1e1e24', cross: '#a33232', cape: '#6e1f24', capeB: '#4a1418', shield: '#7a1f24', shieldB: '#4a1418', trim: '#c9ced8', trimB: '#8d939e', plume: '#e8e8e8' } });
+Object.assign(CHARS.ninja, { altColors: { ...CHARS.ninja.colors, cloth: '#5a2232', back: '#3b1521', dark: '#250c15', wrap: '#8c4456', glove: '#1d0a11', accent: '#f2c14e', metal: '#b9a58a' } });
+Object.assign(CHARS.brawler, { altColors: { ...CHARS.brawler.colors, vest: '#8c2f3e', vestB: '#66202c', pants: '#2b3652', pantsB: '#1c2439', band: '#2a5290', sash: '#e0a526', bead: '#2a3f6a' } });
+Object.assign(CHARS.staff, { altColors: { ...CHARS.staff.colors, jacket: '#2f6dcc', jacketB: '#214e96', trim: '#f4f1ea', cap: '#f4f1ea', pants: '#2c2430', pantsB: '#1d171f' } });
+Object.assign(CHARS.psychic, { altColors: { ...CHARS.psychic.colors, robe: '#1f5a70', robeB: '#133b4a', trim: '#c6f0f6', sash: '#36b4cc', gem: '#7ae6ff', hair: '#3a2a4e', hairB: '#261b35' } });
+// afterimages, tinted per fighter
+const GHOST_TINT = Object.fromEntries([['ninja', '#8a6be0'], ['brawler', '#5fd6ef'], ['staff', '#ffd27a'], ['psychic', '#ff9be8'], ['paladin', '#bfe0ff'], ['kappa', '#9ff0d8'], ['gunman', '#ffd9a0'], ['salary', '#d8dde8']].map(([k, c]) => [k, new Proxy({}, { get: () => c })]));
+const DEMO_VS = { ninja: 'brawler', brawler: 'ninja', staff: 'brawler', psychic: 'ninja', paladin: 'ninja', kappa: 'ninja', gunman: 'ninja', salary: 'ninja' }; // who each fighter's sample combos are played against
+const SHADOW_TINT = { cloth: '#4a3577', back: '#33255a', dark: '#22183d', wrap: '#6e58a8', glove: '#22183d', accent: '#9d7cf0', skin: '#b7a6ec' };
+const FLASH = new Proxy({}, { get: () => '#ffffff' });
+

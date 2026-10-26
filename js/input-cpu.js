@@ -1,0 +1,302 @@
+'use strict';
+/* ================= input ================= */
+const MAPS = {
+  p1: { left: 'KeyA', right: 'KeyD', up: 'KeyW', down: 'KeyS', lp: 'KeyU', hp: 'KeyI', lk: 'KeyJ', hk: 'KeyK', charge: 'KeyP' },
+};
+const ALT = { left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown' };
+const GAME_KEYS = new Set([...Object.values(MAPS.p1), ...Object.values(ALT), 'Space']);
+const BTN_ORDER = ['hp','lp','hk','lk'];
+const EMPTY = Object.freeze({ h: 0, down: false, up: false, btn: null, sup: false, ff: false, ffNow: false, bb: false, bbNow: false, dashTap: 0, charge: false });
+// a phone or tablet (touch controls, landscape) rather than a computer with a keyboard
+const IS_MOBILE = (() => { try { return /Android|iPhone|iPad|iPod|Mobile|Silk/i.test(navigator.userAgent) || (matchMedia('(pointer: coarse)').matches && navigator.maxTouchPoints > 0); } catch (e) { return false; } })();
+const keys = new Set(), pressed = new Set(), pressT = {}; // pressT: real tick of each key press (keeps counting through hit pauses)
+class Human {
+  constructor(map) { this.m = map; this.reset(); }
+  reset() { this.held = null; this.lastP = -99; this.lastK = -199; this.tapDir = 0; this.tapT = -99; this.ffDir = 0; this.ffT = -99; }
+  consume() { this.held = null; }
+  consumeIf(t) { if (this.held && this.held.t === t) this.held = null; }
+  read(f, frame, o) {
+    const m = this.m, k = c => keys.has(m[c]) || keys.has(ALT[c]);
+    const h = (k('right') ? 1 : 0) - (k('left') ? 1 : 0);
+    // double tap: the same direction pressed twice within 14 frames
+    for (const [c, dir] of [['left', -1], ['right', 1]]) {
+      if (!pressed.has(m[c]) && !pressed.has(ALT[c])) continue;
+      if (this.tapDir === dir && frame - this.tapT <= 14) { this.ffDir = dir; this.ffT = frame; this.tapT = -99; }
+      else { this.tapDir = dir; this.tapT = frame; }
+      this.lastTap = { dir, t: frame };
+    }
+    const toward = Math.sign(o.x - f.x) || f.facing;
+    const tap = this.lastTap && frame - this.lastTap.t <= 6 ? this.lastTap.dir : 0;
+    const ff = this.ffDir === toward && frame - this.ffT <= 12, bb = this.ffDir === -toward && frame - this.ffT <= 18; // (← ← then → + button: a little longer to fit the → in)
+    let btn = null;
+    for (const b of BTN_ORDER) if (pressed.has(m[b])) { btn = b; break; }
+    if (btn) {
+      // Punch + Kick only counts as "together" if the real key presses were close, even across a hit pause
+      if (pressed.has(m.lp) || pressed.has(m.hp)) this.lastP = Math.max(pressed.has(m.lp) ? pressT[m.lp] : -999, pressed.has(m.hp) ? pressT[m.hp] : -999);
+      if (pressed.has(m.lk) || pressed.has(m.hk)) this.lastK = Math.max(pressed.has(m.lk) ? pressT[m.lk] : -999, pressed.has(m.hk) ? pressT[m.hk] : -999);
+      // Punch + Kick within 4 frames of each other = super
+      this.held = { btn, sup: Math.abs(this.lastP - this.lastK) <= 4, ff, bb, t: frame };
+    }
+    // a press stays buffered for a few frames, so a punish can be entered during guard stun
+    const hb = this.held && frame - this.held.t <= 5 ? this.held : null;
+    return { held: { lp: k('lp'), hp: k('hp'), lk: k('lk'), hk: k('hk') }, h, down: k('down'), up: k('up'), upPress: pressed.has(m.up) || pressed.has(ALT.up), btn: hb ? hb.btn : null, sup: hb ? hb.sup : false, ff: hb ? hb.ff : false, bb: hb ? hb.bb : false, bt: hb ? hb.t : -1,
+      ffNow: this.ffDir === toward && frame - this.ffT <= 2, bbNow: this.ffDir === -toward && frame - this.ffT <= 2, tap, charge: keys.has(m.charge),
+      dashTap: this.ffT === frame ? (this.ffDir === toward ? 1 : -1) : 0 }; // the second tap itself: dash forward or roll back
+  }
+}
+
+/* ================= CPU ================= */
+function threatOfLowDummy() {}
+const isLowAtk = o => !!(o && o.state === 'attack' && o.move && (o.move.low || /low|Low|slide|Sweep|sweep|Belly/.test(o.move.pose || ''))) || // (a low attack — or one aimed low — is coming)
+  projs.some(p => p.owner === o && ((p.h && p.h.low) || p.low)); // (a low attack coming: guard crouching)
+function threatOf(f, o) {
+  const dist = Math.abs(o.x - f.x);
+  if (o.state === 'attack' && o.move && o.move.hitbox && o.mf <= o.move.startup + o.move.active && dist < 210)
+    return { key: 'm' + o.serial, kind: o.y > 0 ? 'air' : o.move.high ? 'high' : o.move.low ? 'low' : 'mid' };
+  if (o.state === 'jump' && dist < 200 && o.vx !== 0 && Math.sign(o.vx) === Math.sign(f.x - o.x))
+    return { key: 'j' + o.jumpSerial, kind: 'air' };
+  for (const p of projs) {
+    if (p.owner !== o || p.dead || p.hold || p.type === 'decoy' || p.type === 'guardShadow') continue;
+    if (p.type === 'beam' || p.type === 'flame') return { key: 'p' + p.id, kind: 'proj' };
+    if (Math.sign(f.x - p.x) === Math.sign(p.vx) && Math.abs(p.x - f.x) < 240) return { key: 'p' + p.id, kind: 'proj' };
+  }
+  return null;
+}
+class CPU {
+  constructor() { this.reset(); }
+  reset() { this.plan = {}; this.next = 0; this.def = null; this.threatKey = null; this.reactAt = 0; this.chargeUntil = 0; this.cancelTried = false; this.punishKey = null; }
+  read(f, frame, o) {
+    const out = { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false };
+    const dx = o.x - f.x, dist = Math.abs(dx), fwd = Math.sign(dx) || f.facing, N = f.key === 'ninja';
+    if (f.state === 'down' && !f.ko) { // roll away or get up
+      if (this.wakeFor !== f.kdSerial) { this.wakeFor = f.kdSerial; const r = Math.random(); this.wakeRoll = r < 0.3 ? -fwd : r < 0.42 ? fwd : 0; this.wakeAtk = Math.random() < 0.3; }
+      if (this.wakeRoll && f.st >= 20) out.tap = this.wakeRoll;
+      return out;
+    }
+    if (f.state === 'getup') {
+      if (this.wakeAtk && f.st >= 8) { this.wakeAtk = false; out.btn = N ? 'lp' : 'hp'; out.down = !N; }
+      return out;
+    }
+    if (this.route) { // playing a combo route: one of the fighter's sample combos
+      const r = this.route, next = r.steps[r.i];
+      if (!r.last) r.last = frame;
+      const hurt = f.state === 'hitstun' || f.state === 'knock' || f.state === 'down' || f.state === 'getup' || f.state === 'gbreak' || f.state === 'stunned' || f.state === 'blockstun' || f.state === 'slashed';
+      const blocked = r.i > 0 && o.state === 'blockstun' && !(next && next.when === 'follow');
+      const launchedInstead = next && next.when === 'follow' && o.state === 'knock' && o.juggle; // the charge uppercut hit: juggle it freely instead
+      if (blocked && f.state === 'attack' && f.move && f.move.follow && f.move.id === 'shadowCharge' && !r.switched) { // guarded: switch to a Shadow Ambush combo
+        const alts = DEMOS[f.key].filter(d => d.steps.some(st => st.when === 'follow'));
+        if (alts.length) { const d = alts[Math.random() * alts.length | 0], k = d.steps.findIndex(st => st.when === 'follow');
+          Object.assign(r, { name: d.name, steps: d.steps, i: k, i0: k - 1, wait: null, last: frame, shown: false, switched: true }); return out; }
+      }
+      if (!next || hurt || blocked || launchedInstead || frame - r.last > 160 || (r.i > r.i0 && o.state === 'down' && next.when !== 'ground')) this.route = null;
+      else {
+        const i0 = r.i;
+        comboStep(f, o, r.steps, r, out);
+        if (r.i !== i0) { r.last = frame; if (r.i >= Math.max(2, r.i0 + 1) && !r.shown) { r.shown = true; game.routeName = { side: f.side, text: r.name, demo: r.demo, kind: r.kind, t: 150 }; } }
+        if (r.i >= r.steps.length) this.route = null;
+        return out;
+      }
+    }
+    if (f.state === 'attack' && f.move) {
+      const mv = f.move;
+      if (mv.normal && mv.str === 0 && f.hitConnected && f.lastResult === 'hit' && f.y <= 0 && this.confirmFor !== f.serial && o.state === 'hitstun') {
+        this.confirmFor = f.serial; // hit-confirm: the jab landed, so go for a launcher combo
+        if (Math.random() < (game.watch ? 0.7 : 0.3)) { const r = pickRoute(f, 'confirm', dist); if (r) { this.route = r; return out; } }
+      }
+      // keep a juggle going with quick hits, finish with a kick
+      if (o.state === 'knock' && o.juggle && mv.normal && mv.str === 0 && f.hitConnected && f.mf >= mv.startup + mv.active && dist < 120) {
+        out.btn = o.jug >= 3 ? 'hk' : 'lp'; return out;
+      }
+      if (this.chainSeq && this.chainSeq.length) { // keep pressing the next button of a combo
+        if (mv.chain && !f.chainQ && f.mf >= 2) { out.btn = this.chainSeq.shift(); return out; }
+        if (!mv.chain) this.chainSeq = null;
+      }
+      if (mv.follow) { // pick a follow-up for Shadow Ambush or Sky Drop Kick
+        if (this.followFor !== f.serial) {
+          this.followFor = f.serial;
+          const r = Math.random();
+          const keys = Object.keys(mv.follow.opts);
+          this.followBtn = mv.id === 'shadowCharge' ? (r < 0.3 ? 'lp' : r < 0.5 ? 'hp' : r < 0.75 ? 'lk' : 'hk') : f.key === 'staff' ? (r < 0.85 ? keys[Math.random() * keys.length | 0] : null) : (r < 0.4 ? 'lk' : r < 0.85 ? 'hk' : null);
+          this.followAt = mv.follow.from + (Math.random() * 10 | 0);
+        }
+        if (mv.id === 'sweepStaff' && f.lastResult === 'hit') this.followBtn = null; // it launched: juggle instead
+        const ready = f.mf >= this.followAt;
+        if (this.followBtn && ready && f.mf <= mv.follow.to) { out.btn = this.followBtn; this.followBtn = null; }
+        return out;
+      }
+      if (f.move.normal && f.hitConnected && !this.cancelTried && f.y <= 0 && f.mf > f.move.startup) {
+        this.cancelTried = true;
+        if (Math.random() < 0.5) { out.ff = true; out.btn = (N ? Math.random() < 0.5 : dist < 90 && Math.random() < 0.6) ? 'lk' : 'lp'; }
+      }
+      return out;
+    }
+    this.cancelTried = false;
+    if (o.state === 'knock' && o.juggle && (f.state === 'stand' || f.state === 'crouch' || f.state === 'guard') && this.jugFor !== o.kdSerial + ':' + (o.ups || 0)) {
+      this.jugFor = o.kdSerial + ':' + (o.ups || 0); // they're launched: finish with one of the sample combos
+      if ((o.ups || 0) <= 1 && Math.random() < (game.watch ? 0.85 : 0.4)) { const r = pickRoute(f, 'juggle', dist); if (r) { this.route = r; return out; } }
+    }
+    if (o.state === 'stunned' && (f.state === 'stand' || f.state === 'crouch' || f.state === 'guard') && this.stunFor !== o.serial + ':' + o.st0) {
+      this.stunFor = o.serial + ':' + o.st0;
+      if (Math.random() < (game.watch ? 0.9 : 0.5)) { const r = pickRoute(f, 'stun', dist); if (r) { this.route = r; return out; } }
+    }
+    if (o.state === 'knock' && o.juggle && (f.state === 'stand' || f.state === 'crouch' || f.state === 'guard') && dist < 150) { // juggle a launched opponent
+      if (dist > 72) { if (dist > 130 && f.state !== 'dash') out.dashTap = 1; else out.h = fwd; return out; } // chase them down
+      if (o.y > 170) return out; // wait until they come down within reach
+      out.btn = o.jug >= 3 ? 'hk' : (Math.random() < 0.6 ? 'lp' : 'hp'); return out;
+    }
+    const canAct = f.state === 'stand' || f.state === 'crouch' || f.state === 'guard';
+    if (canAct && f.atkCD <= 0 && o.state === 'attack' && o.move && o.y <= 0 && this.routeReact !== o.serial && dist < 150) {
+      this.routeReact = o.serial;
+      const early = o.mf <= Math.min(3, o.move.startup);
+      const kind = (!N && early && o.move.startup >= 12 && Math.random() < 0.5) ? 'parry' : (dist < 130 && o.move.startup - o.mf >= 8) ? 'counter' : null;
+      if (kind && Math.random() < (game.watch ? 0.45 : 0.2)) { const r = pickRoute(f, kind, dist); if (r) { this.route = r; return out; } }
+    }
+    if (canAct && o.state === 'stunned' && f.atkCD <= 0) { // stunned: close in and launch them
+      if (dist > 85) { if (dist > 170 && Math.random() < 0.15) out.dashTap = 1; else out.h = fwd; return out; }
+      out.btn = 'hp'; out.down = true; return out;
+    }
+    if (canAct && o.state === 'attack' && o.move && (o.pre > 0 || (o.move.slow && o.mf < o.move.startup - 5)) && dist < 110 && this.interruptKey !== o.serial) {
+      this.interruptKey = o.serial; // jab the opponent out of a slow turn or hand signs
+      if (Math.random() < (o.pre > 0 ? 0.35 : (o.move.interruptChance || 0.6))) { out.btn = 'lp'; return out; }
+    }
+    if (o.state === 'attack' && o.move && o.move.walkAway && o.mf <= o.move.startup) { // try to step out of Shadow Leap
+      if (this.evadeFor !== o.serial) { this.evadeFor = o.serial; this.evade = Math.random() < 0.5; }
+      if (this.evade && (f.state === 'stand' || f.state === 'guard' || f.state === 'crouch')) { out.h = -(Math.sign(o.x - f.x) || f.facing); return out; }
+    }
+    const th = threatOf(f, o);
+    if (th) {
+      if (this.threatKey !== th.key) {
+        this.threatKey = th.key; this.reactAt = frame + (game.watch ? 4 + Math.random() * 7 : 10 + Math.random() * 12) | 0; // reacts later against a player
+        const r = Math.random(), jumpProj = game.watch ? 0.7 : 0.85, blockP = game.watch ? 0.62 : 0.8; // (more defensive: guards most attacks) // watching: a little less perfect defense, so more combos land
+        this.def = (th.kind === 'high' && r < 0.3) ? 'duck' : r < blockP ? 'block' : (th.kind === 'proj' && r < jumpProj) ? 'jump' : (th.kind === 'air' && !N && r < 0.72) ? 'dp' : (th.kind === 'air' && r < 0.88) ? 'aa' : 'none';
+        this.duckHit = false;
+      }
+    } else { this.threatKey = null; this.def = null; }
+    const free = f.state === 'stand' || f.state === 'crouch' || f.state === 'guard' || f.state === 'blockstun' || f.state === 'charge' || f.state === 'recover';
+    if (th && this.def && frame >= this.reactAt && free) {
+      if (this.def === 'block') { out.h = -fwd; if (th.kind === 'low' || isLowAtk(o)) out.down = true; return out; } // (crouching for a low)
+      if (this.def === 'duck') { // duck under a punch, then kick low
+        out.down = true;
+        if (!this.duckHit && o.mf > o.move.startup + o.move.active) { this.duckHit = true; out.btn = 'lk'; }
+        return out;
+      }
+      if (this.def === 'jump') { this.def = 'none'; out.up = true; out.h = fwd; return out; }
+      if (this.def === 'dp') { this.def = 'none'; out.btn = 'hp'; out.down = true; return out; }
+      if (this.def === 'aa') { // anti-air: the rising palm, or the rising version of a special
+        if (dist < 115 && o.y > 25) { this.def = 'none'; out.btn = 'lp'; if (Math.random() < 0.4) { if (N) out.bb = true; else out.ff = true; } }
+        return out;
+      }
+    }
+    if (f.state === 'jump') {
+      if (f.ch.doubleJump && !f.dj && f.vy < 2 && f.vy > -4 && Math.random() < (o.state === 'attack' ? 0.3 : 0.02)) { out.up = true; out.upPress = true; out.h = fwd; return out; } // Mei's second jump
+      if (!f.airAttacked && f.y > 60 && f.vy < 0 && dist > 50 && dist < 170 && Math.random() < 0.05) { out.btn = 'hk'; out.down = true; return out; } // dive kick
+      if (!f.airAttacked && dist < 120 && f.vy < 0 && f.y < 110 && Math.random() < 0.35) out.btn = Math.random() < 0.5 ? 'hk' : 'hp';
+      return out;
+    }
+    const actionable = f.state === 'stand' || f.state === 'crouch' || f.state === 'guard' || f.state === 'charge';
+    if (actionable && (o.state === 'getup' || (o.wakeT > 0))) { // they're getting up and can't be hit yet: wait, and be ready
+      this.wakeWait = o.kdSerial; if (dist < 90) out.h = -fwd * 0.5; return out; }
+    if (actionable && this.wakeWait != null && o.state === 'stand' && !(o.wakeT > 0)) { // the moment they're hittable again: press in (or keep guarding)
+      this.wakeWait = null; if (dist < 115 && Math.random() < (game.watch ? 0.7 : 0.55)) { out.btn = 'lp'; return out; } }
+    if (actionable && !th && o.state === 'attack' && o.move && dist < 140 && o.mf <= o.move.startup && Math.random() < 0.5) { out.h = -fwd; if (isLowAtk(o)) out.down = true; return out; } // they're starting something nearby: guard first
+    if (actionable && !th && o.state === 'attack' && o.move && o.move.normal && !o.move.air && o.mf > o.move.startup + o.move.active && dist < 105 && this.punishKey !== o.serial) {
+      this.punishKey = o.serial;
+      if (Math.random() < (game.watch ? 0.65 : 0.35)) { out.btn = dist < 82 ? 'lp' : 'lk'; this.chargeUntil = 0; return out; }
+    }
+    if (frame < this.chargeUntil && f.meter < 100 && actionable && !th) { out.charge = true; return out; }
+    if (frame >= this.next) { this.plan = this.decide(f, o, dist); this.next = frame + (game.watch ? 16 + Math.random() * 26 : 32 + Math.random() * 40) | 0; } // thinks less often against a player (and attacks less recklessly)
+    const p = this.plan;
+    if (p.walk) out.h = p.walk * fwd;
+    if (p.crouch) out.down = true;
+    if (p.jump) { out.up = true; out.h = p.jump * fwd; p.jump = 0; }
+    if (p.dash) { out.dashTap = p.dash; p.dash = 0; }
+    if (p.btn) {
+      out.btn = p.btn; out.sup = !!p.sup;
+      if (p.ff) out.ff = true; else if (p.bb) out.bb = true; else if (p.dir === 'd') out.down = true;
+      if (p.down) out.down = true; // rising version of a special
+      p.btn = null;
+    }
+    if (p.chain) { this.chainSeq = p.chain.slice(); p.chain = null; }
+    if (p.chargeMP) { this.chargeUntil = frame + p.chargeMP; p.chargeMP = 0; }
+    return out;
+  }
+  decide(f, o, dist) {
+    const N = f.key === 'ninja', r = Math.random(), s = Math.random() < 0.5 ? 'l' : 'h';
+    if (Math.random() < (game.watch ? (dist < 95 ? 0.1 : 0.5) : 0.18)) { const rt = pickRoute(f, 'neutral', dist); if (rt) { this.route = rt; return {}; } } // go for one of the sample combos
+    if (f.meter >= 100 && dist < 520 && r < 0.3) return { btn: 'hp', sup: true };
+    if (dist < 330 && Math.random() < 0.07) { // rising versions used on their own
+      const opts = N ? (dist < 110 ? [{ btn: 'lp', bb: true, down: true }, { btn: 'hk', bb: true, down: true }] : [{ btn: 'hp', bb: true, down: true }, { btn: 'lk', ff: true, down: true }, { btn: 'hp', ff: true, down: true }])
+        : (dist < 110 ? [{ btn: 'lp', ff: true, down: true }, { btn: 'hk', ff: true, down: true }, { btn: 'hk', bb: true, down: true }] : [{ btn: 'lp', bb: true, down: true }, { btn: 'hp', ff: true, down: true }]);
+      return opts[Math.random() * opts.length | 0];
+    }
+    if (f.key === 'staff') { // Mei: jumps in a lot, pokes with the staff from mid range
+      if (dist > 340) return r < 0.3 ? { dash: 1 } : r < 0.4 ? { jump: 1 } : (r < 0.6 && f.meter < 100) ? { chargeMP: rnd(40, 90) | 0 } : r < 0.7 ? { btn: 'hp', bb: true } : { walk: 1 };
+      if (dist > 150) return r < 0.26 ? { btn: 'lp', ff: true } : r < 0.38 ? { btn: 'hp', ff: true } : r < 0.52 ? { btn: 'lk', ff: true } : r < 0.58 ? { jump: 1 } : r < 0.64 ? { btn: 'hp', bb: true }
+        : r < 0.75 ? { btn: 'lp', bb: true } : r < 0.82 ? { dash: 1 } : { walk: 1 };
+      if (r < 0.05) return { jump: 1 }; if (r < 0.13) return { btn: 'lp', bb: true }; if (r < 0.19) return { btn: 'hk', ff: true }; if (r < 0.25) return { btn: Math.random() < 0.5 ? 'hp' : 'hk' }; // long staff pokes
+    }
+    if (f.key === 'psychic') { // Lyra: keeps her distance and fights from afar
+      if (dist > 380) return r < 0.3 ? { btn: 'lp', ff: true } : r < 0.45 ? { btn: 'hp', ff: true } : r < 0.55 ? { btn: 'lk', ff: true } : (r < 0.72 && f.meter < 100) ? { chargeMP: rnd(40, 100) | 0 } : r < 0.8 ? { btn: 'lp', bb: true } : { walk: 1 };
+      if (dist > 150) return r < 0.22 ? { btn: 'lp', ff: true } : r < 0.34 ? { btn: 'hp', ff: true } : r < 0.44 ? { btn: 'lk', ff: true } : (r < 0.52 && dist < 250) ? { btn: 'hp', bb: true }
+        : r < 0.58 ? { btn: 'hk', ff: true } : r < 0.66 ? { btn: 'lp', bb: true } : r < 0.72 ? { walk: -1 } : r < 0.78 ? { btn: 'lk', bb: true } : { walk: 1 };
+      if (r < 0.15) return { btn: 'hk', ff: true }; if (r < 0.22) return { btn: 'lk', bb: true }; if (r < 0.28) return { dash: -1 }; if (r < 0.32) return { btn: 'hk', bb: true };
+    }
+    if (dist > 380) {
+      if (N) return r < 0.3 ? { btn: 'lk', ff: true } : r < 0.4 ? { btn: 'hp', bb: true } : r < 0.5 ? { btn: 'hk', ff: true } : r < 0.6 ? { jump: 1 } : (r < 0.76 && f.meter < 100) ? { chargeMP: rnd(40, 100) | 0 } : { walk: 1 };
+      return r < 0.22 ? { btn: s + 'p', ff: true } : (r < 0.45 && f.meter < 100) ? { chargeMP: rnd(40, 110) | 0 } : { walk: 1 };
+    }
+    if (dist > 150) {
+      if (N) return (r < 0.08 && dist < 300) ? { btn: 'lp', ff: true } : r < 0.26 ? { btn: 'lk', ff: true } : (r < 0.32 && dist < 200) ? { btn: 'hp', ff: true } : r < 0.37 ? { btn: 'hk', ff: true }
+        : (r < 0.45 && dist < 330) ? { btn: 'lp', bb: true } : r < 0.49 ? { btn: 'hp', bb: true } : r < 0.53 ? { btn: Math.random() < 0.5 ? 'lk' : 'hk', bb: true }
+        : r < 0.63 ? { jump: 1 } : r < 0.75 ? { walk: -1 } : { walk: 1 };
+      return (r < 0.16 && dist < 300) ? { btn: 'lk', ff: true } : r < 0.24 ? { btn: 'hp', ff: true } : r < 0.31 ? { btn: 'hk', bb: true } : r < 0.37 ? { btn: 'lp', bb: true }
+        : r < 0.43 ? { btn: 'hk', ff: true } : r < 0.52 ? { jump: 1 } : r < 0.62 ? { btn: 'lp', ff: true } : r < 0.7 ? { dash: 1 } : { walk: 1 };
+    }
+    if (dist > 95 && Math.random() < (N ? 0.2 : 0.35)) return (N && dist > 110 && Math.random() < 0.4) ? { btn: 'hp', ff: true } : { btn: Math.random() < 0.5 ? 'hp' : 'hk' }; // long-reach poke (Kuro sometimes draws his sword)
+    if (Math.random() < 0.05) return { dash: -1 }; // back dash out
+    if (N && r < 0.14) return { walk: -1 };
+    if (N && r < 0.17) return { btn: 'hk', ff: true };
+    if (N && r < 0.21) return { btn: Math.random() < 0.5 ? 'lk' : 'hk', bb: true };
+    if (N && r < 0.26) return { jump: -1 };
+    if ((!N && r < 0.1) || Math.random() < 0.06) return { btn: 'hp', dir: 'd' }; // launcher
+    if (r < 0.4) { // strings
+      const list = [{ btn: 'lp', chain: ['lp', 'hp'] }, { btn: 'lp', chain: ['lp', 'lk'] }, { btn: 'lk', chain: ['lk', 'lk'] }, { btn: 'lk', chain: ['lk', 'hk'] },
+        { btn: 'lp', chain: ['hp', 'hk'] }, { btn: 'lp', chain: ['hk'] }, { btn: 'lk', chain: ['hk'] }];
+      return list[Math.random() * list.length | 0];
+    }
+    if (r < 0.45) return { btn: s + 'p' };
+    if (r < 0.75) return { btn: s + 'k', dir: Math.random() < 0.35 ? 'd' : null };
+    if (r < 0.85) return { crouch: true, walk: -1 };
+    return { walk: 1 };
+  }
+}
+// training dummy: guards, stands, jumps, or hands control to the CPU
+const DUMMY_MODES = ['stand', 'guard', 'crouch', 'jump', 'cpu'];
+const DUMMY_LABEL_EN = { guard: 'Guard', stand: 'Stand still', crouch: 'Crouch', jump: 'Jump', cpu: 'Fight back' };
+const DUMMY_LABEL_JA = { guard: 'ガード', stand: '立ち', crouch: 'しゃがみ', jump: 'ジャンプ', cpu: '反撃' };
+const DUMMY_LABEL = new Proxy({}, { get: (t, k) => (game.lang === 'ja' ? DUMMY_LABEL_JA : DUMMY_LABEL_EN)[k] });
+class Dummy {
+  constructor() { this.cpu = new CPU(); }
+  reset() { this.cpu.reset(); }
+  read(f, frame, o) {
+    if (game.demo) { // in Kuro's sample combos the dummy sometimes attacks once, so he can counter it
+      const st = game.demoState, d = curDemos()[game.demoIdx];
+      if (d.dummy && d.dummy.guard && st && st.phase === 'run') {
+        if (f.state === 'blockstun') st.guardSeen = true; else if (st.guardSeen && d.dummy.guard !== 'all') st.guardDone = true; // 'all': keeps guarding the whole time
+        if (!st.guardDone && (threatened(f, o) || f.state === 'blockstun')) return { h: -(Math.sign(o.x - f.x) || f.facing), down: isLowAtk(o), up: false, btn: null, sup: false, ff: false, bb: false, charge: false };
+        if (!st.guardDone) return { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false };
+      }
+      if (d.dummy && d.dummy.steps && st && st.phase === 'run' && st.t >= (d.dummy.at || 0)) { st.dSt = st.dSt || { i: 0 }; const out = comboStep(f, o, d.dummy.steps, st.dSt, { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false }); if (st.dSt.i >= d.dummy.steps.length) st.dummyDone = true; if (!st.dummyDone || out.btn) return out; }
+      if (d.dummy && d.dummy.seq && st && st.phase === 'run') { const e = d.dummy.seq.find(q => q[0] === st.t); if (e) { if (e[2]) st.dummyDone = true; return { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false, ...e[1] }; } } // (a sequence of presses: a whole string)
+      if (d.dummy && d.dummy.inp && st && st.phase === 'run' && !st.dummyDone && st.t >= (d.dummy.at || 0)) { st.dummyDone = true; return { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false, ...d.dummy.inp }; }
+      if (d.dummy && d.dummy.guardAfter && st && st.dummyDone && f.state !== 'attack' && (threatened(f, o) || f.state === 'blockstun')) return { h: -(Math.sign(o.x - f.x) || f.facing), down: isLowAtk(o), up: false, btn: null, sup: false, ff: false, bb: false, charge: false }; // (a punish sample: once its technique is over, the opponent guards — only a real punish gets in)
+    }
+    if (game.dummyMode === 'cpu') return this.cpu.read(f, frame, o);
+    const out = { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false };
+    if (game.dummyMode === 'guard' && (threatened(f, o) || f.state === 'blockstun')) { out.h = -(Math.sign(o.x - f.x) || f.facing); if (isLowAtk(o)) out.down = true; }
+    if (game.dummyMode === 'jump') out.up = true;
+    if (game.dummyMode === 'crouch') out.down = true;
+    return out;
+  }
+}
+
