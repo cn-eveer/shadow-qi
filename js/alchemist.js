@@ -132,11 +132,12 @@ function golemBlast(f, o) { // a beam of glowing core energy straight out of its
   for (let i = 0; i < 10; i++) parts.push({ type: 'spark', x: g.x + d * 36, y: GROUND - 80 - g.y, vx: d * rnd(2, 9), vy: rnd(-3, 3), life: 12, max: 12, col: '255,200,90' });
 }
 const live0 = (f, o) => game.phase === 'fight' && !f.ko && !o.ko;
-function golemPlace(f, o) { // while it holds them: they're presented in front of the alchemist, the golem behind them, facing him
-  const g = f.golem, hd = g.hold; o.x = clamp(f.x + hd.side * 100, WALL_L + 20, WALL_R - 20); g.x = clamp(o.x + hd.side * 74, WALL_L, WALL_R); g.facing = -hd.side; o.vx = 0;
+function golemPlace(f, o) { // while it holds them: they stay where the swap put them, the golem behind them, both turned toward the alchemist
+  const g = f.golem, hd = g.hold; o.x = hd.ox; g.x = hd.gx; g.facing = Math.sign(f.x - g.x) || g.facing; o.vx = 0;
 }
-function golemSeize(f, o) { // the grab: the golem and the opponent swap places (they're shown to the alchemist) and he holds them for three seconds, so J, J, K can't miss
-  const g = f.golem; g.hold = { t: 180, side: Math.sign(o.x - f.x) || f.facing }; golemPlace(f, o); setState(o, 'stunned'); o.stunT = 184; o.stunKind = 'held'; o.stunUsed = true;
+function golemSeize(f, o) { // the grab: the golem turns them round and the two trade places, so they're on the alchemist's side of it, facing him (not pulled in to him)
+  const g = f.golem, near = Math.abs(g.x - f.x) < Math.abs(o.x - f.x) ? g.x : o.x, far = near === g.x ? o.x : g.x, away = Math.sign(near - f.x) || 1;
+  g.hold = { t: 180, ox: clamp(near, WALL_L + 20, WALL_R - 20), gx: clamp(Math.abs(far - near) < 70 ? near + away * 70 : far, WALL_L, WALL_R) }; golemPlace(f, o); setState(o, 'stunned'); o.stunT = 184; o.stunKind = 'held'; o.stunUsed = true;
   popText(o.x, GROUND - 190, L('GRABBED!', '捕まえた！'), '255,215,140'); sfx('block'); game.shake = Math.max(game.shake, 3);
 }
 function golemBox(g) { return { x0: g.x - 46, x1: g.x + 46, y0: g.y, y1: g.y + (g.crouch || (g.act && g.act.kind === 'lowp') ? 125 : 165) }; }
