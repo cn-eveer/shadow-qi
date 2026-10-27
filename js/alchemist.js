@@ -631,8 +631,9 @@ function drawGolem(f) { // a stone golem, drawn in the world where it stands
     return k <= su ? [lerp(rest[0], pull[0], e(k / su)), lerp(rest[1], pull[1], e(k / su))] : k <= end + 2 ? [lerp(pull[0], fwd[0] + sh, Math.min(1, (k - su) / 2)), lerp(pull[1], fwd[1], Math.min(1, (k - su) / 2))]
       : [lerp(fwd[0], rest[0], e(Math.min(1, (k - end - 2) / (A.rec * 0.8)))), lerp(fwd[1], rest[1], e(Math.min(1, (k - end - 2) / (A.rec * 0.8))))]; };
   const twoHanded = (a && ['hp', 'tackle', 'heave', 'pound', 'meteor', 'ham'].includes(a.kind)) || !!g.hold;
+  const cheer = !a && !g.hold && ((f.state === 'win' && f.st > 25) || (showOn() && game.round === 1 && f.state === 'stand' && game.phaseT - (f.side ? 8 : 0) > 100)); // (it raises a fist with him)
   const farRest = [-42, -46 - bob], nearRest = [34, -48 - bob], useFar = a && a.alt && !twoHanded;
-  const farH = twoHanded ? hand([-30, -50], true) : useFar ? hand(farRest) : farRest, nearH = (a && !useFar) ? hand(nearRest) : nearRest;
+  const farH = twoHanded ? hand([-30, -50], true) : useFar ? hand(farRest) : farRest, nearH = cheer ? [34, -136 - bob + Math.sin(t * 0.15) * 3] : (a && !useFar) ? hand(nearRest) : nearRest;
   if (!useFar) arm(-30, -86 - bob, farH[0] - (twoHanded ? 8 : 0), farH[1], pal.dark);                       // the far arm
   ctx.fillStyle = pal.body; ctx.strokeStyle = pal.line; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-30, -34 - bob); ctx.lineTo(30, -34 - bob); ctx.lineTo(38, -90 - bob); ctx.lineTo(-38, -90 - bob); ctx.closePath(); ctx.fill(); ctx.stroke(); // the body
   ctx.strokeStyle = pal.crack; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-14, -90 - bob); ctx.lineTo(-6, -66 - bob); ctx.lineTo(-16, -48 - bob); ctx.moveTo(18, -76 - bob); ctx.lineTo(10, -58 - bob); ctx.stroke(); // cracks
@@ -709,6 +710,15 @@ function vsGolemPlan(f, o, dist) {
   if (r < (g.hp < g.max * 0.5 ? 0.1 : 0.3)) return { jump: 1 }; // over it, onto Hohen (less often once it's half broken)
   return r < 0.6 ? { btn: 'lp', chain: ['lp', 'lp', 'hk'] } : r < 0.85 ? { btn: 'hp' } : { btn: 'hk' }; // break it: whole strings into it
 }
+// his entrance before the first round, and his victories (the golem joins in: see drawGolem)
+SHOW.alchemist = { intro: [['alGlasses', 50], ['alStoneUp', 95], ['alPresent', 140]], introLine: ['Hold still. This won’t hurt... much.', 'じっとしていなさい。痛くは…ないはずだ。'],
+  win: [['alStoneUp', 60], ['alPresent', 999]], winLine: ['Diagnosis: complete.', '診断終了。'] };
+WIN.alchemist = {
+  a: { seq: [['alStoneUp', 35], ['alGlasses', 75], ['alIdle', 999]], line: ['A textbook case.', '教科書どおりの症例だ。'] },
+  b: { seq: [['alBowDoc', 55], ['alGlasses', 95], ['alIdle', 999]], line: ['Rest now. Doctor’s orders.', '安静にしなさい。医者の指示だ。'] },
+  c: { seq: [['vTired', 60], ['alGlasses', 999]], line: ['My golem needs repairs... and so do I.', 'ゴーレムも…私も、修理が必要だな。'] },
+  final: { seq: [['alOpus', 45], ['alStoneUp', 90], ['alPresent', 999]], line: ['The great work is complete.', '大いなる業、ここに成れり。'] },
+};
 // joining the roster
 CHAR_ORDER.push('alchemist'); DEMO_VS.alchemist = 'ninja'; GHOST_TINT.alchemist = new Proxy({}, { get: () => '#e8f4ff' });
 // sample combos: one quick and one long for each way the three of them can stand — the golem in front of him or behind the opponent,
