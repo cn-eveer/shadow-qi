@@ -7,11 +7,11 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="note"><b>Guarding.</b> Guard relative to whoever is attacking: away from the golem when the golem strikes, away from the alchemist when he does.</p>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>Golem Punch<small>The golem throws a quick punch (it comes in first if it’s far away).</small></td><td class="keys"><kbd>U</kbd></td></tr>
+          <tr><td>Golem Punch<small>The golem throws a quick punch (it comes in first if it’s far away). Crouching (↓ + U): a low punch.</small></td><td class="keys"><kbd>U</kbd></td></tr>
           <tr><td>Golem Smash<small>A heavy, slow smash that knocks them down.</small></td><td class="keys"><kbd>I</kbd></td></tr>
-          <tr><td>Stone Throw<small>The golem hurls a stone along the floor (low).</small></td><td class="keys"><kbd>J</kbd></td></tr>
-          <tr><td>Stone Volley<small>Three stones at once, low and medium.</small></td><td class="keys"><kbd>K</kbd></td></tr>
-          <tr><td>Golem Dash<small>The golem runs in toward the opponent too.</small></td><td class="cmd">→ →</td></tr>
+          <tr><td>Stone Throw<small>The alchemist throws one of his glowing stones along the floor (low).</small></td><td class="keys"><kbd>J</kbd></td></tr>
+          <tr><td>Stone Volley<small>He throws three glowing stones at once, low and medium.</small></td><td class="keys"><kbd>K</kbd></td></tr>
+          <tr><td>Copying him<small>The golem mirrors his walking, jumping, crouching and dashing; when he gives no movement, it walks to the opponent by itself.</small></td><td class="cmd">← → ↑ ↓</td></tr>
         </tbody>
       </table></div>
     </article>
@@ -21,11 +21,11 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="note"><b>ガード。</b>攻撃している側を基準にガードする：ゴーレムの攻撃はゴーレムの反対側、錬金術師の攻撃は錬金術師の反対側へ。</p>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>ゴーレムパンチ<small>素早いパンチ（遠ければ先に近づく）。</small></td><td class="keys"><kbd>U</kbd></td></tr>
+          <tr><td>ゴーレムパンチ<small>素早いパンチ（遠ければ先に近づく）。しゃがみ（↓＋U）は下段パンチ。</small></td><td class="keys"><kbd>U</kbd></td></tr>
           <tr><td>ゴーレムスマッシュ<small>重くて遅い一撃。ダウンさせる。</small></td><td class="keys"><kbd>I</kbd></td></tr>
-          <tr><td>石投げ<small>床すれすれに石を投げる（下段）。</small></td><td class="keys"><kbd>J</kbd></td></tr>
-          <tr><td>石の連弾<small>石を3つ同時に投げる（下段と中段）。</small></td><td class="keys"><kbd>K</kbd></td></tr>
-          <tr><td>ゴーレムダッシュ<small>ゴーレムも相手に向かって駆ける。</small></td><td class="cmd">→ →</td></tr>
+          <tr><td>石投げ<small>光る石を床すれすれに投げる（下段）。錬金術師自身が投げる。</small></td><td class="keys"><kbd>J</kbd></td></tr>
+          <tr><td>石の連弾<small>光る石を3つ同時に投げる（下段と中段）。</small></td><td class="keys"><kbd>K</kbd></td></tr>
+          <tr><td>動きをまねる<small>ゴーレムは錬金術師の歩き・ジャンプ・しゃがみ・ダッシュをまねる。操作がないときは自分で相手に向かって歩く。</small></td><td class="cmd">← → ↑ ↓</td></tr>
         </tbody>
       </table></div>
     </article>

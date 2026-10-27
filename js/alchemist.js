@@ -14,25 +14,25 @@ CHARS.alchemist = {
 };
 Object.assign(CHARS.alchemist, { altColors: { ...CHARS.alchemist.colors, coat: '#d9e6dc', coatB: '#b7c9bb', shirt: '#f0d8c0', hair: '#4a3b2e' } });
 { // every button is an order to the golem (standing, crouching and in the air); the alchemist himself only points
-  const order = (kind, label, pose, st, ex) => ({ label, startup: 6, active: 2, recovery: 12, wind: 'idle', pose, hitbox: null, chain: null, launch: false, kd: false, ...ex, onFrame: (f, o, mf) => { if (mf === f.move.startup) golemOrder(f, kind); } });
+  const order = (kind, label, pose, st, ex) => ({ label, startup: 6, active: 2, recovery: 12, wind: 'idle', pose, hitbox: null, chain: null, launch: false, kd: false, ...ex, onFrame: (f, o, mf) => { if (mf === f.move.startup) { if (kind === 'stone' || kind === 'stones') alchemistThrow(f, o, kind); else golemOrder(f, kind); } } });
   const L = CHARS.alchemist.normalLook;
   for (const st of ['s', 'c', 'j']) {
     const ex = st === 'j' ? {} : { startup: 6 };
-    L[st + 'p0'] = order('lp', 'Order: Punch', 'gAim', st, ex); L[st + 'p1'] = order('hp', 'Order: Smash', 'gTwin', st, ex);
+    L[st + 'p0'] = order(st === 'c' ? 'lowp' : 'lp', st === 'c' ? 'Order: Low Punch' : 'Order: Punch', st === 'c' ? 'gLow' : 'gAim', st, ex); L[st + 'p1'] = order('hp', 'Order: Smash', 'gTwin', st, ex);
     L[st + 'k0'] = order('stone', 'Order: Throw Stone', 'gAim', st, ex); L[st + 'k1'] = order('stones', 'Order: Stone Volley', 'gTwin', st, ex);
   }
 }
 const GOLEM_ACT = { // startup / active / recovery (frames), and the blow
   lp: { su: 7, ac: 3, rec: 12, reach: [10, 85], y: [10, 135], h: { dmg: 28, stun: 19, bstun: 11, push: 1.6, hitstop: 6, str: 0, gdrain: 4, label: 'Golem Punch' } },
   hp: { su: 14, ac: 4, rec: 20, reach: [10, 105], y: [10, 140], h: { dmg: 62, stun: 24, bstun: 14, push: 3, hitstop: 10, str: 1, gdrain: 14, kd: true, kdVx: 9, kdVy: 7, label: 'Golem Smash', heavy: true } },
-  stone: { su: 9, ac: 1, rec: 14 }, stones: { su: 12, ac: 1, rec: 20 },
+  lowp: { su: 8, ac: 3, rec: 14, reach: [10, 95], y: [0, 40], h: { dmg: 26, stun: 19, bstun: 11, push: 1.6, hitstop: 6, str: 0, gdrain: 4, low: true, label: 'Golem Low Punch' } },
 };
-function newGolem(f) { return { x: f.x - f.facing * 90, facing: f.facing, act: null, queue: null, qT: 0, cd: 30, dashT: 0, ph: 0, spd: 0 }; }
+function newGolem(f) { return { x: f.x - f.facing * 90, facing: f.facing, act: null, queue: null, qT: 0, cd: 30, dashT: 0, ph: 0, spd: 0, y: 0, vy: 0, js: 0, crouch: false }; }
 function golemOrder(f, kind) { const g = f.golem; if (g && !f.ko) { g.queue = kind; g.qT = 0; } }
 function golemStart(f, kind, auto) { const g = f.golem, o = other(f); g.facing = Math.sign(o.x - g.x) || g.facing; g.act = { kind, t: 0, id: ++serial, hit: false, auto: !!auto }; g.queue = null; if (kind === 'hp') sfx('swing'); }
-function golemThrow(f, o, kind) { // stones fly low (J) or low and medium (K), from the golem's hands
-  const g = f.golem, d = g.facing, ys = kind === 'stone' ? [24] : [24, 54, 84];
-  ys.forEach((y, i) => spawnPJ(f, 'stone', { dir: d, x: g.x + d * clamp(Math.abs(o.x - g.x) - 30, 0, 56), y, vx: d * (9 + i * 0.8), life: 64, r: 11,
+function alchemistThrow(f, o, kind) { // he throws his own glowing stones: low (J), or low and medium (K)
+  const d = f.facing, ys = kind === 'stone' ? [24] : [24, 54, 84], cols = ['110,255,220', '255,190,80', '150,170,255'];
+  ys.forEach((y, i) => spawnPJ(f, 'stone', { dir: d, x: f.x + d * 40, y: f.y + y, vx: d * (9 + i * 0.8), life: 64, r: 11, glow: cols[i % 3],
     h: { dmg: kind === 'stone' ? 26 : 18, stun: 17, bstun: 10, push: 1.4, gdrain: 6, hitstop: 5, low: y < 40, label: kind === 'stone' ? 'Stone Throw' : 'Stone Volley' } }));
   sfx('throw');
 }
@@ -48,6 +48,10 @@ function golemUpdate(f, o) {
   if (g.dashT > 0) g.dashT--;
   if (g.cd > 0) g.cd--;
   g.spd = 0;
+  const inp = f.inp || EMPTY; // the golem copies the alchemist: where he walks, when he jumps or crouches
+  if (g.js !== f.jumpSerial) { g.js = f.jumpSerial; if (f.state === 'jump' && g.y <= 0) g.vy = f.ch.jumpV || JUMP_V; }
+  if (g.y > 0 || g.vy > 0) { g.vy -= G; g.y += g.vy; if (g.y <= 0) { g.y = 0; g.vy = 0; dustAt(g.x, false); } }
+  g.crouch = !!inp.down && g.y <= 0;
   if (!live) { g.act = null; g.queue = null; return; }
   const a = g.act;
   if (a) {
@@ -55,17 +59,20 @@ function golemUpdate(f, o) {
     if (a.t <= A.su && dist > 70 && A.reach) { g.x += dir * 1.6; g.spd = 1.6; }
     if (A.reach) {
       if (a.t > A.su && a.t <= A.su + A.ac && !a.hit) {
-        const x0 = g.x + g.facing * A.reach[0], x1 = g.x + g.facing * A.reach[1], hb = { x0: Math.min(x0, x1), x1: Math.max(x0, x1), y0: A.y[0], y1: A.y[1] }, hu = hurtbox(o, false, false);
+        const x0 = g.x + g.facing * A.reach[0], x1 = g.x + g.facing * A.reach[1], hb = { x0: Math.min(x0, x1), x1: Math.max(x0, x1), y0: A.y[0] + g.y, y1: A.y[1] + g.y }, hu = hurtbox(o, false, false);
         if (hu && overlap(hb, hu)) { const res = golemHit(f, o, { type: 'mid', chip: false, proj: false, gbstun: 45, ...A.h }, hb, hu); if (res) a.hit = true; }
       }
-    } else if (a.t === A.su) golemThrow(f, o, a.kind);
+    }
     if (a.t >= A.su + A.ac + A.rec) { g.act = null; g.cd = a.auto ? 36 : 10; }
   } else {
     g.facing = dir;
     const q = g.queue;
-    if (q) { g.qT++; const melee = !!GOLEM_ACT[q].reach; if (!melee || dist <= 100) golemStart(f, q, false); else if (g.qT > 70) g.queue = null; }
+    if (q) { g.qT++; if (dist <= 100) golemStart(f, q, false); else if (g.qT > 70) g.queue = null; }
     else if (dist < 95 && g.cd <= 0) golemStart(f, 'lp', true); // next to them it punches on its own
-    if (!g.act && dist > (q ? 80 : 60)) { const sp = g.dashT > 0 || q ? 6.5 : 2.5; g.x += dir * sp; g.spd = sp; }
+    if (!g.act) {
+      if (inp.h) { const sp = g.dashT > 0 ? 7 : g.y > 0 ? 3.5 : 2.6; g.x += Math.sign(inp.h) * sp; g.spd = sp; } // his movement comes first
+      else if (g.y <= 0 && !g.crouch && dist > (q ? 80 : 60)) { const sp = g.dashT > 0 || q ? 6.5 : 2.5; g.x += dir * sp; g.spd = sp; } // otherwise it walks to the opponent itself
+    }
   }
   g.x = clamp(g.x, WALL_L, WALL_R); g.ph += g.spd * 0.09;
 }
@@ -110,7 +117,7 @@ DRAWERS.alchemist = drawAlchemist;
 function drawGolem(f) { // a brown stone golem, drawn in the world where it stands
   const g = f.golem; if (!g) return;
   const t = globalT, a = g.act, A = a && GOLEM_ACT[a.kind], s = 1.4, wk = Math.sin(g.ph * 6) * (g.spd > 0 ? 1 : 0);
-  ctx.save(); ctx.translate(g.x, GROUND); ctx.scale(g.facing * s, s); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.save(); ctx.translate(g.x, GROUND - g.y); ctx.scale(g.facing * s, s * (g.crouch ? 0.78 : 1)); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(0, 0, 38, 8, 0, 0, Math.PI * 2); ctx.fill();
   const rock = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.strokeStyle = '#4a3523'; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(x, y, w, h, 5); ctx.fill(); ctx.stroke(); };
   const bob = g.spd > 0 ? Math.abs(Math.sin(g.ph * 6)) * 3 : Math.sin(t * 0.05) * 1.2;
