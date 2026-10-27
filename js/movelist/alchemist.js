@@ -9,8 +9,8 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="note"><b>Guarding.</b> Guard relative to whoever is attacking: away from the golem when the golem strikes, away from the alchemist when he does.</p>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>Golem Punch<small>The golem throws a quick punch (it comes in first if it’s far away). Crouching (↓ + U): a low punch.</small></td><td class="keys"><kbd>U</kbd></td></tr>
-          <tr><td>Golem Grab<small>The golem seizes them (it can’t be guarded) and holds them for three seconds. While they’re held his stones can’t miss and hit harder: J, J, K — the last stone knocks them loose. Also as a string: U, U, I.</small></td><td class="keys"><kbd>I</kbd></td></tr>
+          <tr><td>Golem Punch<small>The golem throws a quick punch (it comes in first if it’s far away). Crouching (↓ + U): he and the golem both crouch for a low punch.</small></td><td class="keys"><kbd>U</kbd></td></tr>
+          <tr><td>Golem Grab<small>The golem seizes them (it can’t be guarded), swaps places with them so they’re shown to the alchemist, and holds them from behind for three seconds. While they’re held his stones can’t miss and hit harder: J, J, K — the last stone knocks them loose. Also as a string: U, U, I.</small></td><td class="keys"><kbd>I</kbd></td></tr>
           <tr><td>Sand Toss<small>Punch, punch, then K: the golem flings sand and stones high into the air, and they rain down on the opponent.</small></td><td class="keys"><kbd>U</kbd> <kbd>U</kbd> <kbd>K</kbd></td></tr>
           <tr><td>Stone Throw<small>One glowing stone at chest height. In the air, thrown at the opponent.</small></td><td class="keys"><kbd>J</kbd></td></tr>
           <tr><td>Low Stone Throw<small>One stone along the floor (low). It hits a downed opponent too.</small></td><td class="cmd">↓ + J</td></tr>
@@ -32,8 +32,8 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="note"><b>ガード。</b>攻撃している側を基準にガードする：ゴーレムの攻撃はゴーレムの反対側、錬金術師の攻撃は錬金術師の反対側へ。</p>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>ゴーレムパンチ<small>素早いパンチ（遠ければ先に近づく）。しゃがみ（↓＋U）は下段パンチ。</small></td><td class="keys"><kbd>U</kbd></td></tr>
-          <tr><td>ゴーレムの掴み<small>ゴーレムが相手を掴み（ガード不能）、3秒間つかまえる。捕まっている間は石が必ず当たり、威力も上がる：J、J、K——最後の石で振りほどく。U、U、Iの連続技にも。</small></td><td class="keys"><kbd>I</kbd></td></tr>
+          <tr><td>ゴーレムパンチ<small>素早いパンチ（遠ければ先に近づく）。しゃがみ（↓＋U）は二人ともしゃがんで下段パンチ。</small></td><td class="keys"><kbd>U</kbd></td></tr>
+          <tr><td>ゴーレムの掴み<small>ゴーレムが相手を掴み（ガード不能）、位置を入れ替えて錬金術師の目の前に差し出し、後ろから3秒間押さえつける。捕まっている間は石が必ず当たり、威力も上がる：J、J、K——最後の石で振りほどく。U、U、Iの連続技にも。</small></td><td class="keys"><kbd>I</kbd></td></tr>
           <tr><td>砂石投げ<small>パンチ、パンチ、そしてK：砂と石を高く投げ上げ、相手の上に降らせる。</small></td><td class="keys"><kbd>U</kbd> <kbd>U</kbd> <kbd>K</kbd></td></tr>
           <tr><td>石投げ<small>光る石を胸の高さに1個投げる。空中では相手に向けて投げる。</small></td><td class="keys"><kbd>J</kbd></td></tr>
           <tr><td>下段石投げ<small>石を床すれすれに1個投げる（下段）。ダウン中の相手にも当たる。</small></td><td class="cmd">↓ + J</td></tr>

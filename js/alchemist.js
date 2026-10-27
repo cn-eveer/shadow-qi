@@ -26,7 +26,7 @@ Object.assign(POSES, { // throwing a stone: the arm drawn back behind him with t
   const throwing = (label, fn, ex = {}) => order(label, 'alThrow', fn, { wind: 'alThrowW', startup: 9, recovery: 14, ...ex });
   const L = CHARS.alchemist.normalLook, golem = k => (f, o) => golemOrder(f, k);
   for (const st of ['s', 'c', 'j']) {
-    L[st + 'p0'] = order(st === 'c' ? 'Order: Low Punch' : 'Order: Punch', st === 'c' ? 'gLow' : 'gAim', golem(st === 'c' ? 'lowp' : 'lp'));
+    L[st + 'p0'] = order(st === 'c' ? 'Order: Low Punch' : 'Order: Punch', st === 'c' ? 'gLow' : 'gAim', golem(st === 'c' ? 'lowp' : 'lp'), st === 'c' ? { crouch: true } : {}); // (↓ + U: he crouches and the golem drops into a crouching low punch)
     L[st + 'p1'] = order('Order: Smash', 'gTwin', golem('hp'));
   }
   L.sk0 = throwing('Stone Throw', (f, o) => alchemistStone(f, o, 70, {}));
@@ -132,11 +132,14 @@ function golemBlast(f, o) { // a beam of glowing core energy straight out of its
   for (let i = 0; i < 10; i++) parts.push({ type: 'spark', x: g.x + d * 36, y: GROUND - 80 - g.y, vx: d * rnd(2, 9), vy: rnd(-3, 3), life: 12, max: 12, col: '255,200,90' });
 }
 const live0 = (f, o) => game.phase === 'fight' && !f.ko && !o.ko;
-function golemSeize(f, o) { // the grab: held for three seconds, so J, J, K can't miss
-  const g = f.golem; g.hold = { t: 180 }; setState(o, 'stunned'); o.stunT = 184; o.stunKind = 'held'; o.stunUsed = true;
+function golemPlace(f, o) { // while it holds them: they're presented in front of the alchemist, the golem behind them, facing him
+  const g = f.golem, hd = g.hold; o.x = clamp(f.x + hd.side * 100, WALL_L + 20, WALL_R - 20); g.x = clamp(o.x + hd.side * 74, WALL_L, WALL_R); g.facing = -hd.side; o.vx = 0;
+}
+function golemSeize(f, o) { // the grab: the golem and the opponent swap places (they're shown to the alchemist) and he holds them for three seconds, so J, J, K can't miss
+  const g = f.golem; g.hold = { t: 180, side: Math.sign(o.x - f.x) || f.facing }; golemPlace(f, o); setState(o, 'stunned'); o.stunT = 184; o.stunKind = 'held'; o.stunUsed = true;
   popText(o.x, GROUND - 190, L('GRABBED!', '捕まえた！'), '255,215,140'); sfx('block'); game.shake = Math.max(game.shake, 3);
 }
-function golemBox(g) { return { x0: g.x - 46, x1: g.x + 46, y0: g.y, y1: g.y + (g.crouch ? 130 : 165) }; }
+function golemBox(g) { return { x0: g.x - 46, x1: g.x + 46, y0: g.y, y1: g.y + (g.crouch || (g.act && g.act.kind === 'lowp') ? 125 : 165) }; }
 function golemDamage(f, n, x, y) { // the golem takes a hit; at zero it comes apart
   const g = f.golem; if (g.broken) return; g.hp = Math.max(0, g.hp - n); g.flash = 5; sfx('hitH'); sparks(x, y, 'hit');
   if (g.hp <= 0) { g.broken = true; g.brokenT = 600; g.act = null; g.queue = null; if (g.hold) { const o = other(f); g.hold = null; if (o.state === 'stunned') setState(o, 'recover'); }
@@ -179,7 +182,7 @@ function golemUpdate(f, o) {
   if (g.hold) { // holding them: pinned in front of it until the three seconds are up, or they're knocked loose
     const hd = g.hold; hd.t--;
     if (hd.t <= 0 || o.ko || ['knock', 'down', 'getup'].includes(o.state)) { g.hold = null; if (o.state === 'stunned') setState(o, 'recover'); }
-    else { o.x = clamp(g.x + g.facing * 70, WALL_L, WALL_R); o.vx = 0; if (o.state !== 'stunned') { setState(o, 'stunned'); o.stunT = hd.t + 4; } }
+    else { golemPlace(f, o); if (o.state !== 'stunned') { setState(o, 'stunned'); o.stunT = hd.t + 4; } }
     g.act = null; g.queue = null; g.spd = 0; return;
   }
   const a = g.act;
@@ -262,6 +265,7 @@ function drawGolem(f) { // a brown stone golem, drawn in the world where it stan
   if (a) { const k = a.t, su = A.su;
     if (a.kind === 'sand') { squat = k <= su ? 1 - 0.22 * e(k / su) : lerp(0.78, 1.05, Math.min(1, (k - su) / 3)); lean = k <= su ? 0.1 : -0.08; }
     if (a.kind === 'core') { glow = 1 + 2.4 * e(Math.min(1, k / su)) * (k <= su + 4 ? 1 : Math.max(0, 1 - (k - su - 4) / 14)); lean = k <= su ? -0.1 : 0.06; squat = k <= su ? 0.97 : 1; } // the core swells, then fires
+    if (a.kind === 'lowp') { squat = k <= su ? 1 - 0.28 * e(k / su) : 0.72; lean = k <= su ? -0.05 : 0.14; } // the low punch: it drops into a crouch
     if (a.kind === 'tackle') lean = k <= su ? -0.1 : 0.32; if (a.kind === 'shield') lean = k <= su ? -0.04 : 0.1;
     if (a.kind === 'hp') lean = k <= su ? -0.06 : 0.1; if (a.kind === 'lp' || a.kind === 'lowp') lean = k <= su ? -0.04 : 0.06; }
   ctx.save(); ctx.translate(g.x, GROUND - g.y); ctx.scale(g.facing * s, s); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
