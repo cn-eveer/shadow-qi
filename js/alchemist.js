@@ -8,7 +8,7 @@ CHARS.alchemist = {
   name: 'ALCHEMIST', title: 'Golem Master', nameJa: '錬金術師', titleJa: 'ゴーレム使い', dmgMul: 1, scale: 1, walk: 3.0, back: 2.6, jumpX: 4.0, jumpV: 17, jugDmg: 1,
   pDmg: 1, kDmg: 1, pReach: 1, kReach: 1, chargeRate: 0.6, auraCol: '255,200,120', fxCol: '255,200,120',
   ammo: 6, // six glowing stones in his pockets: every stone he throws (or sets as a trap) uses one, and they come back one at a time
-  sp: { fK: 'alUpStone', fKH: 'alTrap' }, sup: null, // (→ → + J: stone lob; → → + K: trap stone; his own super comes later)
+  sp: { fK: 'alUpStone', fKH: 'alTrap', fP: 'alShield', fPH: 'alTackle' }, sup: null, // (→ → + J: stone lob; → → + K: trap stone; his own super comes later)
   normalLook: {},
   colors: { coat: '#f4f6f8', coatB: '#d4d9de', pants: '#3a3f4f', pantsB: '#2b2f3b', shoe: '#2a2a30', shirt: '#cfe3f2', skin: '#efc9a4', hair: '#8e8f96', glass: '#2a2a30', stetho: '#2b2b33' },
   meterCol: ['#d98a2c', '#ffe0a8'], bannerCol: 'rgba(150,110,60,.9)', idle: 'idle', chargePose: 'gAim', winPose: 'win', atkCD: 8, recoverT: 10, hitFx: 'star',
@@ -20,7 +20,7 @@ Object.assign(POSES, { // throwing a stone: the arm drawn back behind him with t
   alThrowLow: P(30, 70,86, -10,30, 40,4, -26,-12) });
 // His buttons. U and I order the golem (a crouching U is its low punch; I (or U, U, I) its three-second grab). J, K and → → are his own glowing stones:
 //   J: one stone at chest height · ↓ + J: one low · → → + J: lobbed up, it comes down and stuns · K: three in a row, chargeable (3 gauges)
-//   → → + K: sets a trap stone forward (up to six; it bursts when they step on it, or after six seconds) · ↓ + K: the golem's core blaster
+//   → → + K: sets a trap stone forward (up to six; it bursts when they step on it, or after six seconds) · ↓ + I: the golem's core blaster · → → + I: its tackle · → → + U: its shield bash
 {
   const order = (label, pose, fn, ex = {}) => ({ label, startup: 5, active: 2, recovery: 5, wind: 'idle', pose, hitbox: null, chain: null, launch: false, kd: false, antiDone: true, ...ex, onFrame: (f, o, mf) => { if (mf === f.move.startup) fn(f, o); } });
   const throwing = (label, fn, ex = {}) => order(label, 'alThrow', fn, { wind: 'alThrowW', startup: 9, recovery: 14, ...ex });
@@ -31,7 +31,8 @@ Object.assign(POSES, { // throwing a stone: the arm drawn back behind him with t
   }
   L.sk0 = throwing('Stone Throw', (f, o) => alchemistStone(f, o, 70, {}));
   L.ck0 = throwing('Low Stone Throw', (f, o) => alchemistStone(f, o, 24, {}), { wind: 'alThrowW', pose: 'alThrowLow', crouch: true });
-  L.ck1 = order('Order: Core Blaster', 'gTwin', golem('hk'), { crouch: true });
+  L.cp1 = order('Order: Core Blaster', 'gTwin', golem('core'), { crouch: true });
+  L.ck1 = throwing('Low Stone Volley', (f, o) => [0, 1, 2].forEach(i => alchemistStone(f, o, 24, { k: 0.7, sp: 9 + i * 1.6, fan: i, label: 'Stone Volley' })), { crouch: true, pose: 'alThrowLow' });
   L.jk0 = throwing('Air Stone Throw', (f, o) => alchemistStone(f, o, 70, {}), { startup: 7 });
   L.jk1 = throwing('Air Stone Volley', (f, o) => alchemistVolley(f, o, 0, 1), { startup: 7 });
   L.sk1 = { label: 'Stone Volley', held: true, startup: 999, active: 2, recovery: 14, wind: 'alThrowW', pose: 'alThrow', hitbox: null, chain: null, launch: false, kd: false, antiDone: true, onFrame: stoneCharged,
@@ -92,16 +93,20 @@ function trapUpdate(p) {
 { const smb = specialMoveBase; specialMoveBase = function (id) {
   if (id === 'alUpStone') return { id, label: 'Stone Lob', startup: 10, active: 2, recovery: 16, wind: 'alThrowW', pose: 'alThrow', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) alchemistLob(f, o); } };
   if (id === 'alTrap') return { id, label: 'Trap Stone', startup: 12, active: 2, recovery: 16, wind: 'alThrowW', pose: 'alThrowLow', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) alchemistTrap(f); } };
+  if (id === 'alShield') return { id, label: 'Order: Shield Bash', startup: 5, active: 2, recovery: 5, wind: 'idle', pose: 'gTwin', hitbox: null, antiDone: true, onFrame: (f, o, mf) => { if (mf === f.move.startup) golemOrder(f, 'shield'); } };
+  if (id === 'alTackle') return { id, label: 'Order: Tackle', startup: 5, active: 2, recovery: 5, wind: 'idle', pose: 'gAim', hitbox: null, antiDone: true, onFrame: (f, o, mf) => { if (mf === f.move.startup) golemOrder(f, 'tackle'); } };
   return smb(id); }; }
-TECH_TIER.alUpStone = 'fast'; TECH_TIER.alTrap = 'fast';
+TECH_TIER.alShield = 'fast'; TECH_TIER.alTackle = 'fast'; TECH_TIER.alUpStone = 'fast'; TECH_TIER.alTrap = 'fast';
 const GOLEM_ACT = { // startup / active / recovery (frames), and the blow
   lp: { su: 7, ac: 3, rec: 12, reach: [10, 85], y: [10, 135], h: { dmg: 28, stun: 30, bstun: 11, push: 1.6, hitstop: 6, str: 0, gdrain: 4, label: 'Golem Punch' } },
   lowp: { su: 8, ac: 3, rec: 14, reach: [10, 95], y: [0, 40], h: { dmg: 26, stun: 30, bstun: 11, push: 1.6, hitstop: 6, str: 0, gdrain: 4, low: true, label: 'Golem Low Punch' } },
   hp: { su: 10, ac: 2, rec: 22, grab: true, reach: [0, 95], y: [0, 150], h: { dmg: 18, stun: 12, bstun: 12, push: 0, hitstop: 6, str: 1, gdrain: 0, grab: true, label: 'Golem Grab', heavy: true } }, // I: it seizes them and holds them for three seconds
+  shield: { su: 10, ac: 6, rec: 20, shield: true, reach: [10, 95], y: [0, 150], h: { dmg: 34, stun: 22, bstun: 22, push: 5, hitstop: 8, str: 1, gdrain: 24, label: 'Golem Shield Bash', heavy: true } }, // →→U: a slab of stone held out front; it blocks shots and bashes
+  tackle: { su: 8, ac: 18, rec: 26, rush: 13, reach: [10, 80], y: [0, 150], h: { dmg: 48, stun: 24, bstun: 16, push: 5, hitstop: 9, str: 1, gdrain: 16, kd: true, kdVx: 11, kdVy: 7, label: 'Golem Tackle', heavy: true } }, // →→I: it charges in
   sand: { su: 13, ac: 1, rec: 22 }, // U, U, K: it scoops up sand and stones and flings them into the air, to rain down on them
   core: { su: 18, ac: 1, rec: 26 }, // K: the core blaster
 };
-const GOLEM_ARMS = { lp: [[8, -92], [0, -92]], lowp: [[10, -60], [0, -30]], hp: [[30, -96], [62, -98]], sand: [[26, -20], [64, -150]], core: [[-16, -102], [-12, -102]] }; // each blow's arm: drawn back, then thrown (x forward of the golem, y up)
+const GOLEM_ARMS = { lp: [[8, -92], [0, -92]], lowp: [[10, -60], [0, -30]], hp: [[30, -96], [62, -98]], sand: [[26, -20], [64, -150]], shield: [[10, -118], [52, -92]], tackle: [[-14, -88], [36, -92]], core: [[-16, -102], [-12, -102]] }; // each blow's arm: drawn back, then thrown (x forward of the golem, y up)
 function newGolem(f) { return { x: f.x - f.facing * 90, facing: f.facing, act: null, queue: null, qT: 0, cd: 30, dashT: 0, ph: 0, spd: 0, y: 0, vy: 0, js: 0, crouch: false, hp: 300, max: 300, broken: false, brokenT: 0, seen: {}, hold: null, flash: 0 }; }
 function golemOrder(f, kind) { // I (also U, U, I) is the grab; U, U, K the sand toss; ↓ + K the core blaster
   const g = f.golem; if (!g || f.ko) return;
@@ -145,6 +150,7 @@ function golemTakeHits(f, o) { // the opponent's attacks can hit the golem too
   }
   for (const p of projs) {
     if (p.owner !== o || p.dead || g.seen['p' + p.id] || !(p.h || p.dmg) || p.type === 'decoy' || p.type === 'guardShadow') continue;
+    const sa = g.act && GOLEM_ACT[g.act.kind]; if (sa && sa.shield && g.act.t >= sa.su - 4 && g.act.t <= sa.su + sa.ac + 4 && overlap(projBox(p), { x0: Math.min(g.x, g.x + g.facing * 90), x1: Math.max(g.x, g.x + g.facing * 90), y0: 0, y1: 160 })) { g.seen['p' + p.id] = 1; if (!p.pierce && p.type !== 'beam' && p.type !== 'flame') p.dead = true; sparks(p.x, GROUND - p.y, 'block'); sfx('block'); continue; } // (the shield stops shots)
     if (overlap(projBox(p), gb)) { g.seen['p' + p.id] = 1; golemDamage(f, Math.round(((p.h && p.h.dmg) || p.dmg || 15) * (o.ch.dmgMul || 1) * 0.8), p.x, GROUND - p.y); if (!p.pierce && !p.hold && p.type !== 'beam' && p.type !== 'flame') p.dead = true; }
   }
 }
@@ -179,7 +185,8 @@ function golemUpdate(f, o) {
   const a = g.act;
   if (a) {
     const A = GOLEM_ACT[a.kind]; a.t++;
-    if (a.t <= A.su && dist > 70 && A.reach) { g.x += dir * 1.6; g.spd = 1.6; }
+    if (a.t <= A.su && dist > 70 && A.reach && !A.rush) { g.x += dir * 1.6; g.spd = 1.6; }
+    if (A.rush && a.t > A.su && a.t <= A.su + A.ac && !a.hit) { g.x += g.facing * A.rush; g.spd = A.rush; } // (the tackle: it charges until it hits)
     if (A.reach) {
       if (a.t > A.su && a.t <= A.su + A.ac && !a.hit) {
         const x0 = g.x + g.facing * A.reach[0], x1 = g.x + g.facing * A.reach[1], hb = { x0: Math.min(x0, x1), x1: Math.max(x0, x1), y0: A.y[0] + g.y, y1: A.y[1] + g.y }, hu = hurtbox(o, false, !!A.h.low); // (a low punch reaches someone lying on the floor too)
@@ -190,10 +197,9 @@ function golemUpdate(f, o) {
   } else {
     g.facing = dir;
     const q = g.queue;
-    if (q) { g.qT++; if (dist <= 100) golemStart(f, q, false); else if (g.qT > 70) g.queue = null; }
-    else if (dist < 95 && g.cd <= 0) golemStart(f, 'lp', true); // next to them it punches on its own
+    if (q) { g.qT++; const Q = GOLEM_ACT[q]; if (!Q.reach || Q.rush || dist <= 100) golemStart(f, q, false); else if (g.qT > 70) g.queue = null; } // (the blaster, sand toss and tackle start from anywhere; punches and bashes come in first)
     if (!g.act) {
-      if (inp.h) { const sp = g.dashT > 0 ? 7 : g.y > 0 ? 3.5 : 2.6; g.x += Math.sign(inp.h) * sp; g.spd = sp; } // his movement comes first
+      if (inp.h) { const away = Math.sign(inp.h) === -(Math.sign(o.x - f.x) || f.facing), sp = g.dashT > 0 || away ? 7 : g.y > 0 ? 3.5 : 2.6; g.x += dir * sp; g.spd = sp; } // it always moves toward the opponent: when he backs away it dashes in, when he walks in it walks in
       else if (g.y <= 0 && !g.crouch && dist > (q ? 80 : 60)) { const sp = g.dashT > 0 || q ? 6.5 : 2.5; g.x += dir * sp; g.spd = sp; } // otherwise it walks to the opponent itself
     }
   }
@@ -256,6 +262,7 @@ function drawGolem(f) { // a brown stone golem, drawn in the world where it stan
   if (a) { const k = a.t, su = A.su;
     if (a.kind === 'sand') { squat = k <= su ? 1 - 0.22 * e(k / su) : lerp(0.78, 1.05, Math.min(1, (k - su) / 3)); lean = k <= su ? 0.1 : -0.08; }
     if (a.kind === 'core') { glow = 1 + 2.4 * e(Math.min(1, k / su)) * (k <= su + 4 ? 1 : Math.max(0, 1 - (k - su - 4) / 14)); lean = k <= su ? -0.1 : 0.06; squat = k <= su ? 0.97 : 1; } // the core swells, then fires
+    if (a.kind === 'tackle') lean = k <= su ? -0.1 : 0.32; if (a.kind === 'shield') lean = k <= su ? -0.04 : 0.1;
     if (a.kind === 'hp') lean = k <= su ? -0.06 : 0.1; if (a.kind === 'lp' || a.kind === 'lowp') lean = k <= su ? -0.04 : 0.06; }
   ctx.save(); ctx.translate(g.x, GROUND - g.y); ctx.scale(g.facing * s, s); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(0, 0, 38, 8, 0, 0, Math.PI * 2); ctx.fill();
@@ -269,7 +276,7 @@ function drawGolem(f) { // a brown stone golem, drawn in the world where it stan
     const sh = two ? -2 : 0; // (the other hand of a two-handed blow trails a little)
     return k <= su ? [lerp(rest[0], pull[0], e(k / su)), lerp(rest[1], pull[1], e(k / su))] : k <= end + 2 ? [lerp(pull[0], fwd[0] + sh, Math.min(1, (k - su) / 2)), lerp(pull[1], fwd[1], Math.min(1, (k - su) / 2))]
       : [lerp(fwd[0], rest[0], e(Math.min(1, (k - end - 2) / (A.rec * 0.8)))), lerp(fwd[1], rest[1], e(Math.min(1, (k - end - 2) / (A.rec * 0.8))))]; };
-  const twoHanded = (a && (a.kind === 'sand' || a.kind === 'core' || a.kind === 'hp')) || !!g.hold;
+  const twoHanded = (a && (a.kind === 'sand' || a.kind === 'core' || a.kind === 'hp' || a.kind === 'tackle')) || !!g.hold;
   const farRest = [-42, -46 - bob], nearRest = [34, -48 - bob], useFar = a && a.alt && !twoHanded;
   const farH = twoHanded ? hand([-30, -50], true) : useFar ? hand(farRest) : farRest, nearH = (a && !useFar) ? hand(nearRest) : nearRest;
   if (!useFar) arm(-30, -86 - bob, farH[0] - (twoHanded ? 8 : 0), farH[1], '#7a5b3b');                       // the far arm
@@ -280,6 +287,7 @@ function drawGolem(f) { // a brown stone golem, drawn in the world where it stan
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = 'rgba(255,170,60,.95)'; ctx.fillRect(1, -112 - bob, 6, 4); ctx.fillRect(9, -112 - bob, 5, 4); ctx.restore();
   if (useFar) arm(-30, -86 - bob, farH[0], farH[1], '#9a7852');                                               // (the other fist throws the second punch of a string)
   else arm(30, -86 - bob, nearH[0], nearH[1], '#9a7852');
+  if (a && a.kind === 'shield') { ctx.save(); ctx.translate(nearH[0] + 12, nearH[1]); ctx.fillStyle = '#7a5b3b'; ctx.strokeStyle = '#4a3523'; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(-9, -52, 20, 108, 6); ctx.fill(); ctx.stroke(); ctx.strokeStyle = '#5a4129'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-4, -30); ctx.lineTo(4, -8); ctx.lineTo(-3, 18); ctx.stroke(); ctx.restore(); } // the slab of stone
   ctx.restore();
   ctx.restore();
   const w = 60, x = g.x - w / 2, y = GROUND - g.y - 176 * (g.crouch ? 0.85 : 1); ctx.fillStyle = 'rgba(8,8,20,.7)'; ctx.fillRect(x - 2, y - 2, w + 4, 8); ctx.fillStyle = g.hp / g.max > 0.35 ? '#d9a65a' : '#e06a4a'; ctx.fillRect(x, y, w * g.hp / g.max, 4); // its health
