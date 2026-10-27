@@ -595,6 +595,10 @@ function drawOpusFront(f) { // in front of them: the golem's pieces flying in, t
   if (e >= 1 && c.bind) { const lit = c.stones.filter(st => st.t >= 10).length / OPUS_THROWS.length; ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(${pal.core},${0.3 + 0.6 * lit})`; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(o.x - 10, GROUND - 10); ctx.lineTo(o.x + 6, GROUND - 60); ctx.lineTo(o.x - 8, GROUND - 110); ctx.moveTo(o.x + 14, GROUND - 30); ctx.lineTo(o.x + 4, GROUND - 90); ctx.stroke(); ctx.restore(); } // (cracks of light through the shell)
 }
 function drawGolemFront(f) { if (f.fuse) drawFuseFront(f); if (f.opus) drawOpusFront(f); } // (drawn over both fighters)
+function drawGolemFigure(x, y, facing, k) { // the golem on its own, with a fist raised (the opening's group shot): it rises out of the ground as k goes 0 → 1
+  const f = { golem: { x, y: 0, facing, act: null, hold: null, broken: false, hidden: false, spd: 0, ph: 0, hp: 1, max: 1, life: GOLEM_LIFE, flash: 0, crouch: false }, pillars: [], state: 'win', st: 99, side: 0, alt: false, fuseT: 0, ch: CHARS.alchemist, bare: true };
+  ctx.save(); ctx.globalAlpha *= k; ctx.translate(0, y - GROUND + (1 - k) * 40); drawGolem(f); ctx.restore();
+}
 function drawGolem(f) { // a stone golem, drawn in the world where it stands
   const g = f.golem; if (!g) return; const pal = golemPal(f);
   if (f.opus) drawOpusFloor(f);
@@ -645,6 +649,7 @@ function drawGolem(f) { // a stone golem, drawn in the world where it stands
   if (a && a.kind === 'shield') { ctx.save(); ctx.translate(nearH[0] + 12, nearH[1]); ctx.fillStyle = pal.dark; ctx.strokeStyle = pal.line; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(-9, -52, 20, 108, 6); ctx.fill(); ctx.stroke(); ctx.strokeStyle = pal.crack; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-4, -30); ctx.lineTo(4, -8); ctx.lineTo(-3, 18); ctx.stroke(); ctx.restore(); } // the slab of stone
   ctx.restore();
   ctx.restore();
+  if (f.bare) return; // (a figure in the opening: no bars)
   const w = 60, x = g.x - w / 2, y = GROUND - g.y - 178 * (g.crouch ? 0.85 : 1); ctx.fillStyle = 'rgba(8,8,20,.7)'; ctx.fillRect(x - 2, y - 2, w + 4, 10); // its health, and under it the time it has left
   ctx.fillStyle = g.hp / g.max > 0.35 ? '#d9a65a' : '#e06a4a'; ctx.fillRect(x, y, w * g.hp / g.max, 4); ctx.fillStyle = `rgba(${pal.glow},.85)`; ctx.fillRect(x, y + 5, w * g.life / GOLEM_LIFE, 2);
   if (g.flash > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(255,255,255,${0.12 * g.flash})`; ctx.fillRect(g.x - 50, GROUND - g.y - 170, 100, 170); ctx.restore(); }
