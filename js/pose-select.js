@@ -179,7 +179,7 @@ function drawTail(f, tip, fade, fire) { // the devil's tail: thick at the base, 
   ctx.restore();
 }
 function tailArcFX(f, mv) { // a tail attack's tip travels along an arc (angles: 0 = straight ahead, π/2 = up, π = behind) from mv.tail.a0 to a1 as it strikes
-  const T = mv.tail, S = mv.startup, mf = f.mf, end = S + (mv.active || 4); if (mf < 1 || mf > end + 8) return;
+  const T = mv.tail, S = mv.tailS != null ? mv.tailS + 1 : mv.startup, mf = f.mf, end = S + (mv.tailS != null ? 3 : (mv.active || 4)); if (mf < 1 || mf > end + 8) return; // (tailS: a frenzy of strikes, each its own quick sweep)
   const k = mf < S ? 0.15 * mf / S : Math.min(1, 0.15 + 0.85 * (mf - S) / Math.max(1, end - S)), fade = mf > end ? 1 - (mf - end) / 8 : 1;
   const an = T.a0 + (T.a1 - T.a0) * k, L = T.len * f.ch.scale, s0 = f.ch.scale, cx = f.x + f.facing * 14 * s0, cy = GROUND - f.y - (T.h || 90) * s0;
   const tip = [cx + Math.cos(an) * L * f.facing, cy - Math.sin(an) * L];
@@ -301,7 +301,7 @@ function targetPose(f) {
   if (f.state === 'win') return winPose(f); // victory.js
   switch (f.state) {
     case 'stand': return Math.abs(f.vx) > 0.1 ? walkPose(f) : idlePose(f.side * 1.7, f.key, f.ch);
-    case 'crouch': return f.backHeld ? POSES.cguard : POSES[f.ch.crouchPose || 'crouch'];
+    case 'crouch': { if (f.backHeld) return POSES.cguard; const c = POSES[f.ch.crouchPose || 'crouch']; if (Math.abs(f.vx) < 0.3) return c; const s = Math.sin(globalT * 0.35), p = { ...c }; p.l1u += s * 10; p.l2u -= s * 10; p.l1l -= Math.max(0, s) * 8; p.l2l -= Math.max(0, -s) * 8; p.t += 3; return p; } // (a low shuffle forward)
     case 'guard': return POSES.guard;
     case 'blockstun': return f.cguard ? POSES.cguard : POSES.guard;
     case 'jump': return POSES.jump;
@@ -323,13 +323,36 @@ function targetPose(f) {
   }
   return POSES.idle;
 }
+function finerMotion(f, p) { // little secondary motions layered on top of the pose (drawing only): breathing, sway, the weight of armor, a float
+  const t = globalT + (f.side ? 37 : 0), idle = f.state === 'stand' && Math.abs(f.vx) < 0.1, walk = f.state === 'stand' && !idle;
+  if (f.key === 'kappa' && floodOwner(f) && f.state === 'stand' && Math.abs(f.vx) > 0.5) { const s = Math.sin(t * 0.5); const q = lerpPose(p, POSES.kBelly, 0.8); q.l1u += s * 18; q.l2u -= s * 18; q.a1u += s * 20; q.a2u -= s * 20; return q; } // swimming: flat on the water, kicking and paddling
+  if (f.key === 'kappa') { // a small wild creature: quick shallow breaths, a twitchy head, a bounce in his step
+    if (idle) { const b = Math.sin(t * 0.21); p.t += b * 2.2; p.a1l += Math.sin(t * 0.13) * 6; p.a2l += Math.sin(t * 0.13 + 1.4) * 6; if (Math.floor(t / 70) % 3 === 0) p.t += Math.sin(t * 0.9) * 1.5; }
+    if (walk) { const s = Math.sin(t * 0.55); p.l1u += s * 6; p.l2u -= s * 6; p.t += Math.abs(s) * 3; }
+  } else if (f.key === 'paladin') { // heavy plate: a slow deep breath, the shield arm settling, weight shifting foot to foot
+    if (idle) { const b = Math.sin(t * 0.045); p.t += b * 1.2; p.a2u += Math.sin(t * 0.05 + 0.8) * 2.5; p.a1l += b * 2; p.l1l -= Math.max(0, b) * 2; p.l2l -= Math.max(0, -b) * 2; }
+    if (walk) { const s = Math.sin(t * 0.32); p.t += 2 + s * 1.5; p.a2u += s * 3; }
+  } else if (f.key === 'psychic') { // she floats: a slow drift, sleeves and the open hand flowing
+    const b = Math.sin(t * 0.06); p.a2u += Math.sin(t * 0.07 + 1) * 5; p.a2l += Math.sin(t * 0.09) * 7; p.l1l += b * 4; p.l2l -= b * 4; p.t += b * 1.2;
+  }
+  if (idle && f.key === 'kappa' && t % 110 === 0) parts.push({ type: 'aura', x: f.x + f.facing * 6, y: GROUND - f.y - 150 * f.ch.scale, vx: vrnd(-0.6, 0.6), vy: 1.2, life: 22, max: 22, r: 2.5, col: '150,215,255' }); // a drop spills from his dish
+  if (f.key === 'psychic' && t % 18 === 0) parts.push({ type: 'aura', x: f.x + vrnd(-26, 26), y: GROUND - f.y - vrnd(10, 40), vx: 0, vy: -vrnd(0.3, 0.8), life: 30, max: 30, r: 1.8, col: '210,190,255' }); // motes of light rising where she floats
+  if (idle && f.key === 'paladin' && t % 140 === 0) parts.push({ type: 'spark', x: f.x + f.facing * 30, y: GROUND - f.y - vrnd(130, 190), vx: 0, vy: -0.4, life: 12, max: 12, col: '235,245,255' }); // a glint runs along the blade
+  return p;
+}
 function updatePose(f) {
   if (f.state !== 'attack') { f.windPhase = -1; f.animDX = (f.animDX || 0) * 0.6; if (f.gunOutT > 0) f.gunOutT--; } else if (f.key === 'gunman') f.gunOutT = 24; // (Jesse holsters a moment after he stops shooting)
-  const tp = targetPose(f);
+  let tp = targetPose(f);
+  if (f.recoilT > 0) { // guarded: rocked back off balance, then gathering himself
+    if (f.state !== 'attack' || !f.move) f.recoilT = 0;
+    else if (f.mf > f.move.startup + (f.move.active || 0)) { f.recoilT--; const k = Math.min(1, f.recoilT / 8) * 0.65, p = lerpPose(tp, POSES.staggered, k); p.t += Math.sin(f.recoilT * 1.3) * 3 * k; tp = p; f.animDX = -f.facing * 5 * k; } }
+  if (f.settleT > 0) { f.settleT--; if (f.state === 'stand' || f.state === 'crouch') tp = lerpPose(tp, f.state === 'crouch' ? POSES.cguard : POSES.guard, f.settleT / 10); } // out of block-stun: the guard comes down gradually
   const k = f.state === 'attack' ? 1 : (f.state === 'hitstun' || f.state === 'knock') ? 0.55 : 0.35;
   f.pose = k === 1 ? tp : lerpPose(f.pose, tp, k);
+  if (f.state !== 'attack' && (f.key === 'kappa' || f.key === 'paladin' || f.key === 'psychic')) f.pose = finerMotion(f, { ...f.pose });
+  const swim = f.key === 'kappa' && floodOwner(f) && f.state === 'stand' && Math.abs(f.vx) > 0.5;
   const air = f.y > 0 || f.state === 'knock';
-  const target = air ? 55 : (f.state === 'roll' || f.state === 'broll') ? 34 : hipFor(f.pose);
+  const target = air ? 55 : (f.state === 'roll' || f.state === 'broll') ? 34 : swim ? 26 : hipFor(f.pose);
   f.hipUp = f.hipUp == null ? target : lerp(f.hipUp, target, air ? 0.35 : 0.5);
 }
 

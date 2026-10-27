@@ -111,8 +111,8 @@ function drawStaff(J, C, o) {
   if (L < 14) { dx = J.h1[0] - J.e1[0]; dy = J.h1[1] - J.e1[1]; L = Math.hypot(dx, dy) || 1; }
   let ux = dx / L, uy = dy / L;
   if (o.staffSpin != null) { const an = o.staffSpin; ux = Math.cos(an); uy = Math.sin(an); }
-  const half = 92, c = o.staffSpin != null || L < 14 ? J.h1 : [(J.h1[0] + J.h2[0]) / 2, (J.h1[1] + J.h2[1]) / 2]; // held in the middle, both hands on it
-  const a = [c[0] - ux * half, c[1] - uy * half], b = [c[0] + ux * (half + (o.staffExt || 0)), c[1] + uy * (half + (o.staffExt || 0))];
+  const spin = o.staffSpin != null || L < 14, back = spin ? 92 : 34, front = spin ? 92 : 150, c0 = spin ? J.h1 : J.h2, c1 = J.h1; // held near the back end: a short end behind her hands, the long end out in front (twirling, it spins about the middle)
+  const a = [c0[0] - ux * back, c0[1] - uy * back], b = [c1[0] + ux * (front + (o.staffExt || 0)), c1[1] + uy * (front + (o.staffExt || 0))];
   seg(a, b, 5.2, C.staffB); seg(a, b, 3.6, C.staff);
   seg(a, [a[0] + ux * 9, a[1] + uy * 9], 6, C.cap); seg([b[0] - ux * 9, b[1] - uy * 9], b, 6, C.cap);
   if (o.staffExt) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; seg([b[0] - ux * 16, b[1] - uy * 16], b, 9, 'rgba(255,215,120,.45)'); ctx.restore(); }
@@ -267,16 +267,13 @@ function drawGreatsword(J, C, o) {
   seg(at(16), at(10 + len * 0.78), 1.4, 'rgba(120,135,160,.75)');                                  // the fuller down the middle
   if (o.staffExt || o.edge) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; seg(at(12), tip, o.edge ? 13 : 16, 'rgba(150,205,255,.4)'); seg(at(12), tip, 5, 'rgba(235,248,255,.85)'); ctx.restore(); }
   const ea = o.tint || o.flash ? 0 : (o.edgeA || 0);
-  if (ea > 0) { // no shine on the steel: when he strikes, the aura of Excalibur forms around his sword — a great blade of light, longer and wider than the real one
-    const L = len * 1.7, w = 12, A0 = at(6), T = at(6 + L), q = k => [A0[0] + ux * L * k, A0[1] + uy * L * k];
-    ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    const g = ctx.createLinearGradient(A0[0], A0[1], T[0], T[1]); g.addColorStop(0, `rgba(190,225,255,${0.55 * ea})`); g.addColorStop(1, `rgba(255,255,255,${0.85 * ea})`);
-    ctx.fillStyle = g; ctx.beginPath(); const [p0, p9] = [q(0), q(0.88)];
-    ctx.moveTo(p0[0] + nx * w, p0[1] + ny * w); ctx.lineTo(p9[0] + nx * w * 0.8, p9[1] + ny * w * 0.8); ctx.lineTo(T[0], T[1]); ctx.lineTo(p9[0] - nx * w * 0.8, p9[1] - ny * w * 0.8); ctx.lineTo(p0[0] - nx * w, p0[1] - ny * w); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = `rgba(255,255,255,${0.7 * ea})`; ctx.lineWidth = 1.6; ctx.stroke();
-    seg([A0[0] + nx * w * 2.6, A0[1] + ny * w * 2.6], [A0[0] - nx * w * 2.6, A0[1] - ny * w * 2.6], 5, `rgba(255,220,140,${0.85 * ea})`); // the aura's golden cross-guard
-    for (let k = 1; k <= 3; k++) { const r = q(0.2 * k + 0.1); dot(r, 2, `rgba(255,240,200,${0.7 * ea})`); } // runes glowing along it
-    ctx.restore(); } // the blade blazes with light as it strikes
+  if (ea > 0) { // when he strikes, the steel itself shines: a bright edge along the blade, a glint running to the tip — the sword stays its own size
+    const base = at(12), g0 = 0.15 + 0.7 * ((globalT * 0.09) % 1); ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    seg(base, tip, 7, `rgba(170,215,255,${0.35 * ea})`); seg(base, tip, 2.4, `rgba(255,255,255,${0.9 * ea})`); // the shining edge
+    const gp = [base[0] + (tip[0] - base[0]) * g0, base[1] + (tip[1] - base[1]) * g0], gr = 7 + 4 * ea; // a glint sliding toward the tip
+    const gg = ctx.createRadialGradient(gp[0], gp[1], 0, gp[0], gp[1], gr * 2); gg.addColorStop(0, `rgba(255,255,255,${0.95 * ea})`); gg.addColorStop(1, 'rgba(200,230,255,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(gp[0], gp[1], gr * 2, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = `rgba(255,255,255,${0.9 * ea})`; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(tip[0] - 7, tip[1]); ctx.lineTo(tip[0] + 7, tip[1]); ctx.moveTo(tip[0], tip[1] - 7); ctx.lineTo(tip[0], tip[1] + 7); ctx.stroke(); // a star of light at the point
+    ctx.restore(); }
 }
 // Aldric's kite shield on the back arm, facing out; it whirls around him in Shield Rotation
 function drawKiteShield(J, C, o) {
@@ -349,7 +346,7 @@ function drawPaladin(J, C, o) {
 // Lyra's staff: a slender rod topped with a glowing crystal; she points it to cast
 function drawMageStaff(J, C, o) {
   let ux = J.h1[0] - J.e1[0], uy = J.h1[1] - J.e1[1] + 9; const L = Math.hypot(ux, uy) || 1; ux /= L; uy /= L; // along the forearm, tipped upward
-  const top = [J.h1[0] + ux * 66, J.h1[1] + uy * 66], bot = [J.h1[0] - ux * 62, J.h1[1] - uy * 62];
+  const top = [J.h1[0] + ux * 104, J.h1[1] + uy * 104], bot = [J.h1[0] - ux * 24, J.h1[1] - uy * 24]; // (held low down: a short end below her hand, the long end with the crystal out in front)
   seg(bot, top, 5, '#3e2a55'); seg(bot, top, 3, '#7a5aa0'); dot(bot, 3, C.trim);
   const nx = -uy, ny = ux, c = [top[0] + ux * 9, top[1] + uy * 9];
   ctx.strokeStyle = C.trim; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(c[0], c[1], 10, 0, Math.PI * 2); ctx.stroke();      // the ring holding the crystal
@@ -541,7 +538,9 @@ function drawSalary(J, C, o) {
   if (pos === 'angel' || pos === 'double') { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(255,220,110,${0.85 + 0.15 * Math.sin(t * 0.2)})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(0, 18 + Math.sin(t * 0.1) * 1.5, 10, 3, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); } // halo
   ctx.restore();
   seg(J.sh, J.e1, 9, C.suit); seg(J.e1, J.h1, 8, C.suit); seg(mid(J.e1, J.h1, 0.85), J.h1, 6, C.shirt); dot(J.h1, 4.8, pos === 'devil' ? '#e05a4a' : C.skin);
-  if (pos === 'angel' && !o.tint) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (const h of [J.h1, J.h2]) { const g = ctx.createRadialGradient(h[0], h[1], 1, h[0], h[1], 16); g.addColorStop(0, 'rgba(255,250,220,.95)'); g.addColorStop(1, 'rgba(255,220,120,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(h[0], h[1], 16 + Math.sin(t * 0.2) * 2, 0, Math.PI * 2); ctx.fill(); } ctx.restore(); } // fists of light
+  if (pos === 'angel' && !o.tint && o.praying) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const m = [(J.h1[0] + J.h2[0]) / 2, Math.max(J.h1[1], J.h2[1]) + 10]; // praying: palms pressed together, a thin line of light rising from the fingertips
+    ctx.strokeStyle = 'rgba(255,245,200,.7)'; ctx.lineWidth = 2; for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(m[0], m[1]); ctx.lineTo(m[0] + i * 9, m[1] + 30 + (i ? 0 : 12)); ctx.stroke(); } ctx.restore(); }
+  else if (pos === 'angel' && !o.tint) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (const h of [J.h1, J.h2]) { const g = ctx.createRadialGradient(h[0], h[1], 1, h[0], h[1], 16); g.addColorStop(0, 'rgba(255,250,220,.95)'); g.addColorStop(1, 'rgba(255,220,120,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(h[0], h[1], 16 + Math.sin(t * 0.2) * 2, 0, Math.PI * 2); ctx.fill(); } ctx.restore(); } // fists of light
   if (!o.tint && !o.flash && !o.noMinis) { // the two little passengers (the one who has taken him over is gone from his shoulder)
     const up = [-td[0], -td[1]];
     // they sit out on the points of his shoulders, below his face, so his expressions stay readable
@@ -550,7 +549,7 @@ function drawSalary(J, C, o) {
   }
 }
 function drawBody(key, pose, x, yS, facing, hipUp, o = {}) {
-  const ch = CHARS[key], s = ch.scale, J = solve(pose);
+  const ch = CHARS[key], s = o.scale || ch.scale, J = solve(pose); // (o.scale: a form that changes his size — Tanaka's double possession)
   const C = o.flash ? FLASH : (o.tint || (o.alt && ch.altColors) || ch.colors);
   ctx.save();
   const sx = o.sx == null ? 1 : (o.sx >= 0 ? 1 : -1) * Math.max(0.18, Math.abs(o.sx));
@@ -794,9 +793,15 @@ function drawSanctuary(f) { // a dome of light over the planted sword
   for (let k = 1; k <= 3; k++) { ctx.beginPath(); ctx.ellipse(f.x, y, R * k / 4, R * 0.92, 0, Math.PI, 2 * Math.PI); ctx.strokeStyle = `rgba(200,230,255,${0.2 * fade})`; ctx.stroke(); } // meridians
   ctx.restore();
 }
-function drawAegis(f) { // a sphere of light around him; it dims as his guard meter drains
-  const s = f.ch.scale, cx = f.x, cy = GROUND - f.y - 95 * s, R = 108 * s, k = 0.35 + 0.65 * (f.guard / 100), t = globalT;
+function drawAegis(f) { // a sphere of light around him: it fades as it runs out (time or guard meter, whichever is closer), flickers and cracks near the end, flashes when hit
+  const mv = f.move, s = f.ch.scale, cx = f.x, cy = GROUND - f.y - 95 * s, R = 108 * s, t = globalT;
+  const left = Math.min(f.guard / 100, mv ? Math.max(0, 1 - (f.mf - 14) / 240) : 1); // how much is left
+  const low = left < 0.3, flick = low ? (Math.floor(t / (left < 0.15 ? 2 : 4)) % 2 ? 0.35 : 1) : 1, hitF = mv && mv.aegisHitT != null ? Math.max(0, 1 - (game.frame - mv.aegisHitT) / 10) : 0;
+  const k = (0.12 + 0.88 * left) * flick + hitF * 0.8;
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  if (hitF > 0) { ctx.strokeStyle = `rgba(255,255,255,${hitF})`; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(cx, cy, R * (1 + 0.08 * (1 - hitF)), 0, Math.PI * 2); ctx.stroke(); } // the flash of a hit tearing into it
+  if (left < 0.5) { ctx.strokeStyle = `rgba(230,245,255,${0.7 * flick})`; ctx.lineWidth = 1.5; const n = Math.round((0.5 - left) * 16); // cracks spreading across it
+    for (let i = 0; i < n; i++) { const an = i * 2.4 + 0.7, r0 = R * 0.95; ctx.beginPath(); ctx.moveTo(cx + Math.cos(an) * r0, cy + Math.sin(an) * r0); ctx.lineTo(cx + Math.cos(an + 0.12) * r0 * 0.78, cy + Math.sin(an + 0.12) * r0 * 0.78); ctx.lineTo(cx + Math.cos(an - 0.05) * r0 * 0.62, cy + Math.sin(an - 0.05) * r0 * 0.62); ctx.stroke(); } }
   const g = ctx.createRadialGradient(cx, cy, R * 0.5, cx, cy, R); g.addColorStop(0, 'rgba(150,205,255,0)'); g.addColorStop(0.85, `rgba(150,205,255,${0.22 * k})`); g.addColorStop(1, `rgba(220,240,255,${0.5 * k})`);
   ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();
   ctx.strokeStyle = `rgba(225,242,255,${0.7 * k})`; ctx.lineWidth = 2;
@@ -850,14 +855,14 @@ function drawFighter(f) {
   const mv = f.state === 'attack' ? f.move : null;
   const sword = mv && mv.sword && (mv.iai ? f.mf > 16 && f.mf < 45 : f.mf >= 8);
   if (f.shadowRun) { // dashing as a shadow: drawn exactly like a shadow clone
-    for (let k = 3; k >= 1; k--) drawBody(f.key, f.pose, f.x - f.vx * k * 1.8, GROUND - f.y, f.facing, f.hipUp, { tint: SHADOW_TINT, alpha: 0.12 * (4 - k) });
-    drawBody(f.key, f.pose, f.x, GROUND - f.y, f.facing, f.hipUp, { tint: SHADOW_TINT, alpha: 0.85 });
+    for (let k = 3; k >= 1; k--) drawBody(f.key, f.pose, f.x - f.vx * k * 1.8, GROUND - f.y, f.facing, f.hipUp, { scale: f.ch.scale, tint: SHADOW_TINT, alpha: 0.12 * (4 - k) });
+    drawBody(f.key, f.pose, f.x, GROUND - f.y, f.facing, f.hipUp, { scale: f.ch.scale, tint: SHADOW_TINT, alpha: 0.85 });
     return;
   }
   if (mv && mv.ghost && f.mf > mv.startup && f.mf <= mv.startup + mv.active) // afterimages trailing the air iai
-    for (let k = 3; k >= 1; k--) drawBody(f.key, f.pose, f.x - (f.x - (f.ia ? f.ia.x0 : f.x)) * 0.08 * k, GROUND - f.y + k * 6, f.facing, f.hipUp, { alpha: 0.14 * (4 - k), sword: true });
+    for (let k = 3; k >= 1; k--) drawBody(f.key, f.pose, f.x - (f.x - (f.ia ? f.ia.x0 : f.x)) * 0.08 * k, GROUND - f.y + k * 6, f.facing, f.hipUp, { scale: f.ch.scale, alpha: 0.14 * (4 - k), sword: true });
   if (mv && mv.iai && f.mf > 16 && f.mf <= 24) // afterimages along the iai dash
-    for (let k = 3; k >= 1; k--) drawBody(f.key, f.pose, f.x - f.vx * k * 0.5, GROUND - f.y, f.facing, f.hipUp, { alpha: 0.15 * (4 - k), sword: true });
+    for (let k = 3; k >= 1; k--) drawBody(f.key, f.pose, f.x - f.vx * k * 0.5, GROUND - f.y, f.facing, f.hipUp, { scale: f.ch.scale, alpha: 0.15 * (4 - k), sword: true });
   const sp = f.state === 'attack' && f.move && f.move.spin;
   const turn = sp && f.mf >= sp[0] && f.mf <= sp[1] ? (f.mf - sp[0] + 1) / (sp[1] - sp[0] + 1) : null;
   if (turn !== null) drawSpinFX(f, turn);
@@ -874,7 +879,7 @@ function drawFighter(f) {
   let rot = f.state === 'roll' ? -(f.st / 24) * Math.PI * 2 * f.rollDir * f.facing : f.state === 'broll' ? (Math.max(0, f.st - 4) / 20) * Math.PI * 2 : 0;
   if (f.flipT > 0) rot = -(1 - f.flipT / (f.flipMax || 20)) * Math.PI * 2; // somersault
   if (mv && mv.speedFx && f.mf > mv.startup - 6 && f.mf <= mv.startup + mv.active) // afterimages on fast techniques
-    for (let k = 3; k >= 1; k--) drawBody(f.key, f.pose, f.x - (f.vx || f.facing * 4) * k * 1.6, GROUND - f.y, f.facing, f.hipUp, { alpha: 0.1 * (4 - k), tint: GHOST_TINT[f.key], staffExt, staffSpin, sword });
+    for (let k = 3; k >= 1; k--) drawBody(f.key, f.pose, f.x - (f.vx || f.facing * 4) * k * 1.6, GROUND - f.y, f.facing, f.hipUp, { scale: f.ch.scale, alpha: 0.1 * (4 - k), tint: GHOST_TINT[f.key], staffExt, staffSpin, sword });
   const dance = f.state === 'stunned' && f.stunKind === 'dance' ? Math.abs(Math.sin(f.st * 0.4)) * 20 : 0; // made to dance by the gunslinger
   const gunOut = f.key !== 'gunman' || f.state === 'attack' || (f.gunOutT || 0) > 0 || f.state === 'win' || (showOn() && game.phaseT - (f.side ? 8 : 0) < 92);
   if (f.ch.possess === 'double') { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const r0 = 105 + Math.sin(globalT * 0.15) * 5; // the field around him: half holy light, half hellfire
@@ -886,7 +891,9 @@ function drawFighter(f) {
   if (wakeInv) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(f.x, GROUND - f.y - 70, 10, f.x, GROUND - f.y - 70, 80); g.addColorStop(0, 'rgba(200,235,255,.35)'); g.addColorStop(1, 'rgba(200,235,255,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(f.x, GROUND - f.y - 70, 56, 92, 0, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = `rgba(220,240,255,${0.5 + 0.3 * Math.sin(globalT * 0.6)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(f.x, GROUND - 4, 40, 9, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); } // getting up: invincible — a pale glow and a blinking body
   if (f.state === 'win') { drawWinFX(f); const ws = winStaffSpin(f); if (ws != null) staffSpin = ws; } // victory.js
-  drawBody(f.key, f.pose, f.x + (f.animDX || 0), GROUND - f.y - dance - (f.ch.hover ? hoverOf(f) : 0), f.facing, f.hipUp, { hideMini: f.state === 'attack' && f.move ? (f.move.toDouble ? 'both' : f.move.id === 'smAngel' ? 'angel' : f.move.id === 'smDevil' ? 'devil' : null) : null, gunOut, rot, sx: (turn === null ? 1 : Math.cos(2 * Math.PI * turn)) * tailSx, flash: f.flash > 3 || (wakeInv && Math.floor(globalT / 3) % 2 === 0), aura, blade, sword, speed: Math.abs(f.vx), alpha: blink ? 0.6 : 1, staffExt, staffSpin, alt: f.alt, shieldSpin: !!(mv && mv.shieldSpin), aegisRing: !!(mv && mv.aegisRing), bladeHalo: !!(mv && mv.bladeHalo), shieldOut: !!f.shieldOut, possess: f.ch.possess, plateOut: !!f.plateOut, face: f.state, edgeA: excalAura(f, mv), wrist: f.state === 'charge' ? 0 : mv ? (mv.wrist != null ? mv.wrist : 0.25) : 0.6 });
+  drawBody(f.key, f.pose, f.x + (f.animDX || 0), GROUND - f.y - dance - (f.ch.hover ? hoverOf(f) : 0), f.facing, f.hipUp, { scale: f.ch.scale, praying: !!(mv && mv.pose === 'saKneelPray'), hideMini: f.state === 'attack' && f.move ? (f.move.toDouble ? 'both' : f.move.id === 'smAngel' ? 'angel' : f.move.id === 'smDevil' ? 'devil' : null) : null, gunOut, rot, sx: (turn === null ? 1 : Math.cos(2 * Math.PI * turn)) * tailSx, flash: f.flash > 3 || (wakeInv && Math.floor(globalT / 3) % 2 === 0), aura, blade, sword, speed: Math.abs(f.vx), alpha: blink ? 0.6 : 1, staffExt, staffSpin, alt: f.alt, shieldSpin: !!(mv && mv.shieldSpin), aegisRing: !!(mv && mv.aegisRing), bladeHalo: !!(mv && mv.bladeHalo), shieldOut: !!f.shieldOut, possess: f.ch.possess, plateOut: !!f.plateOut, face: f.state, edgeA: excalAura(f, mv), wrist: f.state === 'charge' ? 0 : mv ? (mv.wrist != null ? mv.wrist : 0.25) : 0.6 });
+  const altFx = f.alt && CANVAS_FILTER; if (altFx) { ctx.save(); ctx.filter = ALT_FILTER; } // (mirror match: the second fighter's effects in another hue — the body keeps its own palette)
+  const prevOwner = FX_OWNER; FX_OWNER = f;
   if (f.brands > 0) drawBrands(f);
   drawHeavyFX(f);
   if (SHOW[f.key]) { const sh = SHOW[f.key]; if (showOn() && game.round === 1) { /* (the greeting line only before the first round) */ const t = game.phaseT - (f.side ? 8 : 0); drawSpeech(f, L(...sh.introLine), clamp((t - 14) / 8, 0, 1) * clamp((130 - t) / 10, 0, 1)); }
@@ -902,6 +909,7 @@ function drawFighter(f) {
   if (mv && f.key === 'psychic' && (mv.psyFist || mv.floorGlyph) && !mv.jug && !mv.air) lyraGroundCrystal(f, mv);
   if (f.possT > 0) drawPossessBar(f);
   if (f.ch.orbs) drawOrbs(f);
+  if (altFx) ctx.restore(); FX_OWNER = prevOwner;
   if (f.state === 'gbreak') {
     const cy = GROUND - f.y - 150 * f.ch.scale;
     ctx.fillStyle = '#ffe066';

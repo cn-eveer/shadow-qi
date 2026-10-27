@@ -69,7 +69,7 @@ const STRINGS = {
     jPalm: LCR('Rune Burst', { runes: true, crystals: 2, gap: 4, cdmg: [16, 16], jugVy: 7.5 }),
     jElbow: LCR('Rune Chain', { runes: true, crystals: 4, gap: 3, cdmg: [8, 8, 8, 12], jugVy: 5.5, lastJug: 7.5, csize: 13 }),
     jUpper: LCR('Twin Runes', { runes: true, crystals: 2, gap: 5, cdmg: [16, 20], jugVy: 8, csize: 22 }),
-    jSpin: { kind: 'k', str: 1, label: 'Trinity Burst', wind: 'psyRaise', pose: 'psyCast', jug: true, stay: true, startup: 20, active: 3, recovery: 16, dmg: 0, hitbox: null, // a triangular magic circle closes around them... and explodes
+    jSpin: { kind: 'k', str: 1, label: 'Trinity Burst', wind: 'psyRaise', pose: 'psyCast', jug: true, stay: true, startup: 14, active: 3, recovery: 16, dmg: 0, hitbox: null, // a triangular magic circle closes around them... and explodes
     onFrame: (f, o, mf) => { f.vx = 0; if (mf === 2) sfx('charge'); if (mf === f.move.startup && Math.abs(o.x - f.x) <= LYRA_RANGE) { const y = GROUND - o.y - 70 * o.ch.scale; columnHit(f, o, { dmg: 46, stun: 24, bstun: 12, push: 2, kd: true, kdVx: 11, kdVy: 9, hitstop: 14, label: 'Trinity Burst' }); triExplode(o.x, y); if (o.state === 'knock') { f.hitConnected = true; f.lastResult = 'hit'; } } },
     drawFX: (f, o) => { const S = f.move.startup; if (!o || f.mf < 1 || f.mf > S + 1) return; const k = f.mf / S; drawTriCircle(o.x, GROUND - o.y - 70 * o.ch.scale, 110 - 45 * k, Math.min(1, 0.3 + k), f.mf * 0.18); } },
     aPalm: SA('p', 'Air Rune', 'airPsyBoth', { psyFist: [80, 70, 0.6] }), aElbow: SA('p', 'Air Crystal', 'airPsyDown', { psyFist: [80, 50, 0.6, 0.5] }),
@@ -223,7 +223,7 @@ Object.assign(STRINGS.brawler, {
 Object.assign(STRINGS.staff, {
   jRise: JR('Pinwheel Rise', 'staffLow', 'staffRise', { spinStaff: true, hitbox: [5,150,45,260], // the staff whirls like a pinwheel, carrying them up
     onFrame: (f, o, mf) => { if (mf === f.move.startup) for (let i = 0; i < 5; i++) parts.push({ type: 'star', x: o.x + rnd(-20, 20), y: GROUND - o.y - rnd(40, 120), vx: 0, vy: -rnd(2, 4), r: 3.5, vr: -0.1, life: 16, max: 16, col: '255,210,110', rot: R() * 3 }); } }),
-  jSpin: SJF('Cloud Staff Smash', 'staffRise', 'staffSlam', { kind: 'p', hop: 'tgt', spinStaff: true, staffExt: 30, hitbox: [10,190,20,260], kdVx: 12, recovery: 16, // she springs up on a cloud, the staff whirling, and smashes it down on them
+  jSpin: SJF('Cloud Staff Smash', 'staffRise', 'staffSlam', { kind: 'p', hop: 'tgt', spinStaff: true, staffExt: 30, hitbox: [10,190,-90,260], kdVx: 12, recovery: 16, // (the slam reaches down below her: it catches them as they fall) she springs up on a cloud, the staff whirling, and smashes it down on them
     trail: { cx: 20, cy: 90, r: 140, a0: 110, a1: -40, col: '255,205,110' },
     poseFn: (f, mf) => mf < f.move.startup ? POSES.staffRise : null,
     onFrame: (f, o, mf) => { f.move.spinStaff = mf < f.move.startup; if (mf % 2 === 0 && mf < 12) cloudPuff(f.x - f.facing * 10, GROUND - f.y + 4);
@@ -258,7 +258,7 @@ Object.assign(STRINGS.psychic, {
 Object.assign(STRINGS.paladin, {
   jRise: JR('Ascension', 'pBashW', 'pShieldUp', { hitbox: [10,140,45,260],
     onFrame: (f, o, mf) => { if (mf === f.move.startup) { parts.push({ type: 'lbeam', x: o.x, w: 30, life: 14, max: 14 }); for (let i = 0; i < 5; i++) parts.push({ type: 'spark', x: o.x + rnd(-20, 20), y: GROUND - o.y - rnd(20, 120), vx: 0, vy: -rnd(2, 3), life: 18, max: 18, col: '235,245,255' }); sfx('orb'); } } }),
-  jSpin: SJF('Cross of Judgement', 'pCleaveW', 'pCleave', { hitbox: [10,190,30,300], kdVx: 12,
+  jSpin: SJF('Cross of Judgement', 'pCleaveW', 'pCleave', { hitbox: [10,190,0,300], startup: 7, kdVx: 12,
     onFrame: (f, o, mf) => { if (mf === f.move.startup + 1) { const [x, y] = atO(o); for (const rot of [Math.PI / 4, -Math.PI / 4]) parts.push({ type: 'slashx', x, y, r: 56, life: 14, max: 14, col: '190,225,255', rot }); } } }),
   aKunai: AK('Blade Halo Flurry', 'pAir', { hitbox: [5,155,0,135],
     drawFX(f) { const S = f.move.startup; if (f.mf < S || f.mf > S + 9) return; fxLighter(() => { ctx.strokeStyle = 'rgba(190,225,255,.7)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(f.x, GROUND - f.y - 90, 110, -0.9 + f.mf * 0.3, -0.1 + f.mf * 0.3); ctx.stroke(); }); } }),
@@ -435,7 +435,7 @@ Object.assign(STRINGS.gunman, {
     poseFn: (f, mf) => mf < f.move.startup ? POSES.gIdle : ((mf - f.move.startup) % 2 ? POSES.gRecoil : POSES.gTwin),
     onFrame(f, o, mf) { const S = f.move.startup, k = (mf - S) / 2; // a gun twirl, then three shots fanned from the hip
       if (mf === 2) sfx('draw');
-      if (mf >= S && Number.isInteger(k) && k < 3) shoot(f, { y: 124 - k * 8, vx: 26, life: 10, dmg: k < 2 ? 16 : 36, push: k < 2 ? 0.6 : 4, kd: k === 2, big: k === 2 });
+      if (mf >= S && Number.isInteger(k) && k < 3) shoot(f, { y: 122 - k * 2, vx: 26, life: 10, dmg: k < 2 ? 16 : 36, push: k < 2 ? 0.6 : 4, kd: k === 2, big: k === 2 });
       if (mf === S + 6) for (let i = 0; i < 5; i++) parts.push({ type: 'smoke', x: f.x + f.facing * rnd(50, 90), y: GROUND - rnd(100, 130), vx: f.facing * 0.5, vy: -0.6, r: rnd(5, 9), vr: 0.25, life: 24, max: 24, col: '215,205,190' }); },
     drawFX(f) { if (f.mf >= f.move.startup) return; const s = f.ch.scale, x = f.x + f.facing * 46 * s, y = GROUND - f.y - 112 * s, an = f.mf * 0.9 * f.facing;
       ctx.save(); ctx.translate(x, y); ctx.rotate(an); ctx.fillStyle = '#a8b0ba'; ctx.fillRect(-2, -12, 4, 18); ctx.fillStyle = '#5a3a22'; ctx.fillRect(-3, 4, 6, 8); ctx.restore(); // the twirl
@@ -608,9 +608,9 @@ function projBox(p) {
   }
   if (p.type === 'beam') {
     const f = p.owner, ox = f.x + f.facing * 50 * f.ch.scale;
-    return f.facing > 0 ? { x0: ox, x1: W + 60, y0: 61, y1: 129 } : { x0: -60, x1: ox, y0: 61, y1: 129 };
+    return f.facing > 0 ? { x0: ox, x1: W + 60, y0: 0, y1: 250 } : { x0: -60, x1: ox, y0: 0, y1: 250 }; // (the Great Qi Cannon fills the screen: it can't be jumped, only guarded)
   }
-  if (p.type === 'clone') return { x0: p.x - p.w, x1: p.x + p.w, y0: p.h0 + (p.yOff || 0), y1: p.h1 + (p.yOff || 0) };
+  if (p.type === 'clone') { const t = other(p.owner), up = p.superHit && !p.fall && t && caughtIn(t) ? Math.max(0, t.y + 60 - p.h1) : 0; return { x0: p.x - p.w, x1: p.x + p.w, y0: p.h0 + (p.yOff || 0), y1: p.h1 + (p.yOff || 0) + up }; } // (in a combo, the super's clones leap up to catch someone already juggled)
   if (p.type === 'decoy' || p.type === 'guardShadow') return { x0: p.x - 25, x1: p.x + 25, y0: 0, y1: 135 };
   if (p.type === 'wave') return { x0: p.x - p.w, x1: p.x + p.w, y0: 0, y1: 34 };
   const back = p.vx && Math.abs(p.vx) > p.r ? p.vx : 0; // a fast projectile (a bullet) sweeps the whole stretch it crossed this frame, so it can't skip through someone point-blank
@@ -650,6 +650,11 @@ function pjUpdate(p) {
   if (p.type === 'puddle' && p.t < 8) return; // (the coffee spreads for a moment before it's slippery: time to see it and crouch)
   const hu = hurtbox(tgt, true), hb = projBox(p); // (fast ones sweep the stretch they crossed)
   if (hu && !p.n && !p.passed && !overlap(hb, hu) && hb.x0 < hu.x1 && hb.x1 > hu.x0 && p.h) { p.passed = true; showHeight(tgt, Math.sign(p.vx) || p.dir, hb, p.h, true); } // (over or under them)
+  if (tgt.state === 'attack' && tgt.move && tgt.move.reflectAll && tgt.mf > tgt.move.startup && tgt.mf <= tgt.move.startup + tgt.move.active && !p.reflected) { // the kappa's shell sends it straight back at them
+    const fb = { x0: tgt.x - 70, x1: tgt.x + 70, y0: 0, y1: 170 };
+    if (overlap(hb, fb)) { p.owner = tgt; p.vx = -p.vx || tgt.facing * 8; p.vy = -p.vy * 0.5; p.dir = -p.dir; p.boomerang = 0; p.reflected = true; p.n = 0; p.life = Math.max(p.life, 40); if (p.h) p.h = { ...p.h, label: (p.h.label || '') + ' (reflected)' };
+      popText(tgt.x, GROUND - 160, 'REFLECT!', '150,215,255'); sparks(p.x, GROUND - p.y, 'block'); sfx('block'); return; }
+  }
   if (hu && overlap(hb, hu)) {
     if (p.explode) { pjExplode(p); p.dead = true; return; }
     const pr = applyHit(own, tgt, { type: 'mid', chip: true, proj: true, str: 1, hitstop: 5, ...p.h }, Math.sign(p.vx) || p.dir, hb, hu);
@@ -696,6 +701,7 @@ function pjDraw(p) {
 }
 function updateProjs() {
   for (const p of projs) {
+    FX_OWNER = p.owner; // (sparks from a projectile are its owner's)
     if (p.dead) continue;
     p.t = (p.t || 0) + 1;
     if (PJ.has(p.type)) { pjUpdate(p); continue; }
@@ -772,7 +778,7 @@ function updateProjs() {
       if (p.life <= 0) { p.dead = true; continue; }
       if (p.t >= p.erupt && !p.done) {
         const tgt = other(p.owner), hu = hurtbox(tgt, true), hb = { x0: p.x - 42, x1: p.x + 42, y0: 0, y1: 330 };
-        if (hu && overlap(hb, hu)) {
+        if (hu && overlap(hb, hu) && !jumpedOver(tgt)) { // (jump clear of the ring and the column misses)
           p.done = true;
           const h = p.juggle ? { dmg: 30, stun: 18, bstun: 10, push: 0.4, jugVy: 10.5, fixedLift: true, type: 'mid', chip: true, hitstop: 8, proj: true, str: 1, gdrain: 6, juggle: true, label: 'Levitate' }
             : { dmg: 46, stun: 20, bstun: 12, push: 1, launch: true, launchVy: 13, type: 'mid', chip: true, hitstop: 9, proj: true, str: 1, gdrain: 10, label: 'Psychic Lift' };
@@ -786,7 +792,7 @@ function updateProjs() {
       p.life--;
       if (p.t === 6) { game.shake = Math.max(game.shake, 9); dustAt(p.x, true); cracks(p.x); parts.push({ type: 'ering', x: p.x, y: GROUND, r: 12, vr: 9, life: 18, max: 18, col: '255,205,110' }); sfx('land'); }
       if (p.life <= 0) { p.dead = true; continue; }
-      const tgt = other(p.owner), hu = hurtbox(tgt, true), hb = { x0: p.x - 150, x1: p.x + 150, y0: 0, y1: 320 }; // the pillar and its shockwave
+      const tgt = other(p.owner), hu = hurtbox(tgt, true), hb = { x0: p.x - 62, x1: p.x + 62, y0: 0, y1: 320 }; // the pillar and its shockwave (step off the golden mark and it misses)
       if (p.t >= 6 && p.hits < p.max && hu && overlap(hb, hu) && p.t - p.last >= 4) {
         const last = p.hits === p.max - 1;
         applyHit(p.owner, tgt, { dmg: last ? 70 : 26, stun: 22, bstun: 12, push: last ? 3 : 0.5, kd: last && !p.close, kdVx: 8, kdVy: 10, launch: last && p.close, launchVy: 12, bounce: last && p.close,
@@ -839,8 +845,8 @@ function updateProjs() {
       }
       p.ft = (p.ft || 0) + 1;
       if (p.ft < 60) { // track the opponent for about a second
-        const o = other(p.owner), dx = o.x - p.x, dy = o.y + 70 * o.ch.scale - p.y, L = Math.hypot(dx, dy) || 1;
-        p.vx += (dx / L * 6 - p.vx) * 0.07; p.vy += (dy / L * 6 - p.vy) * 0.07;
+        const o = other(p.owner), dx = o.x - p.x, dy = (caughtIn(o) ? o.y : 0) + 70 * o.ch.scale - p.y, L = Math.hypot(dx, dy) || 1; // (they home in at body height: jump over them)
+        if (caughtIn(o) || o.y < 20) p.vx += (dx / L * 6 - p.vx) * 0.07; if (caughtIn(o)) p.vy += (dy / L * 6 - p.vy) * 0.07; else { p.vy = 0; p.y += (70 - p.y) * 0.25; } // (on someone not in a combo they drop to body height and fly level: a jump clears them)
       }
       if (p.t % 2 === 0) parts.push({ type: 'aura', x: p.x - p.vx + rnd(-4, 4), y: GROUND - p.y + rnd(-4, 4), vx: 0, vy: -0.4, life: 12, max: 12, r: rnd(2.5, 5), col: '160,200,255' });
     }
@@ -861,7 +867,9 @@ function updateProjs() {
     }
     if (tgt.state === 'attack' && tgt.move && tgt.move.destroysProj && tgt.mf > tgt.move.startup && tgt.mf <= tgt.move.startup + tgt.move.active && p.type !== 'beam' && p.type !== 'flame' && p.type !== 'pillar') {
       const fb = { x0: tgt.x + (tgt.facing > 0 ? 0 : -140), x1: tgt.x + (tgt.facing > 0 ? 140 : 0), y0: 20, y1: 190 };
-      if (overlap(projBox(p), fb)) { p.dead = true; sparks(p.x, GROUND - p.y, 'clash'); sfx('block'); continue; } // the spinning staff swats it away
+      if (overlap(projBox(p), fb)) {
+        if (tgt.move.reflectAll && PJ.has(p.type)) { p.owner = tgt; p.vx = -p.vx || tgt.facing * 8; p.vy = -p.vy * 0.5; p.dir = -p.dir; p.boomerang = 0; popText(tgt.x, GROUND - 180, 'REFLECT!', '150,215,255'); sfx('block'); continue; } // the kappa's shell sends it straight back
+        p.dead = true; sparks(p.x, GROUND - p.y, 'clash'); sfx('block'); continue; } // the spinning staff swats it away
     }
     if (hu) {
       const hb = projBox(p);

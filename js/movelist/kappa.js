@@ -5,6 +5,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
     <article class="card kappa" data-tab="kappa" data-lang="en">
       <h2>KAPPA<span>Mythic Kappa</span></h2>
       <p class="blurb">A small, round, very cute kappa with a turtle shell and a dish of water on his head, and a wild animal at heart: he crouches low like a beast, and almost everything he does is a claw attack that leaves three glowing slash marks. He never kicks; the kick buttons grab and throw (throws can’t be guarded, but they miss anyone in the air).</p>
+      <p class="note"><b>v1.3.9.</b> Poison now takes only three separate attacks within three seconds, lasts eight seconds and drains twice as fast. His dash is quicker and dives under projectiles (DIVE), and Shell Guard (← ← + J) sends projectiles straight back at whoever fired them. Great Flood now floods the stage (see below). His dash and his Pounce have armor: hits land, but don’t stop him. New on ← ← + K (in place of the Cucumber Snack): <b>Riptide</b>, the answer to anyone who keeps their distance.</p>
       <p class="note"><b>Poison.</b> Land four separate attacks within two seconds and the river venom poisons them: they slowly lose health and move slower, until it wears off after about six seconds.</p>
       <p class="note"><b>Charge (hold I).</b> Qi gathers into him while you hold. Half a second: Ambush, a short charge: he darts in low and rakes them into the air — follow it with a juggle. Over a second: Dish Storm, a long charge: a whole stack of dishes thrown in a storm, the last one sends them flying. A tap is the normal heavy attack.</p>
       <p class="note"><b>Theme.</b> River spirit · teal and water blue. A wild little creature from a mountain stream. Signatures: U, U, K Whirlpool Rake (a spinning whirlpool of claws); U, U, I Splash Geyser (a belly-flop splash, then a geyser under them).</p>
@@ -21,8 +22,8 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Water Bubble<small>A lobbed bubble that bursts and leaves them dizzy and dripping (stunned).</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>Geyser<small>A column of water bursts up under them, wherever they are, and throws them high.</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>Shell Guard<small>Pulls into his shell: everything bounces off, and if something did, he spins out of it.</small></td><td class="cmd">← ← + J</td></tr>
-          <tr><td>Cucumber Snack<small>Munches a cucumber to heal a little. A hit while he eats is a counter hit.</small></td><td class="cmd">← ← + K</td></tr>
-          <tr class="super"><td>Super: Great Flood<small>A wave rises behind him and sweeps across the stage, carrying them away.</small></td><td class="cmd">U + J</td></tr>
+          <tr><td>Riptide<small>The water rises up behind them and rolls in toward him, carrying them right up to him — even if they guard. On a hit they arrive stunned in front of him: start his ground string (U, U, U, U, K). Jump the wave to escape.</small></td><td class="cmd">← ← + K</td></tr>
+          <tr class="super"><td>Super: Great Flood<small>No direct hit: a great wave rolls in and the stage floods for ten seconds, the water a little above head height (a gauge under the timer shows the time left). The kappa swims — faster, ↑ strokes up (a little above a normal jump), ↓ dives — his attacks come out a fifth faster, <b>reach them anywhere on the stage</b> (the water carries every blow), and the water heals him (about 70 health). They wade: three-quarter speed, jumps a quarter slower, attacks a fifth slower to come out — recovery is untouched, so they can still get away and punish — and they slowly drown (about 90 health).</small></td><td class="cmd">U + J</td></tr>
         </tbody>
       </table></div>
       <button class="pill watch" data-watch="kappa">▶ Watch Kappa’s combos</button>
@@ -40,6 +41,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
     <article class="card kappa" data-tab="kappa" data-lang="ja" hidden>
       <h2>カッパ<span>幻獣カッパ</span></h2>
       <p class="blurb">甲羅と頭の皿の、小さくて丸くてとても可愛いカッパ。でも中身は野生の獣：獣のように低く構え、ほとんどの攻撃が光る三本の爪痕を残す爪攻撃。蹴りは使わず、キックボタンはつかみ投げ（ガード不能、空中の相手には当たらない）。</p>
+      <p class="note"><b>v1.3.9。</b>毒は3秒以内に3回当てるだけで回り、8秒続き、減りも2倍に。ダッシュは速くなり、飛び道具の下をくぐる（DIVE）。甲羅ガード（←←+J）は飛び道具を撃った相手に跳ね返す。大洪水はステージを水没させる技に（下の表）。ダッシュと飛びかかりにはアーマー：攻撃を受けても止まらない。←←+K は、きゅうりおやつに代わって新技<b>引き波</b>に（距離を取る相手への切り札）。</p>
       <p class="note"><b>毒。</b> 2秒以内に4回攻撃を当てると川の毒が回り、相手は少しずつ体力を失い動きが遅くなる（約6秒で治る）。</p>
       <p class="note"><b>溜め技（I長押し）。</b> 押している間、気が集まる。0.5秒：奇襲（短い溜め：低く飛び込んで爪で浮かせる）、空中追撃につながる。1秒以上：皿の嵐（長い溜め：皿を次々と投げ、最後の一枚で吹き飛ばす）。押すだけなら通常の強攻撃。</p>
       <p class="note"><b>テーマ.</b> 川の精・青緑と水色。山の渓流に住む野生の小さな生き物。決め技：U、U、K「渦巻き引っかき」（爪の渦巻き）／U、U、I「水しぶき間欠泉」（腹打ちの水しぶきから足元に間欠泉）。</p>
@@ -56,8 +58,8 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>水玉<small>山なりの水玉。はじけると相手はずぶ濡れで目を回す（気絶）。</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>間欠泉<small>相手の足元から水柱が噴き上がり、高く打ち上げる。</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>甲羅ガード<small>甲羅にこもる：すべて弾き、何かを弾いたら回転して飛び出す。</small></td><td class="cmd">← ← + J</td></tr>
-          <tr><td>きゅうりおやつ<small>きゅうりをかじって少し回復。食べている間に受けた攻撃はカウンター。</small></td><td class="cmd">← ← + K</td></tr>
-          <tr class="super"><td>超必殺技：大洪水<small>背後から大波が立ち上がり、画面を押し流して相手をさらう。</small></td><td class="cmd">U + J</td></tr>
+          <tr><td>引き波<small>相手の背後から水がせり上がり、カッパの方へ押し寄せて目の前まで運ぶ（ガードしていても引き寄せる）。当たれば気絶したまま目の前に来るので、地上の連続技（U、U、U、U、K）を始められる。波をジャンプすればかわせる。</small></td><td class="cmd">← ← + K</td></tr>
+          <tr class="super"><td>超必殺技：大洪水<small>直接は当たらない：大波が押し寄せ、10秒間ステージが水没する（水面は頭の少し上。タイマーの下のゲージで残り時間がわかる）。カッパは泳いで速く動き（↑で上へ・普通のジャンプより少し高くまで、↓で潜る）、攻撃の出も5分の1速く、<b>攻撃はステージのどこにいても届く</b>（水が一撃を運ぶ）。水で体力も回復する（約70）。相手は水の中を歩くので、移動は4分の3、ジャンプは4分の1ゆっくり、攻撃の出も5分の1遅い（硬直は変わらないので回避も反撃もできる）。さらに溺れて体力が少しずつ減る（約90）。</small></td><td class="cmd">U + J</td></tr>
         </tbody>
       </table></div>
       <button class="pill watch" data-watch="kappa">▶ カッパのコンボを見る</button>

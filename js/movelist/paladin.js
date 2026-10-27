@@ -5,7 +5,8 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
     <article class="card paladin" data-tab="paladin" data-lang="en">
       <h2>ALDRIC<span>Holy Paladin</span></h2>
       <p class="blurb">A towering knight in full plate, wreathed in pale blue holy light. He is slow and sturdy: he walks and swings with weight, hits barely move him, and he has the biggest guard meter in the game. His game is built on four things: parrying, healing, charged attacks you hold the button for, and the Aegis that protects him from every side.</p>
-      <p class="note"><b>Excalibur.</b> When he swings, the aura of Excalibur forms around his sword — a great blade of light — and fades after the strike.</p>
+      <p class="note"><b>v1.3.9.</b> The Aegis now really feeds on his guard meter: about ten a second while it’s up, and every hit tears a huge piece out of it (two to four hits break it; it no longer refills while the Aegis is up), and it lasts four seconds at most. The sphere fades as it runs out, then flickers and cracks near the end, so the opponent can see when it will give out. Sanctuary’s dome now swells more slowly: dash out before it reaches you.</p>
+      <p class="note"><b>Shining blade.</b> When he strikes, the steel shines — a bright edge along the blade and a glint running to its point. (The giant aura sword is kept for the charged Excalibur on K.)</p>
       <p class="note"><b>Auto guard.</b> Standing still, he guards by himself (except throws). The moment he moves, attacks, or is still recovering from an attack, he can be hit like anyone else, so wait for him to commit and punish him.</p>
       <p class="note"><b>Theme.</b> Holy steel · pale blue and silver. A knight sworn to guard others before himself. Signatures: U, U, K Bulwark Breaker (shield, then a cleave that leaves a cross of light); U, U, I Heaven’s Rise (a pillar of light lifts them).</p>
       <p class="note"><b>In mid-air.</b> In a juggle, U, U, I relaunches and U, U, K finishes with moves different from the ground string (shield lift, sword lift, ascension, cross of judgement). Jumping after them, U, U, I and U, U, K become: air slash, air shield bash, blade halo flurry, plunging light.</p>
@@ -31,7 +32,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
         <tbody>
           <tr><td>Parry<small>A short, sharp shield guard. Parry an attack from the front and he answers with a lightning Riposte that lifts them.</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>Shield Parry<small>The same parry, but he bashes them senseless (stunned) instead.</small></td><td class="cmd">← ← + I</td></tr>
-          <tr><td>Aegis<small>Hold ← ← + J: a sphere of light closes around him and stops everything, from the front, from behind and from above, where a parry only works from the front. It takes a moment to cast (hit him then for a counter hit), then he can hold it for up to seven seconds and even walk with it. Hits only do a quarter of their damage and wear down his guard meter; if it runs out his guard breaks. When he lets go, his guard meter drops to half and comes back slowly.</small></td><td class="cmd">← ← + J (hold)</td></tr>
+          <tr><td>Aegis<small>Hold ← ← + J: a sphere of light closes around him and stops everything, from the front, from behind and from above, where a parry only works from the front. It takes a moment to cast (hit him then for a counter hit), then he can hold it for up to four seconds and even walk with it. Hits only do a quarter of their damage but take a big bite out of his guard meter, which also drains while it’s up; if it runs out his guard breaks. When he lets go, his guard meter drops to half and comes back slowly.</small></td><td class="cmd">← ← + J (hold)</td></tr>
           <tr><td>Lay on Hands<small>Hold ← ← + K: he kneels and prays, turning MP into health (light falls on him as he heals). Any hit while he prays is a counter hit.</small></td><td class="cmd">← ← + K (hold)</td></tr>
           <tr class="super"><td>Super: Sanctuary<small>He plants the sword, wings of light open, and a dome of light swells around him. Caught inside, they are held and burned again and again while his health and guard come back; then the dome bursts. Needs a full MP meter.</small></td><td class="cmd">U + J</td></tr>
         </tbody>
@@ -57,7 +58,8 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
     <article class="card paladin" data-tab="paladin" data-lang="ja" hidden>
       <h2>アルドリック<span>聖騎士</span></h2>
       <p class="blurb">淡い青の聖なる光をまとう、全身鎧の大柄な騎士。動きは重く頑丈：一歩一歩、一振り一振りに重みがあり、攻撃を受けてもほとんど下がらず、ガードゲージはゲームで一番大きい。戦い方の柱は四つ：受け流し、回復、押し続けて溜める攻撃、そしてあらゆる方向から身を守るイージス。</p>
-      <p class="note"><b>エクスカリバー。</b>剣を振るうと、剣のまわりにエクスカリバーのオーラ（巨大な光の刃）が現れ、斬撃のあと消えていく。</p>
+      <p class="note"><b>v1.3.9。</b>イージスは本当にガードゲージを消費するように：張っている間は1秒に約10、攻撃を受けるたびに大きく削られる（2〜4発で割れる。張っている間は回復しない）。最大4秒。光の球は残りが減るほど薄くなり、終わり際には点滅してひびが入るので、相手にも切れる時がわかる。聖域のドームはゆっくり広がるように：届く前にダッシュで逃げよう。</p>
+      <p class="note"><b>輝く剣。</b>斬りつけると剣そのものが輝く：刃に沿った光と、切っ先へ走るきらめき。（巨大な光の剣は、K長押しのエクスカリバーだけ。）</p>
       <p class="note"><b>オートガード。</b> 静かに立っているときは自動でガードする（投げ以外）。動いた瞬間、攻撃中、攻撃後の戻りの間は普通に当たるので、動き出したところを狙って反撃しよう。</p>
       <p class="note"><b>テーマ.</b> 聖なる鋼・淡い青と銀。自らより他者を守ると誓った騎士。決め技：U、U、K「城壁崩し」（盾から光の十字を残す斬り）／U、U、I「天への昇り」（光の柱が持ち上げる）。</p>
       <p class="note"><b>空中。</b> 空中追撃では、U、U、Iで再打ち上げ、U、U、Kで締める地上とは違う技（盾持ち上げ、剣上げ、昇天、裁きの十字）。ジャンプして追うと、U、U、IとU、U、Kは：空中斬り、空中盾打ち、剣輪連撃、急降下の光。</p>

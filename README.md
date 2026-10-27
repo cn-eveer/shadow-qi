@@ -20,7 +20,7 @@ Eight fighters · combos & supers · CPU battles (4 difficulties) · training ·
 | 🥢 | **Mei** — Staff Prodigy | long reach with the bo staff, cloud jumps, double jump |
 | 🔮 | **Lyra** — Psychic Sage | magic circles and falling crystals from across the screen |
 | 🛡️ | **Aldric** — Holy Paladin | Excalibur's aura, shield guard, Rampart Charge with armor |
-| 🐸 | **Kappa** — Mythic Kappa | dish water, shell tricks, poison |
+| 🐸 | **Kappa** — Mythic Kappa | dish water, shell tricks, poison, and a riptide (← ← + K) that drags runaways back |
 | 🤠 | **Jesse** — Gunslinger | quick draw from the holster, charge shots, aimed juggles — ten bullets, then a five-second reload |
 | 💼 | **Tanaka** — Salaryman | office supplies — and angel, devil, or **double** possession |
 
@@ -32,6 +32,7 @@ Eight fighters · combos & supers · CPU battles (4 difficulties) · training ·
 
 - **Combos and supers** — strings, launchers, juggles, bounces, charge attacks and a super for every fighter
 - **Readable fights** — technique tells, armor, counters, punish windows, high / low guarding, visible wake-up invincibility
+- **Every super can be escaped** — the four biggest can only be guarded; the rest come out after an invincible wind-up and can be jumped over or dashed away from (a hint shows which)
 - **CPU battles** on four difficulties: かんたん / ふつう / むずかしい / 地獄 (Easy / Medium / Hard / Hell)
 - **Training** with a move card that shows one move at a time (name and command) to practise each one, and a label on every hit showing how high the attack reached (上段 / 上中段 / 中段 / 中下段 / 下段 — it can be switched off in ⚙ Settings)
 - **Sample combos and punishes** for every fighter, played out with the inputs on screen — including a *max combo* for each
@@ -69,7 +70,7 @@ Every fighter's sample combos (title screen → *combos*) show these patterns, t
 
 | Move | Keys |
 |---|---|
-| Walk / jump / crouch | A D / W / S — or the arrow keys (hold back to guard standing: everything but lows; back + down to guard crouching: lows and mids, but not mid + lows) |
+| Walk / jump / crouch | A D / W / S — or the arrow keys (crouch + forward edges forward) (hold back to guard standing: everything but lows; back + down to guard crouching: lows and mids, but not mid + lows) |
 | Light / heavy punch | U / I |
 | Light / heavy kick | J / K |
 | Techniques | tap forward twice (→ →) or back twice (← ←) + a button; some also have ↑, ↓ or → versions |

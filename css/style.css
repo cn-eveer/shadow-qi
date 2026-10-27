@@ -65,6 +65,10 @@ h1{font-family:var(--hud);font-weight:400;font-size:clamp(24px,3.6vw,36px);line-
 .news .relh span{color:var(--muted);font-size:13px;font-weight:600}
 .news ul{margin:6px 0 0;padding-left:1.2em}
 .news li{margin:3px 0;line-height:1.55}
+.news ul ul{margin:2px 0 4px;padding-left:1.1em}
+.news .relg{display:block;font-size:14px}
+.news .rel>ul>.relgi>.relg{font-size:15px;color:var(--accent);margin-top:4px}
+.news ul ul li{font-size:14px}
 /* a new version is live: asked over everything; and the note after an update */
 .upd{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(8,6,20,.62)}
 .upd[hidden]{display:none}

@@ -61,7 +61,7 @@ tbar.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
 function showMenu() {
   game.mode = 'menu'; game.paused = false; game.netMenu = false; tbar.hidden = true; dbar.hidden = true;
   const c = game.p1Char;
-  if (game.p2Char === c) game.p2Char = CHAR_ORDER.find(k => k !== c);
+  // (the CPU can be the same fighter: a mirror match, the CPU in the second palette and its effects in another hue)
   const blurbs = {}; // each fighter's explanation, shown in full for the one you've picked
   const pick = (k, blurb, ja) => { blurbs[k] = L(blurb, ja); return `<button class="pick ${k} ${c === k ? 'on' : ''}" data-char="${k}" aria-pressed="${c === k}"><b>${nm(CHARS[k])}</b><small>${L(CHARS[k].title, CHARS[k].titleJa)}</small></button>`; };
   ov.hidden = false;
@@ -79,7 +79,7 @@ function showMenu() {
       ${pick('salary', 'Salaryman. An angel and a devil ride his shoulders, and either can take him over.', 'サラリーマン。両肩の天使と悪魔、どちらかに憑依されて戦う。')}
     </div>
     <div class="pickinfo"><span><b>${nm(CHARS[c])}</b> ${blurbs[c]}</span><button class="ghost sm" data-act="moves">${L('Move list', '技表')}</button></div>
-    <div class="vsrow">${L('CPU opponent:', 'CPUの相手：')} ${CHAR_ORDER.filter(k => k !== c).map(k => `<button class="${game.p2Char === k ? 'on' : ''}" data-vs="${k}" aria-pressed="${game.p2Char === k}">${nm(CHARS[k])}</button>`).join('')}</div>
+    <div class="vsrow">${L('CPU opponent:', 'CPUの相手：')} ${CHAR_ORDER.map(k => `<button class="${game.p2Char === k ? 'on' : ''}" data-vs="${k}" aria-pressed="${game.p2Char === k}">${nm(CHARS[k])}</button>`).join('')}</div>
     <div class="vsrow">${L('Difficulty:', '難易度：')} ${DIFF_ORDER.map(k => `<button class="${game.diff === k ? 'on' : ''}" data-diff="${k}" aria-pressed="${game.diff === k}">${L(...DIFF_NAMES[k])}</button>`).join('')}</div>
     <div class="row"><button class="go" data-act="start">${L('FIGHT', '対戦')}</button><button class="ghost" data-act="training">${L('Training', 'トレーニング')}</button><button class="ghost" data-act="watch">${L('CPU vs CPU', 'CPU対CPU')}</button><button class="ghost" data-act="online">${L('Online', 'オンライン')}</button><button class="ghost" data-act="opening">${L('Opening', 'オープニング')}</button><button class="ghost" data-act="demo" data-who="${c}">${L(CHARS[c].name[0] + CHARS[c].name.slice(1).toLowerCase() + ' combos', nm(CHARS[c]) + 'のコンボ見本')}</button><button class="ghost" data-act="punish" data-who="${c}">${L(CHARS[c].name[0] + CHARS[c].name.slice(1).toLowerCase() + ' punishes', nm(CHARS[c]) + 'の反撃見本')}</button></div>
     <div class="hint">${L('A and D pick your fighter, W and S pick the opponent. Enter to fight, T for training, C to watch CPU vs CPU, V for your fighter’s sample combos, P for punish samples.', 'A・Dでキャラ選択、W・Sで相手を選択。Enterで対戦、Tでトレーニング、CでCPU対CPU、Vでコンボ見本、Pで反撃見本。')}</div>
@@ -176,7 +176,7 @@ window.addEventListener('keydown', e => {
   if (game.mode === 'menu') {
     const cyc = (k, d, skip) => { const L = CHAR_ORDER.filter(x => x !== skip); return L[(L.indexOf(k) + d + L.length) % L.length]; };
     if (['KeyA','KeyD','ArrowLeft','ArrowRight'].includes(e.code)) { game.p1Char = cyc(game.p1Char, e.code === 'KeyA' || e.code === 'ArrowLeft' ? -1 : 1); sfx('select'); showMenu(); }
-    else if (['KeyW','KeyS','ArrowUp','ArrowDown'].includes(e.code)) { e.preventDefault(); if (game.p2Char === game.p1Char) game.p2Char = cyc(game.p1Char, 1); game.p2Char = cyc(game.p2Char, e.code === 'KeyW' || e.code === 'ArrowUp' ? -1 : 1, game.p1Char); sfx('select'); showMenu(); }
+    else if (['KeyW','KeyS','ArrowUp','ArrowDown'].includes(e.code)) { e.preventDefault(); game.p2Char = cyc(game.p2Char, e.code === 'KeyW' || e.code === 'ArrowUp' ? -1 : 1); sfx('select'); showMenu(); }
     else if (e.code === 'Enter') { e.preventDefault(); startMatch(false, false); }
     else if (e.code === 'KeyT') startMatch(true);
     else if (e.code === 'KeyC') startMatch(false, true);

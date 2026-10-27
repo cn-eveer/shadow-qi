@@ -1,6 +1,9 @@
 'use strict';
 /* ================= drawing: projectiles, particles ================= */
-function drawProj(p) {
+function drawProj(p) { // (the second fighter's projectiles in a mirror match: another hue)
+  if (p.owner && p.owner.alt && CANVAS_FILTER) { ctx.save(); ctx.filter = ALT_FILTER; drawProjBase(p); ctx.restore(); } else drawProjBase(p);
+}
+function drawProjBase(p) {
   if (PJ.has(p.type)) { pjDraw(p); return; }
   if (p.type === 'hwave') { // a standing crescent of light
     const y = GROUND, a = Math.min(1, p.life / 12);
@@ -119,7 +122,7 @@ function drawProj(p) {
     ctx.restore();
   } else if (p.type === 'beam') {
     const b = projBox(p), grow = Math.min(1, p.t / 6), fade = Math.min(1, p.life / 8);
-    const yc = GROUND - 95, hh = (34 + Math.sin(p.t * 0.9) * 3) * grow * fade;
+    const yc = GROUND - 125, hh = (110 + Math.sin(p.t * 0.9) * 6) * grow * fade;
     const x0 = b.x0, w = b.x1 - b.x0;
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
     ctx.fillStyle = 'rgba(60,200,255,.35)'; ctx.fillRect(x0, yc - hh - 10, w, (hh + 10) * 2);
@@ -134,7 +137,10 @@ function drawProj(p) {
 }
 function drawParts() {
   ctx.lineCap = 'round';
+  for (const altPass of [false, true]) { // (two passes: the second fighter's particles last, in another hue)
+  if (altPass) { if (!CANVAS_FILTER || !parts.some(p => p.alt)) break; ctx.save(); ctx.filter = ALT_FILTER; }
   for (const p of parts) {
+    if (CANVAS_FILTER && !!p.alt !== altPass) continue;
     const a = clamp(p.life / p.max, 0, 1);
     if (p.type === 'paper') { p.vy += 0.18; p.vx *= 0.97; p.rot += p.vr; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.scale(1, Math.abs(Math.sin(p.rot * 2)) * 0.8 + 0.2); ctx.globalAlpha = Math.min(1, a * 1.5); ctx.fillStyle = '#f5f5f0'; ctx.fillRect(-6, -8, 12, 16); ctx.fillStyle = '#9aa4b8'; ctx.fillRect(-4, -5, 8, 1); ctx.fillRect(-4, -2, 8, 1); ctx.fillRect(-4, 1, 6, 1); ctx.restore(); continue; } // a sheet of paper fluttering down
     if (p.type === 'crystal') { drawCrystal(p.x, p.y, p.r, Math.min(1, a * 1.4), p.rot); continue; } // a crystal falling onto them
@@ -241,6 +247,7 @@ function drawParts() {
       ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
     }
   }
+  if (altPass) ctx.restore(); }
 }
 
 /* ================= drawing: stage ================= */

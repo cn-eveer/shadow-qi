@@ -5,6 +5,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
     <article class="card brawler" data-tab="brawler" data-lang="en">
       <h2>TETSU<span>Qi Brawler</span></h2>
       <p class="blurb">Slower but hits hard. Heavy fists up close, qi to cover the distance, and six ways to launch you into a juggle. Charges MP faster than Kuro. Before each technique he pulls his fists back to gather qi. While he’s attacking he shrugs off up to three weak hits (ARMOR), but anything heavier still stops him.</p>
+      <p class="note"><b>v1.3.9: long juggles pay.</b> For every fighter, adding a second lift or bounce to a combo earns a one-time +26 bonus on top of the extra hits, so two juggles always beat one. The limits on lifts and bounces are unchanged.</p>
       <p class="note"><b>Charge (hold I).</b> Qi gathers into him while you hold. Half a second: Charged Qi Palm, a rising palm full of qi lifts them — follow it with a juggle. Over a second: Mountain Qi Blast, a blast of qi from both palms sends them across the stage. A tap is the normal heavy attack.</p>
       <p class="note"><b>Theme.</b> Iron qi & mountains · cyan and bronze. A temple brawler who trained by breaking stone. Signatures: U, U, K Mountain Splitter (stomps the ground open, then twin palms); U, U, I Ascending Dragon (a qi dragon coils up around him).</p>
       <div class="scroll"><table>
@@ -56,6 +57,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
     <article class="card brawler" data-tab="brawler" data-lang="ja" hidden>
       <h2>テツ<span>気の拳士</span></h2>
       <p class="blurb">動きは遅いが一撃が重い。技の前に拳を引いて気を溜める（その間に攻撃されると中断）。攻撃中は弱い攻撃を3回まで耐える（アーマー）。</p>
+      <p class="note"><b>v1.3.9：長い空中コンボほど強い。</b>全キャラ共通で、コンボに2回目の打ち上げ・バウンドを入れると、追加の攻撃に加えて一度だけ+26のボーナス。2回打ち上げは必ず1回より強い。回数制限はそのまま。</p>
       <p class="note"><b>溜め技（I長押し）。</b> 押している間、気が集まる。0.5秒：溜め気掌（気を込めた掌で浮かせる）、空中追撃につながる。1秒以上：山の気功砲（両掌から気の奔流、画面の端まで吹き飛ばす）。押すだけなら通常の強攻撃。</p>
       <p class="note"><b>テーマ.</b> 鉄の気と山・水色と青銅。岩を砕いて修行した寺の拳士。決め技：U、U、K「山割り」（地面を踏み割り、双掌）／U、U、I「昇龍」（気の龍が体に巻きつき昇る）。</p>
       <div class="scroll"><table>

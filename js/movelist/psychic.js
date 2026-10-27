@@ -5,6 +5,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
     <article class="card psychic" data-tab="psychic" data-lang="en">
       <h2>LYRA<span>Psychic Sage</span></h2>
       <p class="blurb">A calm sage in a long robe who floats just above the ground. She never throws a punch: her power takes the shape of turning rune circles, crystals of light and orbs that fight beside her. She carries a tall staff topped with a glowing crystal and casts every spell through it.</p>
+      <p class="note"><b>v1.3.9: her staff.</b> She holds it low down — a short end below her hand, the long end with the crystal out in front — and her rays and Crystal Shard come out of the crystal at its tip.</p>
       <p class="note"><b>Slow magic, quick feet.</b> Her attacks are the slowest in the game to come out — every magic circle holds for a moment before its crystal falls — but she walks, backs off and jumps faster than anyone.</p>
       <p class="note"><b>Crystals.</b> On the ground, a rune circle flares right where they stand, then a crystal falls into it out of a second magic circle that opens above them (or spears up out of a floor rune). Her U, U, K uses magic circles only. In a juggle she never moves: crystals form above them, wherever they are up to half the stage away, and fall on them, several at a time (U: a rune bursts on them, U: a chain of runes, I: a magic circle opens above them and the crystal meteor falls out of it and lifts them again, K: a triangular magic circle closes around them and explodes).</p>
       <p class="note"><b>Charge (hold I).</b> Qi gathers into him while you hold. Half a second: Rising Glyph, a rune under their feet lifts them, wherever they are — follow it with a juggle. Over a second: Nova Glyph, a giant starburst rune blasts them away. A tap is the normal heavy attack.</p>
@@ -46,6 +47,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
     <article class="card psychic" data-tab="psychic" data-lang="ja" hidden>
       <h2>ライラ<span>超能力の賢者</span></h2>
       <p class="blurb">長いローブをまとい、地面から少し浮いた静かな賢者。拳は振るわず、回る魔法陣と光の水晶、そばで戦うオーブで戦う。どの攻撃も一瞬力を溜めてから放つ。光る水晶のついた長い杖を持ち、すべての術を杖から放つ。</p>
+      <p class="note"><b>v1.3.9：杖。</b>杖の下の方を握るように（手の下は短く、水晶のついた長い方が前に）。光線と水晶の欠片は、杖の先の水晶から放たれる。</p>
       <p class="note"><b>遅い魔法、速い足。</b>攻撃の発生は全キャラで一番遅い（魔法陣が少し留まってから水晶が落ちる）が、歩き・後退・ジャンプは誰よりも速い。</p>
       <p class="note"><b>水晶。</b> 地上では相手の立っている場所に魔法陣が光り、頭上に開いたもう一つの魔法陣から水晶が落ちる（床の紋からは水晶が突き上がる）。U、U、Kは魔法陣だけで戦う。空中追撃ではライラは動かない：画面の半分まで、相手がどこにいてもその上に水晶が現れて次々と降り注ぐ（U：魔法陣の炸裂、U：魔法陣の連鎖、I：頭上高くに大きな魔法陣が開き、巨大な水晶の流星が落ちて再び浮かせる、K：三角の爆発）。</p>
       <p class="note"><b>溜め技（I長押し）。</b> 押している間、気が集まる。0.5秒：昇る紋（どこにいても足元の紋で浮かせる）、空中追撃につながる。1秒以上：新星の紋（巨大な星の紋で吹き飛ばす）。押すだけなら通常の強攻撃。</p>

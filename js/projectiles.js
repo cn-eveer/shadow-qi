@@ -21,7 +21,7 @@ function spawnClone(f, sup, idx) {
   const o = other(f), side = Math.sign(o.x - f.x) || f.facing;
   const fromBack = sup && idx % 2 === 1; // in the super, every other clone comes from behind the opponent
   const sp = sup ? 16 : 10, range = sup ? 1100 : 520, dir = fromBack ? -side : f.facing;
-  const x = fromBack ? clamp(o.x + side * 430, -60, W + 60) : f.x + f.facing * 20;
+  const x = fromBack ? clamp(o.x + side * (sup ? Math.max(120, Math.abs(o.x - f.x) - 20) : 430), -60, W + 60) : f.x + f.facing * 20; // (in the super the ones from behind start as far away as the ones in front: they all arrive together)
   projs.push({ id: ++serial, type: 'clone', owner: f, x, y: 0, vx: dir * sp, vy: 0, w: 28, h0: 10, h1: 120,
     dmg: sup ? 32 : 66, stun: sup ? 24 : 26, bstun: 15, push: sup ? 1.5 : 5,
     kd: false, juggle: sup, superHit: sup, hitstop: 7, life: Math.round(range / sp), chip: true, dir });
@@ -29,7 +29,7 @@ function spawnClone(f, sup, idx) {
 }
 function spawnDiveClone(f) { // the Shadow Army finisher drops from above
   const o = other(f), close = Math.abs(o.x - f.x) < 240; // up close, it bounces them back toward Kuro so he can keep the combo going
-  projs.push({ id: ++serial, type: 'clone', owner: f, x: o.x, y: 0, yOff: 240, fall: true, vx: 0, vy: 0, w: 34, h0: 0, h1: 120,
+  projs.push({ id: ++serial, type: 'clone', owner: f, x: o.x, y: 0, yOff: f.move && f.move.dodge ? 420 : Math.max(200, o.y + 120), fall: true, vx: 0, vy: 0, w: 34, h0: 0, h1: 120, // (it starts high: its shadow on the floor gives time to dash away)
     dmg: 85, stun: 24, bstun: 16, push: 3, kd: !close, kdVx: 9, kdVy: 10, launch: close, launchVy: 12, bounce: close, endOwner: close,
     juggle: true, superHit: true, hitstop: 12, life: 60, chip: true, dir: f.facing });
   puff(o.x, 260); sfx('clone');
@@ -43,14 +43,20 @@ const NO_CLASH = new Set(['pillar', 'lift', 'crush', 'dish', 'crescent', 'plate'
 const pullV = (f, t) => { const d = f.x - t.x; return Math.sign(d || 1) * clamp((Math.abs(d) - 60) / 55, 0.5, 5.5); }; // drift a launched opponent back toward her
 const FINISHERS = new Set(['mrFinish', 'srSlam']);
 // ← ← + I: three rays at once, like Orb Burst all in one go; the third leaves them stunned
+function lyraTip(f) { // where the crystal on Lyra's staff is right now (screen coordinates): her spells come out of it
+  const pose = f.state === 'attack' && f.move && POSES[f.move.pose] ? POSES[f.move.pose] : f.pose, J = solve(pose), s = f.ch.scale, hip = f.state === 'attack' && f.move && POSES[f.move.pose] ? hipFor(pose) : (f.hipUp || 0); // (the casting pose: where the staff points as the spell goes off)
+  let ux = J.h1[0] - J.e1[0], uy = J.h1[1] - J.e1[1] + 9; const L = Math.hypot(ux, uy) || 1; ux /= L; uy /= L;
+  const cx = J.h1[0] + ux * 113, cy = J.h1[1] + uy * 113;
+  return [f.x + (f.animDX || 0) + f.facing * s * cx, GROUND - f.y - (f.ch.hover ? hoverOf(f) : 0) - s * (cy + hip)];
+}
 function tripleRay(f, o) {
   const reach = 430, inRange = Math.abs(o.x - f.x) <= reach, hu = inRange ? hurtbox(o, true) : null;
   sfx('zap');
   for (let k = 0; k < 3; k++) {
-    const sx = f.x + f.facing * 40 * f.ch.scale, sy = GROUND - f.y - (95 + (k - 1) * 24) * f.ch.scale;
-    const tx = inRange ? o.x : f.x + f.facing * reach, ty = GROUND - o.y - (55 + k * 32) * o.ch.scale;
+    const tip = lyraTip(f), sx = tip[0], sy = tip[1] + (k - 1) * 4; // (all three out of the crystal on her staff)
+    const oy = jumpedOver(o) ? 0 : o.y, tx = inRange ? o.x : f.x + f.facing * reach, ty = GROUND - oy - (55 + k * 32) * o.ch.scale; // (aimed where they stand: jump over the rays)
     parts.push({ type: 'ray', x: sx, y: sy, x1: tx, y1: ty, life: 14, max: 14, col: '210,190,255', w: 1.3 });
-    if (!hu) continue;
+    if (!hu || jumpedOver(o)) continue;
     const hb = { x0: tx - 10, x1: tx + 10, y0: GROUND - ty - 10, y1: GROUND - ty + 10 };
     applyHit(f, o, { dmg: k === 2 ? 24 : 14, stun: 18, bstun: 10, push: 1, type: 'mid', chip: true, hitstop: k === 2 ? 8 : 3, proj: true, str: 1, gdrain: 8, juggle: true, jugVy: 5,
       stunT: k === 2 ? 62 : undefined, stunKind: 'psy', label: 'Triple Ray' }, Math.sign(o.x - f.x) || f.facing, hb, hu);
@@ -84,18 +90,18 @@ function spawnLift(f, o, juggle) { // a glowing ring on the floor (or around the
   projs.push({ id: ++serial, type: 'lift', owner: f, x, y: 0, vx: 0, vy: 0, r: 40, t: 0, erupt: juggle ? 3 : 16, juggle, life: juggle ? 16 : 26, done: false, dir: f.facing });
 }
 function burstRay(f, o, i, n) { // Orb Burst: a ray from an orb (or her hand) straight at them
-  const pos = orbCount(f) ? orbPos(f, i, orbCount(f)) : [f.x + f.facing * 40, GROUND - f.y - 115];
-  const hu = hurtbox(o, true), tx = o.x, ty = GROUND - o.y - 80 * o.ch.scale;
+  const pos = orbCount(f) ? orbPos(f, i, orbCount(f)) : lyraTip(f); // (with no orbs, out of the crystal on her staff)
+  const hu = hurtbox(o, true), tx = o.x, ty = GROUND - (jumpedOver(o) ? 0 : o.y) - 80 * o.ch.scale; // (aimed where they stand: jump over it)
   parts.push({ type: 'ray', x: pos[0], y: pos[1], x1: tx, y1: ty, life: 12, max: 12 });
   sfx('zap');
   if (f.orbCD && f.orbCD[i] != null) f.orbCD[i] = Math.max(f.orbCD[i], 60);
-  if (!hu) return;
+  if (!hu || jumpedOver(o)) return;
   const hb = { x0: tx - 10, x1: tx + 10, y0: GROUND - ty - 10, y1: GROUND - ty + 10 };
-  applyHit(f, o, { dmg: 16, stun: 16, bstun: 8, push: 1, type: 'mid', chip: true, hitstop: 4, proj: true, str: 1, gdrain: 4, juggle: true, jugVy: 5, label: 'Orb Ray' }, Math.sign(o.x - f.x) || f.facing, hb, hu);
+  applyHit(f, o, { dmg: orbCount(f) ? 16 : 30, stun: 16, bstun: 8, push: 1, type: 'mid', chip: true, hitstop: 4, proj: true, str: 1, gdrain: 4, juggle: true, jugVy: 5, label: 'Orb Ray' }, Math.sign(o.x - f.x) || f.facing, hb, hu);
 }
 // Great Sage Pillar: a giant staff crashes down on them
-function spawnPillar(f, o) {
-  const x = clamp(f.x + clamp(o.x - f.x, -420, 420), WALL_L, WALL_R), close = Math.abs(o.x - f.x) < 240;
+function spawnPillar(f, o, lx) { // lx: where it was aimed when the wind-up began (dash away from the mark and it misses)
+  const tx = lx != null ? lx : o.x, x = clamp(f.x + clamp(tx - f.x, -420, 420), WALL_L, WALL_R), close = Math.abs(tx - f.x) < 240;
   projs.push({ id: ++serial, type: 'pillar', owner: f, x, y: 0, vx: 0, vy: 0, r: 40, t: 0, hits: 0, max: 6, last: -99, life: 46, close, dir: f.facing });
   sfx('super');
 }
@@ -128,9 +134,9 @@ function aimPose(f) { // his arms point straight at them; he leans back and look
   return p;
 }
 function aimShot(f, o, h) { // a shot aimed straight at a juggled opponent, from a muzzle that points at them
-  const s = f.ch.scale, sx = f.x + f.facing * 6 * s, sy = f.y + 128 * s, tx = o.x, ty = o.y + 60 * o.ch.scale, dd = Math.hypot(tx - sx, ty - sy) || 1;
-  const mx = sx + (tx - sx) / dd * 58 * s, my = sy + (ty - sy) / dd * 58 * s, d = Math.hypot(tx - mx, ty - my) || 1, sp = 24;
-  shoot(f, { x: mx, y: my, vx: (tx - mx) / d * sp * f.facing, vy: (ty - my) / d * sp, life: 18, ...h }); // (vx is relative to his facing; aimed even if they drift behind the muzzle)
+  const s = f.ch.scale, sx = f.x + f.facing * 6 * s, sy = f.y + 128 * s, lead = Math.min(10, Math.hypot(o.x - sx, o.y - sy) / 40), tx = o.x + (o.vx || 0) * lead, ty = o.y + 60 * o.ch.scale + (o.vy || 0) * lead * 0.8, dd = Math.hypot(tx - sx, ty - sy) || 1; // (it leads them: aimed where they'll be when it gets there)
+  const mx = sx + (tx - sx) / dd * 58 * s, my = sy + (ty - sy) / dd * 58 * s, d = Math.hypot(tx - mx, ty - my) || 1, sp = 40; // (fast: it lands before the next shot of the juggle)
+  shoot(f, { x: mx, y: my, vx: (tx - mx) / d * sp * f.facing, vy: (ty - my) / d * sp, life: 12, ...h }); // (vx is relative to his facing; aimed even if they drift behind the muzzle)
 }
 // Jesse's guns hold 10 bullets. Each shooting attack uses one, however many shots it fires; when the last is gone he reloads for
 // 5 seconds (he can still move, jump and guard), and until then a shot only clicks on an empty chamber. Dynamite, the Showdown
@@ -239,17 +245,84 @@ function hopBack(f, from, n = 12, sp = 8) { const mf = f.mf; if (f.move && f.mov
 function geyser(f, o, x) { // a column of water erupting under them
   parts.push({ type: 'wcol', x, w: 46, life: 22, max: 22, col: '150,215,255' }); sfx('flame'); game.shake = Math.max(game.shake, 4);
   for (let i = 0; i < 10; i++) parts.push({ type: 'aura', x: x + rnd(-24, 24), y: GROUND - rnd(0, 200), vx: rnd(-1, 1), vy: -rnd(2, 5), life: 18, max: 18, r: rnd(3, 5), col: '170,225,255' });
-  const hu = hurtbox(o, true); if (!hu) return;
+  const hu = hurtbox(o, true); if (!hu || jumpedOver(o, 70)) return; // (jump over the eruption)
   const hb = { x0: x - 28, x1: x + 28, y0: 0, y1: 260 };
   if (overlap(hb, hu)) applyHit(f, o, { dmg: 46, stun: 22, bstun: 12, push: 0.5, launch: true, launchVy: 13, type: 'mid', chip: true, hitstop: 10, proj: true, str: 1, gdrain: 12, label: 'Geyser' }, Math.sign(o.x - f.x) || f.facing, hb, hu);
 }
+// Every super can be escaped one way. The big ones ('guard') fill the screen: they can't be jumped over or dashed away from, only guarded.
+// The others come out after a longer wind-up (he's invincible through it) and hit only where they land: jump over them ('jump')
+// or dash out of the way ('dash').
+const SUPER_DODGE = { qiCannon: 'guard', thousandFists: 'guard', saHeaven: 'guard',
+  sdInferno: 'guard', shadowArmy: 'jump', gnHighNoon: 'jump', smDeadline: 'jump', greatSage: 'dash', plJudgement: 'dash' };
+const SUPER_PRE = 16; // the extra wind-up (frames) for the supers that can be jumped or dashed away from
+function superDodgeHint(f) { // as the super freeze ends: how to get away from it, over the one it's aimed at
+  const mv = f.move, o = other(f); if (!mv || !mv.dodge || !o) return;
+  const t = { jump: L('JUMP!', 'ジャンプでかわせ！'), dash: L('DASH AWAY!', 'ダッシュで逃げろ！'), guard: L('GUARD IT!', 'ガードしろ！') }[mv.dodge];
+  popText(o.x, GROUND - o.y - 215, t, mv.dodge === 'guard' ? '255,210,120' : '150,230,255');
+}
+function superWindFX(f) { // the super's wind-up: power pulled in around him (he can't be hit through it)
+  const s = f.ch.scale, col = f.ch.fxCol || '255,230,170';
+  for (let i = 0; i < 3; i++) { const an = vrnd(0, Math.PI * 2), r = vrnd(70, 120); parts.push({ type: 'spark', x: f.x + Math.cos(an) * r, y: GROUND - f.y - 100 * s + Math.sin(an) * r * 0.8, vx: -Math.cos(an) * r / 7, vy: -Math.sin(an) * r / 9, life: 8, max: 8, col }); }
+  parts.push({ type: 'ring', x: f.x, y: GROUND - f.y - 100 * s, r: 90, vr: -6, life: 10, max: 10, col });
+}
+// the Great Flood: for a while the stage is under water. The kappa swims (faster, and he attacks faster);
+// whoever he's fighting wades (slower, and slower to attack)
+const FLOOD_T = 600; // frames (10 seconds)
+const FLOOD_HEAL = 0.12; // health the kappa gets back every frame of the flood (about 70 over the ten seconds)
+const FLOOD_SWIM_MAX = 200; // how high the kappa can swim (a bit above a normal jump)
+const FLOOD_DEPTH = 250; // the water's surface, above the floor
+const FLOOD_DROWN = 0.15; // health drained from the other fighter every frame of the flood (about 90 over the ten seconds)
+const floodOwner = f => game.flood && game.flood.t > 0 && game.flood.owner === f;
+const floodVictim = f => game.flood && game.flood.t > 0 && game.flood.owner !== f;
+function floodWalkMul(f) { return floodOwner(f) ? 1.5 : floodVictim(f) ? 0.75 : 1; } // (the kappa swims fast; the other wades — slower, but still able to get away or punish)
+function floodTick() { if (!game.flood) return; if (--game.flood.t <= 0) { game.flood = null; return; }
+  for (const f of fighters) if (floodOwner(f) && !f.ko && game.phase === 'fight') { f.hp = Math.min(f.ch.hp || 1000, f.hp + FLOOD_HEAL); if (game.frame % 14 === 0) parts.push({ type: 'aura', x: f.x + vrnd(-20, 20), y: GROUND - f.y - vrnd(30, 120), vx: 0, vy: -0.8, life: 22, max: 22, r: 3, col: '140,255,190' }); } // the water heals him
+  for (const f of fighters) if (floodVictim(f) && !f.ko && game.phase === 'fight') { if (f.hp > 1) f.hp = Math.max(1, f.hp - FLOOD_DROWN); if (game.flood.t === FLOOD_T - 40) popText(f.x, GROUND - f.y - 210, L('DROWNING!', '溺れる！'), '150,215,255'); if (game.frame % 9 === 0) parts.push({ type: 'aura', x: f.x + f.facing * 10 + vrnd(-6, 6), y: GROUND - f.y - 150 * f.ch.scale, vx: 0, vy: -vrnd(0.8, 1.6), life: 26, max: 26, r: 3, col: '220,245,255' }); } // drowning: bubbles escaping, health draining away
+  if (game.frame % 5 === 0) for (const f of fighters) if (Math.abs(f.vx) > 0.5 && f.y <= 0) parts.push({ type: 'aura', x: f.x - Math.sign(f.vx) * 16, y: GROUND - 34, vx: -f.vx * 0.2, vy: -vrnd(0.5, 1.5), life: 14, max: 14, r: 3, col: '200,235,255' }); }
+function drawFlood() { // the whole stage under water: a surface far overhead, light rays, rising bubbles — and a gauge of the time left
+  const fl = game.flood; if (!fl || fl.t <= 0) return; const rise = Math.min(1, (FLOOD_T - fl.t) / 30), fade = Math.min(1, fl.t / 30), t = globalT;
+  const surf = GROUND - FLOOD_DEPTH * rise; // the water rises from the floor to a little above a jump
+  ctx.save(); ctx.globalAlpha = fade; if (fl.owner && fl.owner.alt && CANVAS_FILTER) ctx.filter = ALT_FILTER; // (the second kappa's flood, in a mirror match, is another colour)
+  const g = ctx.createLinearGradient(0, surf, 0, GROUND + 70); g.addColorStop(0, 'rgba(110,190,255,.28)'); g.addColorStop(1, 'rgba(20,70,150,.45)'); ctx.fillStyle = g;
+  ctx.beginPath(); ctx.moveTo(0, GROUND + 70); for (let x = 0; x <= W; x += 24) ctx.lineTo(x, surf + Math.sin(t * 0.06 + x * 0.025) * 5); ctx.lineTo(W, GROUND + 70); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(235,250,255,.6)'; ctx.lineWidth = 2; ctx.beginPath(); for (let x = 0; x <= W; x += 24) { const y = surf + Math.sin(t * 0.06 + x * 0.025) * 5; x ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke();
+  ctx.globalCompositeOperation = 'lighter'; for (let i = 0; i < 6; i++) { const x0 = ((i * 190 + t * 0.4) % (W + 200)) - 100; ctx.fillStyle = 'rgba(200,235,255,.05)'; ctx.beginPath(); ctx.moveTo(x0, surf); ctx.lineTo(x0 + 40, surf); ctx.lineTo(x0 + 120, GROUND); ctx.lineTo(x0 + 60, GROUND); ctx.closePath(); ctx.fill(); } // shafts of light from the surface
+  ctx.globalCompositeOperation = 'source-over';
+  for (let i = 0; i < 14; i++) { const x = (i * 71 + 30) % W, y = GROUND - ((t * (0.8 + (i % 4) * 0.3) + i * 53) % Math.max(1, GROUND - surf)); ctx.strokeStyle = 'rgba(220,245,255,.55)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(x + Math.sin(t * 0.05 + i) * 6, y, 2 + (i % 3), 0, Math.PI * 2); ctx.stroke(); } // bubbles
+  ctx.restore();
+  // the gauge: a bar of water draining, with the seconds left, under the round timer
+  const k = fl.t / FLOOD_T, gx = W / 2 - 90, gy = 98, gw = 180, gh = 12;
+  ctx.save(); ctx.fillStyle = 'rgba(10,20,40,.7)'; rr(gx - 2, gy - 2, gw + 4, gh + 4, 6); ctx.fill();
+  const gg = ctx.createLinearGradient(gx, 0, gx + gw, 0); gg.addColorStop(0, '#2f8fe0'); gg.addColorStop(1, '#9fe0ff'); ctx.fillStyle = gg; rr(gx, gy, gw * k, gh, 5); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(gx + 2, gy + 2, Math.max(0, gw * k - 4), 3);
+  ctx.font = "700 13px 'Rajdhani', system-ui, sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(10,20,40,.8)';
+  const label = L('🌊 FLOOD ', '🌊 水没 ') + (fl.t / 60).toFixed(1) + L('s', '秒'); ctx.strokeText(label, W / 2, gy + gh + 3); ctx.fillStyle = k < 0.25 ? '#ffd2a0' : '#d8f0ff'; ctx.fillText(label, W / 2, gy + gh + 3);
+  ctx.restore();
+}
+function zoneHit(f, o, h, hb) { // a hit only where it lands (hb): jump or dash out of it and it misses
+  const hu = hurtbox(o, true); if (!hu || !overlap(hb, hu)) return false;
+  applyHit(f, o, { type: 'mid', chip: true, proj: true, str: h.launch || h.kd ? 2 : 1, hitstop: 4, gdrain: 6, ...h }, Math.sign(o.x - f.x) || f.facing, hb, hu); return true;
+}
+const caughtIn = o => o.state === 'knock' && o.juggle; // already juggled in a combo: ranged attacks follow them into the air
+const jumpedOver = (o, h = 60) => o.y > h && !caughtIn(o); // a free opponent this high has jumped over a ranged attack aimed along the ground
 function columnHit(f, o, h) { // a hit that lands wherever they are (supers, floods, pillars)
   const hu = hurtbox(o, true); if (!hu) return;
   const hb = { x0: o.x - 20, x1: o.x + 20, y0: 0, y1: 400 };
   applyHit(f, o, { type: 'mid', chip: true, proj: true, str: h.launch || h.kd ? 2 : 1, hitstop: 4, gdrain: 6, ...h }, Math.sign(o.x - f.x) || f.facing, hb, hu);
 }
 // the salaryman's possession: the angel or the devil takes him over for ten seconds
-const POSSESS_T = 600;
+const POSSESS_T = 900; // (fifteen seconds)
+// during the countdown: ← ← + I (angel) or ← ← + K (devil); the last one called holds for the whole round, with no timer
+// (never both at once before the round: the double only comes by calling the other one during the fight)
+function prePossessTick(f, t) {
+  const o = other(f); let kind = null;
+  if (f.ctrl instanceof CPU) { if (t === 50 && !game.watch) { const r = Math.random(); kind = r < 0.3 ? 'angel' : r < 0.55 ? 'devil' : null; } } // the CPU sometimes does it too
+  else if (f.ctrl && f.ctrl.read) { const inp = f.ctrl.read(f, game.frame, o); if (inp && inp.bb && (inp.btn === 'hp' || inp.btn === 'hk')) { kind = inp.btn === 'hp' ? 'angel' : 'devil'; if (f.ctrl.consume) f.ctrl.consume(); } }
+  if (!kind || f.prePoss === kind) return;
+  f.prePoss = kind; sfx('charge'); game.shake = Math.max(game.shake, 4);
+  popText(f.x, GROUND - 230, kind === 'angel' ? L('ANGEL — ALL ROUND!', '天使憑依・このラウンドずっと！') : L('DEVIL — ALL ROUND!', '悪魔憑依・このラウンドずっと！'), kind === 'angel' ? '255,230,150' : '255,90,70');
+  for (let i = 0; i < 18; i++) { const an = i * Math.PI / 9; parts.push({ type: 'spark', x: f.x, y: GROUND - 110, vx: Math.cos(an) * 6, vy: Math.sin(an) * 6, life: 20, max: 20, col: kind === 'angel' ? '255,235,160' : '255,100,60' }); }
+}
 function startPossession(f, kind) {
   if ((kind === 'angel' && f.ch.possess === 'devil') || (kind === 'devil' && f.ch.possess === 'angel')) kind = 'double'; // the other one arrives while one already has him: both at once
   f.ch = kind === 'angel' ? ANGEL_CH : kind === 'devil' ? DEVIL_CH : DOUBLE_CH; f.possT = kind === 'double' ? Math.round(POSSESS_T * 0.75) : POSSESS_T;
@@ -261,6 +334,8 @@ function startPossession(f, kind) {
 }
 function endPossession(f) {
   if (!f.ch.possess) return;
+  if (f.wholeKind && f.ch.possess !== f.wholeKind) { // a double on top of a possession called before the round: when it wears off, he's back in that form (no timer)
+    f.ch = f.wholeKind === 'angel' ? ANGEL_CH : DEVIL_CH; f.possT = 0; popText(f.x, GROUND - 200, L('DOUBLE OVER', '二重憑依終了'), '220,225,235'); sfx('vanish'); return; }
   f.ch = CHARS[f.key]; popText(f.x, GROUND - 200, L('POSSESSION OVER', '憑依終了'), '220,225,235');
   for (let i = 0; i < 8; i++) parts.push({ type: 'smoke', x: f.x + rnd(-30, 30), y: GROUND - f.y - rnd(40, 160), vx: rnd(-1, 1), vy: -1, r: rnd(6, 10), vr: 0.3, life: 20, max: 20, col: '200,200,210' });
   sfx('vanish');
@@ -384,7 +459,7 @@ LOOKS.gunman = {
   aPalm: { label: 'Air Shot', pose: 'gAirDown', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) { aimShot(f, o, { dmg: 20, jugVy: 6 });  } } }, aElbow: { label: 'Air Twin Shot', pose: 'gAirDown', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) { aimShot(f, o, { dmg: 14, jugVy: 6 }); aimShot(f, o, { dmg: 14, jugVy: 6, y: f.y + 96 }); } } }, aKunai: { label: 'Air Fan', pose: 'gAirDown', poseFn: null, blade: false, hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) { aimShot(f, o, { dmg: 16, jugVy: 6 }); aimShot(f, o, { dmg: 16, jugVy: 6, y: f.y + 96 }); } } },
   aSpin: { label: 'Air Finishing Blast', pose: 'gTwin', spin: null, hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) { aimShot(f, o, { dmg: 26, jugVy: 5, kd: true }); aimShot(f, o, { dmg: 26, jugVy: 5, y: f.y + 96 }); } } }, aMeteor: { label: 'Dive Shot', pose: 'gAirDown' }, airSmash: { label: 'Gun Drop', pose: 'gAirDown' },
   jab2: { label: 'Hip Shot 2', pose: 'gTwin', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) { aimShot(f, o, { dmg: 18, jugVy: 5 });  } } }, oneTwo: { label: 'Double Tap', pose: 'gTwin', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) { aimShot(f, o, { dmg: 16, jugVy: 5 }); aimShot(f, o, { dmg: 16, jugVy: 5, y: f.y + 96 }); } } }, leapHammer: { label: 'Leaping Shot', pose: 'gAirDown', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) { aimShot(f, o, { dmg: 24, jugVy: 6 });  } } },
-  kick2: { label: 'Low Shot 2', pose: 'gAimLow', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 30, dmg: 20, low: true }); } }, kick3: { label: 'Rising Shot', pose: 'gUp', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) { aimShot(f, o, { dmg: 24, jugVy: 9 });  } } },
+  kick2: { label: 'Low Shot 2', pose: 'gLow', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 44, dmg: 20, low: true }); } }, kick3: { label: 'Rising Shot', pose: 'gUp', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) { aimShot(f, o, { dmg: 24, jugVy: 9 });  } } },
   chainRound: { label: 'Spinning Shots', pose: 'gTwin', poseFn: null, spin: null, hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) { aimShot(f, o, { dmg: 16, jugVy: 5 }); aimShot(f, o, { dmg: 16, jugVy: 5, y: f.y + 96 }); } } }, lowMid: { label: 'Low Shot, High Shot', pose: 'gTwin', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) { aimShot(f, o, { dmg: 20, jugVy: 6 });  } } },
   jabKick: { label: 'Hip Shot, Twin Shot', pose: 'gTwin', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) { aimShot(f, o, { dmg: 16, jugVy: 5 }); aimShot(f, o, { dmg: 16, jugVy: 5, y: f.y + 96 }); } } }, risingKick: { label: 'Rising Twin Shot', pose: 'gUp', trail: null, hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) { aimShot(f, o, { dmg: 16, jugVy: 9 }); aimShot(f, o, { dmg: 16, jugVy: 9, y: f.y + 96 }); } } }, chainSlide: { label: 'Slide Shot', pose: 'gLow', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 26, dmg: 24, low: true, kd: true }); } },
 };
@@ -506,7 +581,11 @@ function chainMove(id, f) {
   const mv = def ? buildString(def, f) : chainMoveBase(id, f);
   const look = LOOKS[f.ch.lookKey || f.key]; if (!def && mv && look && look[id]) Object.assign(mv, look[id]); // (a possessed salaryman fights with the angel's or the devil's moves)
   if (mv && f.ch.possess === 'angel' && id === 'aElbow' && mv.chain) mv.chain = { ...mv.chain, lp: 'aWing' }; // (the angel: U goes on in the air)
+  if (mv && (id === 'jSpin' || id === 'jRise' || id === 'jUpper') && Array.isArray(mv.hitbox)) { // juggle lifts and finishers reach anyone still in the air in front of him — low after a bounce, or pushed a little away
+    const hb = mv.hitbox = mv.hitbox.slice(); hb[0] = Math.min(hb[0], -10); hb[1] = Math.max(hb[1], 160); hb[2] = Math.min(hb[2], hb[2] < 0 ? hb[2] : 0); hb[3] = Math.max(hb[3], 250); }
   stretchReach(mv, f.ch.reachMul);
+  if (f.ch.reachAdd && mv && Array.isArray(mv.hitbox) && mv.hitbox[1] > 60) { mv.hitbox = mv.hitbox.slice(); mv.hitbox[1] += f.ch.reachAdd; } // (Mei: her string hits reach the staff's tip too)
+  if (f.key !== 'psychic' && f.key !== 'gunman' && mv && !mv.air && !mv.jug && Array.isArray(mv.hitbox)) mv.stepIn = mv.hitbox[1] - 30; // (Mei follows her own string in: each hit after the first steps toward them, so a string started at the staff's tip doesn't run out of reach)
   if (mv && f.ch.stringDelay && !mv.air && !KURO_STRONG.has(id)) { mv.startup += f.ch.stringDelay; mv.recovery += f.ch.stringDelay; } // Lyra: each hit of a string comes out later (juggle hits keep their pace)
   if (mv && f.key === 'ninja' && mv.recovery < 90) mv.recovery = Math.max(5, Math.round(mv.recovery * 0.75)); // Kuro recovers faster
   if (mv && KURO_STRONG.has(id) && !def) { const k = 1.3 * (f.ch.jugDmg || 1); mv.dmg = Math.round(mv.dmg * k); if (mv.lastDmg) mv.lastDmg = Math.round(mv.lastDmg * k); } // juggle and air hits hit harder (scaled per fighter)

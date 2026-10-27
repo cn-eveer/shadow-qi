@@ -164,6 +164,7 @@ const POSES = {
   saIdle: P(-4, 120,150, 120,150, 18,-6, -18,-16),             // the angel floats, arms open
   sdIdle: P(44, 58,96, 46,82, 76,-54, 0,-90),                // the devil crouches low like a beast, claws hanging low
   saPray: P(0, 36,150, 36,150, 20,3, -20,-8),                  // the angel stands still, hands together in prayer
+  saKneelPray: P(10, 22,172, 18,176, 88,-4, -8,-100),           // Heaven's Gate: down on one knee, palms pressed together before his face, praying
   sdBeckon: P(18, 96,150, 40,90, 50,-30, -10,-50),             // a low crouch, one hand curling: come here...
   sSpring: P(-10, 160,170, 120,140, 10,0, -30,-60),
   sCase: P(20, 104,70, 40,70, 50,6, -44,-26),

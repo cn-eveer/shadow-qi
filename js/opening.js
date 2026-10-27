@@ -14,10 +14,12 @@ const OP_ROSTER = [
 ];
 const OP_CUT = 150, OP_PRO = 130, OP_CLASH = 110, OP_CLASHES = [['ninja', 'staff'], ['brawler', 'paladin'], ['psychic', 'ninja']];
 // real battle footage: the actual game, playing one of each fighter's sample combos, filmed up close
-const OP_BATTLE = [ // a highlight reel: each clip starts right at the action (from: the step to start on); supers and big combos
-  { key: 'ninja', demo: 11, from: 2, len: 165, sup: true }, { key: 'staff', demo: 11, from: 2, len: 150, sup: true }, { key: 'psychic', demo: 5, len: 135 },
-  { key: 'brawler', demo: 11, from: 3, len: 150, sup: true }, { key: 'kappa', demo: 7, len: 140, sup: true }, { key: 'salary', demo: 20, from: 2, len: 200 },
-  { key: 'gunman', demo: 7, len: 140, sup: true }, { key: 'paladin', demo: 11, len: 150, sup: true }];
+const OP_BATTLE = [ // a highlight reel: each clip starts right at the action (from: the step to start on); supers and big combos. Samples are found by name, so adding samples never shifts the reel
+  { key: 'ninja', name: '6. Lightning stun: two juggles', from: 2, len: 165, sup: true }, { key: 'staff', name: '6. Jump-in Falling Staff: two juggles', from: 2, len: 150, sup: true },
+  { key: 'psychic', name: '3. Falling Star: two juggles', len: 135 }, { key: 'brawler', name: '6. Qi Parry: two juggles', from: 3, len: 150, sup: true },
+  { key: 'kappa', name: '8. Great Flood (super)', len: 250, sup: true }, { key: 'salary', name: 'Double possession: tail hook juggle', from: 1, len: 210 },
+  { key: 'gunman', name: '8. High Noon (super)', len: 150, sup: true }, { key: 'paladin', name: '12. Sanctuary (super)', len: 150, sup: true }];
+const opDemoIdx = c => { const i = (COMBO_SET[c.key] || []).findIndex(d => d.name === c.name); return i >= 0 ? i : 0; };
 const OP_BAT0 = OP_PRO, OP_CLASH0 = OP_BAT0 + OP_BATTLE.reduce((n, c) => n + c.len, 0); // (no slow roster cuts or clashes any more: straight into the action)
 const OP_GROUP = OP_CLASH0, OP_END = OP_GROUP + 260;
 function opClipAt(t) { let s0 = OP_BAT0; for (let i = 0; i < OP_BATTLE.length; i++) { if (t < s0 + OP_BATTLE[i].len) return t >= s0 ? { i, k: t - s0 } : null; s0 += OP_BATTLE[i].len; } return null; }
@@ -25,7 +27,7 @@ function opSim() { for (const f of fighters) { f.ox = f.x; f.oy = f.y; } game.fr
 function opPrepClip(i) { // set up the real game behind the scenes for clip i (the run-up to the combo comes after: opRunUp)
   const c = OP_BATTLE[i]; OP.prep = { i, n: 0, done: false };
   OP.muted = true;
-  game.p1Char = c.key; startMatch(true, false, true); setupDemo(c.demo);
+  game.p1Char = c.key; game.demoSet = 'combos'; startMatch(true, false, true); setupDemo(opDemoIdx(c));
   game.mode = 'opening'; updateTbar(); ov.hidden = true;
   game.phase = 'fight'; game.phaseT = 0; if (game.demoState) { game.demoState.phase = 'run'; game.demoState.t = 0; } // (skip the round and sample intros nobody sees: far less to simulate)
   OP.muted = false;
@@ -71,8 +73,9 @@ function opRenderClip(i, k) { // the live game, filmed: zoomed in on the action,
   for (const f of fighters) if (!f.hidden && !f.shadow) drawShadow(f.x, f.y, f.ch.scale);
   const behind = t => t === 'clone' || t === 'decoy' || t === 'guardShadow';
   for (const p of projs) if (behind(p.type)) drawProj(p);
-  for (const f of fighters) if (f.spirit) drawSpirit(f); // Kuro's spirit animals, behind everyone
+  for (const f of fighters) if (f.spirit) { if (f.alt && CANVAS_FILTER) { ctx.save(); ctx.filter = ALT_FILTER; drawSpirit(f); ctx.restore(); } else drawSpirit(f); } // Kuro's spirit animals, behind everyone (the second fighter's in another hue)
   for (const f of [...fighters].sort((p, q) => (p.state === 'attack' ? 1 : 0) - (q.state === 'attack' ? 1 : 0))) drawFighter(f);
+  drawFlood(); // (the Great Flood's water shows in the reel too)
   for (const p of projs) if (!behind(p.type)) drawProj(p);
   drawParts();
   ctx.restore();
@@ -407,9 +410,10 @@ function render() {
   for (const f of fighters) if (!f.hidden && !f.shadow) drawShadow(f.x, f.y, f.ch.scale);
   const behind = t => t === 'clone' || t === 'decoy' || t === 'guardShadow';
   for (const p of projs) if (behind(p.type)) drawProj(p);
-  for (const f of fighters) if (f.spirit) drawSpirit(f); // Kuro's spirit animals, behind everyone
+  for (const f of fighters) if (f.spirit) { if (f.alt && CANVAS_FILTER) { ctx.save(); ctx.filter = ALT_FILTER; drawSpirit(f); ctx.restore(); } else drawSpirit(f); } // Kuro's spirit animals, behind everyone (the second fighter's in another hue)
   const order = [...fighters].sort((p, q) => (p.state === 'attack' ? 1 : 0) - (q.state === 'attack' ? 1 : 0));
   for (const f of order) drawFighter(f);
+  drawFlood(); // the Great Flood's water, over their feet
   for (const p of projs) if (!behind(p.type)) drawProj(p);
   drawParts();
   ctx.restore();

@@ -144,7 +144,6 @@ function startMatch(training, watch, demo) {
   initAudio();
   game.demo = !!demo; game.training = !!training || game.demo; game.watch = !!watch && !game.training; // watch: CPU vs CPU, demo: Kuro sample combos
   const p1 = game.p1Char;
-  if (game.p2Char === p1) game.p2Char = CHAR_ORDER.find(k => k !== p1);
   const p2 = game.demo ? DEMO_VS[p1] : game.p2Char; // sample combos always play against the same partner
   fighters = [makeFighter(p1, 0, game.demo ? new DemoCtrl() : game.watch ? new CPU() : new Human(MAPS.p1)), makeFighter(p2, 1, game.training ? new Dummy() : new CPU())];
   if (p1 === p2) fighters[1].alt = true; // mirror match: the second fighter wears the second palette
@@ -158,15 +157,15 @@ function startMatch(training, watch, demo) {
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
 }
 function startRound(n) {
-  for (const f of fighters) { f.shieldOut = false; f.brands = 0; f.plateOut = false; f.possT = 0; f.guardSlowT = 0; f.poisonT = 0; f.venom = 0; f.venomT = 0; if (CHARS[f.key]) f.ch = CHARS[f.key]; }
-  Object.assign(game, { finalWin: null, round: n, phase: 'intro', phaseT: 0, timer: 99 * 60, freeze: 0, slow: 0, shake: 0, combo: null, superFlash: null, roundWinner: null, track: null, advInfo: null });
+  for (const f of fighters) { f.prePoss = null; f.wholeRound = false; f.wholeKind = null; f.stuckT = 0; f.freeT = 0; f.loopGuard = 0; f.repLabel = null; f.repN = 0; f.liftT = null; f.stunUsed = false; f.pendingStun = 0; f.shieldOut = false; f.brands = 0; f.plateOut = false; f.possT = 0; f.guardSlowT = 0; f.poisonT = 0; f.venom = 0; f.venomT = 0; if (CHARS[f.key]) f.ch = CHARS[f.key]; }
+  Object.assign(game, { flood: null, finalWin: null, round: n, phase: 'intro', phaseT: 0, timer: 99 * 60, freeze: 0, slow: 0, shake: 0, combo: null, superFlash: null, roundWinner: null, track: null, advInfo: null });
   projs.length = 0; parts.length = 0;
   fighters.forEach(resetFighter);
   fighters.forEach(updatePose);
 }
 function resetPositions() {
-  for (const f of fighters) { if (CHARS[f.key]) f.ch = CHARS[f.key]; f.possT = 0; f.plateOut = false; f.poisonT = 0; f.venom = 0; f.spirit = null; } // (a sample combo starts the salaryman unpossessed)
-  projs.length = 0; game.track = null; game.advInfo = null; game.combo = null; game.routeName = null; fighters.forEach(f => { f.sorbs = []; });
+  for (const f of fighters) { if (CHARS[f.key]) f.ch = CHARS[f.key]; f.possT = 0; f.plateOut = false; f.poisonT = 0; f.venom = 0; f.spirit = null; f.stuckT = 0; f.freeT = 0; f.loopGuard = 0; f.repLabel = null; f.repN = 0; f.liftT = null; f.recoilT = 0; f.settleT = 0; f.stunUsed = false; f.pendingStun = 0; f.stunT = 0; f.extendBonus = 0; f.prePoss = null; f.wholeRound = false; f.wholeKind = null; } // (a fresh start: no combo counters carried over from the last one) // (a sample combo starts the salaryman unpossessed)
+  projs.length = 0; game.flood = null; game.track = null; game.advInfo = null; game.combo = null; game.routeName = null; fighters.forEach(f => { f.sorbs = []; });
   for (const f of fighters) resetFighter(f);
   fighters.forEach(updatePose);
 }
@@ -256,20 +255,21 @@ function step() {
   const [a, b] = fighters, live = game.phase === 'fight';
   const ia = live ? a.ctrl.read(a, game.frame, b) : EMPTY;
   const ib = live ? b.ctrl.read(b, game.frame, a) : EMPTY;
-  update(a, b, ia); update(b, a, ib);
+  FX_OWNER = a; update(a, b, ia); FX_OWNER = b; update(b, a, ib); FX_OWNER = null;
   pushApart(a, b);
   checkHits(a, b); checkHits(b, a);
-  updateProjs();
+  updateProjs(); FX_OWNER = null;
   fighters.forEach(updatePose);
   if (game.training) trainingUpkeep();
   if (game.demo) demoUpkeep();
   if (game.combo && --game.combo.t <= 0) game.combo = null;
   if (game.routeName && --game.routeName.t <= 0) game.routeName = null;
   if (game.phase === 'intro') {
+    if (!game.demo) for (const f of fighters) if (f.key === 'salary') prePossessTick(f, game.phaseT);
     if (showOn()) for (const f of fighters) showFX(f, 'intro', game.phaseT - (f.side ? 8 : 0));
     if (!game.training && game.phaseT === 4) { const fin = a.wins === 1 && b.wins === 1; announce(fin ? 'Final round!' : `Round ${game.round}!`, fin ? 'ファイナルラウンド！' : `ラウンド${game.round}！`); }
     if (!game.training && COUNT_AT.includes(game.phaseT)) sfx('count');
-    if (game.phaseT >= (game.training ? 40 : INTRO_T)) { game.phase = 'fight'; game.phaseT = 0; if (!game.training) { sfx('go'); announce('Fight!', 'ファイト！'); } }
+    if (game.phaseT >= (game.training ? 40 : INTRO_T)) { for (const f of fighters) if (f.prePoss) { startPossession(f, f.prePoss); f.possT = 0; f.wholeRound = true; f.wholeKind = f.prePoss; f.prePoss = null; /* (no timer: it lasts the whole round) */ } game.phase = 'fight'; game.phaseT = 0; if (!game.training) { sfx('go'); announce('Fight!', 'ファイト！'); } }
   }
   else if (game.phase === 'fight') {
     const dead = fighters.filter(f => f.hp <= 0);
@@ -294,10 +294,12 @@ function tick() {
   fightTick();
 }
 function fightTick() {
+  if (!game.superFlash) { FX_OWNER = game.flood ? game.flood.owner : null; floodTick(); FX_OWNER = null; } // (the flood runs on every frame of the fight, hit-stop included; its bubbles and splashes are its kappa's colour)
+  if (!game.superFlash) for (const f of fighters) loopGuardTick(f);
   updateParts();
   if (game.shake > 0) { game.shake *= 0.86; if (game.shake < 0.3) game.shake = 0; }
   if (game.superFlash) {
-    if (--game.superFlash.t <= 0) game.superFlash = null;
+    if (--game.superFlash.t <= 0) { const sf = game.superFlash; game.superFlash = null; superDodgeHint(sf.f); }
     else { if (globalT % 2 === 0) auraParticle(game.superFlash.f); return; }
   }
   if (game.freeze > 0) { game.freeze--; return; }

@@ -14,6 +14,20 @@ const game = { mode: 'menu', paused: false, vsCPU: true, p1Char: 'ninja', p2Char
   heights: (() => { try { return localStorage.getItem('sq-heights') !== '0'; } catch (e) { return true; } })() }; // training: show each attack's height
 let fighters = [];
 const projs = [], parts = [];
+// mirror matches: the second fighter (the one in the second palette) has its effects — sparks, auras, projectiles, spells — drawn in another hue,
+// so you can always tell whose they are. Particles are tagged with whoever was acting when they were made
+const ALT_HUE = 165, ALT_FILTER = 'hue-rotate(165deg) saturate(1.2)';
+let FX_OWNER = null;
+const CANVAS_FILTER = (() => { try { const c = document.createElement('canvas').getContext('2d'); return !!c && 'filter' in c; } catch (e) { return false; } })();
+const altCache = new Map();
+function altCol(col) { // a particle colour 'r,g,b' turned round the colour wheel (for browsers whose canvas can't filter)
+  if (typeof col !== 'string' || !/^\d+,\d+,\d+$/.test(col)) return col; if (altCache.has(col)) return altCache.get(col);
+  const [r, g, b] = col.split(',').map(Number), a = ALT_HUE * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
+  const m = [0.213 + c * 0.787 - s * 0.213, 0.715 - c * 0.715 - s * 0.715, 0.072 - c * 0.072 + s * 0.928, 0.213 - c * 0.213 + s * 0.143, 0.715 + c * 0.285 + s * 0.140, 0.072 - c * 0.072 - s * 0.283, 0.213 - c * 0.213 - s * 0.787, 0.715 - c * 0.715 + s * 0.715, 0.072 + c * 0.928 + s * 0.072];
+  const k = v => Math.max(0, Math.min(255, Math.round(v))), out = `${k(m[0] * r + m[1] * g + m[2] * b)},${k(m[3] * r + m[4] * g + m[5] * b)},${k(m[6] * r + m[7] * g + m[8] * b)}`;
+  altCache.set(col, out); return out;
+}
+{ const push = parts.push; parts.push = function (...xs) { if (FX_OWNER && FX_OWNER.alt) for (const x of xs) if (x && x.alt == null && !x.text) { x.alt = true; if (!CANVAS_FILTER && x.col) x.col = altCol(x.col); } return push.apply(this, xs); }; } // (words keep their colours)
 const other = f => fighters[0] === f ? fighters[1] : fighters[0];
 
 function makeFighter(key, side, ctrl) { return { key, ch: CHARS[key], side, ctrl, wins: 0, meter: 0 }; }
@@ -32,7 +46,7 @@ function setState(f, s) {
   f.state = s; f.st = 0;
   if (s !== 'knock') { f.jugSpent = false; f.airT = 0; } // back on the floor (or hit out of it): a new juggle can start
   if (s === 'stand' || s === 'crouch') f.stunUsed = false;
-  if (s === 'stand' || s === 'crouch' || s === 'down') { f.ups = 0; f.bounces = 0; f.rises = ''; } // the combo is over: lifts and bounces start counting again
+  if (s === 'stand' || s === 'crouch' || s === 'down') { f.ups = 0; f.bounces = 0; f.rises = ''; f.extendBonus = 0; } // the combo is over: lifts and bounces start counting again
 }
 // each combo can lift the opponent up twice (a launch, a relaunch or a bounce); the third one barely raises them
 // The only ways a combo can lift (L) and bounce (B) them, each followed by a finisher:
@@ -40,11 +54,19 @@ function setState(f, s) {
 // Anything else (a third lift, B L L, L B B, B B L...) and they drop out of the combo, untouchable until they land.
 const RISE_PATTERNS = ['LLB', 'LBL', 'BB', 'BL'];
 const AIR_MAX = 300; // frames (5 seconds) a juggle can keep them in the air
+function loopGuardTick(f) { // the endless-loop guard (counted on every frame of the fight, hit-stop included, so it's real time): anyone held in hit-stun, stun or a juggle for 4.5 seconds in a row can't be hit again until they've been free a moment
+    const stuck = ['hitstun', 'knock', 'stunned', 'slashed', 'dizzy'].includes(f.state);
+    if (stuck) { f.stuckT = (f.stuckT || 0) + 1; f.freeT = 0; if (f.stuckT === LOOP_MAX && !f.loopGuard) { f.loopGuard = 1; if (f.state === 'knock') { f.juggle = false; f.jugSpent = true; } popText(f.x, GROUND - f.y - 205, L('COMBO BREAK', 'コンボ終了'), '205,205,220'); } }
+    else { f.freeT = (f.freeT || 0) + 1; if (f.freeT >= 12) { f.stuckT = 0; if (f.loopGuard) f.loopGuard = 0; } else if (f.loopGuard) f.loopGuard = 1; }
+  }
+const DIVE_STRIKE = { ninja: 'Kunai Dive', brawler: 'Meteor Elbow', staff: 'Staff Pogo Strike', psychic: 'Crystal Dive', paladin: 'Shield Dive', kappa: 'Claw Dive', gunman: 'Rain of Lead', salary: 'Briefcase Drop', salaryAngel: 'Feather Dive', salaryDevil: 'Hellfire Drop' }; // ↓ + U in the air
+const CEILING = 340; // the highest anyone can go (their head stays on screen)
+const LOOP_MAX = 270; // frames (4.5 seconds) anyone can be kept stuck in one combo, on the ground or in the air
 const RISE_OK = new Set(RISE_PATTERNS.flatMap(p => [...p].map((_, i) => p.slice(0, i + 1))));
 function registerRise(d, kind, a) {
   const seq = (d.rises || '') + kind;
   if (kind === 'L') d.ups = (d.ups || 0) + 1; else d.bounces = (d.bounces || 0) + 1;
-  if (RISE_OK.has(seq)) { d.rises = seq; return false; }
+  if (RISE_OK.has(seq)) { if (seq.length === 2 && (d.rises || '').length === 1) d.extendBonus = EXTEND_BONUS; d.rises = seq; d.liftT = globalT; return false; } // (the second lift or bounce: the combo earns its extension bonus) // (every lift or bounce within the rules restarts the hold timer)
   popText(d.x, GROUND - d.y - 200, kind === 'L' ? 'LIFT LIMIT' : 'BOUNCE LIMIT', '205,205,220'); d.jugSpent = true;
   return true;
 }
@@ -70,6 +92,7 @@ function resolveSpecial(f, o, inp) {
     const tw = Math.sign(o.x - f.x) || f.facing;
     if (inp.up && f.y <= 0 && f.ch.spUp) { const uid = (heavy && f.ch.spUp[k + 'H']) || f.ch.spUp[k]; if (uid) return uid; } // (an up version: hold ↑ with the technique)
     if (inp.bb && Math.sign(inp.h || 0) === tw && f.ch.spFwd) { const fid = (heavy && f.ch.spFwd[k + 'H']) || f.ch.spFwd[k]; if (fid) return fid; } // (← ← → + button: a forward version)
+    if (f.ch.spAuto) { const aid = f.ch.spAuto(f, o, k, heavy, inp); if (aid) return aid; } // (Tanaka's forms: the right version comes out by itself)
     if (inp.down && f.y <= 0 && !inAir(o) && f.ch.spLow) { const lid = (heavy && f.ch.spLow[k + 'H']) || f.ch.spLow[k]; if (lid) return lid; } // (a low version: hold ↓ with the technique)
     // rising version: automatic against an opponent in the air, or on demand by holding ↓ with the button
     return (sid && JUGGLE_SP[sid] && f.y <= 0 && (inp.down || inAir(o))) ? JUGGLE_SP[sid] : sid;
@@ -90,7 +113,9 @@ function startMove(f, mv, str, keepBuffer) {
   if (mv.normal) sfx('swing');
   if (f.sorbs) orbAssist(f, mv);
   if (mv.rushTag) f.rushN = mv.rushOpen ? 0 : (f.rushN || 0) + 1;
+  if (mv.jug) { const oj = other(f); if (oj && Math.abs(oj.x - f.x) > 6) f.facing = Math.sign(oj.x - f.x); } // (a juggle attack turns to face them: a juggle can carry them over to the other side)
   f.pre = mv.pre || 0; // frames spent gathering qi before the technique itself starts
+  if (mv.super) { const dg = SUPER_DODGE[mv.id], oc = other(f), caught = oc && ['hitstun', 'knock', 'stunned', 'down', 'getup', 'slashed', 'gbreak'].includes(oc.state); mv.dodge = caught ? null : dg; if (!caught && (dg === 'jump' || dg === 'dash')) { f.pre += SUPER_PRE; mv.superPre = SUPER_PRE; } f.invul = Math.max(f.invul || 0, f.pre + mv.startup + 6); } // (invincible all the way through the wind-up) // (in a combo it comes straight out: they can't get away anyway)
   const ksg = f.key === 'ninja' && (KURO_SIGNS[mv.id] || KURO_SPIRIT_LABEL[mv.label]);
   if (ksg) f.spirit = { sg: ksg, t0: game.frame, rise: mv.tellPre ? Math.min(12, mv.tellPre) : 6, hold: (mv.tellPre || 0) + 40, x: f.x - f.facing * 12, y: GROUND - f.y - 125 * f.ch.scale, dir: f.facing, hy: GROUND - f.y - 236 * f.ch.scale }; // the seal's spirit: it rises where he cast it and stays there a while, then fades slowly
   if (f.key === 'gunman' && !(f.gunOutT > 0)) for (const sd of [1, -1]) parts.push({ type: 'star', x: f.x + f.facing * sd * 14, y: GROUND - f.y - 92 * f.ch.scale, r: 8, vr: 1.4, life: 6, max: 6, col: '255,240,190', rot: 0.4 }); // the quick draw: a glint as the guns leave the holsters
@@ -138,7 +163,7 @@ function tryAttack(f, o, inp, noLight) { // (noLight: anything but a light attac
   return true;
 }
 function startJump(f, inp) {
-  setState(f, 'jump'); f.vy = f.ch.jumpV || JUMP_V; f.vx = inp.h * f.ch.jumpX * (f.poisonT > 0 ? 0.7 : 1); f.airAttacked = false; f.airShuri = false; f.jumpSerial = ++serial; f.dj = false;
+  setState(f, 'jump'); f.vy = (f.ch.jumpV || JUMP_V) * (floodVictim(f) ? 0.8 : 1); f.vx = inp.h * f.ch.jumpX * (f.poisonT > 0 ? 0.7 : 1) * (floodVictim(f) ? 0.8 : 1); f.airAttacked = false; f.airShuri = false; f.jumpSerial = ++serial; f.dj = false;
   dustAt(f.x, false);
 }
 function endMove(f) {
@@ -168,7 +193,10 @@ function runMove(f, o, inp) {
   if (f.ch.possess === 'angel' && f.y > 0 && mv.air && f.hitConnected && inp && inp.upPress && !f.dj && f.mf > mv.startup) { // the angel's wings: jump again out of an air attack that hit, and keep the combo going
     f.move = null; setState(f, 'jump'); f.dj = true; f.vy = 11; f.vx = f.facing * 2; f.flipT = 20; f.airAttacked = false; sfx('rise');
     for (let i = 0; i < 6; i++) parts.push({ type: 'aura', x: f.x + rnd(-20, 20), y: GROUND - f.y - 40, vx: rnd(-1, 1), vy: rnd(0.5, 2), life: 16, max: 16, r: 3, col: '255,248,225' }); return; }
+  if (mv.stepIn && f.mf <= mv.startup + (mv.active || 0) && f.y <= 0 && !f.hitConnected && Math.abs(o.x - f.x) > mv.stepIn * f.ch.scale) f.vx = f.facing * (f.key === 'kappa' ? 12 : 9); // (a string's follow-up steps in after them)
   if (f.pre > 0) { // gathering qi: he can't act yet, and any hit cancels the technique
+    if (mv.superPre && mv.lockX == null) mv.lockX = o.x; // (a super that lands on a spot aims at where they stood when it began)
+    if (mv.superPre && f.pre % 3 === 0) superWindFX(f);
     f.pre--; f.vx *= 0.6; if (!(mv.antiPre && !mv.pre)) gatherFX(f);
     if (f.pre === 0) { f.prevPose = { ...f.pose }; if (mv.onStart) mv.onStart(f, o); }
     return;
@@ -265,10 +293,10 @@ function update(f, o, inp) {
     if (globalT % 3 === 0) { const an = globalT * 0.12; for (const sd of [0, Math.PI]) parts.push({ type: 'aura', x: f.x + Math.cos(an + sd) * 95, y: GROUND - f.y - 90 + Math.sin(an + sd) * 40, vx: 0, vy: -0.6, life: 16, max: 16, r: 5, col: sd ? '255,90,60' : '255,240,190' }); }
     if (o2 && !o2.ko && !(o2.invul > 0) && o2.state !== 'getup' && Math.abs(o2.x - f.x) < 115 && Math.abs(o2.y - f.y) < 140 && game.frame % 24 === 0) { o2.hp = Math.max(1, o2.hp - 10); o2.flash = 4; parts.push({ type: 'spark', x: o2.x, y: GROUND - o2.y - 90, vx: 0, vy: -2, life: 10, max: 10, col: '255,150,120' }); } }
   if (f.ch.regen && f.hp > 0 && f.hp < 1000 && !f.ko) { f.hp = Math.min(1000, f.hp + f.ch.regen); f.healT = Math.max(f.healT || 0, 20); } // the angel heals him slowly
-  if (f.ch.drain && f.hp > 1 && !f.ko) { f.hp = Math.max(1, f.hp - f.ch.drain); if (globalT % 10 === 0) parts.push({ type: 'aura', x: f.x + rnd(-20, 20), y: GROUND - f.y - rnd(40, 160), vx: 0, vy: -1.2, life: 16, max: 16, r: 3, col: '170,40,40' }); } // the devil eats his health
+  if (f.ch.drain && f.hp > 1 && !f.ko && game.phase === 'fight') { f.hp = Math.max(1, f.hp - f.ch.drain * (f.wholeRound ? 0.35 : 1)); if (globalT % 10 === 0) parts.push({ type: 'aura', x: f.x + rnd(-20, 20), y: GROUND - f.y - rnd(40, 160), vx: 0, vy: -1.2, life: 16, max: 16, r: 3, col: '170,40,40' }); } // the devil eats his health
   if (f.meteorFX > 0) { f.meteorFX--; if (f.y <= 2 && f.meteorFX < 19) { f.meteorFX = 0; parts.push({ type: 'ring', x: f.x, y: GROUND - 6, r: 10, vr: 10, life: 16, max: 16, col: '255,180,120' }); for (let i = 0; i < 10; i++) parts.push({ type: 'spark', x: f.x, y: GROUND - 8, vx: rnd(-7, 7), vy: -rnd(3, 8), life: 18, max: 18, col: i % 2 ? '255,190,120' : '255,210,250' }); cracks(f.x); dustAt(f.x, true); game.shake = Math.max(game.shake, 6); sfx('land'); } }
   if (f.wakeT > 0 && --f.wakeT === 0) parts.push({ type: 'ring', x: f.x, y: GROUND - f.y - 70, r: 30, vr: -1.6, life: 10, max: 10, col: '255,150,120' }); // the invincibility ends: a ring closes in (now they can be hit)
-  if (f.poisonT > 0) { f.poisonT--; if (f.hp > 1 && !f.ko) f.hp = Math.max(1, f.hp - 0.1); if (globalT % 5 === 0) parts.push({ type: 'aura', x: f.x + rnd(-22, 22), y: GROUND - f.y - rnd(30, 150), vx: 0, vy: -rnd(0.8, 1.6), life: 18, max: 18, r: rnd(2.5, 4.5), col: '120,220,90' }); }
+  if (f.poisonT > 0) { f.poisonT--; if (f.hp > 1 && !f.ko) f.hp = Math.max(1, f.hp - 0.17); if (globalT % 5 === 0) parts.push({ type: 'aura', x: f.x + rnd(-22, 22), y: GROUND - f.y - rnd(30, 150), vx: 0, vy: -rnd(0.8, 1.6), life: 18, max: 18, r: rnd(2.5, 4.5), col: '120,220,90' }); }
   if (f.venomT > 0 && --f.venomT === 0) f.venom = 0;
   if (f.invul > 0) f.invul--;
   if (f.flipT > 0) f.flipT--;
@@ -291,14 +319,21 @@ function update(f, o, inp) {
       if (inp.dashTap === -1) { setState(f, 'bdash'); sfx('swing'); break; }
       if (inp.up) { startJump(f, inp); break; }
       // (charging MP by holding P has been removed: MP fills only by fighting)
-      if (inp.down) { if (f.state !== 'crouch') setState(f, 'crouch'); f.vx = 0; break; }
+      if (inp.down) { if (f.state !== 'crouch') setState(f, 'crouch'); f.vx = !f.backHeld && Math.sign(inp.h) === toward ? toward * f.ch.walk * 0.45 * (f.poisonT > 0 ? 0.6 : 1) * floodWalkMul(f) : 0; break; } // (crouching, ↓ + forward edges forward; ↓ + back stays the crouching guard)
       if (f.backHeld && threatened(f, o)) { if (f.state !== 'guard') setState(f, 'guard'); f.vx = 0; break; }
       if (f.state !== 'stand') setState(f, 'stand');
-      f.vx = inp.h * (f.backHeld ? f.ch.back : f.ch.walk) * (f.ctrl instanceof CPU && !game.watch ? 0.75 : 1) * (f.poisonT > 0 ? 0.6 : 1); // the CPU walks slower against a player; poison slows anyone
+      f.vx = inp.h * (f.backHeld ? f.ch.back : f.ch.walk) * (f.ctrl instanceof CPU && !game.watch ? 0.75 : 1) * (f.poisonT > 0 ? 0.6 : 1) * floodWalkMul(f); // the CPU walks slower against a player; poison slows anyone; in the flood the kappa swims fast and the other wades
       if (f.vx) f.walkPh += Math.abs(f.vx) * 0.085 * (f.backHeld ? -1 : 1);
       break;
     }
     case 'jump':
+      if (floodOwner(f)) { // swimming through the flooded stage: ↑ strokes up, ↓ dives, ← → swims across; he hardly sinks
+        f.vx += ((inp.h || 0) * f.ch.walk * 1.7 - f.vx) * 0.2;
+        if (inp.up) f.vy = Math.min(f.vy + 0.9, 6); else if (inp.down) f.vy = Math.max(f.vy - 0.9, -7);
+        if (inp.upPress) { f.vy = Math.max(f.vy, 7); for (let i = 0; i < 4; i++) parts.push({ type: 'aura', x: f.x + vrnd(-14, 14), y: GROUND - f.y - 10, vx: vrnd(-1, 1), vy: vrnd(0.5, 1.5), life: 16, max: 16, r: 3, col: '200,235,255' }); }
+        if (!inp.up && !inp.down) f.vy *= 0.92; // (still water: he drifts gently down)
+        f.y = Math.min(f.y, FLOOD_SWIM_MAX); f.airAttacked = false; // (he can attack again and again while swimming)
+      }
       if (f.ch.doubleJump && inp.upPress && !f.dj && f.vy < 8 && f.y > 20) { // Mei: a second jump in mid-air, with a somersault
         f.dj = true; f.vy = 12.5; f.vx = inp.h * f.ch.jumpX; f.flipT = 20; f.airAttacked = false; sfx('rise');
         parts.push({ type: 'ring', x: f.x, y: GROUND - f.y, r: 6, vr: 3, life: 12, max: 12, col: f.ch.auraCol }); cloudPuff(f.x, GROUND - f.y + 6);
@@ -309,10 +344,12 @@ function update(f, o, inp) {
         // air juggle: near a launched opponent, U starts the air string, I the flurry, K smashes them down
         if (inAir(o) && Math.abs(o.x - f.x) < 130 && o.state === 'knock' && o.juggle) { const am = chainMove(inp.btn === 'lp' ? 'aPalm' : inp.btn === 'hp' ? 'aKunai' : inp.down ? 'aMeteor' : 'airSmash', f); startMove(f, am, am.str); }
         else if (inp.down && inp.btn === 'hk' && f.y > 30) { const am = chainMove('aMeteor', f); startMove(f, am, am.str); } // dive kick from any jump
+        else if (inp.down && inp.btn === 'lp' && f.y > 30) { // ↓ + U in the air: a diving strike with his weapon or fist, straight down at them (an overhead: guard it standing)
+          const am = chainMove('aMeteor', f), ai = normalMove(f.ch, 'p', 1, 'j'); am.label = DIVE_STRIKE[f.ch.lookKey || f.key] || 'Dive Strike'; if (ai && ai.pose && f.key !== 'gunman') am.pose = ai.pose; am.dmg = Math.round((am.dmg || 40) * 0.85); am.overhead = true; startMove(f, am, am.str); }
         else startMove(f, normalMove(f.ch, isP ? 'p' : 'k', str, 'j'), str);
       }
       break;
-    case 'attack': runMove(f, o, inp); if (f.move && f.move.lvl != null && !f.move.fired && f.state === 'attack') qiGather(f, f.mf, Math.min(1, f.mf / 120), f.key === 'gunman' ? '255,200,110' : null); break; // held charge attacks gather qi too
+    case 'attack': if (floodVictim(f) && game.frame % 5 === 0 && f.move && f.mf <= f.move.startup) break; runMove(f, o, inp); if (floodOwner(f) && f.state === 'attack' && game.frame % 5 === 0 && f.move && f.mf <= f.move.startup + (f.move.active || 0)) runMove(f, o, inp); if (f.move && f.move.lvl != null && !f.move.fired && f.state === 'attack') qiGather(f, f.mf, Math.min(1, f.mf / 120), f.key === 'gunman' ? '255,200,110' : null); break; // held charge attacks gather qi too // (flooded: the kappa's attacks come out a fifth faster, the other's a fifth slower — but recovery isn't touched, so the kappa can still be punished and the other can still get away)
     case 'land': if (f.st >= f.landT) setState(f, 'stand'); break;
     case 'hitstun':
       if (f.st >= f.stun) {
@@ -332,7 +369,7 @@ function update(f, o, inp) {
       f.facing = toward; f.vx = 0;
       if (f.st >= (f.ch.recoverT || 12)) setState(f, inp.down ? 'crouch' : 'stand');
       break;
-    case 'blockstun': if (f.st >= f.stun) setState(f, inp.down ? 'crouch' : 'guard'); break;
+    case 'blockstun': if (f.st >= f.stun) { setState(f, inp.down ? 'crouch' : 'guard'); f.settleT = 10; } break;
     case 'down': // lie on the ground a while; tap ← or → to roll away instead of standing up in place
       if (f.ko) break;
       if (f.st >= 18 && inp.tap) { setState(f, 'roll'); f.rollDir = inp.tap; sfx('land'); }
@@ -348,7 +385,7 @@ function update(f, o, inp) {
     case 'dash': // forward dash: a quick burst toward the opponent; attacks (and → → specials) come straight out of it
       f.facing = toward;
       if (f.atkCD <= 0 && tryAttack(f, o, inp)) break;
-      f.vx = f.facing * (f.st < 9 ? 8 : 4) * (f.poisonT > 0 ? 0.6 : 1);
+      f.vx = f.facing * (f.st < 9 ? 8 : 4) * (f.poisonT > 0 ? 0.6 : 1) * (f.key === 'kappa' ? 1.35 : 1); // (the kappa darts in fast and low, under projectiles)
       if (f.st % 3 === 0) dustAt(f.x, false);
       if (f.st >= 14) setState(f, 'stand');
       break;
@@ -391,8 +428,10 @@ function update(f, o, inp) {
   if ((f.y > 0 || f.vy > 0) && !(f.state === 'attack' && f.move && f.move.manualY)) {
     const hang = f.state === 'knock' && f.floatT > 0 ? (f.floatT--, 0.25) : 1; // held by a juggle hit: they hang in the air for a moment (without rising)
     const jugG = G * (0.62 + 0.04 * Math.min(f.jugMoves || 0, 10)); // the longer the juggle (in attacks), the faster they fall
-    f.vy -= ((f.state === 'knock' && f.juggle) ? jugG : G) * hang; f.y += f.vy; // launched opponents float a little, like in Tekken
-    if (f.state === 'knock' && f.juggle && !f.jugSpent && ++f.airT > AIR_MAX) { f.jugSpent = true; f.juggle = false; popText(f.x, GROUND - f.y - 200, 'LIFT LIMIT', '205,205,220'); } // no juggle lasts longer than this, whatever is used
+    const wet = floodOwner(f) && f.state !== 'knock' ? 0.12 : floodVictim(f) && f.state === 'jump' ? 0.64 : 1; // (their jump: about the same height, a quarter slower) // (under the flood: the kappa barely sinks; the others float up and sink back slowly)
+    f.vy -= ((f.state === 'knock' && f.juggle) ? jugG : G) * hang * wet; f.y += f.vy;
+    if (f.y > CEILING) { f.y = CEILING; f.vy = Math.min(f.vy, 0); } // (the top of the screen: nobody is launched out of sight) // launched opponents float a little, like in Tekken
+    if (f.state === 'knock' && f.juggle && !f.jugSpent && (f.airT = (f.airT || 0) + 1) > AIR_MAX) { f.jugSpent = true; f.juggle = false; popText(f.x, GROUND - f.y - 200, 'LIFT LIMIT', '205,205,220'); } // no juggle lasts longer than this, whatever is used
     if (f.y <= 0) { f.y = 0; f.vy = 0; land(f); }
   }
   f.x += f.vx;
@@ -404,7 +443,7 @@ function update(f, o, inp) {
   f.x = clamp(f.x, WALL_L, WALL_R);
   f.dispHp = Math.max(f.hp, f.dispHp - ((f.state === 'hitstun' || f.state === 'knock') ? 0 : 6));
   // guard meter refills slowly once you stop guarding
-  const guarding = f.state === 'guard' || f.state === 'blockstun' || f.state === 'gbreak' || (f.state === 'crouch' && f.backHeld);
+  const guarding = f.state === 'guard' || f.state === 'blockstun' || f.state === 'gbreak' || (f.state === 'crouch' && f.backHeld) || (f.state === 'attack' && f.move && f.move.aegis); // (no recovery while the Aegis is up)
   if (guarding) f.guardIdle = 0;
   else if (++f.guardIdle > 45) f.guard = Math.min(100, f.guard + (f.guardSlowT > 0 ? 0.02 : 0.07)); // (slowly after the Aegis)
   if (f.guardSlowT > 0) f.guardSlowT--;

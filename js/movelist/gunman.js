@@ -5,6 +5,8 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
     <article class="card gunman" data-tab="gunman" data-lang="en">
       <h2>JESSE<span>Gunslinger</span></h2>
       <p class="blurb">A gunslinger in a wide-brimmed hat and a long duster coat, a revolver in each hand. Every attack is a gunshot: no punches, no kicks. He even keeps opponents in the air by shooting them. His shots reach about a third of the stage (mid range), and he likes to jump and shoot.</p>
+      <p class="note"><b>v1.3.9: shot heights.</b> Every ordinary shot flies at upper-body height: it hits anyone standing (even the small kappa), and a crouching fighter ducks under it. Aimed upward (Sky Shot, the air shots) they go higher still. Low shots (J, ↓ + J, ↓ + K): he drops into a crouch and fires at knee height — guard them crouching.</p>
+      <p class="note"><b>High Noon (v1.3.9).</b> It now reaches across the whole stage and every shot strikes at their feet — a low: they have to guard it crouching, or jump over it — with bright tracers from his guns to the floor, sparks where it hits and one huge last shot.</p>
       <p class="note"><b>Holstered.</b> At rest his hands sit on his guns in their holsters; they come out in a flash only when he attacks, and go back a moment after. Every shot now has a bigger muzzle flash.</p>
       <p class="note"><b>Guns.</b> His bullets are fast with long tracers and big muzzle flashes; charged shots are huge, shake the screen and kick him back with the recoil.</p>
       <p class="note"><b>Ten bullets.</b> His guns hold 10 bullets, shown next to his name. Every shooting attack uses one, however many shots it fires. When the last one is gone he reloads for 5 seconds: he can still move, jump and guard, but a shot only clicks on an empty chamber until the bullets turn gold again. Dynamite, Showdown and High Noon don’t need bullets.</p>
@@ -43,6 +45,8 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
     <article class="card gunman" data-tab="gunman" data-lang="ja" hidden>
       <h2>ジェシー<span>ガンマン</span></h2>
       <p class="blurb">つば広の帽子にロングコート、両手にリボルバー。攻撃はすべて射撃：パンチもキックもなし。空中の相手も撃ち続けて落とさない。弾は画面の約3分の1（中距離）まで届き、跳びながら撃つのが得意。</p>
+      <p class="note"><b>v1.3.9：弾の高さ。</b>通常の射撃は胸の高さ（中上段）：立っている相手には当たり（小さなカッパにも）、しゃがめばくぐってかわせる。スカイショットや空中射撃はさらに上を狙う。下段の射撃（J・↓+J・↓+K）は、しゃがんで膝の高さで撃つ（しゃがみガードで防ぐ）。</p>
+      <p class="note"><b>真昼の決闘（v1.3.9）。</b>画面のどこにいても届き、すべての弾が足元を撃つ下段に。しゃがみガードかジャンプでしか防げない。銃から床まで光る弾道、着弾の火花、最後の一発は特大。</p>
       <p class="note"><b>ホルスター。</b>構えでは手をホルスターの銃に添えている。攻撃するときだけ一瞬で抜き、少しすると戻す。発砲の閃光も大きくなった。</p>
       <p class="note"><b>銃。</b> 弾は速く、長い光跡と大きな銃口の閃光。溜め撃ちは巨大で画面が揺れ、反動で後ろに下がる。</p>
       <p class="note"><b>弾は10発。</b>残りの弾は名前の横に表示。射撃する攻撃は1回につき1発を使う（何発撃つ技でも1発）。撃ち尽くすと5秒間のリロード：移動・ジャンプ・ガードはできるが、弾が金色に戻るまでは撃っても「カチッ」と空撃ちになる。ダイナマイト、決闘、真昼の決闘は弾を使わない。</p>
