@@ -234,7 +234,7 @@ function applyLang() { // header, drawer, tabs and which language of the command
   drawer.querySelectorAll('[data-l]').forEach(el => { const [en, ja] = el.dataset.l.split('|'); el.textContent = L(en, ja); });
   drawer.querySelectorAll('[data-diff]').forEach(b => { b.textContent = L(...DIFF_NAMES[b.dataset.diff]); b.classList.toggle('on', b.dataset.diff === game.diff); b.setAttribute('aria-pressed', String(b.dataset.diff === game.diff)); });
   const tagEl = document.getElementById('tagline');
-  tagEl.textContent = IS_MOBILE ? L('Eight fighters. Touch controls: the pad on the left, U I J K on the right.', '8人のファイター。タッチ操作：左のパッドで移動、右のU・I・J・Kで攻撃。') : L('Eight fighters. CPU battles on four difficulties, training, sample combos and online battles. Keyboard required.', '8人のファイター。4段階の難易度のCPU戦、トレーニング、コンボ見本、オンライン対戦。キーボードで操作します。');
+  tagEl.textContent = IS_MOBILE ? L('Nine fighters. Touch controls: the pad on the left, U I J K on the right.', '9人のファイター。タッチ操作：左のパッドで移動、右のU・I・J・Kで攻撃。') : L('Nine fighters. CPU battles on four difficulties, training, sample combos and online battles. Keyboard required.', '9人のファイター。4段階の難易度のCPU戦、トレーニング、コンボ見本、オンライン対戦。キーボードで操作します。');
   tagEl.title = tagEl.textContent; // (the whole line on hover, when it's shortened)
   const tabNames = { ctl: ['Controls', '操作'], ninja: ['Kuro', 'クロ'], brawler: ['Tetsu', 'テツ'], staff: ['Mei', 'メイ'], psychic: ['Lyra', 'ライラ'], paladin: ['Aldric', 'アルドリック'], kappa: ['Kappa', 'カッパ'], alchemist: ['Hohen', 'ホーエン'], gunman: ['Jesse', 'ジェシー'], salary: ['Tanaka', '田中'] };
   drawer.querySelectorAll('.tabs button').forEach(b => { b.textContent = L(...tabNames[b.dataset.tab]); b.classList.toggle('on', b.dataset.tab === drawerTab); b.setAttribute('aria-selected', String(b.dataset.tab === drawerTab)); });

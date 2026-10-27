@@ -725,6 +725,7 @@ WIN.alchemist = {
   final: { seq: [['alOpus', 45], ['alStoneUp', 90], ['alPresent', 999]], line: ['The great work is complete.', '大いなる業、ここに成れり。'] },
 };
 // joining the roster
+Object.assign(DIVE_STRIKE, { alchemist: 'Falling Stone', alchemistFused: 'Boulder Dive' }); // (↓ + U in the air)
 CHAR_ORDER.push('alchemist'); DEMO_VS.alchemist = 'ninja'; GHOST_TINT.alchemist = new Proxy({}, { get: () => '#e8f4ff' });
 // sample combos: one quick and one long for each way the three of them can stand — the golem in front of him or behind the opponent,
 // Hohen close in or far back — then the super, the armour and the stone skin
