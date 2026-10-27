@@ -34,10 +34,14 @@ const GOLEM_ACT = { // startup / active / recovery (frames), and the blow
 function newGolem(f) { return { x: f.x - f.facing * 90, facing: f.facing, act: null, queue: null, qT: 0, cd: 30, dashT: 0, ph: 0, spd: 0, y: 0, vy: 0, js: 0, crouch: false }; }
 function golemOrder(f, kind) { const g = f.golem; if (g && !f.ko) { g.queue = kind; g.qT = 0; } }
 function golemStart(f, kind, auto) { const g = f.golem, o = other(f); g.facing = Math.sign(o.x - g.x) || g.facing; g.act = { kind, t: 0, id: ++serial, hit: false, auto: !!auto }; g.queue = null; if (kind === 'hp') sfx('swing'); }
-function alchemistThrow(f, o, kind) { // he throws his own glowing stones: low (J), or low and medium (K)
-  const d = f.facing, ys = kind === 'stone' ? [24] : [24, 54, 84], cols = ['110,255,220', '255,190,80', '150,170,255'];
-  ys.forEach((y, i) => spawnPJ(f, 'stone', { dir: d, x: f.x + d * 40, y: f.y + y, vx: d * (9 + i * 0.8), life: 64, r: 11, glow: cols[i % 3],
-    h: { dmg: kind === 'stone' ? 26 : 18, stun: 17, bstun: 10, push: 1.4, gdrain: 6, hitstop: 5, low: y < 40, label: kind === 'stone' ? 'Stone Throw' : 'Stone Volley' } }));
+function alchemistThrow(f, o, kind) { // he throws his own glowing stones: low (J), or low and medium (K); in the air they are aimed at the opponent
+  const d = f.facing, ys = kind === 'stone' ? [24] : [24, 54, 84], cols = ['110,255,220', '255,190,80', '150,170,255'], air = f.y > 20;
+  ys.forEach((y, i) => {
+    const x0 = f.x + d * 40, y0 = f.y + (air ? 70 : y), h = { dmg: kind === 'stone' ? 26 : 18, stun: 17, bstun: 10, push: 1.4, gdrain: 6, hitstop: 5, low: !air && y < 40, label: kind === 'stone' ? 'Stone Throw' : 'Stone Volley' };
+    let vx = d * (9 + i * 0.8), vy = 0;
+    if (air) { const an = Math.atan2(o.y + 60 - y0, o.x - x0) + (i - (ys.length - 1) / 2) * 0.16, sp = 11; vx = Math.cos(an) * sp; vy = Math.sin(an) * sp; } // (a volley fans out a little)
+    spawnPJ(f, 'stone', { dir: Math.sign(vx) || d, x: x0, y: y0, vx, vy, life: 64, r: 11, glow: cols[i % 3], h });
+  });
   sfx('throw');
 }
 function golemHit(f, o, h, hb, hu) { // resolved as if the golem were the attacker: its side decides the guard
