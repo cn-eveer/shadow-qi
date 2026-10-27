@@ -1,49 +1,91 @@
 'use strict';
-// Move list: the Alchemist, in English and then Japanese (shown in the ⚙ Settings drawer and used for the training move card).
+// Move list: Hohen, the golem doctor, in English and then Japanese (shown in the ⚙ Settings drawer and used for the training move card).
 document.getElementById('info').insertAdjacentHTML('beforeend', `
     <article class="card alchemist" data-tab="alchemist" data-lang="en">
-      <h2>ALCHEMIST<span>Golem Master</span></h2>
-      <p class="blurb">A doctor in a white coat, with glowing stones on his chest and in his pockets. His brown stone golem fights beside him: it always moves toward the opponent — even when they are between the two of them: it walks in while he walks in, dashes in when he backs away, and jumps and crouches when he does. It never attacks on its own, only on his orders. The alchemist throws his glowing stones himself.</p>
-      <p class="note"><b>Six stones.</b> Every stone he throws or sets as a trap uses one of the six in his pockets (shown beside his name); one comes back every second and a half. With none left, a throw only clicks.</p>
-      <p class="note"><b>The golem wears out.</b> Its health drains away in ten seconds (a bar above it shows how much is left), and opponents can hit it too. At zero it can’t move: it crumbles into a heap and is rebuilt, at full health, four seconds later.</p>
-      <p class="note"><b>Guarding.</b> Guard relative to whoever is attacking: away from the golem when the golem strikes, away from the alchemist when he does.</p>
+      <h2>HOHEN<span>Golem Doctor</span></h2>
+      <p class="blurb">An alchemist and doctor in a white coat, glowing stones on his chest and in his pockets, and Mortar, his stone golem. <b>U and I are the golem’s blows; J and K are Hohen’s own</b> — a stone-knuckle up close, glowing stones from further off. The golem walks out to stand between him and the opponent, and never attacks by itself.</p>
+      <p class="note"><b>Duet strings.</b> Any mix of U and J, up to three presses, then a finisher: U the golem’s hammer, J his stone barrage, K his volley, I the golem’s grab, ↓ + I its uppercut. Where they stand changes the combo — golem in front of him or behind the opponent, Hohen close in or far back (see the sample combos). In a juggle: U the golem’s rising jab, J his aimed stone, I the stone pillar, → → + I the meteor, K the Stone Comet. At most lift, lift, bounce.</p>
+      <p class="note"><b>The golem is solid.</b> The opponent can’t walk through it: they have to jump over it or break it (it has its own health, a third of a fighter’s; blows and shots that hit it don’t reach him). It lasts thirty seconds before it crumbles; beaten apart or worn out, it’s rebuilt four seconds later. Left on the opponent’s far side, it hops back over them. He has <b>ten stones</b>; one comes back every second and a half.</p>
+      <p class="note"><b>How to fight him.</b> Hit the conductor: when Hohen is hit, the golem’s order is lost and its grab lets go. Guard away from whoever is attacking — the golem or him. The golem’s heavy blows (hammer, uppercut, tackle) leave Hohen committed when they’re guarded or miss: punish him. Jump the grab and the Bedrock burst; throw him out of his stone skin. See the punish samples.</p>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>Golem Punch<small>The golem throws a quick punch (it comes in first if it’s far away) and so does he, with a weaker punch of his own. Crouching (↓ + U): both crouch for a low punch.</small></td><td class="keys"><kbd>U</kbd></td></tr>
-          <tr><td>Golem Grab<small>The golem seizes them (it can’t be guarded), turns them round and trades places with them, so they stand on the alchemist’s side of it, facing him, held from behind for three seconds. While they’re held his stones can’t miss and hit harder: J, J, K — the last stone knocks them loose. Also as a string: U, U, I.</small></td><td class="keys"><kbd>I</kbd></td></tr>
-          <tr><td>Sand Toss<small>Punch, punch, then K: the golem flings sand and stones high into the air, and they rain down on the opponent.</small></td><td class="keys"><kbd>U</kbd> <kbd>U</kbd> <kbd>K</kbd></td></tr>
-          <tr><td>Stone Throw<small>One glowing stone at chest height (in the air, thrown at the opponent) — and the golem’s weak kick at the same time.</small></td><td class="keys"><kbd>J</kbd></td></tr>
-          <tr><td>Low Stone Throw<small>One stone along the floor (low). It hits a downed opponent too.</small></td><td class="cmd">↓ + J</td></tr>
-          <tr><td>Stone Lob<small>He lobs a stone up and over: it drops on them and stuns.</small></td><td class="cmd">→ → + J</td></tr>
-          <tr><td>Stone Volley<small>Three stones in a row. Hold K to charge: three gauges (Lv1, Lv2, MAX), each one makes the stones hit harder and fly faster. The golem adds a strong kick that knocks them down.</small></td><td class="keys"><kbd>K</kbd></td></tr>
-          <tr><td>Trap Stone<small>He sets a glowing stone on the floor ahead. It bursts when the opponent steps on it, or by itself after six seconds. Up to six at a time (a seventh pushes out the oldest).</small></td><td class="cmd">→ → + K</td></tr>
-          <tr><td>Core Blaster<small>The golem’s chest core swells and fires a blast — very short range, only right in front of it. It knocks them down.</small></td><td class="cmd">↓ + I</td></tr>
-          <tr><td>Golem Tackle<small>The golem charges in from anywhere on the stage and knocks them down.</small></td><td class="cmd">→ → + I</td></tr>
-          <tr><td>Golem Shield Bash<small>The golem holds out a slab of stone: it stops shots, and bashes (a big drain on the guard).</small></td><td class="cmd">→ → + U</td></tr>
-          <tr><td>Low Stone Volley<small>Three stones along the floor.</small></td><td class="cmd">↓ + K</td></tr>
+          <tr><td>Golem Jab · Hook <small>Mid. U, then U again: its other fist.</small></td><td class="keys"><kbd>U</kbd></td></tr>
+          <tr><td>Golem Hammer <small>Mid + low (from above: guard standing). The third U of a string; knocks down. Guarded, Hohen is open.</small></td><td class="keys"><kbd>U</kbd> <kbd>U</kbd> <kbd>U</kbd></td></tr>
+          <tr><td>Golem Low Punch <small>Low: guard crouching.</small></td><td class="cmd">↓ + U</td></tr>
+          <tr><td>Golem Grab <small>Can’t be guarded (jump it, or hit Hohen). It holds them up to three seconds, facing him, and lets go after four hits or a knockdown; then it can’t grab again for two and a half seconds. Held, they take more from his blows. Also a string finisher.</small></td><td class="keys"><kbd>I</kbd></td></tr>
+          <tr><td>Golem Heave <small>While it holds them: it hoists them overhead and throws them up — a launcher.</small></td><td class="keys"><kbd>I</kbd> <small>(held)</small></td></tr>
+          <tr><td>Golem Uppercut <small>Mid + low. A launcher; slow, and punishable when guarded.</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>Stone Knuckle / Stone Throw <small>Mid. Up close he drives a stone held in his fist (no stone spent); further off he throws one.</small></td><td class="keys"><kbd>J</kbd></td></tr>
+          <tr><td>Stone Barrage <small>The third J of a string: two blows, the second knocks down.</small></td><td class="keys"><kbd>J</kbd> <kbd>J</kbd> <kbd>J</kbd></td></tr>
+          <tr><td>Stone Volley <small>Mid. Three stones; the third knocks down. Hold K to charge three gauges: harder, faster stones that shove them back and wear down the guard — a full charge (MAX) breaks a full guard.</small></td><td class="keys"><kbd>K</kbd></td></tr>
+          <tr><td>Low Stones <small>Low. One stone, or three, along the floor; they hit a downed opponent too.</small></td><td class="cmd">↓ + J / ↓ + K</td></tr>
+          <tr><td>Stone Lob <small>Mid + low (drops from above). It stuns.</small></td><td class="cmd">→ → + J</td></tr>
+          <tr><td>Trap Stone <small>Set on the floor ahead; bursts when they step on it, or after six seconds. Six at most.</small></td><td class="cmd">→ → + K</td></tr>
+          <tr><td>Golem Shield Bash <small>Mid + low. A slab of stone that stops shots and bashes; safe.</small></td><td class="cmd">→ → + U</td></tr>
+          <tr><td>Golem Tackle <small>Mid + low. It charges in from anywhere; punishable when guarded. On someone in the air: Golem Meteor, a leap that slams them into the floor (the bounce).</small></td><td class="cmd">→ → + I</td></tr>
+          <tr><td>Bedrock Stride <small>His skin turns to stone as he strides in (armour: blows land but don’t stop him), then it bursts all round him and knocks down. Throws and supers go through the armour; the burst runs along the floor, so jump it; punishable when guarded.</small></td><td class="cmd">← ← + K</td></tr>
+          <tr><td colspan="2"><b>In a juggle</b> (once they’re launched)</td></tr>
+          <tr><td>Golem Rising Jab <small>The golem punches up and holds them in the air. U, U, U — and J in between: his stone.</small></td><td class="keys"><kbd>U</kbd></td></tr>
+          <tr><td>Stone Pillar <small>The golem pounds the floor and a pillar of rock rises under them — the second lift.</small></td><td class="keys"><kbd>I</kbd></td></tr>
+          <tr><td>Golem Meteor <small>The golem leaps and slams them into the floor — the bounce.</small></td><td class="cmd">→ → + I</td></tr>
+          <tr><td>Stone Comet <small>The finisher: one big glowing stone hurled down at them.</small></td><td class="keys"><kbd>K</kbd></td></tr>
+          <tr><td><b>Magnum Opus</b> <small>Super (full MP): the golem bursts into stones that fly onto them and lock them in a shell of rock; he throws six glowing stones around them, and when the circle closes it erupts and blasts them up. Guard it.</small></td><td class="keys"><kbd>U</kbd> + <kbd>J</kbd></td></tr>
+          <tr><td><b>Golem Armour</b> <small>With the fusion gauge full (under his stones: it fills over thirty seconds, faster for every hit landed or taken). The golem comes apart and its pieces lock onto him one by one, boots to helmet. For twenty seconds he fights in it himself, hitting harder, taking less damage, his techniques armoured; then it crumbles and the golem rises again. In it, his commands are like Tetsu’s:</small></td><td class="cmd">← → + J + K</td></tr>
+          <tr><td>· Stone fists <small>U U U U K, U U I (pillar upper, a launcher), U U K; in a juggle U U U, I, K (a burst of core light from his belly).</small></td><td class="keys"><kbd>U</kbd></td></tr>
+          <tr><td>· Core Beam <small>The core in his belly fires a slow ball of light.</small></td><td class="cmd">→ → + U</td></tr>
+          <tr><td>· Boulder Toss <small>Rocks pack into a boulder in his hands; he hurls it over in an arc and it crashes down on them (an overhead; bounces them). In a juggle: Boulder Crash, a boulder called down out of the sky onto them.</small></td><td class="cmd">→ → + I</td></tr>
+          <tr><td>· Rubble Wave <small>Low: a short surge of rubble along the floor scoops them up.</small></td><td class="cmd">→ → + J</td></tr>
+          <tr><td>· Stone Arm <small>A giant arm of stone bursts out of the floor in front of him and smashes them away (in a juggle: under them).</small></td><td class="cmd">→ → + K</td></tr>
+          <tr><td>· Rolling Boulder <small>A boulder rolled along the floor: three hits.</small></td><td class="cmd">← ← + U</td></tr>
+          <tr><td>· Stone Wall <small>A wall of stone springs up; whatever hits it, he bursts through it.</small></td><td class="cmd">← ← + I</td></tr>
+          <tr><td>· Quake Fist <small>Low: both fists into the floor; rock spikes burst along it.</small></td><td class="cmd">← ← + J</td></tr>
+          <tr><td>· Rock Eruption <small>Three pillars of rock erupt in a line, marching out from him; the last throws them up.</small></td><td class="cmd">← ← + K</td></tr>
+          <tr><td>· Pillar Spike <small>He stays planted and a spike of rock shoots up just in front of him: it catches jumps and launches.</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>· Great Core Cannon <small>Super: a great beam of gold out of his belly.</small></td><td class="keys"><kbd>U</kbd> + <kbd>J</kbd></td></tr>
         </tbody>
       </table></div>
     </article>
     <article class="card alchemist" data-tab="alchemist" data-lang="ja">
-      <h2>錬金術師<span>ゴーレム使い</span></h2>
-      <p class="blurb">白衣を着た医師。胸とポケットに光る石を持つ。茶色い石のゴーレムが隣で戦う：常に相手に向かって動く（二人の間に相手がいても）。錬金術師が歩けば歩いて近づき、後ろに下がればダッシュで詰め、ジャンプ・しゃがみもまねる。勝手に攻撃はせず、命令された技だけを出す。光る石は錬金術師自身が投げる。</p>
-      <p class="note"><b>石は6個。</b>投げた石も、罠として置いた石も、ポケットの6個から1個ずつ使う（名前の横に表示）。1.5秒ごとに1個戻る。なくなると、投げても「カチッ」と鳴るだけ。</p>
-      <p class="note"><b>ゴーレムは消耗する。</b>体力は10秒でなくなり（頭上のバーで残りを表示）、相手の攻撃でも減る。0になると動けなくなり、バラバラに崩れて、4秒後に全回復して復活する。</p>
-      <p class="note"><b>ガード。</b>攻撃している側を基準にガードする：ゴーレムの攻撃はゴーレムの反対側、錬金術師の攻撃は錬金術師の反対側へ。</p>
+      <h2>ホーエン<span>ゴーレム博士</span></h2>
+      <p class="blurb">白衣の錬金術師で医師。胸とポケットに光る石を持ち、石のゴーレム「モルタル」を連れる。<b>U・Iはゴーレムの攻撃、J・Kはホーエン自身の攻撃</b>——近くでは石を握った拳、離れると光る石を投げる。ゴーレムは博士と相手の間に立ちに行き、自分からは攻撃しない。</p>
+      <p class="note"><b>二重奏の連続技。</b>UとJを好きな順で3回まで、そして締め：Uでゴーレムハンマー、Jで石の連打、Kで三連投げ、Iでゴーレムの掴み、↓+Iでアッパー。立ち位置でコンボが変わる——ゴーレムが博士の前か、相手の後ろか、博士が近いか遠いか（コンボ見本を参照）。空中コンボ：Uでゴーレムのライジングジャブ、Jで狙い石、Iで石柱、→→+Iでメテオ、Kでストーンコメット。浮かせは「浮かせ・浮かせ・バウンド」まで。</p>
+      <p class="note"><b>ゴーレムは通り抜けられない。</b>相手はジャンプで越えるか、壊すしかない（自分の体力はキャラの約3分の1。ゴーレムに当たった攻撃や飛び道具は博士に届かない）。30秒で崩れ、壊されても崩れても4秒後に復活する。相手の向こう側に残ると、飛び越えて間に戻る。<b>石は10個</b>、1.5秒ごとに1個戻る。</p>
+      <p class="note"><b>ホーエン対策。</b>指揮者を狙え：博士が攻撃を受けると、ゴーレムへの命令は取り消され、掴みも離れる。攻撃している側（ゴーレムか博士）の反対へガード。ゴーレムの重い攻撃（ハンマー・アッパー・タックル）は、ガードされたり外れたりすると博士が動けない——反撃を。掴みと岩肌の炸裂はジャンプでかわし、石の肌は投げで崩す。反撃見本を参照。</p>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>ゴーレムパンチ<small>素早いパンチ（遠ければ先に近づく）。錬金術師も、それより弱い自分のパンチを同時に出す。しゃがみ（↓＋U）は二人ともしゃがんで下段パンチ。</small></td><td class="keys"><kbd>U</kbd></td></tr>
-          <tr><td>ゴーレムの掴み<small>ゴーレムが相手を掴み（ガード不能）、相手を反対向きにして位置を入れ替え、錬金術師の側に向けて後ろから3秒間押さえつける。捕まっている間は石が必ず当たり、威力も上がる：J、J、K——最後の石で振りほどく。U、U、Iの連続技にも。</small></td><td class="keys"><kbd>I</kbd></td></tr>
-          <tr><td>砂石投げ<small>パンチ、パンチ、そしてK：砂と石を高く投げ上げ、相手の上に降らせる。</small></td><td class="keys"><kbd>U</kbd> <kbd>U</kbd> <kbd>K</kbd></td></tr>
-          <tr><td>石投げ<small>光る石を胸の高さに1個投げる（空中では相手に向けて）。同時にゴーレムが弱いキックを出す。</small></td><td class="keys"><kbd>J</kbd></td></tr>
-          <tr><td>下段石投げ<small>石を床すれすれに1個投げる（下段）。ダウン中の相手にも当たる。</small></td><td class="cmd">↓ + J</td></tr>
-          <tr><td>石の山なり投げ<small>石を高く投げ上げ、相手の上に落とす。当たると気絶する。</small></td><td class="cmd">→ → + J</td></tr>
-          <tr><td>石の三連投げ<small>石を3つ続けて投げる。Kを長押しで溜め：ゲージは3段階（Lv1・Lv2・MAX）。段階が上がるほど威力と速さが増す。ゴーレムが強いキックを加え、ダウンさせる。</small></td><td class="keys"><kbd>K</kbd></td></tr>
-          <tr><td>罠の石<small>光る石を前方の床に置く。相手が踏むか、6秒たつと爆発する。同時に6個まで（7個目は一番古いものが消える）。</small></td><td class="cmd">→ → + K</td></tr>
-          <tr><td>コアブラスター<small>ゴーレムの胸のコアが膨らみ、射程のとても短い衝撃波を撃つ（目の前だけ）。ダウンさせる。</small></td><td class="cmd">↓ + I</td></tr>
-          <tr><td>ゴーレムタックル<small>ステージのどこからでも突進して、ダウンさせる。</small></td><td class="cmd">→ → + I</td></tr>
-          <tr><td>ゴーレムシールドバッシュ<small>石の盾を構える：飛び道具を止め、殴りつける（ガードゲージを大きく削る）。</small></td><td class="cmd">→ → + U</td></tr>
-          <tr><td>下段石の三連投げ<small>石を床すれすれに3つ。</small></td><td class="cmd">↓ + K</td></tr>
+          <tr><td>ゴーレムジャブ・フック <small>中段。Uのあと、もう一度U：もう片方の拳。</small></td><td class="keys"><kbd>U</kbd></td></tr>
+          <tr><td>ゴーレムハンマー <small>中下段（上から：立ちガード）。連続技の3回目のU。ダウンさせる。ガードされると博士にスキ。</small></td><td class="keys"><kbd>U</kbd> <kbd>U</kbd> <kbd>U</kbd></td></tr>
+          <tr><td>ゴーレム下段パンチ <small>下段：しゃがんでガード。</small></td><td class="cmd">↓ + U</td></tr>
+          <tr><td>ゴーレムの掴み <small>ガード不能（ジャンプでかわすか、博士を攻撃）。最大3秒、博士の方へ向けて押さえ、4発当たるかダウンで離す。離した後2.5秒は掴めない。捕まえている間は博士の攻撃が強くなる。連続技の締めにも。</small></td><td class="keys"><kbd>I</kbd></td></tr>
+          <tr><td>ゴーレムの持ち上げ <small>掴んでいる間に：頭上に持ち上げて投げ上げる（浮かせ技）。</small></td><td class="keys"><kbd>I</kbd> <small>（掴み中）</small></td></tr>
+          <tr><td>ゴーレムアッパー <small>中下段。浮かせ技。遅く、ガードされると反撃を受ける。</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>石拳・石投げ <small>中段。近くでは石を握った拳（石は減らない）、離れると石を投げる。</small></td><td class="keys"><kbd>J</kbd></td></tr>
+          <tr><td>石の連打 <small>連続技の3回目のJ：2発、2発目でダウン。</small></td><td class="keys"><kbd>J</kbd> <kbd>J</kbd> <kbd>J</kbd></td></tr>
+          <tr><td>石の三連投げ <small>中段。石を3つ、3つ目でダウン。Kを長押しで3段階の溜め：石が強く速くなり、大きく押し飛ばし、ガードを大きく削る。最大溜め（MAX）は満タンのガードも崩す。</small></td><td class="keys"><kbd>K</kbd></td></tr>
+          <tr><td>下段の石 <small>下段。床すれすれに1つ、または3つ。ダウン中の相手にも当たる。</small></td><td class="cmd">↓ + J / ↓ + K</td></tr>
+          <tr><td>石の山なり投げ <small>中下段（上から落ちる）。気絶させる。</small></td><td class="cmd">→ → + J</td></tr>
+          <tr><td>罠の石 <small>前方の床に置く。踏むか6秒で爆発。最大6個。</small></td><td class="cmd">→ → + K</td></tr>
+          <tr><td>ゴーレムシールドバッシュ <small>中下段。飛び道具を止めて殴る。反撃されない。</small></td><td class="cmd">→ → + U</td></tr>
+          <tr><td>ゴーレムタックル <small>中下段。どこからでも突進。ガードされると反撃を受ける。空中の相手には：ゴーレムメテオ（跳んで床に叩きつける・バウンド）。</small></td><td class="cmd">→ → + I</td></tr>
+          <tr><td>岩肌の行進 <small>肌が石になって前進（アーマー：攻撃を受けても止まらない）、そして周囲に炸裂してダウンさせる。投げと超必殺技はアーマーを貫く。炸裂は床を走るのでジャンプでかわせる。ガードされると反撃を受ける。</small></td><td class="cmd">← ← + K</td></tr>
+          <tr><td colspan="2"><b>空中コンボ中</b>（浮かせた後）</td></tr>
+          <tr><td>ゴーレムのライジングジャブ <small>上へ殴って空中に留める。U、U、U——間にJで博士の石。</small></td><td class="keys"><kbd>U</kbd></td></tr>
+          <tr><td>石柱 <small>ゴーレムが床を叩き、足元から岩の柱（2回目の浮かせ）。</small></td><td class="keys"><kbd>I</kbd></td></tr>
+          <tr><td>ゴーレムメテオ <small>跳び上がって床に叩きつける（バウンド）。</small></td><td class="cmd">→ → + I</td></tr>
+          <tr><td>ストーンコメット <small>締め：大きな光る石を叩きつける。</small></td><td class="keys"><kbd>K</kbd></td></tr>
+          <tr><td><b>大いなる錬成</b> <small>超必殺技（MP満タン）：ゴーレムが石に砕けて相手に飛びつき、岩の殻で閉じ込める。周りに光る石を6つ投げ、円が閉じると錬成陣が炸裂して打ち上げる。ガード可能。</small></td><td class="keys"><kbd>U</kbd> + <kbd>J</kbd></td></tr>
+          <tr><td><b>ゴーレムアーマー</b> <small>融合ゲージ満タンで（石の下のゲージ。30秒で溜まり、攻撃を当てても受けても早く溜まる）。ゴーレムが砕け、ブーツからヘルメットまで一つずつ博士に装着される。20秒間、博士自身が鎧で戦う——攻撃力が上がり、受けるダメージが減り、必殺技にアーマーが付く。その後鎧は崩れ、ゴーレムが復活する。鎧の間のコマンドはテツと同じ：</small></td><td class="cmd">← → + J + K</td></tr>
+          <tr><td>・石の拳 <small>U U U U K、U U I（石柱アッパー・浮かせ）、U U K。空中コンボはU U U、I、K（腹のコアから光の炸裂）。</small></td><td class="keys"><kbd>U</kbd></td></tr>
+          <tr><td>・コアビーム <small>腹のコアからゆっくり進む光の玉。</small></td><td class="cmd">→ → + U</td></tr>
+          <tr><td>・ボルダートス <small>岩が手に集まって大岩になり、弧を描いて投げ落とす（中下段・バウンド）。空中コンボ中は：空から大岩を呼び落とすボルダークラッシュ。</small></td><td class="cmd">→ → + I</td></tr>
+          <tr><td>・ラブルウェーブ <small>下段：床を走る短い瓦礫の波がすくい上げる。</small></td><td class="cmd">→ → + J</td></tr>
+          <tr><td>・ストーンアーム <small>目の前の床から巨大な石の腕が突き出し、殴り飛ばす（空中コンボ中は相手の真下から）。</small></td><td class="cmd">→ → + K</td></tr>
+          <tr><td>・ローリングボルダー <small>床を転がる大岩：3回当たる。</small></td><td class="cmd">← ← + U</td></tr>
+          <tr><td>・ストーンウォール <small>石の壁がせり上がり、当たった攻撃をはじいて突き破る。</small></td><td class="cmd">← ← + I</td></tr>
+          <tr><td>・クエイクフィスト <small>下段：両拳を床に打ち込み、岩の棘が床を走る。</small></td><td class="cmd">← ← + J</td></tr>
+          <tr><td>・ロックイラプション <small>岩の柱が三本、博士から順に噴き出し、最後の一本で打ち上げる。</small></td><td class="cmd">← ← + K</td></tr>
+          <tr><td>・ピラースパイク <small>その場から動かず、目の前に岩の棘が突き上がる。ジャンプを落とし、浮かせる。</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>・大コアキャノン <small>超必殺技：腹から金色の巨大なビーム。</small></td><td class="keys"><kbd>U</kbd> + <kbd>J</kbd></td></tr>
         </tbody>
       </table></div>
     </article>

@@ -149,15 +149,15 @@ function drawProjBase(p) {
     ctx.restore();
   } else if (p.type === 'beam') {
     const b = projBox(p), grow = Math.min(1, p.t / 6), fade = Math.min(1, p.life / 8);
-    const yc = GROUND - 125, hh = (110 + Math.sin(p.t * 0.9) * 6) * grow * fade;
+    const cb = p.coreBeam, yc = GROUND - (cb ? 88 : 125), hh = (cb ? 70 : 110 + Math.sin(p.t * 0.9) * 6) * grow * fade, C = cb ? ['255,170,60', '255,215,130'] : ['60,200,255', '140,240,255']; // (Hohen's Core Cannon: gold, out of his belly)
     const x0 = b.x0, w = b.x1 - b.x0;
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    ctx.fillStyle = 'rgba(60,200,255,.35)'; ctx.fillRect(x0, yc - hh - 10, w, (hh + 10) * 2);
-    ctx.fillStyle = 'rgba(140,240,255,.65)'; ctx.fillRect(x0, yc - hh, w, hh * 2);
+    ctx.fillStyle = `rgba(${C[0]},.35)`; ctx.fillRect(x0, yc - hh - 10, w, (hh + 10) * 2);
+    ctx.fillStyle = `rgba(${C[1]},.65)`; ctx.fillRect(x0, yc - hh, w, hh * 2);
     ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.fillRect(x0, yc - hh * 0.4, w, hh * 0.8);
     const ox = p.owner.x + p.owner.facing * 50 * p.owner.ch.scale;
     const g = ctx.createRadialGradient(ox, yc, 4, ox, yc, 60);
-    g.addColorStop(0, 'rgba(255,255,255,.95)'); g.addColorStop(1, 'rgba(80,220,255,0)');
+    g.addColorStop(0, 'rgba(255,255,255,.95)'); g.addColorStop(1, `rgba(${C[0]},0)`);
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ox, yc, 60, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
   }
@@ -389,7 +389,8 @@ function healthBar(f, x, left) {
   const nw = ctx.measureText(nm(f.ch)).width;
   ctx.font = SMALL; ctx.fillStyle = 'rgba(255,255,255,.78)';
   ctx.fillText(game.online ? (f.netName || '') + (f.side === NET.side ? L(' (you)', '（あなた）') : '') : game.watch ? 'CPU ' + (f.side + 1) : game.demo ? (f.side === 0 ? L('DEMO', '見本') : L('DUMMY', 'ダミー')) : f.side === 0 ? L('YOU', 'あなた') : (game.training ? L('DUMMY', 'ダミー') : 'CPU'), left ? x + nw + 8 : x + w - nw - 8, ny + 4);
-  if (f.ch.ammo) (f.ch.ammo === 6 && f.key === 'alchemist' ? stoneRow : ammoRow)(f, left ? x + w - 52 : x + 52, ny + 9, left);
+  if (f.ch.ammo) (f.key === 'alchemist' ? stoneRow : ammoRow)(f, left ? x + w - 52 : x + 52, ny + 9, left);
+  if (f.golem) fuseGauge(f, left ? x + w - 52 : x + 52, ny + 17, left); // (Hohen: the fusion gauge, under his stones)
   for (let i = 0; i < (game.training ? 0 : 2); i++) {
     const cx = left ? x + w - 10 - i * 20 : x + 10 + i * 20;
     ctx.beginPath(); ctx.arc(cx, ny + 9, 6.5, 0, Math.PI * 2);
@@ -400,8 +401,8 @@ function healthBar(f, x, left) {
 function stoneRow(f, x, y, left) { // the alchemist's stones: glowing while he has them; the next one fills in as it comes back
   const n = f.ch.ammo, gap = 11, cols = ['110,255,220', '255,190,80', '150,170,255', '255,120,120', '120,255,160', '255,230,120'];
   for (let i = 0; i < n; i++) {
-    const cx = left ? x - i * gap : x + i * gap, live = i < f.ammo, next = i === f.ammo, k = next ? (f.stoneT || 0) / STONE_REGEN : 0;
-    if (live) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(cx, y, 0.5, cx, y, 7); g.addColorStop(0, `rgba(${cols[i]},.95)`); g.addColorStop(1, `rgba(${cols[i]},0)`); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, y, 7, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+    const cx = left ? x - i * gap : x + i * gap, col = cols[i % cols.length], live = i < f.ammo, next = i === f.ammo, k = next ? (f.stoneT || 0) / STONE_REGEN : 0;
+    if (live) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(cx, y, 0.5, cx, y, 7); g.addColorStop(0, `rgba(${col},.95)`); g.addColorStop(1, `rgba(${col},0)`); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, y, 7, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
     ctx.beginPath(); ctx.moveTo(cx - 4, y + 1); ctx.lineTo(cx - 2, y - 4); ctx.lineTo(cx + 3, y - 4.5); ctx.lineTo(cx + 5, y); ctx.lineTo(cx + 3, y + 4); ctx.lineTo(cx - 3, y + 4.5); ctx.closePath();
     ctx.fillStyle = live ? '#a98152' : next ? `rgba(169,129,82,${0.2 + 0.5 * k})` : 'rgba(0,0,0,.35)'; ctx.fill(); ctx.strokeStyle = live ? 'rgba(74,53,35,.95)' : 'rgba(255,255,255,.3)'; ctx.lineWidth = 1; ctx.stroke();
   }

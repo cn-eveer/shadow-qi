@@ -53,7 +53,7 @@ const TECH_TIER = {
   sdLunge: 'mod', sdMaul: 'mod', sdClaw: 'mod', sdUpper: 'heavy', sdBeckon: 'fast', sdChain: 'mod', sdDrain: 'heavy',
 };
 const NO_TELL = new Set(['risingFist', 'smBow', 'saRayFly', 'saDive', 'smAngel', 'smDevil']); // (these have their own long lead-in)
-function hasArmor(f) { const mv = f.move; return !!mv && ((mv.armorDive && f.mf >= 24) || (f.key === 'kappa' && (mv.id === 'kpPounce' || (mv.dashLeft > 0))) || (f.key === 'brawler' && !mv.normal && !mv.super && techTier(mv) !== 'fast') || mv.id === 'plRampart'); }
+function hasArmor(f) { const mv = f.move; return !!mv && ((mv.armorDive && f.mf >= 24) || (f.key === 'kappa' && (mv.id === 'kpPounce' || (mv.dashLeft > 0))) || (f.key === 'brawler' && !mv.normal && !mv.super && techTier(mv) !== 'fast') || mv.id === 'plRampart' || mv.stoneSkin || (f.ch.fused && !mv.normal && !mv.super && techTier(mv) !== 'fast')); } // (Hohen's Bedrock Stride: stone skin; in the golem armour, his techniques have armour like Tetsu's)
 function techTier(mv) { return TECH_TIER[mv.id] || (mv.parry ? 'fast' : mv.launch ? 'heavy' : 'mod'); }
 const TELL = { mod: 14, heavy: 20 }; // frames of the tell before the wind-up: long enough that a jab pressed after it starts still lands first
 const U_REACH = {};
@@ -301,7 +301,7 @@ function applyHit(a, d, h, side, hb, hu) {
   // a quick jab (about 15 frames from start to finish) keeps 72%, a heavy blow (about 40) 93%, a big technique 95%
   const cm = a.move, frames = cm ? Math.min(cm.startup, 60) + (cm.active || 0) + Math.min(cm.recovery || 0, 60) : 30;
   const comboScale = d.combo > 1 && a.serial !== d.comboSerial && !h.fullDmg ? clamp(0.6 + frames / 120, 0.65, 0.95) : 1; // (a few big, separate heavy techniques keep it all)
-  let dmg = Math.max(1, Math.round(h.dmg * scale * riseScale * comboScale * (tech ? (airTech ? AIR_TECH : TECH_DMG) : 1) * (h.bounce && h.launch ? BOUNCE_DMG : 1)));
+  let dmg = Math.max(1, Math.round(h.dmg * scale * riseScale * comboScale * (tech ? (airTech ? AIR_TECH : TECH_DMG) : 1) * (h.bounce && h.launch ? BOUNCE_DMG : 1) * (d.ch.takeMul || 1))); // (takeMul: a form that's harder to hurt — Hohen fused with his golem)
   if (d.extendBonus && !isSup) { dmg += d.extendBonus; d.extendBonus = 0; popText(d.x, GROUND - d.y - 175, L('EXTENDED +', '追撃ボーナス +') + EXTEND_BONUS, '255,225,140'); } // (the second lift or bounce extends the combo: a one-time bonus)
   d.hp = Math.max(0, d.hp - dmg);
   if (a.y > 0 && a.state === 'attack' && a.move && a.move.air && d.juggle && !a.move.manualY && a.move.chain && Object.values(a.move.chain).some(Boolean)) a.vy = Math.max(a.vy, 3.2); // an air combo: hitting them keeps him hanging in the air a moment
@@ -357,7 +357,7 @@ function applyHit(a, d, h, side, hb, hu) {
     setState(d, 'knock'); d.juggle = air; d.jug = air ? (wasKnock ? Math.max(d.jug || 0, 2) : 2) : 0; // (still flying from this combo: the juggle count carries on, it doesn't start over)
     d.vy = h.kd ? (h.kdVy || 8.5) : 6.5; d.vx = side * (h.kd ? (h.kdVx || 4) : 1.4); d.y = Math.max(d.y, 1); // (hit out of the air: a smaller push unless it knocks them away)
   }
-  else { if (d.repLabel === h.label && d.stuckT > 0) d.repN = (d.repN || 0) + 1; else { d.repLabel = h.label; d.repN = 0; } setState(d, 'hitstun'); d.stun = Math.max(5, Math.round(((h.stun || 16) - Math.max(0, d.combo - STUN_DECAY_AFTER) * 3) * Math.pow(0.6, d.repN))); /* (the same attack again and again in one combo — against a wall, say — stuns less each time: no repeat loops) */ d.crouchHit = low; /* (hit-stun decay: past the first few hits each one stuns less, so a string can't loop forever) */ d.vx = side * (h.push || 1) * 3 * (h.rushTag ? 1 : a.ch.pushMul || 1) * (d.ch.sturdy ? 0.5 : 1); } // knocked back by the hit (further by Mei and Lyra, except in Mei's rush strings)
+  else { if (d.repLabel === h.label && d.stuckT > 0 && !h.superHit) d.repN = (d.repN || 0) + 1; else { d.repLabel = h.label; d.repN = 0; } setState(d, 'hitstun'); d.stun = Math.max(5, Math.round(((h.stun || 16) - Math.max(0, d.combo - STUN_DECAY_AFTER) * 3) * Math.pow(0.6, d.repN))); /* (the same attack again and again in one combo — against a wall, say — stuns less each time: no repeat loops) */ d.crouchHit = low; /* (hit-stun decay: past the first few hits each one stuns less, so a string can't loop forever) */ d.vx = side * (h.push || 1) * 3 * (h.rushTag ? 1 : a.ch.pushMul || 1) * (d.ch.sturdy ? 0.5 : 1); } // knocked back by the hit (further by Mei and Lyra, except in Mei's rush strings)
   if (!h.proj) wallPush(a, d, side); // pinned at the wall: the attacker is pushed back the same way instead
   // Lightning Ball / Fire Breath: once the hit wears off they're left stunned (once until they're back on their feet)
   if (d.state === 'hitstun' && h.stunT && !d.stunUsed && d.hp > 0) { d.pendingStun = Math.max(d.pendingStun || 0, h.stunT); d.stunKind = h.stunKind; }

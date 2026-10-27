@@ -428,6 +428,7 @@ function render() {
   for (const f of fighters) if (f.spirit) { if (f.alt) drawInAltHue(() => drawSpirit(f)); else drawSpirit(f); } // Kuro's spirit animals, behind everyone (the second fighter's in another hue)
   const order = [...fighters].sort((p, q) => (p.state === 'attack' ? 1 : 0) - (q.state === 'attack' ? 1 : 0));
   for (const f of order) drawFighter(f);
+  for (const f of fighters) if (f.golem) drawGolemFront(f); // (Hohen: the golem's stones flying onto him, or onto them)
   } finally { untweenFighters(held); }
   drawFlood(); // the Great Flood's water, over their feet
   drawProjs(projs.filter(p => !behind(p.type)));

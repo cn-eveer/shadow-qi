@@ -77,7 +77,7 @@ function showMenu() {
       ${pick('kappa', 'Mythic Kappa. Cute, with a dish on his head: claws, water, plate throws and sumo throws.', '幻獣カッパ。頭に皿の可愛いカッパ：爪、水、皿投げ、相撲の投げ。')}
       ${pick('gunman', 'Gunslinger. Two revolvers and a long coat: mid-range shots, jump shots, no kicks.', 'ガンマン。二丁拳銃とロングコート：中距離の射撃、ジャンプショット、足技なし。')}
       ${pick('salary', 'Salaryman. An angel and a devil ride his shoulders, and either can take him over.', 'サラリーマン。両肩の天使と悪魔、どちらかに憑依されて戦う。')}
-      ${pick('alchemist', 'Alchemist. A doctor in a white coat with glowing stones: he points, and his stone golem fights for him.', '錬金術師。白衣に光る石をまとった医師。指示を出し、石のゴーレムを戦わせる。')}
+      ${pick('alchemist', 'Golem Doctor. U and I: his stone golem’s blows. J and K: his own stone-knuckle and glowing stones. Strung together, they fight as one.', 'ゴーレム博士。U・Iは石のゴーレムの攻撃、J・Kは博士自身の石拳と光る石。つなげて二人で一つの戦い方。')}
     </div>
     <div class="pickinfo"><span><b>${nm(CHARS[c])}</b> ${blurbs[c]}</span><button class="ghost sm" data-act="moves">${L('Move list', '技表')}</button></div>
     <div class="vsrow">${L('CPU opponent:', 'CPUの相手：')} ${CHAR_ORDER.map(k => `<button class="${game.p2Char === k ? 'on' : ''}" data-vs="${k}" aria-pressed="${game.p2Char === k}">${nm(CHARS[k])}</button>`).join('')}</div>
@@ -236,7 +236,7 @@ function applyLang() { // header, drawer, tabs and which language of the command
   const tagEl = document.getElementById('tagline');
   tagEl.textContent = IS_MOBILE ? L('Eight fighters. Touch controls: the pad on the left, U I J K on the right.', '8人のファイター。タッチ操作：左のパッドで移動、右のU・I・J・Kで攻撃。') : L('Eight fighters. CPU battles on four difficulties, training, sample combos and online battles. Keyboard required.', '8人のファイター。4段階の難易度のCPU戦、トレーニング、コンボ見本、オンライン対戦。キーボードで操作します。');
   tagEl.title = tagEl.textContent; // (the whole line on hover, when it's shortened)
-  const tabNames = { ctl: ['Controls', '操作'], ninja: ['Kuro', 'クロ'], brawler: ['Tetsu', 'テツ'], staff: ['Mei', 'メイ'], psychic: ['Lyra', 'ライラ'], paladin: ['Aldric', 'アルドリック'], kappa: ['Kappa', 'カッパ'], alchemist: ['Alchemist', '錬金術師'], gunman: ['Jesse', 'ジェシー'], salary: ['Tanaka', '田中'] };
+  const tabNames = { ctl: ['Controls', '操作'], ninja: ['Kuro', 'クロ'], brawler: ['Tetsu', 'テツ'], staff: ['Mei', 'メイ'], psychic: ['Lyra', 'ライラ'], paladin: ['Aldric', 'アルドリック'], kappa: ['Kappa', 'カッパ'], alchemist: ['Hohen', 'ホーエン'], gunman: ['Jesse', 'ジェシー'], salary: ['Tanaka', '田中'] };
   drawer.querySelectorAll('.tabs button').forEach(b => { b.textContent = L(...tabNames[b.dataset.tab]); b.classList.toggle('on', b.dataset.tab === drawerTab); b.setAttribute('aria-selected', String(b.dataset.tab === drawerTab)); });
   drawer.querySelectorAll('article.card').forEach(a => { a.hidden = !(a.dataset.tab === drawerTab && a.dataset.lang === game.lang); });
 }
