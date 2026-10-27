@@ -13,13 +13,17 @@ CHARS.alchemist = {
   meterCol: ['#d98a2c', '#ffe0a8'], bannerCol: 'rgba(150,110,60,.9)', idle: 'idle', chargePose: 'gAim', winPose: 'win', atkCD: 8, recoverT: 10, hitFx: 'star',
 };
 Object.assign(CHARS.alchemist, { altColors: { ...CHARS.alchemist.colors, coat: '#d9e6dc', coatB: '#b7c9bb', shirt: '#f0d8c0', hair: '#4a3b2e' } });
+Object.assign(POSES, { // throwing a stone: the arm drawn back behind him with the weight on the back foot, then whipped through and forward
+  alThrowW: P(-14, -105,-150, 30,60, 22,10, -26,-14),
+  alThrow: P(26, 112,78, -20,20, 36,6, -24,-10),
+  alThrowLow: P(30, 70,86, -10,30, 40,4, -26,-12) });
 { // every button is an order to the golem (standing, crouching and in the air); the alchemist himself only points
   const order = (kind, label, pose, st, ex) => ({ label, startup: 6, active: 2, recovery: 12, wind: 'idle', pose, hitbox: null, chain: null, launch: false, kd: false, ...ex, onFrame: (f, o, mf) => { if (mf === f.move.startup) { if (kind === 'stone' || kind === 'stones') alchemistThrow(f, o, kind); else golemOrder(f, kind); } } });
   const L = CHARS.alchemist.normalLook;
   for (const st of ['s', 'c', 'j']) {
     const ex = st === 'j' ? {} : { startup: 6 };
     L[st + 'p0'] = order(st === 'c' ? 'lowp' : 'lp', st === 'c' ? 'Order: Low Punch' : 'Order: Punch', st === 'c' ? 'gLow' : 'gAim', st, ex); L[st + 'p1'] = order('hp', 'Order: Smash', 'gTwin', st, ex);
-    L[st + 'k0'] = order('stone', 'Order: Throw Stone', 'gAim', st, ex); L[st + 'k1'] = order('stones', 'Order: Stone Volley', 'gTwin', st, ex);
+    const th = { startup: 9, recovery: 14 }; L[st + 'k0'] = order('stone', 'Stone Throw', 'alThrowLow', st, { ...ex, ...th, wind: 'alThrowW' }); L[st + 'k1'] = order('stones', 'Stone Volley', 'alThrow', st, { ...ex, ...th, startup: 11, wind: 'alThrowW' });
   }
 }
 const GOLEM_ACT = { // startup / active / recovery (frames), and the blow
