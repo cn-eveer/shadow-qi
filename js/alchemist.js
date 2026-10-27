@@ -106,7 +106,7 @@ const GOLEM_ACT = { // startup / active / recovery (frames), and the blow
   lowp: { su: 8, ac: 3, rec: 14, reach: [10, 95], y: [0, 40], h: { dmg: 26, stun: 30, bstun: 11, push: 1.6, hitstop: 6, str: 0, gdrain: 4, low: true, label: 'Golem Low Punch' } },
   hp: { su: 10, ac: 2, rec: 22, grab: true, reach: [0, 95], y: [0, 150], h: { dmg: 18, stun: 12, bstun: 12, push: 0, hitstop: 6, str: 1, gdrain: 0, grab: true, label: 'Golem Grab', heavy: true } }, // I: it seizes them and holds them for three seconds
   shield: { su: 10, ac: 6, rec: 20, shield: true, reach: [10, 95], y: [0, 150], h: { dmg: 34, stun: 22, bstun: 22, push: 5, hitstop: 8, str: 1, gdrain: 24, label: 'Golem Shield Bash', heavy: true } }, // →→U: a slab of stone held out front; it blocks shots and bashes
-  tackle: { su: 8, ac: 18, rec: 26, rush: 13, reach: [10, 80], y: [0, 150], h: { dmg: 48, stun: 24, bstun: 16, push: 5, hitstop: 9, str: 1, gdrain: 16, kd: true, kdVx: 11, kdVy: 7, label: 'Golem Tackle', heavy: true } }, // →→I: it charges in
+  tackle: { su: 8, ac: 18, rec: 26, rush: 13, reach: [10, 80], y: [0, 150], h: { dmg: 48, stun: 24, bstun: 16, push: 5, hitstop: 9, str: 1, gdrain: 16, kd: true, kdVx: 6, kdVy: 7, label: 'Golem Tackle', heavy: true } }, // →→I: it charges in
   kickw: { su: 9, ac: 3, rec: 14, reach: [10, 100], y: [20, 120], kick: true, h: { dmg: 22, stun: 24, bstun: 11, push: 2, hitstop: 6, str: 0, gdrain: 5, label: 'Golem Kick' } }, // J: a weak kick, at the same time as his stone
   kicks: { su: 14, ac: 4, rec: 22, reach: [10, 118], y: [20, 125], kick: true, h: { dmg: 50, stun: 24, bstun: 14, push: 4, hitstop: 9, str: 1, gdrain: 14, kd: true, kdVx: 9, kdVy: 7, label: 'Golem Heavy Kick', heavy: true } }, // K: a strong kick, with his volley
   sand: { su: 13, ac: 1, rec: 22 }, // U, U, K: it scoops up sand and stones and flings them into the air, to rain down on them
@@ -314,4 +314,37 @@ STRINGS.alchemist = (() => { // in a juggle he throws aimed stones at them (the 
 })();
 // joining the roster
 CHAR_ORDER.push('alchemist'); DEMO_VS.alchemist = 'ninja'; GHOST_TINT.alchemist = new Proxy({}, { get: () => '#e8f4ff' });
-DEMOS.alchemist = []; COMBO_SET.alchemist = []; PUNISH_SET.alchemist = []; // (no sample combos yet)
+// sample combos: the golem and the alchemist playing together (the golem's blows, his stones, and the grab that sets them up)
+const ALCHEMIST_DEMOS = [
+  { name: '1. Grab, then the stones', tail: 'golem grab, stone, stone, volley', ax: 250, bx: 400,
+    note: 'I: the golem seizes them, turns them round and holds them for three seconds. Then J, J, K: his stones can’t miss, and the last one knocks them down.',
+    steps: [S('I', 'start', { btn: 'hp' }), S('J', 'link', { btn: 'lk' }), S('J', 'link', { btn: 'lk' }), S('K', 'link', { btn: 'hk' })] },
+  { name: '2. Punch string into the grab', tail: 'punch, punch, grab, stones', ax: 250, bx: 400,
+    note: 'U, U: the golem and the alchemist punch together. Then I: the golem grabs them out of the string, and J, J, K finishes.',
+    steps: [S('U', 'start', { btn: 'lp' }), S('U', 'link', { btn: 'lp' }), S('I', 'link', { btn: 'hp' }), S('J', 'link', { btn: 'lk' }), S('J', 'link', { btn: 'lk' }), S('K', 'link', { btn: 'hk' })] },
+  { name: '3. Stone lob stun', tail: 'lob and stun, golem grab, stones', ax: 250, bx: 560,
+    note: '→ → + J: a stone lobbed over drops on them and stuns. The golem runs in and grabs them (I), then J, J, K.',
+    steps: [S('→ → + J', 'start', { btn: 'lk', ff: true }), S('I', 'link', { btn: 'hp' }), S('J', 'link', { btn: 'lk' }), S('J', 'link', { btn: 'lk' }), S('K', 'link', { btn: 'hk' })] },
+  { name: '4. Tackle and the low stone', tail: 'golem tackle, low stone on the ground', ax: 300, bx: 440,
+    note: '→ → + I: the golem charges in from afar and knocks them down. ↓ + J: his low stone hits them as they lie there.',
+    steps: [S('→ → + I', 'start', { btn: 'hp', ff: true }), S('↓ + J', 'otg', { btn: 'lk', down: true })] },
+  { name: '5. Core blast and the low stone', tail: 'core blast, low stone on the ground', ax: 250, bx: 370, gx: 300,
+    note: '↓ + I: the golem’s core blast (very short range) knocks them down right in front of it. ↓ + J: his low stone follows on the ground.',
+    steps: [S('↓ + I', 'start', { btn: 'hp', down: true }), S('↓ + J', 'otg', { btn: 'lk', down: true })] },
+  { name: '6. Shield bash and the stones', tail: 'shield bash, stone and kick, volley', ax: 250, bx: 380, gx: 300,
+    note: '→ → + U: the golem bashes with its stone shield (it also stops shots). Then J: his stone with the golem’s kick, and K: the volley with the strong kick.',
+    steps: [S('→ → + U', 'start', { btn: 'lp', ff: true }), S('J', 'link', { btn: 'lk' }), S('K', 'link', { btn: 'hk' })] },
+  { name: '7. Punch, punch, sand toss', tail: 'punch, punch, sand toss', ax: 250, bx: 400,
+    note: 'U, U, then K right after: the golem flings sand and stones high into the air, and they rain down on the opponent.',
+    steps: [S('U', 'start', { btn: 'lp' }), S('U', 'link', { btn: 'lp' }), S('K', 'link', { btn: 'hk' })] },
+];
+Object.assign(JA_DEMO, {
+  '1. Grab, then the stones': { n: '1. 掴んで、石', tail: 'ゴーレムの掴み、石、石、三連投げ', note: 'I：ゴーレムが相手を掴み、反対向きにして3秒間押さえつける。そしてJ、J、K：石は必ず当たり、最後の一発でダウン。' },
+  '2. Punch string into the grab': { n: '2. パンチ連打から掴み', tail: 'パンチ、パンチ、掴み、石', note: 'U、U：ゴーレムと錬金術師が一緒にパンチ。そしてI：連続技から掴みに移り、J、J、Kで締める。' },
+  '3. Stone lob stun': { n: '3. 山なり投げで気絶', tail: '山なり投げ（気絶）、ゴーレムの掴み、石', note: '→→+J：高く投げた石が落ちて気絶。ゴーレムが駆けつけて掴み（I）、J、J、K。' },
+  '4. Tackle and the low stone': { n: '4. タックルと下段の石', tail: 'ゴーレムタックル、倒れた相手に下段の石', note: '→→+I：遠くから突進してダウンさせる。↓+J：倒れている相手に下段の石が当たる。' },
+  '5. Core blast and the low stone': { n: '5. コアブラストと下段の石', tail: 'コアブラスト、倒れた相手に下段の石', note: '↓+I：目の前に撃つ短射程のコアブラストでダウン。↓+J：下段の石で追い打ち。' },
+  '6. Shield bash and the stones': { n: '6. シールドバッシュと石', tail: 'シールドバッシュ、石とキック、三連投げ', note: '→→+U：石の盾で殴る（飛び道具も止める）。そしてJ：石とゴーレムのキック、K：三連投げと強いキック。' },
+  '7. Punch, punch, sand toss': { n: '7. パンチ、パンチ、砂石投げ', tail: 'パンチ、パンチ、砂石投げ', note: 'U、Uのあと続けてK：ゴーレムが砂と石を高く投げ上げ、相手の上に降らせる。' },
+});
+DEMOS.alchemist = ALCHEMIST_DEMOS; COMBO_SET.alchemist = ALCHEMIST_DEMOS; PUNISH_SET.alchemist = [];

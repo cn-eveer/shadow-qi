@@ -1143,7 +1143,7 @@ function setupDemo(i) {
   resetPositions();
   const d = curDemos()[i], [a, b] = fighters;
   if (d.bMeter) b.meter = d.bMeter;
-  a.x = d.ax; b.x = d.bx; a.facing = 1; b.facing = -1; a.meter = 100;
+  a.x = d.ax; b.x = d.bx; a.facing = 1; b.facing = -1; a.meter = 100; if (a.golem) a.golem.x = d.gx != null ? d.gx : a.x + 70; // (the alchemist's golem starts just ahead of him)
   if (d.ahp) { a.hp = d.ahp; a.healT = 600; }
   fighters.forEach(updatePose);
   game.demoState = { phase: 'intro', t: 0, i: 0, idle: 0 };
