@@ -42,7 +42,7 @@ function movePose(f) {
   }
   f.windPhase = -1; if (f.animDX) f.animDX *= 0.85;
   if (mf <= su + ac) return lerpPose(A, F, (mf - su) / Math.max(1, ac));
-  const t = Math.min(1, (mf - su - ac) / Math.max(1, Math.min(mv.recovery, 26))), tt = t < 0.22 ? 0 : (t - 0.22) / 0.78; // a beat of follow-through, then settle
+  const R = Math.max(1, mv.recovery), hold = Math.min(6, R * 0.22), tt = clamp((mf - su - ac - hold) / Math.max(1, R - hold), 0, 1); // a beat of follow-through (never longer than 6 frames), then settle over the whole recovery, so a long one never stands frozen
   return lerpPose(F, stanceBase(f, mv), easeInOutQ(tt));
 }
 const easeOutQ = x => 1 - (1 - x) * (1 - x), easeInOutQ = x => x < 0.5 ? 2 * x * x : 1 - 2 * (1 - x) * (1 - x);
@@ -325,7 +325,8 @@ function targetPose(f) {
 }
 function finerMotion(f, p) { // little secondary motions layered on top of the pose (drawing only): breathing, sway, the weight of armor, a float
   const t = globalT + (f.side ? 37 : 0), idle = f.state === 'stand' && Math.abs(f.vx) < 0.1, walk = f.state === 'stand' && !idle;
-  if (f.key === 'kappa' && floodOwner(f) && f.state === 'stand' && Math.abs(f.vx) > 0.5) { const s = Math.sin(t * 0.5); const q = lerpPose(p, POSES.kBelly, 0.8); q.l1u += s * 18; q.l2u -= s * 18; q.a1u += s * 20; q.a2u -= s * 20; return q; } // swimming: flat on the water, kicking and paddling
+  if (f.key === 'kappa') { f.swimK = lerp(f.swimK || 0, floodOwner(f) && f.state === 'stand' && Math.abs(f.vx) > 0.5 ? 1 : 0, 0.25); // (into and out of the swim over a few frames, never in one jump)
+    if (f.swimK > 0.02) { const s = Math.sin(t * 0.5) * f.swimK, q = lerpPose(p, POSES.kBelly, 0.8 * f.swimK); q.l1u += s * 18; q.l2u -= s * 18; q.a1u += s * 20; q.a2u -= s * 20; return q; } } // swimming: flat on the water, kicking and paddling
   if (f.key === 'kappa') { // a small wild creature: quick shallow breaths, a twitchy head, a bounce in his step
     if (idle) { const b = Math.sin(t * 0.21); p.t += b * 2.2; p.a1l += Math.sin(t * 0.13) * 6; p.a2l += Math.sin(t * 0.13 + 1.4) * 6; if (Math.floor(t / 70) % 3 === 0) p.t += Math.sin(t * 0.9) * 1.5; }
     if (walk) { const s = Math.sin(t * 0.55); p.l1u += s * 6; p.l2u -= s * 6; p.t += Math.abs(s) * 3; }
@@ -348,8 +349,11 @@ function updatePose(f) {
     else if (f.mf > f.move.startup + (f.move.active || 0)) { f.recoilT--; const k = Math.min(1, f.recoilT / 8) * 0.65, p = lerpPose(tp, POSES.staggered, k); p.t += Math.sin(f.recoilT * 1.3) * 3 * k; tp = p; f.animDX = -f.facing * 5 * k; } }
   if (f.settleT > 0) { f.settleT--; if (f.state === 'stand' || f.state === 'crouch') tp = lerpPose(tp, f.state === 'crouch' ? POSES.cguard : POSES.guard, f.settleT / 10); } // out of block-stun: the guard comes down gradually
   const k = f.state === 'attack' ? 1 : (f.state === 'hitstun' || f.state === 'knock') ? 0.55 : 0.35;
+  const was = f.pose;
   f.pose = k === 1 ? tp : lerpPose(f.pose, tp, k);
   if (f.state !== 'attack' && (f.key === 'kappa' || f.key === 'paladin' || f.key === 'psychic')) f.pose = finerMotion(f, { ...f.pose });
+  if (k !== 1 && was) { let d = 0; for (const key of PK) d = Math.max(d, Math.abs(wrap180(f.pose[key] - was[key]))); // (how far any part turns this frame)
+    const cap = (f.state === 'hitstun' || f.state === 'knock') ? 45 : 30; if (d > cap) f.pose = lerpPose(was, f.pose, cap / d); } // a big change of pose (out of a tucked flip into a stance, into a swim) is spread over a few frames instead of jumping
   const swim = f.key === 'kappa' && floodOwner(f) && f.state === 'stand' && Math.abs(f.vx) > 0.5;
   const air = f.y > 0 || f.state === 'knock';
   const target = air ? 55 : (f.state === 'roll' || f.state === 'broll') ? 34 : swim ? 26 : hipFor(f.pose);

@@ -308,6 +308,9 @@ const LYRA_DEMOS = [
   { name: '3. Falling Star: two juggles', cpu: { min: 150, max: 400 }, tail: 'Falling Star bounce, rune burst, rune chain, trinity burst', ax: 300, bx: 560,
     note: 'Rune burst, then → → + I again: a second star bounces them again. Rune burst, rune chain, trinity burst.',
     steps: [S('→ → + I', 'start', { btn: 'hp', ff: true }), S('U', 'air', { btn: 'lp' }), S('→ → + I', 'cancel', { btn: 'hp', ff: true }), S('U', 'air', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
+  { name: '3. Falling Star: Spirit Fist finish', cpu: { min: 150, max: 400 }, tail: 'Falling Star bounce, rune burst, rune chain, Spirit Fist', ax: 300, bx: 560,
+    note: 'The star bounces them; rune burst, rune chain, then → → + K: Spirit Fist thrusts them away.',
+    steps: [S('→ → + I', 'start', { btn: 'hp', ff: true }), S('U', 'air', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('→ → + K', 'cancel', { btn: 'hk', ff: true })] },
   { name: '4. Triple Ray: one juggle', cpu: { min: 120, max: 250 }, tail: 'launch, rune burst, rune chain, trinity burst', ax: 340, bx: 540,
     note: 'Three rays at once; the third leaves them stunned (a stun is not a lift). ↓ + I, then rune burst, rune chain, trinity burst.',
     steps: [S('← ← + I', 'start', { btn: 'hp', bb: true }), S('↓ + I', 'stun', { btn: 'hp', down: true }), S('U', 'air', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
@@ -593,7 +596,7 @@ const JA_DEMO = {
   '5. Geyser': { n: '5. 間欠泉', tail: '間欠泉、かき上げ追撃、二連かき、狂乱の締め', note: '←←+I：相手の足元から水柱が噴き上がる。かき上げ追撃・二連かき・狂乱の締め。' },
   '6. Plate Throw': { n: '6. 皿投げ', tail: '', note: '→→+U：頭の皿が回転しながら飛び、戻ってくる。' },
   '7. Tsuppari Rush': { n: '7. つっぱり連打', tail: '', note: '→→+K：相撲のつっぱり（爪）の連打。' },
-  '8. Great Flood (super)': { n: '8. 大洪水（超必殺技）', tail: '', note: 'MP満タンでU+J：大波が押し寄せ、8秒間ステージが水没。カッパは速く泳ぎ攻撃も速くなり、相手は動きも攻撃も遅くなる。泳いで近づき U、U、U、U、K。' },
+  '8. Great Flood (super)': { n: '8. 大洪水（超必殺技）', tail: '', note: 'MP満タンでU+J：大波が押し寄せ、8秒間ステージが水没。カッパは速く泳ぎ攻撃も速くなり、相手は動きも攻撃も遅くなる。泳いで近づき U、U、U、U、K で投げ上げ、U、U、K で締め。' },
   '1. Gun Butt Upper': { n: '1. 銃床アッパー', tail: '追い撃ち、二丁追い撃ち、とどめの一発', note: '至近距離で↓+I：銃床で殴り上げる。追い撃ち・二丁追い撃ち・とどめの一発。' },
   '2. Dynamite': { n: '2. ダイナマイト', tail: '爆発、追い撃ち、二丁追い撃ち、とどめの一発', note: '←←+Uで火のついたダイナマイトを投げ、爆発で宙へ。追い撃ち・二丁追い撃ち・とどめの一発。' },
   '3. Showdown': { n: '3. 決闘', tail: '早撃ち、追い撃ち、二丁追い撃ち、とどめの一発', note: '←←+K：ホルスターに手をかけて待つ。正面からのクナイ斬りより先に抜く。追い撃ち・二丁追い撃ち・とどめの一発。' },
@@ -665,6 +668,7 @@ const JA_DEMO = {
   '2. Psychic Lift: one juggle': { n: '2. 念動浮上：1回打ち上げ', tail: '浮遊の紋、霊の紋、力の押し出し', note: '画面の端から：足元に光の輪、光の柱が相手を持ち上げて引き寄せる。紋・霊の紋・押し出し。' },
   '2. Psychic Lift: two juggles': { n: '2. 念動浮上：2回打ち上げ', tail: '昇る星、浮遊の紋、霊の紋、力の押し出し', note: '浮上、浮遊の紋のあとIの昇る星で再び持ち上げ、紋・霊の紋・押し出し。' },
   '3. Falling Star: one juggle': { n: '3. 落ちる星：1回打ち上げ', tail: '浮遊の紋、霊の紋、力の押し出し', note: '巨大な水晶が落ちてきて相手を手前にバウンドさせる。紋・霊の紋・押し出し。' },
+  '3. Falling Star: Spirit Fist finish': { n: '3. 落ちる星：霊気の拳で締め', tail: '落ちる星、浮遊の紋、霊の紋、霊気の拳', note: '星でバウンドさせ、浮遊の紋・霊の紋、→→+Kの霊気の拳で突き飛ばす。' },
   '3. Falling Star: two juggles': { n: '3. 落ちる星：2回打ち上げ', tail: '落ちる星、浮遊の紋、霊の紋、力の押し出し', note: '浮遊の紋のあと→→+Iをもう一度：二つ目の星で再バウンド、紋・霊の紋・押し出し。' },
   '4. Triple Ray: one juggle': { n: '4. 三連光線：1回打ち上げ', tail: '打ち上げ、浮遊の紋、霊の紋、力の押し出し', note: '三本の光線を同時に放ち、三本目で気絶（打ち上げに数えない）。↓+Iのあと紋・霊の紋・押し出し。' },
   '4. Triple Ray: two juggles': { n: '4. 三連光線：2回打ち上げ', tail: '打ち上げ、昇る星、空中の紋、空中押し出し', note: '三連光線で気絶、↓+I、浮遊の紋、昇る星で再び持ち上げ、ジャンプして空中の紋・空中押し出し。' },
@@ -786,8 +790,8 @@ const KAPPA_DEMOS = [
     note: '→ → + K: a wild, screeching flurry of claws.',
     steps: [S('→ → + K', 'start', { btn: 'hk', ff: true })] },
   { name: '8. Great Flood (super)', cpu: { min: 0, max: 300, meter: true }, tail: '', ax: 300, bx: 520,
-    note: 'U + J with full MP: a great wave floods the stage for eight seconds. The kappa swims fast and attacks faster; they wade, slow to move and slow to attack. Then swim in: U, U, U, U, K.',
-    steps: [S('U + J', 'start', { btn: 'hp', sup: true }), S('U', 'punish', { btn: 'lp', reach: 95 }), S('U', 'chain', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
+    note: 'U + J with full MP: a great wave floods the stage for eight seconds. The kappa swims fast and attacks faster; they wade, slow to move and slow to attack. Then swim in: U, U, U, U, K throws them up, and U, U, K finishes.',
+    steps: [S('U + J', 'start', { btn: 'hp', sup: true }), S('U', 'punish', { btn: 'lp', reach: 95 }), S('U', 'chain', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' }), S('U', 'air', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
   { name: '9. Max combo: lift, lift', cpu: { min: 0, max: 100 }, tail: 'rake lift, beak peck, Geyser Hop, shell cannonball', ax: 400, bx: 480,
     note: '↓ + I lifts them (1), U, U, I: Geyser Hop lifts them again (2), K finishes.',
     steps: [S('↓ + I', 'start', { btn: 'hp', down: true }), S('U', 'air', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('I', 'chain', { btn: 'hp' }), S('K', 'chain', { btn: 'hk' })] },
@@ -1105,7 +1109,7 @@ class DemoCtrl { // plays the current sample combo, one step at a time
   read(f, frame, o) {
     const out = { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, tap: 0, charge: false };
     const d = curDemos()[game.demoIdx], st = game.demoState;
-    if (!st || st.phase !== 'run') return out;
+    if (!st || st.phase !== 'run' || (game.demoUpto != null && st.i >= game.demoUpto)) return out; // (the opening can stop a sample early: upto)
     return comboStep(f, o, d.steps, st, out);
   }
 }

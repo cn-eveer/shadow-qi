@@ -14,20 +14,20 @@ const OP_ROSTER = [
 ];
 const OP_CUT = 150, OP_PRO = 130, OP_CLASH = 110, OP_CLASHES = [['ninja', 'staff'], ['brawler', 'paladin'], ['psychic', 'ninja']];
 // real battle footage: the actual game, playing one of each fighter's sample combos, filmed up close
-const OP_BATTLE = [ // a highlight reel: each clip starts right at the action (from: the step to start on); supers and big combos. Samples are found by name, so adding samples never shifts the reel
-  { key: 'ninja', name: '6. Lightning stun: two juggles', from: 2, len: 165, sup: true }, { key: 'staff', name: '6. Jump-in Falling Staff: two juggles', from: 2, len: 150, sup: true },
-  { key: 'psychic', name: '3. Falling Star: two juggles', len: 135 }, { key: 'brawler', name: '6. Qi Parry: two juggles', from: 3, len: 150, sup: true },
-  { key: 'kappa', name: '8. Great Flood (super)', len: 250, sup: true }, { key: 'salary', name: 'Double possession: tail hook juggle', from: 1, len: 210 },
+const OP_BATTLE = [ // a highlight reel: each clip starts right at the action (from: the step to start on; upto: the step to stop before — Mei ends on her super) and runs until the combo's last hit has landed; supers and big combos. Samples are found by name, so adding samples never shifts the reel
+  { key: 'ninja', name: '6. Lightning stun: two juggles', from: 2, len: 195, sup: true }, { key: 'staff', name: '6. Jump-in Falling Staff: two juggles', from: 2, upto: 4, len: 205, sup: true },
+  { key: 'psychic', name: '3. Falling Star: Spirit Fist finish', len: 180 }, { key: 'brawler', name: '6. Qi Parry: two juggles', from: 3, len: 205, sup: true },
+  { key: 'kappa', name: '8. Great Flood (super)', len: 290, sup: true }, { key: 'salary', name: '6. Devil Possession: Demon Uppercut', len: 255 },
   { key: 'gunman', name: '8. High Noon (super)', len: 150, sup: true }, { key: 'paladin', name: '12. Sanctuary (super)', len: 150, sup: true }];
 const opDemoIdx = c => { const i = (COMBO_SET[c.key] || []).findIndex(d => d.name === c.name); return i >= 0 ? i : 0; };
 const OP_BAT0 = OP_PRO, OP_CLASH0 = OP_BAT0 + OP_BATTLE.reduce((n, c) => n + c.len, 0); // (no slow roster cuts or clashes any more: straight into the action)
 const OP_GROUP = OP_CLASH0, OP_END = OP_GROUP + 260;
 function opClipAt(t) { let s0 = OP_BAT0; for (let i = 0; i < OP_BATTLE.length; i++) { if (t < s0 + OP_BATTLE[i].len) return t >= s0 ? { i, k: t - s0 } : null; s0 += OP_BATTLE[i].len; } return null; }
-function opSim() { for (const f of fighters) { f.ox = f.x; f.oy = f.y; } game.freeze = Math.min(game.freeze, 2); game.mode = 'fight'; fightTick(); game.mode = 'opening'; } // (short hit-stops only: in a movie a long one reads as a stutter; ox/oy: where they were, for drawing in between steps)
+function opSim() { game.freeze = Math.min(game.freeze, 2); game.mode = 'fight'; fightTick(); game.mode = 'opening'; } // (short hit-stops only: in a movie a long one reads as a stutter)
 function opPrepClip(i) { // set up the real game behind the scenes for clip i (the run-up to the combo comes after: opRunUp)
   const c = OP_BATTLE[i]; OP.prep = { i, n: 0, done: false };
   OP.muted = true;
-  game.p1Char = c.key; game.demoSet = 'combos'; startMatch(true, false, true); setupDemo(opDemoIdx(c));
+  game.p1Char = c.key; game.demoSet = 'combos'; startMatch(true, false, true); setupDemo(opDemoIdx(c)); game.demoUpto = c.upto != null ? c.upto : null;
   game.mode = 'opening'; updateTbar(); ov.hidden = true;
   game.phase = 'fight'; game.phaseT = 0; if (game.demoState) { game.demoState.phase = 'run'; game.demoState.t = 0; } // (skip the round and sample intros nobody sees: far less to simulate)
   OP.muted = false;
@@ -42,7 +42,7 @@ function opStartClip(i) {
   opRunUp(900);
   parts.length = 0; // (the set-up's particles are never seen)
   OP.prep = null; OP.clip = i; OP.z = null; OP.cx = null; OP.cy = null; OP.cam = null; OP.pcam = null; OP.punch = 0; OP.slowT = 0; OP.lastHp = fighters[1].hp; OP.half = false;
-  for (const f of fighters) { f.ox = f.x; f.oy = f.y; }
+  for (const f of fighters) f.tw = null; // (the clip's first frame: nothing to blend from)
   opCamUpdate();
 }
 function opCamUpdate() { // once per game step: where the camera wants to be (close, punching in on the big moments, always keeping BOTH fighters in shot), eased toward it
@@ -64,22 +64,21 @@ function opRenderClip(i, k) { // the live game, filmed: zoomed in on the action,
   if (!OP.cam) opCamUpdate();
   const A = RENDER_ALPHA, c0 = OP.pcam, c1 = OP.cam; // drawn in between the last two game steps (smooth on 90–144 Hz screens)
   const z = lerp(c0.z, c1.z, A), mx = lerp(c0.mx, c1.mx, A), my = lerp(c0.my, c1.my, A), sh = game.shake * 0.5; // (half the shake: the camera already punches in)
-  const held = fighters.map(f => [f.x, f.y]);
-  for (const f of fighters) if (f.ox != null) { f.x = lerp(f.ox, f.x, A); f.y = lerp(f.oy, f.y, A); }
+  const held = tweenFighters(A);
   ctx.save(); ctx.translate(sh ? vrnd(-sh, sh) : 0, sh ? vrnd(-sh, sh) * 0.6 : 0);
   ctx.translate(W / 2, H / 2); ctx.scale(z, z); ctx.translate(-mx, -my);
   ctx.drawImage(bg, 0, 0, W, H);
   if (game.superFlash) drawSuperFX(false);
   for (const f of fighters) if (!f.hidden && !f.shadow) drawShadow(f.x, f.y, f.ch.scale);
   const behind = t => t === 'clone' || t === 'decoy' || t === 'guardShadow';
-  for (const p of projs) if (behind(p.type)) drawProj(p);
-  for (const f of fighters) if (f.spirit) { if (f.alt && CANVAS_FILTER) { ctx.save(); ctx.filter = ALT_FILTER; drawSpirit(f); ctx.restore(); } else drawSpirit(f); } // Kuro's spirit animals, behind everyone (the second fighter's in another hue)
+  drawProjs(projs.filter(p => behind(p.type)));
+  for (const f of fighters) if (f.spirit) { if (f.alt) drawInAltHue(() => drawSpirit(f)); else drawSpirit(f); } // Kuro's spirit animals, behind everyone (the second fighter's in another hue)
   for (const f of [...fighters].sort((p, q) => (p.state === 'attack' ? 1 : 0) - (q.state === 'attack' ? 1 : 0))) drawFighter(f);
   drawFlood(); // (the Great Flood's water shows in the reel too)
-  for (const p of projs) if (!behind(p.type)) drawProj(p);
+  drawProjs(projs.filter(p => !behind(p.type)));
   drawParts();
   ctx.restore();
-  fighters.forEach((f, n) => { f.x = held[n][0]; f.y = held[n][1]; }); // (back to where the game has them)
+  untweenFighters(held); // (back to where the game has them)
   if (game.superFlash) drawSuperFX(true);
   // a slanted tag with the fighter's title (not their name), and the hit counter
   const tk = ease(k / 14);
@@ -120,7 +119,7 @@ function startOpening() { warmOpening();
   initAudio(); game.mode = 'opening'; OP.t = 0; OP.clip = -1; OP.prep = null; ov.hidden = true; ov.innerHTML = '';
   try { localStorage.setItem('sq-opening', '1'); } catch (e) {}
 }
-function endOpening() { if (game.mode !== 'opening') return; if (OP.save) { game.p1Char = OP.save.p1; game.p2Char = OP.save.p2; } game.demo = false; game.training = false; showMenu(); }
+function endOpening() { if (game.mode !== 'opening') return; game.demoUpto = null; if (OP.save) { game.p1Char = OP.save.p1; game.p2Char = OP.save.p2; } game.demo = false; game.training = false; showMenu(); }
 function skipOpening() { if (OP.t < OP_GROUP) { OP.t = OP_GROUP; OP.clip = -1; } else if (OP.t > OP_GROUP + 110) endOpening(); }
 function openingTick() { // the sound cues of the movie
   if (!OP.ready) return; // (still preparing the titles: the movie hasn't started)
@@ -397,6 +396,20 @@ function showSplash() { // the first screen: a click or key starts the opening m
   bindOverlay();
 }
 
+// Between two game steps (60 a second) the fighters are drawn part of the way from where they were to where they are, body pose included,
+// so motion is smooth on 90–144 Hz screens and when a frame comes late. (Drawing only: the game itself never sees these positions.)
+function tweenFighters(A) {
+  const held = fighters.map(f => [f.x, f.y, f.pose, f.hipUp]);
+  for (const f of fighters) if (f.tw && A > 0 && A < 1 && Math.abs(f.x - f.tw[0]) < 90 && Math.abs(f.y - f.tw[1]) < 90) { // (a jump cut — a reset, a teleport — isn't smoothed)
+    f.x = lerp(f.tw[0], f.x, A); f.y = lerp(f.tw[1], f.y, A); f.hipUp = lerp(f.tw[3], f.hipUp, A); if (f.tw[2] && f.pose && f.tw[2] !== f.pose) f.pose = lerpPose(f.tw[2], f.pose, A); }
+  for (const f of fighters) if (f.stillN > 6 && f.pose && f.state === 'attack' && f.move) { // a pose held still (charging, a guard of light, a super's long blast): a breath or a tremble, so it never looks stuck
+    const amp = Math.min(1, (f.stillN - 6) / 10), g = globalT + (f.side ? 40 : 0), p = { ...f.pose }, mv = f.move;
+    if (mv.startup >= 900 && !mv.fired) { const w = Math.sin(g * 0.9) * amp; p.t += w * 0.8; p.a1u += w * 1.6; p.a2u -= w * 1.6; p.a1l += w * 1.6; p.a2l -= w * 1.6; } // charging: power trembling through him
+    else { const b = Math.sin(g * 0.1) * amp, s = Math.sin(g * 0.13 + 1) * amp; p.t += b * 1.6; p.a1u += s * 3; p.a1l += s * 3; p.a2u -= b * 3; p.a2l -= b * 3; p.l1u += b; p.l2u -= b; } // holding: a slow breath
+    f.pose = p; }
+  return held;
+}
+function untweenFighters(held) { fighters.forEach((f, n) => { if (held[n]) [f.x, f.y, f.pose, f.hipUp] = held[n]; }); }
 function render() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
@@ -407,14 +420,17 @@ function render() {
   ctx.drawImage(bg, 0, 0, W, H);
   if (game.mode === 'menu' || !fighters.length) { drawPreview(); ctx.restore(); return; }
   if (game.superFlash) drawSuperFX(false);
-  for (const f of fighters) if (!f.hidden && !f.shadow) drawShadow(f.x, f.y, f.ch.scale);
+  const held = tweenFighters(RENDER_ALPHA); // (drawn in between the last two game steps: smooth on any screen)
   const behind = t => t === 'clone' || t === 'decoy' || t === 'guardShadow';
-  for (const p of projs) if (behind(p.type)) drawProj(p);
-  for (const f of fighters) if (f.spirit) { if (f.alt && CANVAS_FILTER) { ctx.save(); ctx.filter = ALT_FILTER; drawSpirit(f); ctx.restore(); } else drawSpirit(f); } // Kuro's spirit animals, behind everyone (the second fighter's in another hue)
+  try {
+  for (const f of fighters) if (!f.hidden && !f.shadow) drawShadow(f.x, f.y, f.ch.scale);
+  drawProjs(projs.filter(p => behind(p.type)));
+  for (const f of fighters) if (f.spirit) { if (f.alt) drawInAltHue(() => drawSpirit(f)); else drawSpirit(f); } // Kuro's spirit animals, behind everyone (the second fighter's in another hue)
   const order = [...fighters].sort((p, q) => (p.state === 'attack' ? 1 : 0) - (q.state === 'attack' ? 1 : 0));
   for (const f of order) drawFighter(f);
+  } finally { untweenFighters(held); }
   drawFlood(); // the Great Flood's water, over their feet
-  for (const p of projs) if (!behind(p.type)) drawProj(p);
+  drawProjs(projs.filter(p => !behind(p.type)));
   drawParts();
   ctx.restore();
   drawHUD();
@@ -431,7 +447,7 @@ function loop(now) {
   acc += dt;
   if (NET.on && game.mode === 'fight') { while (acc >= STEP) { if (!netStep()) { acc = Math.min(acc, STEP); break; } acc -= STEP; } }
   else while (acc >= STEP) { tick(); acc -= STEP; }
-  RENDER_ALPHA = clamp(acc / STEP, 0, 1);
+  RENDER_ALPHA = slowAvg < 13 ? clamp(acc / STEP, 0, 1) : 1; // (blend between steps only on fast screens, 90 Hz and up; at 60 Hz every frame shows the newest step, with no added delay)
   render();
   if ((++touchTick & 7) === 0) { updateTouchUI(); updateMoveList(); } // (the touch controls and the rotate screen, checked a few times a second)
   requestAnimationFrame(loop);

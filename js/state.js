@@ -16,18 +16,17 @@ let fighters = [];
 const projs = [], parts = [];
 // mirror matches: the second fighter (the one in the second palette) has its effects — sparks, auras, projectiles, spells — drawn in another hue,
 // so you can always tell whose they are. Particles are tagged with whoever was acting when they were made
-const ALT_HUE = 165, ALT_FILTER = 'hue-rotate(165deg) saturate(1.2)';
+const ALT_HUE = 165; // (how far round the colour wheel the second fighter's effects are turned)
 let FX_OWNER = null;
-const CANVAS_FILTER = (() => { try { const c = document.createElement('canvas').getContext('2d'); return !!c && 'filter' in c; } catch (e) { return false; } })();
 const altCache = new Map();
-function altCol(col) { // a particle colour 'r,g,b' turned round the colour wheel (for browsers whose canvas can't filter)
+function altCol(col) { // a particle colour 'r,g,b' turned round the colour wheel, once, when the particle is made (filtering while drawing is far too slow)
   if (typeof col !== 'string' || !/^\d+,\d+,\d+$/.test(col)) return col; if (altCache.has(col)) return altCache.get(col);
   const [r, g, b] = col.split(',').map(Number), a = ALT_HUE * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
   const m = [0.213 + c * 0.787 - s * 0.213, 0.715 - c * 0.715 - s * 0.715, 0.072 - c * 0.072 + s * 0.928, 0.213 - c * 0.213 + s * 0.143, 0.715 + c * 0.285 + s * 0.140, 0.072 - c * 0.072 - s * 0.283, 0.213 - c * 0.213 - s * 0.787, 0.715 - c * 0.715 + s * 0.715, 0.072 + c * 0.928 + s * 0.072];
   const k = v => Math.max(0, Math.min(255, Math.round(v))), out = `${k(m[0] * r + m[1] * g + m[2] * b)},${k(m[3] * r + m[4] * g + m[5] * b)},${k(m[6] * r + m[7] * g + m[8] * b)}`;
   altCache.set(col, out); return out;
 }
-{ const push = parts.push; parts.push = function (...xs) { if (FX_OWNER && FX_OWNER.alt) for (const x of xs) if (x && x.alt == null && !x.text) { x.alt = true; if (!CANVAS_FILTER && x.col) x.col = altCol(x.col); } return push.apply(this, xs); }; } // (words keep their colours)
+{ const push = parts.push; parts.push = function (...xs) { if (FX_OWNER && FX_OWNER.alt) for (const x of xs) if (x && x.alt == null && !x.text) { x.alt = true; if (x.col) x.col = altCol(x.col); } return push.apply(this, xs); }; } // (words keep their colours)
 const other = f => fighters[0] === f ? fighters[1] : fighters[0];
 
 function makeFighter(key, side, ctrl) { return { key, ch: CHARS[key], side, ctrl, wins: 0, meter: 0 }; }
@@ -107,7 +106,7 @@ function startMove(f, mv, str, keepBuffer) {
   if (f.ctrl.consume && !keepBuffer) f.ctrl.consume();
   setState(f, 'attack');
   if (f.y <= 0 && !mv.selfMove) f.vx = 0;
-  if (mv.super) { f.meter = 0; game.superFlash = { f, name: mv.name, t: 45 }; sfx('super');
+  if (mv.super) { f.meter = 0; game.superFlash = { f, name: mv.name, t: SUPER_CUT, max: SUPER_CUT }; sfx('super');
     for (let i = 0; i < 16; i++) { const an = i * Math.PI / 8; parts.push({ type: 'speed', x: f.x + Math.cos(an) * 30, y: GROUND - f.y - 90 + Math.sin(an) * 30, vx: Math.cos(an) * 9, vy: Math.sin(an) * 9, life: 12, max: 12, col: f.ch.fxCol }); } }
   else if (!mv.normal) f.meter = Math.min(100, f.meter + 3); // ...and using techniques
   if (mv.normal) sfx('swing');

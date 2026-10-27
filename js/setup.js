@@ -4,7 +4,7 @@ const W = 960, H = 540, GROUND = 470, WALL_L = 42, WALL_R = 918, G = 0.75, JUMP_
 const HUD = "'Bungee', Impact, 'Arial Black', sans-serif";
 const SMALL = "700 13px 'Rajdhani', 'Segoe UI', system-ui, sans-serif";
 const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
+let ctx = canvas.getContext('2d'); // (swapped for a moment while the second fighter's effects are drawn in another hue: see drawInAltHue)
 let DPR = 1; // backing pixels per game unit; fitCanvas() keeps it matched to the canvas's real on-screen size
 const ov = document.getElementById('overlay');
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -254,7 +254,16 @@ const POSES = {
   airPsyBoth: P(10, 92,90, 86,88, 60,-10, 20,-40),
   airPsyDown: P(30, 60,40, 20,90, 50,-20, 10,-50),
 };
-function lerpPose(a, b, t) { const o = {}; for (const k of PK) o[k] = a[k] + (b[k] - a[k]) * t; return o; }
+const wrap180 = d => ((d % 360) + 540) % 360 - 180;
+const LIMB = [['a1u', 'a1l'], ['a2u', 'a2l'], ['l1u', 'l1l'], ['l2u', 'l2l']];
+// Blending two poses: the torso, upper arms and thighs move straight from one angle to the other (so a big swing keeps its arc);
+// forearms and shins blend by how far the elbow or knee is bent, so they follow the limb instead of spinning round the long way
+function lerpPose(a, b, t) {
+  if (t <= 0) return { ...a }; if (t >= 1) return { ...b };
+  const o = { t: a.t + (b.t - a.t) * t };
+  for (const [u, l] of LIMB) { o[u] = a[u] + (b[u] - a[u]) * t; const ba = wrap180(a[l] - a[u]), bb = wrap180(b[l] - b[u]); o[l] = o[u] + ba + wrap180(bb - ba) * t; }
+  return o;
+}
 function solve(p) {
   const dv = a => [Math.sin(a * RAD), -Math.cos(a * RAD)];
   const td = [Math.sin(p.t * RAD), Math.cos(p.t * RAD)];

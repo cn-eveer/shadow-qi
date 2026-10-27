@@ -4,6 +4,18 @@
 // version.json on the server says which version is live. When the two differ, the player is asked to reload without the
 // browser's cache, or to erase the site's saved data and reload.
 const RELEASES = [ // notes: a string, or { g: 'group', items: [...] } (groups nest)
+  { v: '1.3.10', date: '2026-10-28', notes: [
+    { g: 'システム', items: [
+      '同キャラ対戦や超必殺技で画面が止まる・カクつく問題を修正（2人目のエフェクトの色を軽い方法で変える）',
+      '動きをなめらかに：高リフレッシュレートの画面ではコマの間も描く、腕や脚が一回転しない、構えが固まったままにならない、姿勢が急に飛ばない',
+      'CPU戦で同じキャラを選べることがタイトル画面でも分かるように',
+      'オープニング：全員のコンボが最後まで入る（メイは超必殺技、ライラは霊気の拳で締め、田中は悪魔憑依からのコンボ）',
+    ] },
+    { g: 'キャラクター', items: [
+      { g: 'ライラ', items: ['コンボ見本「落ちる星：霊気の拳で締め」を追加'] },
+      { g: 'カッパ', items: ['大洪水の見本は投げ上げのあと U、U、K で締め'] },
+    ] },
+  ] },
   { v: '1.3.9', date: '2026-10-27', notes: [
     { g: 'システム', items: [
       { g: '超必殺技', items: [

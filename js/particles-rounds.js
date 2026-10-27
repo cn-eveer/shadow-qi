@@ -142,7 +142,7 @@ function updateParts() {
 /* ================= round flow ================= */
 function startMatch(training, watch, demo) {
   initAudio();
-  game.demo = !!demo; game.training = !!training || game.demo; game.watch = !!watch && !game.training; // watch: CPU vs CPU, demo: Kuro sample combos
+  game.demoUpto = null; game.demo = !!demo; game.training = !!training || game.demo; game.watch = !!watch && !game.training; // watch: CPU vs CPU, demo: Kuro sample combos
   const p1 = game.p1Char;
   const p2 = game.demo ? DEMO_VS[p1] : game.p2Char; // sample combos always play against the same partner
   fighters = [makeFighter(p1, 0, game.demo ? new DemoCtrl() : game.watch ? new CPU() : new Human(MAPS.p1)), makeFighter(p2, 1, game.training ? new Dummy() : new CPU())];
@@ -294,6 +294,9 @@ function tick() {
   fightTick();
 }
 function fightTick() {
+  for (const f of fighters) { // how many steps an attacking fighter's pose has stayed exactly the same (hit-stop not counted): drawing keeps a held pose alive, see tweenFighters
+    if (!(game.freeze > 0) && f.tw && f.tw[2] && f.pose) { let d = 0; for (const k of PK) d = Math.max(d, Math.abs(f.pose[k] - f.tw[2][k])); f.stillN = f.state === 'attack' && d < 0.3 ? (f.stillN || 0) + 1 : 0; }
+    f.tw = [f.x, f.y, f.pose, f.hipUp || 0]; } // (where everyone was before this step: drawing blends from here)
   if (!game.superFlash) { FX_OWNER = game.flood ? game.flood.owner : null; floodTick(); FX_OWNER = null; } // (the flood runs on every frame of the fight, hit-stop included; its bubbles and splashes are its kappa's colour)
   if (!game.superFlash) for (const f of fighters) loopGuardTick(f);
   updateParts();

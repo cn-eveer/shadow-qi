@@ -1,8 +1,35 @@
 'use strict';
 /* ================= drawing: projectiles, particles ================= */
-function drawProj(p) { // (the second fighter's projectiles in a mirror match: another hue)
-  if (p.owner && p.owner.alt && CANVAS_FILTER) { ctx.save(); ctx.filter = ALT_FILTER; drawProjBase(p); ctx.restore(); } else drawProjBase(p);
+// Mirror matches: the second fighter's effects are drawn with every colour turned round the colour wheel as it is set
+// (fills, lines, gradients), straight onto the canvas. No canvas filter: a filter makes the browser redraw everything it touches
+// a second time, which froze the game when a super filled the screen; swapping the colours costs next to nothing.
+const altCssCache = new Map();
+function altCss(c) {
+  if (typeof c !== 'string') return c;
+  let v = altCssCache.get(c); if (v !== undefined) return v;
+  let m = /^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*(?:,\s*([\d.]+)\s*)?\)$/.exec(c), rgb = null, a = null;
+  if (m) { rgb = [+m[1], +m[2], +m[3]]; a = m[4]; }
+  else if ((m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(c))) { const h = m[1].length === 3 ? m[1].replace(/./g, x => x + x) : m[1]; rgb = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); }
+  v = rgb ? (a != null ? `rgba(${altCol(rgb.map(Math.round).join(','))},${a})` : `rgb(${altCol(rgb.map(Math.round).join(','))})`) : c;
+  if (altCssCache.size > 4000) altCssCache.clear(); altCssCache.set(c, v); return v;
 }
+const ALT_COLOR_PROPS = new Set(['fillStyle', 'strokeStyle', 'shadowColor']), ALT_GRADIENTS = new Set(['createLinearGradient', 'createRadialGradient', 'createConicGradient']);
+let altCtxOf = null, altCtx = null;
+function altContext(main) { // the canvas, as the second fighter's effects see it: the same, except every colour comes out in another hue
+  if (altCtxOf === main) return altCtx;
+  const bound = new Map(); altCtxOf = main;
+  return altCtx = new Proxy(main, {
+    get(t, k) { const v = t[k]; if (typeof v !== 'function') return v; let fn = bound.get(k);
+      if (!fn) { fn = ALT_GRADIENTS.has(k) ? (...a) => { const g = v.apply(t, a), add = g.addColorStop.bind(g); g.addColorStop = (o, c) => add(o, altCss(c)); return g; } : v.bind(t); bound.set(k, fn); }
+      return fn; },
+    set(t, k, v) { t[k] = ALT_COLOR_PROPS.has(k) ? altCss(v) : v; return true; } });
+}
+function drawInAltHue(draw) { const main = ctx; ctx = altContext(main); try { draw(); } finally { ctx = main; } }
+function drawProjs(list) { // projectiles: the second fighter's (mirror match) together, in another hue
+  let alt = false; for (const p of list) { if (p.owner && p.owner.alt) alt = true; else drawProjBase(p); }
+  if (alt) drawInAltHue(() => { for (const p of list) if (p.owner && p.owner.alt) drawProjBase(p); });
+}
+function drawProj(p) { drawProjs([p]); }
 function drawProjBase(p) {
   if (PJ.has(p.type)) { pjDraw(p); return; }
   if (p.type === 'hwave') { // a standing crescent of light
@@ -137,10 +164,7 @@ function drawProjBase(p) {
 }
 function drawParts() {
   ctx.lineCap = 'round';
-  for (const altPass of [false, true]) { // (two passes: the second fighter's particles last, in another hue)
-  if (altPass) { if (!CANVAS_FILTER || !parts.some(p => p.alt)) break; ctx.save(); ctx.filter = ALT_FILTER; }
-  for (const p of parts) {
-    if (CANVAS_FILTER && !!p.alt !== altPass) continue;
+  for (const p of parts) { // (the second fighter's particles were recoloured when they were made)
     const a = clamp(p.life / p.max, 0, 1);
     if (p.type === 'paper') { p.vy += 0.18; p.vx *= 0.97; p.rot += p.vr; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.scale(1, Math.abs(Math.sin(p.rot * 2)) * 0.8 + 0.2); ctx.globalAlpha = Math.min(1, a * 1.5); ctx.fillStyle = '#f5f5f0'; ctx.fillRect(-6, -8, 12, 16); ctx.fillStyle = '#9aa4b8'; ctx.fillRect(-4, -5, 8, 1); ctx.fillRect(-4, -2, 8, 1); ctx.fillRect(-4, 1, 6, 1); ctx.restore(); continue; } // a sheet of paper fluttering down
     if (p.type === 'crystal') { drawCrystal(p.x, p.y, p.r, Math.min(1, a * 1.4), p.rot); continue; } // a crystal falling onto them
@@ -247,7 +271,6 @@ function drawParts() {
       ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
     }
   }
-  if (altPass) ctx.restore(); }
 }
 
 /* ================= drawing: stage ================= */
@@ -393,9 +416,8 @@ function meterBar(f, x, y, w, h, left) { // MP: violet with stripes running alon
   ctx.fillStyle = '#1a1030'; ctx.fillRect(x, y, w, h);
   const c = full ? ['#ffb020', '#fff3a0'] : f.ch.possess ? f.ch.meterCol : ['#9b3cff', '#ff6ad5'];
   const g = ctx.createLinearGradient(left ? x + w : x, 0, left ? x : x + w, 0); g.addColorStop(0, c[0]); g.addColorStop(1, c[1]);
-  if (full) { ctx.save(); ctx.shadowColor = '#ffd23f'; ctx.shadowBlur = 8 + 6 * Math.sin(globalT * 0.2); }
+  if (full) { const gl = 0.5 + 0.5 * Math.sin(globalT * 0.2); for (const [pad, al] of [[7, 0.12], [3.5, 0.22]]) { ctx.fillStyle = `rgba(255,210,63,${al * (0.6 + 0.4 * gl)})`; ctx.fillRect(fx - pad, y - pad, m + pad * 2, h + pad * 2); } } // (a pulsing glow from two soft layers: a canvas blur here was costly every frame)
   ctx.fillStyle = g; ctx.fillRect(fx, y, m, h);
-  if (full) ctx.restore();
   if (m > 0) { // the stripes run toward the full end; when full, a bright sweep crosses it
     ctx.save(); ctx.beginPath(); ctx.rect(fx, y, m, h); ctx.clip();
     ctx.fillStyle = 'rgba(255,255,255,.22)';
@@ -468,7 +490,7 @@ function drawAnnounce() {
   ctx.restore();
 }
 function drawSuperFX(front) {
-  const sf = game.superFlash, f = sf.f, t = 45 - sf.t;
+  const sf = game.superFlash, f = sf.f, t = (sf.max || 45) - sf.t;
   if (!front) {
     ctx.fillStyle = 'rgba(6,4,16,.62)'; ctx.fillRect(-20, -20, W + 40, H + 40);
     const cy = GROUND - f.y - 70, g = ctx.createRadialGradient(f.x, cy, 10, f.x, cy, 260);
@@ -486,7 +508,7 @@ function drawSuperFX(front) {
   ctx.restore();
 }
 function drawPreview() {
-  const p2 = game.p2Char !== game.p1Char ? game.p2Char : CHAR_ORDER.find(k => k !== game.p1Char);
+  const p2 = game.p2Char, mirror = p2 === game.p1Char; // (the same fighter on both sides: the CPU wears the second palette, as in the match)
   [[game.p1Char, 150, 1], [p2, 810, -1]].forEach(([key, x, fc], i) => {
     const sel = i === 0;
     if (sel) {
@@ -496,7 +518,7 @@ function drawPreview() {
     }
     const p = idlePose(i * 1.7, key);
     drawShadow(x, 0, CHARS[key].scale);
-    drawBody(key, p, x, GROUND, fc, hipFor(p), { aura: sel, alpha: sel ? 1 : 0.7 });
+    drawBody(key, p, x, GROUND, fc, hipFor(p), { aura: sel, alpha: sel ? 1 : 0.7, alt: mirror && i === 1 });
   });
 }
 

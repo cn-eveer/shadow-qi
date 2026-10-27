@@ -254,6 +254,7 @@ function geyser(f, o, x) { // a column of water erupting under them
 // or dash out of the way ('dash').
 const SUPER_DODGE = { qiCannon: 'guard', thousandFists: 'guard', saHeaven: 'guard',
   sdInferno: 'guard', shadowArmy: 'jump', gnHighNoon: 'jump', smDeadline: 'jump', greatSage: 'dash', plJudgement: 'dash' };
+const SUPER_CUT = 45, POSSESS_CUT = 30; // frames the game pauses for a super's cut-in (and a possession's)
 const SUPER_PRE = 16; // the extra wind-up (frames) for the supers that can be jumped or dashed away from
 function superDodgeHint(f) { // as the super freeze ends: how to get away from it, over the one it's aimed at
   const mv = f.move, o = other(f); if (!mv || !mv.dodge || !o) return;
@@ -282,7 +283,8 @@ function floodTick() { if (!game.flood) return; if (--game.flood.t <= 0) { game.
 function drawFlood() { // the whole stage under water: a surface far overhead, light rays, rising bubbles — and a gauge of the time left
   const fl = game.flood; if (!fl || fl.t <= 0) return; const rise = Math.min(1, (FLOOD_T - fl.t) / 30), fade = Math.min(1, fl.t / 30), t = globalT;
   const surf = GROUND - FLOOD_DEPTH * rise; // the water rises from the floor to a little above a jump
-  ctx.save(); ctx.globalAlpha = fade; if (fl.owner && fl.owner.alt && CANVAS_FILTER) ctx.filter = ALT_FILTER; // (the second kappa's flood, in a mirror match, is another colour)
+  if (fl.owner && fl.owner.alt && ctx === canvas.getContext('2d')) { drawInAltHue(drawFlood); return; } // (the second kappa's flood, in a mirror match, is another colour)
+  ctx.save(); ctx.globalAlpha = fade;
   const g = ctx.createLinearGradient(0, surf, 0, GROUND + 70); g.addColorStop(0, 'rgba(110,190,255,.28)'); g.addColorStop(1, 'rgba(20,70,150,.45)'); ctx.fillStyle = g;
   ctx.beginPath(); ctx.moveTo(0, GROUND + 70); for (let x = 0; x <= W; x += 24) ctx.lineTo(x, surf + Math.sin(t * 0.06 + x * 0.025) * 5); ctx.lineTo(W, GROUND + 70); ctx.closePath(); ctx.fill();
   ctx.strokeStyle = 'rgba(235,250,255,.6)'; ctx.lineWidth = 2; ctx.beginPath(); for (let x = 0; x <= W; x += 24) { const y = surf + Math.sin(t * 0.06 + x * 0.025) * 5; x ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke();
