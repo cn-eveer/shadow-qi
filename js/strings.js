@@ -650,7 +650,7 @@ function pjUpdate(p) {
   if (p.delay > 0) { p.delay--; return; } // (Hohen's stones: a frame or two in the air before they can hit, so they're seen even point-blank)
   if (p.n >= p.hits || p.t - p.last < p.interval) return;
   if (p.type === 'puddle' && p.t < 8) return; // (the coffee spreads for a moment before it's slippery: time to see it and crouch)
-  const hu = hurtbox(tgt, true, p.type === 'stone' && !!(p.h && p.h.low)), hb = projBox(p); // (fast ones sweep the stretch they crossed) (a low stone can still hit someone lying on the floor)
+  const hu = hurtbox(tgt, !(p.type === 'stone' && tgt.state === 'knock' && !tgt.juggle), p.type === 'stone' && !!(p.h && p.h.low)), hb = projBox(p); // (Hohen's stones fly over someone knocked down and falling: they can't turn a knockdown back into a juggle) // (fast ones sweep the stretch they crossed) (a low stone can still hit someone lying on the floor)
   if (hu && !p.n && !p.passed && !overlap(hb, hu) && hb.x0 < hu.x1 && hb.x1 > hu.x0 && p.h) { p.passed = true; showHeight(tgt, Math.sign(p.vx) || p.dir, hb, p.h, true); } // (over or under them)
   if (tgt.state === 'attack' && tgt.move && tgt.move.reflectAll && tgt.mf > tgt.move.startup && tgt.mf <= tgt.move.startup + tgt.move.active && !p.reflected) { // the kappa's shell sends it straight back at them
     const fb = { x0: tgt.x - 70, x1: tgt.x + 70, y0: 0, y1: 170 };
