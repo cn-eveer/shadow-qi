@@ -39,6 +39,7 @@ function resetFighter(f) {
     hipUp: null, serial: 0, jumpSerial: 0, guard: 100, guardIdle: 0, lastToward: 0, sideT: -99, calm: 0,
     shadow: false, followQ: null, lastResult: null, shadowRun: false, atkCD: 0, resting: 0, ammo: f.ch.ammo || 0, reloadT: 0,
   });
+  f.golem = f.key === 'alchemist' ? newGolem(f) : null; // (the alchemist's stone golem, standing behind him)
   if (f.ctrl.reset) f.ctrl.reset();
 }
 function setState(f, s) {
@@ -253,6 +254,7 @@ function runMove(f, o, inp) {
 }
 function threatened(f, o) {
   const d = Math.abs(o.x - f.x);
+  if (o.golem && golemThreatening(f, o)) return true; // (the golem is attacking)
   if (o.state === 'attack' && o.move && d < 280 && o.mf <= o.move.startup + o.move.active + 2 && !(o.move.walkAway && o.mf <= o.move.startup)) return true;
   for (const p of projs) if (p.owner === o && !p.dead && (p.type === 'beam' || p.type === 'flame' || (Math.sign(f.x - p.x) === Math.sign(p.vx) && Math.abs(p.x - f.x) < 300))) return true;
   return false;
@@ -285,6 +287,7 @@ function land(f) {
 
 function update(f, o, inp) {
   f.inp = inp; f.st++;
+  if (f.golem) golemUpdate(f, o);
   if (f.brands && --f.brandT <= 0) f.brands = 0; // holy brands fade
   if (f.healT > 0) f.healT--;
   if (f.possT > 0 && --f.possT === 0) endPossession(f);

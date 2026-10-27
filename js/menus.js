@@ -77,11 +77,12 @@ function showMenu() {
       ${pick('kappa', 'Mythic Kappa. Cute, with a dish on his head: claws, water, plate throws and sumo throws.', '幻獣カッパ。頭に皿の可愛いカッパ：爪、水、皿投げ、相撲の投げ。')}
       ${pick('gunman', 'Gunslinger. Two revolvers and a long coat: mid-range shots, jump shots, no kicks.', 'ガンマン。二丁拳銃とロングコート：中距離の射撃、ジャンプショット、足技なし。')}
       ${pick('salary', 'Salaryman. An angel and a devil ride his shoulders, and either can take him over.', 'サラリーマン。両肩の天使と悪魔、どちらかに憑依されて戦う。')}
+      ${pick('alchemist', 'Alchemist. A doctor in a white coat with glowing stones: he points, and his stone golem fights for him.', '錬金術師。白衣に光る石をまとった医師。指示を出し、石のゴーレムを戦わせる。')}
     </div>
     <div class="pickinfo"><span><b>${nm(CHARS[c])}</b> ${blurbs[c]}</span><button class="ghost sm" data-act="moves">${L('Move list', '技表')}</button></div>
     <div class="vsrow">${L('CPU opponent:', 'CPUの相手：')} ${CHAR_ORDER.map(k => `<button class="${game.p2Char === k ? 'on' : ''}" data-vs="${k}" aria-pressed="${game.p2Char === k}">${nm(CHARS[k])}</button>`).join('')}</div>
     <div class="vsrow">${L('Difficulty:', '難易度：')} ${DIFF_ORDER.map(k => `<button class="${game.diff === k ? 'on' : ''}" data-diff="${k}" aria-pressed="${game.diff === k}">${L(...DIFF_NAMES[k])}</button>`).join('')}</div>
-    <div class="row"><button class="go" data-act="start">${L('FIGHT', '対戦')}</button><button class="ghost" data-act="training">${L('Training', 'トレーニング')}</button><button class="ghost" data-act="watch">${L('CPU vs CPU', 'CPU対CPU')}</button><button class="ghost" data-act="online">${L('Online', 'オンライン')}</button><button class="ghost" data-act="opening">${L('Opening', 'オープニング')}</button><button class="ghost" data-act="demo" data-who="${c}">${L(CHARS[c].name[0] + CHARS[c].name.slice(1).toLowerCase() + ' combos', nm(CHARS[c]) + 'のコンボ見本')}</button><button class="ghost" data-act="punish" data-who="${c}">${L(CHARS[c].name[0] + CHARS[c].name.slice(1).toLowerCase() + ' punishes', nm(CHARS[c]) + 'の反撃見本')}</button></div>
+    <div class="row"><button class="go" data-act="start">${L('FIGHT', '対戦')}</button><button class="ghost" data-act="training">${L('Training', 'トレーニング')}</button><button class="ghost" data-act="watch">${L('CPU vs CPU', 'CPU対CPU')}</button><button class="ghost" data-act="online">${L('Online', 'オンライン')}</button><button class="ghost" data-act="opening">${L('Opening', 'オープニング')}</button>${COMBO_SET[c] && COMBO_SET[c].length ? `<button class="ghost" data-act="demo" data-who="${c}">${L(CHARS[c].name[0] + CHARS[c].name.slice(1).toLowerCase() + ' combos', nm(CHARS[c]) + 'のコンボ見本')}</button><button class="ghost" data-act="punish" data-who="${c}">${L(CHARS[c].name[0] + CHARS[c].name.slice(1).toLowerCase() + ' punishes', nm(CHARS[c]) + 'の反撃見本')}</button>` : ''}</div>
     <div class="hint">${L('A and D pick your fighter, W and S pick the opponent. Enter to fight, T for training, C to watch CPU vs CPU, V for your fighter’s sample combos, P for punish samples.', 'A・Dでキャラ選択、W・Sで相手を選択。Enterで対戦、Tでトレーニング、CでCPU対CPU、Vでコンボ見本、Pで反撃見本。')}</div>
     <div class="ver"><button class="vlink" data-act="news">v${APP_VERSION} · ${L('What’s new', '更新情報')}</button></div>
   </div>`;
@@ -180,8 +181,8 @@ window.addEventListener('keydown', e => {
     else if (e.code === 'Enter') { e.preventDefault(); startMatch(false, false); }
     else if (e.code === 'KeyT') startMatch(true);
     else if (e.code === 'KeyC') startMatch(false, true);
-    else if (e.code === 'KeyV') { game.demoSet = 'combos'; startMatch(true, false, true); }
-    else if (e.code === 'KeyP') { game.demoSet = 'punish'; startMatch(true, false, true); }
+    else if (e.code === 'KeyV' && COMBO_SET[game.p1Char].length) { game.demoSet = 'combos'; startMatch(true, false, true); }
+    else if (e.code === 'KeyP' && PUNISH_SET[game.p1Char].length) { game.demoSet = 'punish'; startMatch(true, false, true); }
   } else if (game.mode === 'result') {
     if (game.online) { // online: Enter asks for a rematch, Esc leaves
       if (e.code === 'Enter') { e.preventDefault(); netAskRematch(); }
@@ -235,7 +236,7 @@ function applyLang() { // header, drawer, tabs and which language of the command
   const tagEl = document.getElementById('tagline');
   tagEl.textContent = IS_MOBILE ? L('Eight fighters. Touch controls: the pad on the left, U I J K on the right.', '8人のファイター。タッチ操作：左のパッドで移動、右のU・I・J・Kで攻撃。') : L('Eight fighters. CPU battles on four difficulties, training, sample combos and online battles. Keyboard required.', '8人のファイター。4段階の難易度のCPU戦、トレーニング、コンボ見本、オンライン対戦。キーボードで操作します。');
   tagEl.title = tagEl.textContent; // (the whole line on hover, when it's shortened)
-  const tabNames = { ctl: ['Controls', '操作'], ninja: ['Kuro', 'クロ'], brawler: ['Tetsu', 'テツ'], staff: ['Mei', 'メイ'], psychic: ['Lyra', 'ライラ'], paladin: ['Aldric', 'アルドリック'], kappa: ['Kappa', 'カッパ'], gunman: ['Jesse', 'ジェシー'], salary: ['Tanaka', '田中'] };
+  const tabNames = { ctl: ['Controls', '操作'], ninja: ['Kuro', 'クロ'], brawler: ['Tetsu', 'テツ'], staff: ['Mei', 'メイ'], psychic: ['Lyra', 'ライラ'], paladin: ['Aldric', 'アルドリック'], kappa: ['Kappa', 'カッパ'], alchemist: ['Alchemist', '錬金術師'], gunman: ['Jesse', 'ジェシー'], salary: ['Tanaka', '田中'] };
   drawer.querySelectorAll('.tabs button').forEach(b => { b.textContent = L(...tabNames[b.dataset.tab]); b.classList.toggle('on', b.dataset.tab === drawerTab); b.setAttribute('aria-selected', String(b.dataset.tab === drawerTab)); });
   drawer.querySelectorAll('article.card').forEach(a => { a.hidden = !(a.dataset.tab === drawerTab && a.dataset.lang === game.lang); });
 }

@@ -51,7 +51,7 @@ function threatOfLowDummy() {}
 const isLowAtk = o => !!(o && o.state === 'attack' && o.move && (o.move.hitbox ? heightClass(o.move, boxOf(o, o.move.hitbox)) === 'low' : (!fromAbove(o.move) && (o.move.low || (!rising(o.move) && /low|Low|slide|Sweep|sweep|Belly/.test(o.move.pose || '')))))) ||
   projs.some(p => p.owner === o && p.type !== 'decoy' && p.type !== 'guardShadow' && (p.h ? heightClass(p.h, projBox(p)) : (p.low && !fromAbove(p) ? 'low' : 'mid')) === 'low'); // (a shockwave along the floor, a shot at the feet...; a ring that rises into a column isn't)
 function threatOf(f, o) {
-  const dist = Math.abs(o.x - f.x);
+  const dist = Math.abs(o.x - f.x), gt = golemThreat(f, o); if (gt) return gt; // (the golem's blow)
   if (o.state === 'attack' && o.move && o.move.hitbox && o.mf <= o.move.startup + o.move.active && dist < 210)
     return { key: 'm' + o.serial, kind: o.y > 0 ? 'air' : o.move.high ? 'high' : isLowAtk(o) ? 'low' : 'mid' };
   if (o.state === 'jump' && dist < 200 && o.vx !== 0 && Math.sign(o.vx) === Math.sign(f.x - o.x))
@@ -85,7 +85,7 @@ class CPU {
   }
   think(f, frame, o) {
     const out = { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false };
-    const dx = o.x - f.x, dist = Math.abs(dx), fwd = Math.sign(dx) || f.facing, N = f.key === 'ninja';
+    const dx = o.x - f.x, dist = Math.abs(dx), fwd = Math.sign(dx) || f.facing, N = f.key === 'ninja', gdir = golemGuardDir(f, o) || fwd; // (gdir: which way to guard — toward the golem when it is the one attacking, else toward the alchemist)
     if (f.state === 'down' && !f.ko) { // roll away or get up
       if (this.wakeFor !== f.kdSerial) { this.wakeFor = f.kdSerial; const r = Math.random(); this.wakeRoll = r < 0.3 ? -fwd : r < 0.42 ? fwd : 0; this.wakeAtk = Math.random() < 0.3; }
       if (this.wakeRoll && f.st >= 20) out.tap = this.wakeRoll;
@@ -166,7 +166,7 @@ class CPU {
     // like a player, it keeps holding guard as it comes out of a hit while they're still pressing (so a string can't just be restarted on it)
     if (f.state === 'hitstun' || f.state === 'blockstun') { if (!this.holdDecided) { this.holdDecided = true; this.holdGuard = Math.random() < (game.watch ? 0.6 : dif().block); } this.holdUntil = frame + 14; }
     else this.holdDecided = false;
-    if (canAct && this.holdGuard && frame < this.holdUntil && dist < 170 && (o.state === 'attack' || o.atkCD > 0)) { out.h = -fwd; if (isLowAtk(o)) out.down = true; return out; }
+    if (canAct && this.holdGuard && frame < this.holdUntil && dist < 170 && (o.state === 'attack' || o.atkCD > 0)) { out.h = -gdir; if (isLowAtk(o)) out.down = true; return out; }
     if (canAct && f.atkCD <= 0 && o.state === 'attack' && o.move && o.y <= 0 && this.routeReact !== o.serial && dist < 150) {
       this.routeReact = o.serial;
       const early = o.mf <= Math.min(3, o.move.startup);
@@ -196,7 +196,7 @@ class CPU {
     } else { this.threatKey = null; this.def = null; }
     const free = f.state === 'stand' || f.state === 'crouch' || f.state === 'guard' || f.state === 'blockstun' || f.state === 'charge' || f.state === 'recover';
     if (th && this.def && frame >= this.reactAt && free) {
-      if (this.def === 'block') { out.h = -fwd; if (th.kind === 'low' || isLowAtk(o)) out.down = true; return out; } // (crouching for a low)
+      if (this.def === 'block') { out.h = -gdir; if (th.kind === 'low' || isLowAtk(o)) out.down = true; return out; } // (crouching for a low)
       if (this.def === 'duck') { // duck under a punch, then kick low
         out.down = true;
         if (!this.duckHit && o.mf > o.move.startup + o.move.active) { this.duckHit = true; out.btn = 'lk'; }
@@ -220,7 +220,7 @@ class CPU {
       this.wakeWait = o.kdSerial; if (dist < 90) out.h = -fwd * 0.5; return out; }
     if (actionable && this.wakeWait != null && o.state === 'stand' && !(o.wakeT > 0)) { // the moment they're hittable again: press in (or keep guarding)
       this.wakeWait = null; if (dist < 115 && Math.random() < (game.watch ? 0.7 : 0.55)) { out.btn = 'lp'; return out; } }
-    if (actionable && !th && o.state === 'attack' && o.move && dist < 140 && o.mf <= o.move.startup && Math.random() < 0.5) { out.h = -fwd; if (isLowAtk(o)) out.down = true; return out; } // they're starting something nearby: guard first
+    if (actionable && !th && o.state === 'attack' && o.move && dist < 140 && o.mf <= o.move.startup && Math.random() < 0.5) { out.h = -gdir; if (isLowAtk(o)) out.down = true; return out; } // they're starting something nearby: guard first
     if (actionable && !th && o.state === 'attack' && o.move && o.move.normal && !o.move.air && o.mf > o.move.startup + o.move.active && dist < 105 && this.punishKey !== o.serial) {
       this.punishKey = o.serial;
       if (Math.random() < (game.watch ? 0.65 : dif().punish)) { out.btn = dist < 82 ? 'lp' : 'lk'; this.chargeUntil = 0; return out; }

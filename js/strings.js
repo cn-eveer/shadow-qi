@@ -617,7 +617,7 @@ function projBox(p) {
   return { x0: Math.min(p.x, p.x - back) - p.r, x1: Math.max(p.x, p.x - back) + p.r, y0: p.y - p.r, y1: p.y + p.r };
 }
 // simple projectiles (plates, water, bubbles, bullets, dynamite, business cards, feathers, halos, hellfire)
-const PJ = new Set(['puddle', 'skidcase', 'brimstone', 'pen', 'stapler', 'mug', 'plate', 'dish', 'crescent', 'water', 'bubble', 'bullet', 'dyna', 'card', 'feather', 'haloP', 'hellfire']);
+const PJ = new Set(['puddle', 'skidcase', 'brimstone', 'pen', 'stapler', 'mug', 'plate', 'dish', 'crescent', 'water', 'bubble', 'bullet', 'dyna', 'card', 'feather', 'haloP', 'hellfire', 'stone']);
 function spawnPJ(f, type, o) {
   const p = Object.assign({ id: ++serial, type, owner: f, dir: f.facing, x: f.x + f.facing * 60, y: 100, vx: f.facing * 10, vy: 0, g: 0, life: 60, r: 14, hits: 1, interval: 8, n: 0, last: -99, t: 0, spin: 0 }, o);
   projs.push(p); return p;
@@ -690,6 +690,7 @@ function pjDraw(p) {
     case 'brimstone': { ctx.globalCompositeOperation = 'lighter'; const d = Math.sign(p.vx || 1); for (let i = 0; i < 6; i++) { const fl = 14 + 12 * Math.sin(globalT * 0.5 + i * 1.3); ctx.fillStyle = `rgba(255,${70 + i * 25},${30 + i * 8},${0.75 - i * 0.1})`; ctx.beginPath(); ctx.moveTo(-i * 9 * d - 8, 0); ctx.quadraticCurveTo(-i * 9 * d, -fl * 1.6, -i * 9 * d + 8, 0); ctx.closePath(); ctx.fill(); } // tongues of hellfire racing along the floor
       ctx.strokeStyle = 'rgba(255,60,20,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, 2); for (let i = 1; i < 8; i++) ctx.lineTo(-i * 12 * d, 2 + (i % 2 ? -3 : 3)); ctx.stroke(); break; } // the crack it tears in the floor
     case 'pen': ctx.rotate(Math.atan2(-p.vy, p.vx)); ctx.fillStyle = '#2b4c9a'; ctx.fillRect(-12, -2.5, 20, 5); ctx.fillStyle = '#d8d8d8'; ctx.fillRect(8, -2, 5, 4); ctx.fillStyle = '#1a1a1a'; ctx.fillRect(12, -1, 3, 2); break; // a ballpoint pen
+    case 'stone': ctx.rotate(p.spin); ctx.fillStyle = '#8b6a47'; ctx.strokeStyle = '#4a3523'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(-10, -4); ctx.lineTo(-3, -11); ctx.lineTo(9, -7); ctx.lineTo(11, 5); ctx.lineTo(0, 11); ctx.lineTo(-9, 7); ctx.closePath(); ctx.fill(); ctx.stroke(); break; // a thrown stone
     case 'stapler': ctx.rotate(p.spin * 1.2); ctx.fillStyle = '#c0392b'; ctx.fillRect(-13, -5, 26, 6); ctx.fillStyle = '#3a3a42'; ctx.fillRect(-13, 1, 26, 4); break; // the office stapler, spinning
     case 'mug': ctx.rotate(p.spin * 0.8); ctx.fillStyle = '#f4f1ea'; ctx.fillRect(-8, -9, 16, 18); ctx.strokeStyle = '#f4f1ea'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(10, 0, 5, -1.2, 1.2); ctx.stroke(); ctx.fillStyle = '#6b3e1f'; ctx.fillRect(-7, -9, 14, 3); break; // his coffee mug
     case 'card': ctx.rotate(p.spin * 1.5); ctx.fillStyle = '#ffffff'; ctx.fillRect(-11, -6, 22, 12); ctx.fillStyle = '#2f3542'; ctx.fillRect(-7, -3, 9, 2); ctx.fillRect(-7, 1, 13, 1.5); break;
