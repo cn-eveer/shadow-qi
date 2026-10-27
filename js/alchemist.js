@@ -214,8 +214,10 @@ function bedrockBurst(f, o) { // the end of the Bedrock Stride: his stone skin b
   if (id === 'afjShoulder') return pdef('Stone Arm', { startup: 6, active: 2, recovery: 18, wind: 'alBrace', pose: 'alThrowLow', // (in a juggle) the stone arm bursts up under them
     onFrame: (f, o, mf) => { f.vx = 0; if (mf !== 6) return; const x = clamp(o.x, WALL_L + 20, WALL_R - 20); erupt(f, x, Math.min(300, o.y + 130), 34); rockHit(f, o, x, 46, o.y + 160, { dmg: 55, stun: 20, bstun: 12, push: 3, kd: true, kdVx: 15, kdVy: 9, hitstop: 13, juggle: true, label: 'Stone Arm' }); } });
   // ...and their juggle versions (on someone launched), like Tetsu's
-  if (id === 'afjGeyser') return fused('jGeyser', { label: 'Core Geyser', wind: 'alOpus', pose: 'alThrowLow', fireCol: null, // core light bursts up out of the floor under them, again and again
-    onFrame: (f, o, mf) => { if (mf === 5) { sfx('flame'); dustAt(o.x, true); } if (mf > 5 && mf <= 21) for (let i = 0; i < 2; i++) parts.push({ type: 'spark', x: o.x + rnd(-22, 22), y: GROUND - rnd(0, 30), vx: rnd(-1, 1), vy: rnd(6, 11), life: 14, max: 14, col: i ? '255,210,130' : '170,130,80' }); } });
+  if (id === 'afjGeyser') return pdef('Core Geyser', { startup: 5, active: 16, recovery: 16, wind: 'alOpus', pose: 'alThrowLow', // core light bursts up out of the floor under them, again and again; the last burst lifts them (wherever they are)
+    onFrame: (f, o, mf) => { f.vx = 0; if (mf === 5) { sfx('flame'); dustAt(o.x, true); } if (mf > 5 && mf <= 21) for (let i = 0; i < 2; i++) parts.push({ type: 'spark', x: o.x + rnd(-22, 22), y: GROUND - rnd(0, 30), vx: rnd(-1, 1), vy: rnd(6, 11), life: 14, max: 14, col: i ? '255,210,130' : '170,130,80' });
+      const i = [6, 10, 14, 18].indexOf(mf); if (i < 0 || Math.abs(o.x - f.x) > 380) return; const last = i === 3;
+      rockHit(f, o, o.x, 34, 320, { dmg: last ? 30 : 15, stun: 18, bstun: 8, push: 0.2, hitstop: last ? 8 : 4, juggle: true, jugVy: last ? 10.5 : 6.5, fixedLift: true, gdrain: 4, label: 'Core Geyser' }); } });
   if (id === 'afjSpiral') return fused('jSpiral', { label: 'Stone Spiral', wind: 'alOpus', pose: 'alThrowLow', // stones burst up out of the floor through them, one after another
     onFrame: (f, o, mf) => { if (mf >= 6 && mf <= 21 && (mf - 6) % 5 === 0) { const i = (mf - 6) / 5; spawnPJ(f, 'stone', { dir: f.facing, x: o.x + (i % 2 ? 14 : -14), y: 4, vx: 0, vy: 13, life: 26, r: 13, glow: ['110,255,220', '255,190,80', '150,170,255', '255,230,120'][i],
       h: { dmg: i === 3 ? 26 : 15, stun: 18, bstun: 10, push: 0.3, hitstop: 4, juggle: true, jugVy: i === 3 ? 9 : 6.5, fixedLift: true, chip: true, label: 'Stone Spiral' } }); sfx('throw'); } } });
@@ -745,9 +747,9 @@ const ALCHEMIST_DEMOS = [
   { name: '13. Armour, close (long): lift, lift, bounce', tail: 'pillar spike, stone lift, pillar upper, boulder crash, stone lift, overhand smash, core burst', ax: 400, bx: 470, armored: true, cpu: { min: 30, max: 90, fused: true },
     note: 'The most a combo allows, in the armour: ↓ + I: Pillar Spike (lift 1), U, I: pillar upper (lift 2), → → + I: Boulder Crash (bounce), U, U, K.',
     steps: [S('↓ + I', 'start', { btn: 'hp', down: true }), S('U', 'air', { btn: 'lp' }), S('I', 'chain', { btn: 'hp' }), S('→ → + I', 'cancel', { btn: 'hp', ff: true }), S('U', 'air', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
-  { name: '14. Armour, mid range (quick): rubble wave, boulder crash', tail: 'rubble wave, boulder crash, core burst', ax: 280, bx: 460, armored: true, cpu: { min: 140, max: 220, fused: true },
-    note: '→ → + J: a low surge of rubble scoops them up. → → + I: a boulder drops out of the sky onto them (the bounce). K: a burst of core light from his belly.',
-    steps: [S('→ → + J', 'start', { btn: 'lk', ff: true }), S('→ → + I', 'air', { btn: 'hp', ff: true, noChase: true }), S('K', 'air', { btn: 'hk' })] },
+  { name: '14. Armour, mid range (quick): rubble wave, boulder crash', tail: 'rubble wave, boulder crash, stone arm', ax: 280, bx: 460, armored: true, cpu: { min: 140, max: 220, fused: true },
+    note: '→ → + J: a low surge of rubble scoops them up. → → + I: a boulder drops out of the sky onto them (the bounce). → → + K: the stone arm bursts up under them as they come down.',
+    steps: [S('→ → + J', 'start', { btn: 'lk', ff: true }), S('→ → + I', 'air', { btn: 'hp', ff: true, noChase: true }), S('→ → + K', 'air', { btn: 'hk', ff: true, noChase: true })] },
   { name: '15. Armour, mid range (long): rubble wave, crash, geyser', tail: 'rubble wave, stone lift, boulder crash, stone lift, core geyser, overhand smash, core burst', ax: 280, bx: 460, armored: true, cpu: { min: 140, max: 220, fused: true },
     note: '→ → + J scoops them up (lift 1). U, then → → + I: Boulder Crash (bounce). U, then → → + U: core light erupts under them (lift 2). U, K.',
     steps: [S('→ → + J', 'start', { btn: 'lk', ff: true }), S('U', 'air', { btn: 'lp' }), S('→ → + I', 'cancel', { btn: 'hp', ff: true }), S('U', 'air', { btn: 'lp' }), S('→ → + U', 'cancel', { btn: 'lp', ff: true }), S('U', 'air', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
@@ -797,7 +799,7 @@ Object.assign(JA_DEMO, {
   '11. Bedrock Stride through a jab': { n: '11. 岩肌の行進でジャブを受け止める', tail: '石の肌でジャブを受け、炸裂、倒れた相手に下段の石', note: '←←+K：肌が石になって前進する——相手のジャブは当たるが止まらない（アーマー）——そして周囲に炸裂してダウン。↓+J：倒れた相手に下段の石。' },
   '12. Armour, close (quick): fists into the Stone Arm': { n: '12. アーマー・近距離（短）：拳からストーンアーム', tail: '石のジャブ、ストレート、ストーンアーム', note: 'アーマーで接近戦。U、U、そして→→+K：床から巨大な石の腕が突き出し、殴り飛ばす。' },
   '13. Armour, close (long): lift, lift, bounce': { n: '13. アーマー・近距離（長）：浮かせ、浮かせ、バウンド', tail: 'ピラースパイク、石の持ち上げ、石柱アッパー、ボルダークラッシュ、石の持ち上げ、振り下ろし、コアバースト', note: 'アーマー中のコンボ上限：↓+I：ピラースパイク（浮かせ1）、U、I：石柱アッパー（浮かせ2）、→→+I：ボルダークラッシュ（バウンド）、U、U、K。' },
-  '14. Armour, mid range (quick): rubble wave, boulder crash': { n: '14. アーマー・中距離（短）：ラブルウェーブ、ボルダークラッシュ', tail: 'ラブルウェーブ、ボルダークラッシュ、コアバースト', note: '→→+J：低く押し寄せる瓦礫がすくい上げる。→→+I：空から大岩が落ちてくる（バウンド）。K：腹のコアから光の炸裂。' },
+  '14. Armour, mid range (quick): rubble wave, boulder crash': { n: '14. アーマー・中距離（短）：ラブルウェーブ、ボルダークラッシュ', tail: 'ラブルウェーブ、ボルダークラッシュ、ストーンアーム', note: '→→+J：低く押し寄せる瓦礫がすくい上げる。→→+I：空から大岩が落ちてくる（バウンド）。→→+K：落ちてくる相手の真下から石の腕が突き出す。' },
   '15. Armour, mid range (long): rubble wave, crash, geyser': { n: '15. アーマー・中距離（長）：瓦礫、大岩、ガイザー', tail: 'ラブルウェーブ、石の持ち上げ、ボルダークラッシュ、石の持ち上げ、コアガイザー、振り下ろし、コアバースト', note: '→→+Jですくい上げ（浮かせ1）。U、→→+I：ボルダークラッシュ（バウンド）。U、→→+U：足元からコアの光が噴き上がる（浮かせ2）。U、K。' },
   '16. Armour, far (quick): boulder toss, stone spiral': { n: '16. アーマー・遠距離（短）：ボルダートス、ストーンスパイラル', tail: 'ボルダートス、ストーンスパイラル', note: '画面の端から。→→+I：大岩を弧を描いて投げ、落ちてバウンドさせる。←←+U：床から石が次々と突き上がる。' },
   '17. Armour, far (long): the stone does the work': { n: '17. アーマー・遠距離（長）：石にまかせる', tail: 'ボルダートス、ストーンスパイラル、コアガイザー、ストーンアーム', note: '博士は一歩も詰めない。→→+I：ボルダートスでバウンド。←←+U：床から石が次々と突き上がる。→→+U：足元からコアの光が噴き上がる（浮かせ）。→→+K：相手の真下から石の腕が突き出して吹き飛ばす。' },
