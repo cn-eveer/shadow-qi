@@ -171,7 +171,7 @@ function endMove(f) {
   if (mv && mv.normal && mv.str === 1 && !mv.launch) f.atkCD = f.ch.atkCD || 14; // heavy attacks: a short wait before the next attack (not after a launcher, so you can juggle)
   if (mv && !mv.air && !mv.jug) {
     if (mv.chainDepth) restAfter(f, STRING_REST, true);
-    else if (mv.normal && mv.str === 0 && (reeling(other(f)) || projs.some(p => p.owner === f && !p.dead))) restAfter(f, JAB_REST, false);
+    else if (mv.normal && mv.str === 0 && !f.golem && (reeling(other(f)) || projs.some(p => p.owner === f && !p.dead))) restAfter(f, JAB_REST, false);
   }
   if (f.y > 0) { setState(f, 'jump'); f.airAttacked = !(mv && mv.airFollow); } // Air Cyclone leaves him free to attack in the air
   else setState(f, (mv && mv.crouch && f.inp.down) ? 'crouch' : 'stand');

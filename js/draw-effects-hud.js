@@ -389,12 +389,21 @@ function healthBar(f, x, left) {
   const nw = ctx.measureText(nm(f.ch)).width;
   ctx.font = SMALL; ctx.fillStyle = 'rgba(255,255,255,.78)';
   ctx.fillText(game.online ? (f.netName || '') + (f.side === NET.side ? L(' (you)', '（あなた）') : '') : game.watch ? 'CPU ' + (f.side + 1) : game.demo ? (f.side === 0 ? L('DEMO', '見本') : L('DUMMY', 'ダミー')) : f.side === 0 ? L('YOU', 'あなた') : (game.training ? L('DUMMY', 'ダミー') : 'CPU'), left ? x + nw + 8 : x + w - nw - 8, ny + 4);
-  if (f.ch.ammo) ammoRow(f, left ? x + w - 52 : x + 52, ny + 9, left);
+  if (f.ch.ammo) (f.ch.ammo === 6 && f.key === 'alchemist' ? stoneRow : ammoRow)(f, left ? x + w - 52 : x + 52, ny + 9, left);
   for (let i = 0; i < (game.training ? 0 : 2); i++) {
     const cx = left ? x + w - 10 - i * 20 : x + 10 + i * 20;
     ctx.beginPath(); ctx.arc(cx, ny + 9, 6.5, 0, Math.PI * 2);
     ctx.fillStyle = f.wins > i ? '#ffd23f' : 'rgba(255,255,255,.16)'; ctx.fill();
     ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 1.5; ctx.stroke();
+  }
+}
+function stoneRow(f, x, y, left) { // the alchemist's stones: glowing while he has them; the next one fills in as it comes back
+  const n = f.ch.ammo, gap = 11, cols = ['110,255,220', '255,190,80', '150,170,255', '255,120,120', '120,255,160', '255,230,120'];
+  for (let i = 0; i < n; i++) {
+    const cx = left ? x - i * gap : x + i * gap, live = i < f.ammo, next = i === f.ammo, k = next ? (f.stoneT || 0) / STONE_REGEN : 0;
+    if (live) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(cx, y, 0.5, cx, y, 7); g.addColorStop(0, `rgba(${cols[i]},.95)`); g.addColorStop(1, `rgba(${cols[i]},0)`); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, y, 7, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+    ctx.beginPath(); ctx.moveTo(cx - 4, y + 1); ctx.lineTo(cx - 2, y - 4); ctx.lineTo(cx + 3, y - 4.5); ctx.lineTo(cx + 5, y); ctx.lineTo(cx + 3, y + 4); ctx.lineTo(cx - 3, y + 4.5); ctx.closePath();
+    ctx.fillStyle = live ? '#a98152' : next ? `rgba(169,129,82,${0.2 + 0.5 * k})` : 'rgba(0,0,0,.35)'; ctx.fill(); ctx.strokeStyle = live ? 'rgba(74,53,35,.95)' : 'rgba(255,255,255,.3)'; ctx.lineWidth = 1; ctx.stroke();
   }
 }
 function ammoRow(f, x, y, left) { // Jesse's bullets, beside the round markers: brass while loaded; reloading, they fill back in grey and turn brass together

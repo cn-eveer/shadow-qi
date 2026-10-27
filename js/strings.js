@@ -617,7 +617,7 @@ function projBox(p) {
   return { x0: Math.min(p.x, p.x - back) - p.r, x1: Math.max(p.x, p.x - back) + p.r, y0: p.y - p.r, y1: p.y + p.r };
 }
 // simple projectiles (plates, water, bubbles, bullets, dynamite, business cards, feathers, halos, hellfire)
-const PJ = new Set(['puddle', 'skidcase', 'brimstone', 'pen', 'stapler', 'mug', 'plate', 'dish', 'crescent', 'water', 'bubble', 'bullet', 'dyna', 'card', 'feather', 'haloP', 'hellfire', 'stone']);
+const PJ = new Set(['puddle', 'skidcase', 'brimstone', 'pen', 'stapler', 'mug', 'plate', 'dish', 'crescent', 'water', 'bubble', 'bullet', 'dyna', 'card', 'feather', 'haloP', 'hellfire', 'stone', 'core', 'trap']);
 function spawnPJ(f, type, o) {
   const p = Object.assign({ id: ++serial, type, owner: f, dir: f.facing, x: f.x + f.facing * 60, y: 100, vx: f.facing * 10, vy: 0, g: 0, life: 60, r: 14, hits: 1, interval: 8, n: 0, last: -99, t: 0, spin: 0 }, o);
   projs.push(p); return p;
@@ -631,6 +631,7 @@ function pjExplode(p) { // dynamite and water bubbles burst, hitting anyone clos
   if (hu && overlap(hb, hu)) applyHit(own, tgt, { type: 'mid', chip: true, proj: true, str: 1, hitstop: 8, ...e.h }, Math.sign(tgt.x - p.x) || p.dir, hb, hu);
 }
 function pjUpdate(p) {
+  if (p.type === 'trap') { trapUpdate(p); return; } // (the alchemist's trap stones)
   const own = p.owner, tgt = other(own);
   p.life--; p.spin += 0.35;
   if (p.boomerang && p.t > p.boomerang) { // a thrown plate curves back to its owner
@@ -690,6 +691,12 @@ function pjDraw(p) {
     case 'brimstone': { ctx.globalCompositeOperation = 'lighter'; const d = Math.sign(p.vx || 1); for (let i = 0; i < 6; i++) { const fl = 14 + 12 * Math.sin(globalT * 0.5 + i * 1.3); ctx.fillStyle = `rgba(255,${70 + i * 25},${30 + i * 8},${0.75 - i * 0.1})`; ctx.beginPath(); ctx.moveTo(-i * 9 * d - 8, 0); ctx.quadraticCurveTo(-i * 9 * d, -fl * 1.6, -i * 9 * d + 8, 0); ctx.closePath(); ctx.fill(); } // tongues of hellfire racing along the floor
       ctx.strokeStyle = 'rgba(255,60,20,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, 2); for (let i = 1; i < 8; i++) ctx.lineTo(-i * 12 * d, 2 + (i % 2 ? -3 : 3)); ctx.stroke(); break; } // the crack it tears in the floor
     case 'pen': ctx.rotate(Math.atan2(-p.vy, p.vx)); ctx.fillStyle = '#2b4c9a'; ctx.fillRect(-12, -2.5, 20, 5); ctx.fillStyle = '#d8d8d8'; ctx.fillRect(8, -2, 5, 4); ctx.fillStyle = '#1a1a1a'; ctx.fillRect(12, -1, 3, 2); break; // a ballpoint pen
+    case 'trap': { const pu = 0.7 + 0.3 * Math.sin(p.t * (p.life < 90 ? 0.6 : 0.18)), c = p.glow; ctx.globalCompositeOperation = 'lighter';
+      ctx.strokeStyle = `rgba(${c},${0.45 * pu})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 12, 34 + 4 * pu, 8, 0, 0, Math.PI * 2); ctx.stroke(); // a glowing ring on the floor
+      const gg = ctx.createRadialGradient(0, 0, 2, 0, 0, 38 * pu + 10); gg.addColorStop(0, `rgba(${c},.9)`); gg.addColorStop(1, `rgba(${c},0)`); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(0, 0, 38 * pu + 10, 0, Math.PI * 2); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = '#8b6a47'; ctx.strokeStyle = '#4a3523'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(-11, 8); ctx.lineTo(-7, -9); ctx.lineTo(5, -12); ctx.lineTo(12, 2); ctx.lineTo(8, 10); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(${c},${0.85 * pu})`; ctx.beginPath(); ctx.arc(0, -1, 5, 0, Math.PI * 2); ctx.fill(); break; } // a trap stone, glowing
+    case 'core': { const d = Math.sign(p.vx) || 1; ctx.globalCompositeOperation = 'lighter'; ctx.scale(d, 1); const tr = ctx.createLinearGradient(-110, 0, 0, 0); tr.addColorStop(0, 'rgba(255,150,40,0)'); tr.addColorStop(1, 'rgba(255,200,90,.9)'); ctx.fillStyle = tr; ctx.beginPath(); ctx.moveTo(-110, 0); ctx.lineTo(0, -15); ctx.lineTo(14, 0); ctx.lineTo(0, 15); ctx.closePath(); ctx.fill();
+      const gc = ctx.createRadialGradient(0, 0, 2, 0, 0, 30 + Math.sin(p.t * 0.8) * 3); gc.addColorStop(0, 'rgba(255,255,230,1)'); gc.addColorStop(0.35, 'rgba(255,210,100,.9)'); gc.addColorStop(1, 'rgba(255,130,30,0)'); ctx.fillStyle = gc; ctx.beginPath(); ctx.arc(0, 0, 32, 0, Math.PI * 2); ctx.fill(); break; } // the golem's core blast
     case 'stone': ctx.rotate(p.spin); ctx.fillStyle = '#8b6a47'; ctx.strokeStyle = '#4a3523'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(-10, -4); ctx.lineTo(-3, -11); ctx.lineTo(9, -7); ctx.lineTo(11, 5); ctx.lineTo(0, 11); ctx.lineTo(-9, 7); ctx.closePath(); ctx.fill(); ctx.stroke(); if (p.glow) { ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(0, 0, 1, 0, 0, 24); gg.addColorStop(0, `rgba(${p.glow},.95)`); gg.addColorStop(1, `rgba(${p.glow},0)`); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(0, 0, 24, 0, Math.PI * 2); ctx.fill(); } break; // a thrown stone (his own are glowing)
     case 'stapler': ctx.rotate(p.spin * 1.2); ctx.fillStyle = '#c0392b'; ctx.fillRect(-13, -5, 26, 6); ctx.fillStyle = '#3a3a42'; ctx.fillRect(-13, 1, 26, 4); break; // the office stapler, spinning
     case 'mug': ctx.rotate(p.spin * 0.8); ctx.fillStyle = '#f4f1ea'; ctx.fillRect(-8, -9, 16, 18); ctx.strokeStyle = '#f4f1ea'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(10, 0, 5, -1.2, 1.2); ctx.stroke(); ctx.fillStyle = '#6b3e1f'; ctx.fillRect(-7, -9, 14, 3); break; // his coffee mug
