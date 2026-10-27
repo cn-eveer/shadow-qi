@@ -67,7 +67,7 @@ function golemUpdate(f, o) {
     if (a.t <= A.su && dist > 70 && A.reach) { g.x += dir * 1.6; g.spd = 1.6; }
     if (A.reach) {
       if (a.t > A.su && a.t <= A.su + A.ac && !a.hit) {
-        const x0 = g.x + g.facing * A.reach[0], x1 = g.x + g.facing * A.reach[1], hb = { x0: Math.min(x0, x1), x1: Math.max(x0, x1), y0: A.y[0] + g.y, y1: A.y[1] + g.y }, hu = hurtbox(o, false, false);
+        const x0 = g.x + g.facing * A.reach[0], x1 = g.x + g.facing * A.reach[1], hb = { x0: Math.min(x0, x1), x1: Math.max(x0, x1), y0: A.y[0] + g.y, y1: A.y[1] + g.y }, hu = hurtbox(o, false, !!A.h.low); // (a low punch reaches someone lying on the floor too)
         if (hu && overlap(hb, hu)) { const res = golemHit(f, o, { type: 'mid', chip: false, proj: false, gbstun: 45, ...A.h }, hb, hu); if (res) a.hit = true; }
       }
     }

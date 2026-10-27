@@ -648,7 +648,7 @@ function pjUpdate(p) {
   if ((p.g && p.y <= 0) || p.life <= 0 || p.x < -60 || p.x > W + 60) { if (p.boomerang) own.plateOut = false; if (p.explode) pjExplode(p); p.dead = true; return; }
   if (p.n >= p.hits || p.t - p.last < p.interval) return;
   if (p.type === 'puddle' && p.t < 8) return; // (the coffee spreads for a moment before it's slippery: time to see it and crouch)
-  const hu = hurtbox(tgt, true), hb = projBox(p); // (fast ones sweep the stretch they crossed)
+  const hu = hurtbox(tgt, true, p.type === 'stone' && !!(p.h && p.h.low)), hb = projBox(p); // (fast ones sweep the stretch they crossed) (a low stone can still hit someone lying on the floor)
   if (hu && !p.n && !p.passed && !overlap(hb, hu) && hb.x0 < hu.x1 && hb.x1 > hu.x0 && p.h) { p.passed = true; showHeight(tgt, Math.sign(p.vx) || p.dir, hb, p.h, true); } // (over or under them)
   if (tgt.state === 'attack' && tgt.move && tgt.move.reflectAll && tgt.mf > tgt.move.startup && tgt.mf <= tgt.move.startup + tgt.move.active && !p.reflected) { // the kappa's shell sends it straight back at them
     const fb = { x0: tgt.x - 70, x1: tgt.x + 70, y0: 0, y1: 170 };
