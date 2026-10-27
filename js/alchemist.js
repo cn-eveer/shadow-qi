@@ -45,8 +45,8 @@ function alchemistThrow(f, o, kind) { // he throws his own glowing stones: low (
   sfx('throw');
 }
 function golemHit(f, o, h, hb, hu) { // resolved as if the golem were the attacker: its side decides the guard
-  const g = f.golem, sv = [f.x, f.facing, f.vx, f.serial]; f.x = g.x; f.facing = g.facing; f.serial = g.act.id;
-  let res; try { res = applyHit(f, o, h, Math.sign(o.x - g.x) || g.facing, hb, hu); } finally { [f.x, f.facing, f.vx, f.serial] = sv; }
+  const g = f.golem, sv = [f.x, f.facing, f.vx, f.serial, f.kb]; f.x = g.x; f.facing = g.facing; f.serial = g.act.id;
+  let res; try { res = applyHit(f, o, h, Math.sign(o.x - g.x) || g.facing, hb, hu); } finally { [f.x, f.facing, f.vx, f.serial, f.kb] = sv; } // (the wall pushes the attacker back: not the alchemist, when it's the golem that hit)
   return res;
 }
 function golemUpdate(f, o) {
