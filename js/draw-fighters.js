@@ -902,7 +902,7 @@ function drawFighter(f) {
   if (f.state === 'win') { const ln = winLine(f); if (ln) drawSpeech(f, ln, clamp((f.st - 20) / 10, 0, 1)); }
   if (mv && f.state === 'attack' && f.pre > 0 && mv.tellPre && (mv.preTotal - f.pre) < mv.tellPre) drawTellFX(f, mv, mv.preTotal - f.pre);
   if (mv && f.state === 'attack' && f.windPhase >= 0) drawWindFX(f, mv);
-  if (mv && !mv.trail && f.state === 'attack') drawSmear(f, mv);
+  if (mv && !mv.trail && !mv.noSmear && f.state === 'attack') drawSmear(f, mv); // (noSmear: a throw, where the hand jumps from behind the head)
   if (mv && mv.reachFX && f.state === 'attack') drawReachFX(f, mv, other(f));
   if (mv && mv.tail && f.state === 'attack') tailArcFX(f, mv);
   if (mv && mv.drawFX) mv.drawFX(f, other(f));

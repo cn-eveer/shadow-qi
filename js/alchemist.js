@@ -20,16 +20,21 @@ CHARS.alchemist = {
   sp: { fK: 'alUpStone', fKH: 'alTrap', fP: 'alShield', fPH: 'alTackle', bKH: 'alBedrock' }, sup: 'alOpus', fuseSp: 'alFuse', // (← → + J + K with a full fusion gauge: the golem armour)
   normalLook: {},
   colors: { coat: '#f4f6f8', coatB: '#d4d9de', pants: '#3a3f4f', pantsB: '#2b2f3b', shoe: '#2a2a30', shirt: '#cfe3f2', skin: '#efc9a4', hair: '#8e8f96', glass: '#2a2a30', stetho: '#2b2b33' },
-  meterCol: ['#d98a2c', '#ffe0a8'], bannerCol: 'rgba(150,110,60,.9)', idle: 'idle', chargePose: 'gAim', winPose: 'win', atkCD: 8, recoverT: 10, hitFx: 'star',
+  meterCol: ['#d98a2c', '#ffe0a8'], bannerCol: 'rgba(150,110,60,.9)', idle: 'alIdle', chargePose: 'alStoneUp', winPose: 'alPresent', atkCD: 8, recoverT: 10, hitFx: 'star',
   cpuBlock: 0.82, // (the CPU Hohen guards more: he's the one who has to survive while the golem works)
 };
 Object.assign(CHARS.alchemist, { altColors: { ...CHARS.alchemist.colors, coat: '#d9e6dc', coatB: '#b7c9bb', shirt: '#f0d8c0', hair: '#4a3b2e' } });
 Object.assign(POSES, { // throwing a stone: the arm drawn back behind him with the weight on the back foot, then whipped through and forward
   alThrowW: P(-14, -105,-150, 30,60, 22,10, -26,-14),
-  alThrow: P(26, 112,78, -20,20, 36,6, -24,-10),
+  alThrow: P(22, 100,92, -26,14, 36,6, -24,-10), // (the release: the arm out level at the shoulder, not across his face)
   alThrowLow: P(30, 70,86, -10,30, 40,4, -26,-12),
   alKnuckleW: P(-6, 20,120, -30,20, 24,6, -24,-10), alKnuckle: P(18, 92,92, -30,40, 34,6, -26,-10), // a stone held in the fist, driven straight out
   alOpus: P(-8, 160,172, 150,168, 22,4, -22,-8), // both arms raised
+  alIdle: P(-2, 26,82, -34,-112, 16,3, -16,-5), // composed: a glowing stone held loosely at the waist, the other hand behind his back
+  alGlasses: P(-3, 52,170, -34,-112, 16,3, -16,-5), // a finger pushing his spectacles up
+  alStoneUp: P(-5, 118,158, -34,-112, 18,3, -18,-6), // a glowing stone held up to the light
+  alBowDoc: P(26, 22,140, -36,-110, 16,2, -16,-6), // a polite doctor's bow, hand on the chest
+  alPresent: P(-4, 26,82, -78,-52, 20,3, -20,-6), // presenting his golem with an open hand
   alBrace: P(10, 60,150, 50,150, 40,-30, -30,-30) }); // set low, arms crossed before him: the stone skin
 // U, I: the golem · J, K: Hohen · ↓ + U: golem low punch · ↓ + I: golem uppercut (a launcher) · ↓ + J / ↓ + K: his low stones
 // → → + J: stone lob (stuns) · → → + K: trap stone · → → + U: shield bash · → → + I: tackle (in a juggle: Golem Meteor, the bounce)
@@ -68,9 +73,9 @@ const KNUCKLE = { wind: 'alKnuckleW', pose: 'alKnuckle', startup: 6, recovery: 9
 const volleyBeat = lvl => (f, o, k) => { if (k <= 14 && k % 7 === 0) alchemistVolley(f, o, lvl, k / 7); }; // three stones, seven frames apart
 // the duet strings: up to three presses of U and J in any order, then a finisher
 const DUET1 = { lp: 'aU2', lk: 'aJ2', hp: 'aGrab', dhp: 'aUp', hk: 'aVol' }, DUET2 = { lp: 'aHam', lk: 'aJF', hp: 'aGrab', dhp: 'aUp', hk: 'aVol' };
-const hStone = (label, chain) => beat(label, 'alThrow', null, { wind: 'alThrowW', startup: 7, recovery: 13, near: KNUCKLE, also: (f, o) => hohenStone(f, o), chain }); // (the next press can come a little late and still string)
+const hStone = (label, chain) => beat(label, 'alThrow', null, { noSmear: true, wind: 'alThrowW', startup: 7, recovery: 13, near: KNUCKLE, also: (f, o) => hohenStone(f, o), chain }); // (the next press can come a little late and still string)
 {
-  const throwing = (label, fn, ex = {}) => beat(label, 'alThrow', null, { wind: 'alThrowW', startup: 9, recovery: 14, also: fn, ...ex });
+  const throwing = (label, fn, ex = {}) => beat(label, 'alThrow', null, { noSmear: true, wind: 'alThrowW', startup: 9, recovery: 14, also: fn, ...ex });
   const L = CHARS.alchemist.normalLook;
   L.sp0 = beat('Golem Jab', 'gAim', 'lp', { chain: DUET1, holdPunch: true });
   L.cp0 = beat('Golem Low Punch', 'gLow', 'lowp', { crouch: true, wind: 'crouch', chain: DUET1 });
@@ -82,8 +87,8 @@ const hStone = (label, chain) => beat(label, 'alThrow', null, { wind: 'alThrowW'
   L.ck1 = throwing('Low Stone Volley', (f, o) => [0, 1, 2].forEach(i => alchemistStone(f, o, 24, { k: 0.7, sp: 9 + i * 1.6, fan: i, label: 'Stone Volley' })), { crouch: true, pose: 'alThrowLow' });
   L.jk0 = throwing('Air Stone Throw', (f, o) => alchemistStone(f, o, 70, {}), { startup: 7 });
   L.jk1 = throwing('Air Stone Volley', (f, o) => alchemistVolley(f, o, 0, 1), { startup: 7 });
-  L.sk1 = { label: 'Stone Volley', held: true, startup: 999, active: 2, recovery: 14, wind: 'alThrowW', pose: 'alThrow', hitbox: null, chain: null, launch: false, kd: false, antiDone: true, onFrame: stoneCharged,
-    poseFn: (f, mf) => { const mv = f.move; if (!mv.fired || mf < mv.startup - 2) return null; const k = (mf - mv.startup + 2) % 7; return lerpPose(POSES.alThrowW, POSES.alThrow, clamp(k / 2, 0, 1)); } };
+  L.sk1 = { label: 'Stone Volley', held: true, noSmear: true, startup: 999, active: 2, recovery: 14, wind: 'alThrowW', pose: 'alThrow', hitbox: null, chain: null, launch: false, kd: false, antiDone: true, onFrame: stoneCharged,
+    poseFn: (f, mf) => { const mv = f.move; if (!mv.fired) return lerpPose(POSES.alIdle, POSES.alThrowW, clamp(mf / 8, 0, 1)); if (mf < mv.startup - 2) return null; const k = (mf - mv.startup + 2) % 7; return lerpPose(POSES.alThrowW, POSES.alThrow, clamp(k / 2, 0, 1)); } }; // (charging: the arm drawn back and held)
 }
 const STONE_LV = [20, 42, 66]; // frames of holding K for gauges 1, 2 and 3
 function stoneCharged(f, o, mf) { // K: hold to charge (three gauges), let go: three stones in a row
@@ -162,8 +167,8 @@ function bedrockBurst(f, o) { // the end of the Bedrock Stride: his stone skin b
 // his specials, his super and the fusion
 { const smb = specialMoveBase; specialMoveBase = function (id) {
   const order = (label, pose, fn) => ({ id, label, startup: 5, active: 2, recovery: 5, wind: 'idle', pose, hitbox: null, antiDone: true, onFrame: (f, o, mf) => { if (mf === f.move.startup) fn(f, o); conductIn(f, f.move, mf); } });
-  if (id === 'alUpStone') return { id, label: 'Stone Lob', startup: 10, active: 2, recovery: 16, wind: 'alThrowW', pose: 'alThrow', hitbox: null, overhead: true, onFrame: (f, o, mf) => { if (mf === f.move.startup) alchemistLob(f, o); } };
-  if (id === 'alTrap') return { id, label: 'Trap Stone', startup: 12, active: 2, recovery: 16, wind: 'alThrowW', pose: 'alThrowLow', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) alchemistTrap(f); } };
+  if (id === 'alUpStone') return { id, noSmear: true, label: 'Stone Lob', startup: 10, active: 2, recovery: 16, wind: 'alThrowW', pose: 'alThrow', hitbox: null, overhead: true, onFrame: (f, o, mf) => { if (mf === f.move.startup) alchemistLob(f, o); } };
+  if (id === 'alTrap') return { id, noSmear: true, label: 'Trap Stone', startup: 12, active: 2, recovery: 16, wind: 'alThrowW', pose: 'alThrowLow', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) alchemistTrap(f); } };
   if (id === 'alShield') return order('Order: Shield Bash', 'gTwin', f => golemOrder(f, 'shield'));
   if (id === 'alTackle') return order('Order: Tackle', 'gAim', (f, o) => { // (on someone launched into the air: the Golem Meteor instead)
     if (o.state === 'knock' && o.juggle && f.golem && !f.golem.broken) { golemStart(f, 'meteor', f.serial); f.move.label = 'Order: Golem Meteor'; } else golemOrder(f, 'tackle'); });
@@ -225,6 +230,7 @@ function bedrockBurst(f, o) { // the end of the Bedrock Stride: his stone skin b
     onStart(f, o) { f.invul = 30; if (['hitstun', 'stunned', 'knock'].includes(o.state)) f.move.startup = 9; }, // (in a combo the core is already lit: it fires at once)
     onFrame: (f, o, mf) => { const S = f.move.startup; if (mf < S && mf % 2 === 0) rocks(f, 3, 60, 85, '255,210,130'); if (mf === S + 1) { spawnBeam(f); const b = projs[projs.length - 1]; if (b && b.type === 'beam') b.coreBeam = true; } } };
   return smb(id); }; }
+TELLS.alchemist = { a: 'alStoneUp', b: 'alBrace', fx: 'gems' }; // (before a technique: three of his glowing stones circle his hands)
 TECH_TIER.alShield = 'fast'; TECH_TIER.alTackle = 'fast'; TECH_TIER.alUpStone = 'fast'; TECH_TIER.alTrap = 'fast'; Object.assign(JUGGLE_SP, { afBeam: 'afjGeyser', afBoulder: 'afjHammer', afShoulder: 'afjShoulder', afBoulderRoll: 'afjSpiral' }); for (const k of ['afjGeyser', 'afjHammer', 'afjShoulder', 'afjSpiral']) RISING_IDS.add(k); TECH_TIER.afPillar = 'fast'; // (in the armour, on someone launched: the juggle versions)
 TECH_TIER.alFuse = 'fast'; TECH_TIER.alBedrock = 'heavy'; TECH_TIER.afWall = 'fast';
 SUPER_DODGE.alOpus = 'guard'; SUPER_DODGE.afCannon = 'guard'; SUPER_EQ.afCannon = 1.028; SUPER_EQ.alOpus = 2.23; SUPER_REF.alchemist = 1; // (every super lands about the same total damage)
@@ -648,12 +654,12 @@ STRINGS.alchemist = { // the duet strings (any mix of U and J, three presses, th
   aHam: beat('Golem Hammer', 'gTwin', 'ham', { startup: 2 }),
   aGrab: beat('Golem Grab', 'gTwin', 'hp', { startup: 2 }),
   aUp: beat('Golem Uppercut', 'gTwin', 'upper', { startup: 2 }), // (in a string the order comes quicker: he's already pointing)
-  aVol: beat('Stone Volley', 'alThrow', null, { wind: 'alThrowW', startup: 6, recovery: 14, each: volleyBeat(1), poseFn: throwAnim(16) }),
-  aJF: beat('Stone Barrage', 'alThrow', null, { wind: 'alThrowW', startup: 6, recovery: 26, near: { ...KNUCKLE, recovery: 26 }, // (a string-ender: it keeps its own long recovery up close too)
+  aVol: beat('Stone Volley', 'alThrow', null, { noSmear: true, wind: 'alThrowW', startup: 6, recovery: 14, each: volleyBeat(1), poseFn: throwAnim(16) }),
+  aJF: beat('Stone Barrage', 'alThrow', null, { noSmear: true, wind: 'alThrowW', startup: 6, recovery: 26, near: { ...KNUCKLE, recovery: 26 }, // (a string-ender: it keeps its own long recovery up close too)
     poseFn: throwAnim(9), // two blows (knuckles up close, stones from afar), the second one knocks them down
     each: (f, o, k) => { if (k === 0) hohenStone(f, o, { label: 'Stone Barrage' }); if (k === 7) hohenStone(f, o, { k: 1.3, label: 'Stone Barrage', h: { kd: true, kdVx: 9, kdVy: 7, hitstop: 9 } }); } }),
   jPalm: beat('Golem Rising Jab', 'gAim', 'rise', { jug: true, stay: true }),
-  jStone: beat('Aimed Stone', 'alThrow', null, { jug: true, stay: true, wind: 'alThrowW', startup: 7, recovery: 10, also: (f, o) => alchemistStone(f, o, 70, { k: 1.2, h: { juggle: true } }) }), // (J after the golem's rising jab: his stone while it holds them up)
+  jStone: beat('Aimed Stone', 'alThrow', null, { noSmear: true, jug: true, stay: true, wind: 'alThrowW', startup: 7, recovery: 10, also: (f, o) => alchemistStone(f, o, 70, { k: 1.2, h: { juggle: true } }) }), // (J after the golem's rising jab: his stone while it holds them up)
   jRise: { kind: 'p', str: 1, label: 'Stone Pillar', jug: true, stay: true, startup: 9, active: 2, recovery: 16, wind: 'gTwin', pose: 'alThrowLow', hitbox: null, antiDone: true, relaunch: true,
     onFrame: (f, o, mf) => { if (mf === 1) golemStart(f, 'pound', f.serial); if (mf === f.move.startup) stonePillar(f, o); } },
   jSpin: { kind: 'k', str: 1, label: 'Stone Comet', jug: true, stay: true, startup: 8, active: 2, recovery: 16, wind: 'alThrowW', pose: 'alThrow', hitbox: null, antiDone: true, kd: true,
