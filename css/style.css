@@ -55,6 +55,30 @@ h1{font-family:var(--hud);font-weight:400;font-size:clamp(24px,3.6vw,36px);line-
 /* the drawer is either the settings (sound, music, language) or the move list (fighter tabs and cards), never both */
 .drawer.settings .tabs,.drawer.settings .dbody{display:none}
 .drawer:not(.settings) .setrow{display:none}
+/* release notes (更新情報): a third drawer mode */
+.drawer.news .tabs,.drawer.news .info{display:none}
+.drawer:not(.news) .news{display:none}
+.vtag{font:700 14px var(--body);color:var(--muted);padding:6px 4px}
+.news .nowver{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-weight:700;margin:2px 2px 12px}
+.news .rel{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px 12px;margin-bottom:10px}
+.news .relh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-size:17px}
+.news .relh span{color:var(--muted);font-size:13px;font-weight:600}
+.news ul{margin:6px 0 0;padding-left:1.2em}
+.news li{margin:3px 0;line-height:1.55}
+/* a new version is live: asked over everything; and the note after an update */
+.upd{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(8,6,20,.62)}
+.upd[hidden]{display:none}
+.updc{width:min(520px,100%);max-height:100%;overflow:auto;background:#1d1a30;color:#f5f2ff;border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:18px 20px;box-shadow:0 20px 50px rgba(0,0,0,.5);text-align:center}
+.updt{font:400 20px var(--hud)}
+.updc p{margin:10px 0 14px;line-height:1.6;font-weight:600}
+.updb{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.utoast{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:90;display:flex;align-items:center;gap:8px;max-width:calc(100vw - 32px);background:#1d1a30;color:#f5f2ff;border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:6px 8px 6px 16px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.utoast[hidden]{display:none}
+.utoast .pill{background:transparent;color:inherit;border-color:rgba(255,255,255,.35);padding:4px 12px}
+/* the version line on the title screen */
+.ver{margin-top:4px}
+.vlink{font:600 12px var(--body);color:rgba(245,242,255,.72);background:none;border:0;padding:2px 6px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+body.mobile .panel.menu .ver{display:none}
 canvas{display:block;width:100%;height:100%}
 .overlay{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;padding:2.5%;overflow:auto;
   background:linear-gradient(180deg,rgba(14,10,30,.30),rgba(14,10,30,.72))}
@@ -78,7 +102,7 @@ canvas{display:block;width:100%;height:100%}
 .pickinfo span{flex:1}
 .ghost.sm{font-size:clamp(11px,1.4vw,14px);padding:.3em .9em;white-space:nowrap}
 @container (max-height: 560px){.pick{padding:clamp(5px,1vw,10px)}.lbl{margin:6px 0 6px}.row{margin-top:8px}}
-@container (max-height: 420px){.pick small{display:none}.hint{display:none}}
+@container (max-height: 420px){.pick small{display:none}.hint{display:none}.ver{display:none}}
 @container (max-height: 400px){.logo{font-size:24px}.pick b{font-size:15px}.go{font-size:16px}.ghost{font-size:12px}}
 /* character select: a narrower panel between the two fighters, so both stay in view behind it */
 .overlay:has(.panel.menu){background:linear-gradient(180deg,rgba(14,10,30,.18),rgba(14,10,30,.38))}

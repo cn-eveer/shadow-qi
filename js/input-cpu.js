@@ -77,7 +77,13 @@ const cpuP = (p, watchP) => game.watch ? watchP : Math.min(0.95, p * dif().combo
 class CPU {
   constructor() { this.reset(); }
   reset() { this.plan = {}; this.next = 0; this.def = null; this.threatKey = null; this.reactAt = 0; this.chargeUntil = 0; this.cancelTried = false; this.punishKey = null; }
-  read(f, frame, o) {
+  read(f, frame, o) { // (Jesse reloading doesn't shoot: he backs off and guards, and only throws Dynamite, counters with Showdown or goes for High Noon)
+    if (f.reloadT > 0) { this.route = null; this.chainSeq = null; }
+    const out = this.think(f, frame, o);
+    if (f.reloadT > 0 && out.btn && !out.sup && !(out.bb && (out.btn === 'lp' || out.btn === 'hk'))) Object.assign(out, { btn: null, ff: false, down: false, h: -(Math.sign(o.x - f.x) || f.facing) });
+    return out;
+  }
+  think(f, frame, o) {
     const out = { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false };
     const dx = o.x - f.x, dist = Math.abs(dx), fwd = Math.sign(dx) || f.facing, N = f.key === 'ninja';
     if (f.state === 'down' && !f.ko) { // roll away or get up

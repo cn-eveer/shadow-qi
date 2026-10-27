@@ -140,6 +140,8 @@ function sfx(n) {
       case 'draw': noise(0.28, 0.12, 6000, 4, 'bandpass', 0.3); tone(1800, 0.35, 'triangle', 0.03, 2600, 0.5); break;
       case 'sheath': tone(2600, 0.1, 'square', 0.04, 1800, 0.2); noise(0.06, 0.12, 5000, 3, 'highpass'); break;
       case 'flame': noise(0.9, 0.24, 500, 0.6, 'lowpass', 0.3, 1400); noise(0.8, 0.08, 3000, 3, 'bandpass', 0.1, 0, 0.1); boom(0.5, 80, 40, 0.6, 0, 0.2); break; // roar with crackle
+      case 'dry': tone(3400, 0.03, 'square', 0.05, 2600, 0.05); noise(0.03, 0.22, 5200, 2, 'highpass', 0.05); break; // the hammer falls on an empty chamber
+      case 'reload': [0, 0.06, 0.12, 0.18].forEach(d => tone(2900, 0.025, 'square', 0.03, 2300, 0.05, d)); noise(0.07, 0.3, 1600, 1.5, 'bandpass', 0.1, 0, 0.28); boom(0.25, 260, 120, 0.06, 0.28, 0); break; // the cylinder spins, then snaps shut
       case 'shot': noise(0.06, 0.55, 2600, 0.8, 'highpass', 0.15); boom(0.6, 180, 50, 0.14, 0, 0); noise(0.4, 0.2, 700, 1, 'bandpass', 0.5); break; // crack and echo
       case 'orb': tone(880, 0.7, 'sine', 0.05, 0, 0.6); tone(2376, 0.5, 'sine', 0.02, 0, 0.6); tone(1320, 0.6, 'sine', 0.025, 0, 0.6, 0.04); break; // a bell
       case 'zap': [0, 0.03, 0.06].forEach((d, i) => tone(600 + Math.random() * 1600, 0.05, 'square', 0.035, 200 + i * 80, 0.15, d)); noise(0.14, 0.14, 5000, 1, 'highpass', 0.15); boom(0.3, 140, 60, 0.12, 0, 0); break;

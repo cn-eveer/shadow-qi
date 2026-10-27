@@ -24,7 +24,7 @@ function resetFighter(f) {
     airAttacked: false, airShuri: false, invul: 0, stun: 0, combo: 0, flash: 0, inp: EMPTY, hidden: false, landT: 0,
     ko: false, cguard: false, crouchHit: false, backHeld: false, walkPh: 0, pose: { ...POSES.idle }, prevPose: { ...POSES.idle },
     hipUp: null, serial: 0, jumpSerial: 0, guard: 100, guardIdle: 0, lastToward: 0, sideT: -99, calm: 0,
-    shadow: false, followQ: null, lastResult: null, shadowRun: false, atkCD: 0, resting: 0,
+    shadow: false, followQ: null, lastResult: null, shadowRun: false, atkCD: 0, resting: 0, ammo: f.ch.ammo || 0, reloadT: 0,
   });
   if (f.ctrl.reset) f.ctrl.reset();
 }
@@ -276,6 +276,7 @@ function update(f, o, inp) {
   if (f.sorbs && f.sorbs.length) { for (const q of f.sorbs) { q.life--; if (q.cd > 0) q.cd--; } f.sorbs = f.sorbs.filter(q => q.life > 0); }
   if (f.ch.orbs && game.phase === 'fight') haloFire(f);
   if (f.resting) { if (reeling(o)) f.atkCD = Math.max(f.atkCD, f.resting); else if (f.atkCD <= 0) f.resting = 0; } // (the rest after a U or a string)
+  if (f.reloadT > 0 && --f.reloadT === 0) reloaded(f); // (Jesse's guns)
   if (f.atkCD > 0) f.atkCD--;
   if (f.flash > 0) f.flash--;
   const toward = Math.sign(o.x - f.x) || f.facing;

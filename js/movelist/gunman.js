@@ -7,6 +7,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="blurb">A gunslinger in a wide-brimmed hat and a long duster coat, a revolver in each hand. Every attack is a gunshot: no punches, no kicks. He even keeps opponents in the air by shooting them. His shots reach about a third of the stage (mid range), and he likes to jump and shoot.</p>
       <p class="note"><b>Holstered.</b> At rest his hands sit on his guns in their holsters; they come out in a flash only when he attacks, and go back a moment after. Every shot now has a bigger muzzle flash.</p>
       <p class="note"><b>Guns.</b> His bullets are fast with long tracers and big muzzle flashes; charged shots are huge, shake the screen and kick him back with the recoil.</p>
+      <p class="note"><b>Ten bullets.</b> His guns hold 10 bullets, shown next to his name. Every shooting attack uses one, however many shots it fires. When the last one is gone he reloads for 5 seconds: he can still move, jump and guard, but a shot only clicks on an empty chamber until the bullets turn gold again. Dynamite, Showdown and High Noon don’t need bullets.</p>
       <p class="note"><b>Theme.</b> Desert sundown · amber and dust. A drifter who never draws second. Signatures: U, U, K Hammer Fan Finale (a gun twirl, then three fanned shots); U, U, I Ricochet Launcher (a shot off the floor lifts them).</p>
       <div class="scroll"><table>
         <tbody>
@@ -44,6 +45,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="blurb">つば広の帽子にロングコート、両手にリボルバー。攻撃はすべて射撃：パンチもキックもなし。空中の相手も撃ち続けて落とさない。弾は画面の約3分の1（中距離）まで届き、跳びながら撃つのが得意。</p>
       <p class="note"><b>ホルスター。</b>構えでは手をホルスターの銃に添えている。攻撃するときだけ一瞬で抜き、少しすると戻す。発砲の閃光も大きくなった。</p>
       <p class="note"><b>銃。</b> 弾は速く、長い光跡と大きな銃口の閃光。溜め撃ちは巨大で画面が揺れ、反動で後ろに下がる。</p>
+      <p class="note"><b>弾は10発。</b>残りの弾は名前の横に表示。射撃する攻撃は1回につき1発を使う（何発撃つ技でも1発）。撃ち尽くすと5秒間のリロード：移動・ジャンプ・ガードはできるが、弾が金色に戻るまでは撃っても「カチッ」と空撃ちになる。ダイナマイト、決闘、真昼の決闘は弾を使わない。</p>
       <p class="note"><b>テーマ.</b> 砂漠の夕日・琥珀と砂ぼこり。決して後れを取らない流れ者。決め技：U、U、K「ファニング・フィナーレ」（銃を回して3連射）／U、U、I「跳弾打ち上げ」（床で跳ねた弾が浮かせる）。</p>
       <div class="scroll"><table>
         <tbody>

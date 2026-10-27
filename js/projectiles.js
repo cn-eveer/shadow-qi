@@ -132,7 +132,24 @@ function aimShot(f, o, h) { // a shot aimed straight at a juggled opponent, from
   const mx = sx + (tx - sx) / dd * 58 * s, my = sy + (ty - sy) / dd * 58 * s, d = Math.hypot(tx - mx, ty - my) || 1, sp = 24;
   shoot(f, { x: mx, y: my, vx: (tx - mx) / d * sp * f.facing, vy: (ty - my) / d * sp, life: 18, ...h }); // (vx is relative to his facing; aimed even if they drift behind the muzzle)
 }
+// Jesse's guns hold 10 bullets. Each shooting attack uses one, however many shots it fires; when the last is gone he reloads for
+// 5 seconds (he can still move, jump and guard), and until then a shot only clicks on an empty chamber. Dynamite, the Showdown
+// counter and High Noon don't need bullets.
+const RELOAD_T = 300;
+function useBullet(f) {
+  const mv = f.move;
+  if (mv && mv.shot) return mv.shot === 'live'; // (the rest of this attack's shots)
+  const live = f.ammo > 0 && !(f.reloadT > 0);
+  if (mv) mv.shot = live ? 'live' : 'dry';
+  if (!live) { sfx('dry'); popText(f.x + f.facing * 40, GROUND - f.y - 150 * f.ch.scale, L('CLICK', 'カチッ'), '225,225,235'); return false; }
+  if (--f.ammo === 0) { f.reloadT = RELOAD_T; sfx('reload'); popText(f.x, GROUND - f.y - 190 * f.ch.scale, L('RELOADING', 'リロード中'), '255,215,140'); }
+  return true;
+}
+function reloaded(f) {
+  f.ammo = f.ch.ammo; sfx('reload'); popText(f.x, GROUND - f.y - 190 * f.ch.scale, L('RELOADED', 'リロード完了'), '255,230,160');
+}
 function shoot(f, o) { // bullets fly 40% faster than before; o.range (in pixels) decides how far they go, otherwise the old reach is kept
+  if (f.ch.ammo && !useBullet(f)) return;
   const s = f.ch.scale, x = o.x != null ? o.x : f.x + f.facing * 70 * s, y = o.y || 118, lvl = o.lvl || (o.big ? 1 : 0);
   const v0 = o.vx || 22, k = 1.4, life = o.range ? Math.ceil(o.range / (Math.hypot(v0, o.vy || 0) * k)) : Math.ceil((o.life || 16) / k) + 1;
   spawnPJ(f, 'bullet', { x, y, vx: f.facing * v0 * k, vy: (o.vy || 0) * k, life, r: 10 + lvl * 5, lvl, pierce: !!o.pierce, hits: o.pierce ? 1 : 1, bounce: o.bounce || 0,

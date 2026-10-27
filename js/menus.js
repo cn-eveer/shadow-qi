@@ -25,6 +25,7 @@ function bindOverlay() {
     else if (d.act === 'music') { toggleMusic(); refreshPause(); }
     else if (d.act === 'lang') setLang(game.lang === 'ja' ? 'en' : 'ja'); // (redraws the menu or pause screen in the new language)
     else if (d.act === 'settings') openDrawer(true, 'settings');
+    else if (d.act === 'news') openDrawer(true, 'news');
     else if (d.act === 'netLeave') { netSend({ t: 'bye' }); netEnd(); showMenu(); }
     else if (d.act === 'netBack') netMenu(false);
   }));
@@ -82,6 +83,7 @@ function showMenu() {
     <div class="vsrow">${L('Difficulty:', '難易度：')} ${DIFF_ORDER.map(k => `<button class="${game.diff === k ? 'on' : ''}" data-diff="${k}" aria-pressed="${game.diff === k}">${L(...DIFF_NAMES[k])}</button>`).join('')}</div>
     <div class="row"><button class="go" data-act="start">${L('FIGHT', '対戦')}</button><button class="ghost" data-act="training">${L('Training', 'トレーニング')}</button><button class="ghost" data-act="watch">${L('CPU vs CPU', 'CPU対CPU')}</button><button class="ghost" data-act="online">${L('Online', 'オンライン')}</button><button class="ghost" data-act="opening">${L('Opening', 'オープニング')}</button><button class="ghost" data-act="demo" data-who="${c}">${L(CHARS[c].name[0] + CHARS[c].name.slice(1).toLowerCase() + ' combos', nm(CHARS[c]) + 'のコンボ見本')}</button><button class="ghost" data-act="punish" data-who="${c}">${L(CHARS[c].name[0] + CHARS[c].name.slice(1).toLowerCase() + ' punishes', nm(CHARS[c]) + 'の反撃見本')}</button></div>
     <div class="hint">${L('A and D pick your fighter, W and S pick the opponent. Enter to fight, T for training, C to watch CPU vs CPU, V for your fighter’s sample combos, P for punish samples.', 'A・Dでキャラ選択、W・Sで相手を選択。Enterで対戦、Tでトレーニング、CでCPU対CPU、Vでコンボ見本、Pで反撃見本。')}</div>
+    <div class="ver"><button class="vlink" data-act="news">v${APP_VERSION} · ${L('What’s new', '更新情報')}</button></div>
   </div>`;
   bindOverlay();
 }
@@ -226,7 +228,8 @@ function applyLang() { // header, drawer, tabs and which language of the command
   [langBtn, document.getElementById('langD')].forEach(b => { b.textContent = game.lang === 'ja' ? 'English' : '日本語'; b.lang = game.lang === 'ja' ? 'en' : 'ja'; });
   const hgt = document.getElementById('hgtD'); hgt.textContent = L(game.heights ? 'On' : 'Off', game.heights ? 'オン' : 'オフ'); hgt.setAttribute('aria-pressed', String(game.heights));
   setBtn.textContent = L('⚙ Settings', '⚙ 設定');
-  document.getElementById('dTitle').textContent = drawerMode === 'settings' ? L('Settings', '設定') : L('Move list', '技表');
+  document.getElementById('dTitle').textContent = drawerMode === 'settings' ? L('Settings', '設定') : drawerMode === 'news' ? L('What’s new', '更新情報') : L('Move list', '技表');
+  if (drawerMode === 'news' && !drawer.hidden) renderNews();
   drawer.querySelectorAll('[data-l]').forEach(el => { const [en, ja] = el.dataset.l.split('|'); el.textContent = L(en, ja); });
   drawer.querySelectorAll('[data-diff]').forEach(b => { b.textContent = L(...DIFF_NAMES[b.dataset.diff]); b.classList.toggle('on', b.dataset.diff === game.diff); b.setAttribute('aria-pressed', String(b.dataset.diff === game.diff)); });
   const tagEl = document.getElementById('tagline');
@@ -237,7 +240,8 @@ function applyLang() { // header, drawer, tabs and which language of the command
   drawer.querySelectorAll('article.card').forEach(a => { a.hidden = !(a.dataset.tab === drawerTab && a.dataset.lang === game.lang); });
 }
 function openDrawer(open, mode) {
-  if (mode) drawerMode = mode; drawer.classList.toggle('settings', drawerMode === 'settings');
+  if (mode) drawerMode = mode; drawer.classList.toggle('settings', drawerMode === 'settings'); drawer.classList.toggle('news', drawerMode === 'news');
+  if (open && drawerMode === 'news') renderNews(); // (release notes, newest first)
   drawer.hidden = !open; setBtn.setAttribute('aria-expanded', String(open));
   if (open && game.mode === 'fight' && !game.paused && !NET.on) togglePause(); // look things up without the fight running on
   if (open) applyLang();
@@ -249,6 +253,9 @@ langBtn.addEventListener('click', () => setLang(game.lang === 'ja' ? 'en' : 'ja'
 setBtn.addEventListener('click', () => openDrawer(drawer.hidden || drawerMode !== 'settings', 'settings'));
 document.getElementById('movesD').addEventListener('click', () => { drawerTab = fighters[0] && game.mode === 'fight' ? fighters[0].key : game.p1Char; openDrawer(true, 'moves'); });
 document.getElementById('hgtD').addEventListener('click', () => { initAudio(); toggleHeights(); sfx('select'); });
+document.getElementById('newsD').addEventListener('click', () => openDrawer(true, 'news'));
+document.getElementById('reloadD').addEventListener('click', freshReload);
+document.getElementById('eraseD').addEventListener('click', () => { if (confirm(L('Erase everything this site has saved (settings included) and reload?', 'このサイトに保存されたデータ（設定を含む）をすべて消去して、再読み込みしますか？'))) eraseSiteData(); });
 document.getElementById('dClose').addEventListener('click', () => openDrawer(false));
 drawer.querySelectorAll('[data-diff]').forEach(b => b.addEventListener('click', () => { initAudio(); setDiff(b.dataset.diff); sfx('select'); }));
 drawer.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => { drawerTab = b.dataset.tab; applyLang(); }));

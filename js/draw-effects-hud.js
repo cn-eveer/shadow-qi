@@ -359,11 +359,25 @@ function healthBar(f, x, left) {
   const nw = ctx.measureText(nm(f.ch)).width;
   ctx.font = SMALL; ctx.fillStyle = 'rgba(255,255,255,.78)';
   ctx.fillText(game.online ? (f.netName || '') + (f.side === NET.side ? L(' (you)', '（あなた）') : '') : game.watch ? 'CPU ' + (f.side + 1) : game.demo ? (f.side === 0 ? L('DEMO', '見本') : L('DUMMY', 'ダミー')) : f.side === 0 ? L('YOU', 'あなた') : (game.training ? L('DUMMY', 'ダミー') : 'CPU'), left ? x + nw + 8 : x + w - nw - 8, ny + 4);
+  if (f.ch.ammo) ammoRow(f, left ? x + w - 52 : x + 52, ny + 9, left);
   for (let i = 0; i < (game.training ? 0 : 2); i++) {
     const cx = left ? x + w - 10 - i * 20 : x + 10 + i * 20;
     ctx.beginPath(); ctx.arc(cx, ny + 9, 6.5, 0, Math.PI * 2);
     ctx.fillStyle = f.wins > i ? '#ffd23f' : 'rgba(255,255,255,.16)'; ctx.fill();
     ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 1.5; ctx.stroke();
+  }
+}
+function ammoRow(f, x, y, left) { // Jesse's bullets, beside the round markers: brass while loaded; reloading, they fill back in grey and turn brass together
+  const n = f.ch.ammo, gap = 8, reload = f.reloadT > 0, k = reload ? (RELOAD_T - f.reloadT) / RELOAD_T * n : 0;
+  for (let i = 0; i < n; i++) {
+    const cx = left ? x - i * gap : x + i * gap, live = !reload && i < f.ammo, filling = reload && i < k;
+    ctx.beginPath(); ctx.moveTo(cx - 2.5, y + 6); ctx.lineTo(cx - 2.5, y - 2); ctx.quadraticCurveTo(cx, y - 8, cx + 2.5, y - 2); ctx.lineTo(cx + 2.5, y + 6); ctx.closePath();
+    ctx.fillStyle = live ? '#f0c060' : filling ? 'rgba(200,210,225,.55)' : 'rgba(0,0,0,.35)'; ctx.fill();
+    ctx.strokeStyle = live ? 'rgba(90,50,10,.9)' : 'rgba(255,255,255,.3)'; ctx.lineWidth = 1; ctx.stroke();
+  }
+  if (reload && globalT % 40 < 28) {
+    ctx.font = `11px ${HUD}`; ctx.textBaseline = 'middle'; ctx.textAlign = left ? 'right' : 'left'; ctx.fillStyle = '#ffd98a';
+    ctx.fillText(L('RELOAD', 'リロード'), left ? x - n * gap - 2 : x + n * gap + 2, y + 1);
   }
 }
 function meterBar(f, x, y, w, h, left) { // MP: violet with stripes running along it (a possessed Tanaka shows his form's colour); gold and pulsing when full

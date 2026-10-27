@@ -21,7 +21,7 @@ Eight fighters · combos & supers · CPU battles (4 difficulties) · training ·
 | 🔮 | **Lyra** — Psychic Sage | magic circles and falling crystals from across the screen |
 | 🛡️ | **Aldric** — Holy Paladin | Excalibur's aura, shield guard, Rampart Charge with armor |
 | 🐸 | **Kappa** — Mythic Kappa | dish water, shell tricks, poison |
-| 🤠 | **Jesse** — Gunslinger | quick draw from the holster, charge shots, aimed juggles |
+| 🤠 | **Jesse** — Gunslinger | quick draw from the holster, charge shots, aimed juggles — ten bullets, then a five-second reload |
 | 💼 | **Tanaka** — Salaryman | office supplies — and angel, devil, or **double** possession |
 
 <p align="center">
@@ -39,6 +39,7 @@ Eight fighters · combos & supers · CPU battles (4 difficulties) · training ·
 - An **opening movie** drawn live in the game engine, **entrance poses** before every round, and **victory animations**: three per fighter by health left, plus a match-win celebration
 - **Sound** — a piano score that builds into a climax as the round heats up, an announcer (“Round 1! Fight! … Player 1 wins!”), and hit sounds that match each fighter's weapon
 - **Japanese by default**, English one tap away
+- **Release notes in the game** (更新情報, in Japanese) and the version in Settings; when a new version is live, the game asks you to reload without the browser's cache, or to erase the site's data and reload
 - **Plays on phones and tablets** — hold the phone sideways; add it to your home screen to play full screen
 
 ## How combos work
@@ -77,17 +78,21 @@ Every fighter's sample combos (title screen → *combos*) show these patterns, t
 
 **Phone or tablet** (hold it sideways): the pad on the left moves you (tap it twice quickly for → → or ← ←), the U I / J K buttons are on the right, and ❚❚ pauses. On most phones (wider than 16:9) the controls sit in panels beside the game, not over it; on 16:9 phones and tablets they sit over the game. The game keeps the same size in menus, fights and pauses, and menus shrink to fit if the screen is small.
 
-**⚙ Settings**: sound, music (BGM), language, attack heights in training (on or off), CPU difficulty, and each fighter's full move list.
+**⚙ Settings**: sound, music (BGM), language, attack heights in training (on or off), CPU difficulty, each fighter's full move list, the version and its release notes (更新情報), and buttons to reload around the browser's cache or erase the site's saved data.
 
 ## Put it online with GitHub Pages
 
 1. Create a new **public** repository (for example `shadow-qi`).
-2. Upload **everything in this folder** — `index.html`, `manifest.webmanifest`, `.nojekyll`, `README.md` and the `css`, `js` and `assets` folders — to the root of the repository (*Add file → Upload files → Commit*).
+2. Upload **everything in this folder** — `index.html`, `version.json`, `manifest.webmanifest`, `.nojekyll`, `README.md` and the `css`, `js` and `assets` folders — to the root of the repository (*Add file → Upload files → Commit*).
    Tip: `.nojekyll` starts with a dot, so your computer may hide it; it is fine to skip it if you can't see it.
 3. Open **Settings → Pages**, set **Source: Deploy from a branch**, **Branch: main**, folder **/ (root)**, and **Save**.
 4. After a minute the game is live at `https://<your-name>.github.io/<repository>/`.
 
-To update later, upload the changed files over the old ones — and raise the version number in `index.html` (every `?v=…` after a `.js` or `.css` file name), so browsers load the new files instead of the ones they kept from last time.
+To update later, upload the changed files over the old ones, and for every release:
+
+- raise the version number in `index.html` (every `?v=…` after a `.js` or `.css` file name), so browsers load the new files instead of the ones they kept from last time;
+- put the same number in `version.json` — anyone who still has the old version open is asked to reload;
+- add the release notes, in Japanese, at the top of `RELEASES` in `js/updates.js` (they show in the game under 更新情報).
 
 > If your address isn't `cn-eveer.github.io/shadow-qi`, change the addresses near the top of `index.html` (`canonical`, `og:url`, `og:image` and `twitter:image`) so link previews show the cover image.
 
@@ -118,7 +123,9 @@ The scripts are plain `<script>` files that share one scope, loaded in the order
 | `js/opening.js` | the render loop and the opening movie (prologue, highlight reel, finale) |
 | `js/online.js` | online play (PeerJS / WebRTC) |
 | `js/audio.js` | sound effects, the announcer and the music |
+| `js/updates.js` | the version, the release notes (更新情報) and the update check |
 | `js/menus.js` | menus, keyboard, settings, touch controls, training move card |
+| `version.json` | the version that's live, for the update check |
 
 ---
 
