@@ -18,7 +18,7 @@ Object.assign(POSES, { // throwing a stone: the arm drawn back behind him with t
   alThrowW: P(-14, -105,-150, 30,60, 22,10, -26,-14),
   alThrow: P(26, 112,78, -20,20, 36,6, -24,-10),
   alThrowLow: P(30, 70,86, -10,30, 40,4, -26,-12) });
-// His buttons. U and I order the golem (a crouching U is its low punch; U, U, I its uppercut). J, K and → → are his own glowing stones:
+// His buttons. U and I order the golem (a crouching U is its low punch; I (or U, U, I) its three-second grab). J, K and → → are his own glowing stones:
 //   J: one stone at chest height · ↓ + J: one low · → → + J: lobbed up, it comes down and stuns · K: three in a row, chargeable (3 gauges)
 //   → → + K: sets a trap stone forward (up to six; it bursts when they step on it, or after six seconds) · ↓ + K: the golem's core blaster
 {
@@ -33,7 +33,7 @@ Object.assign(POSES, { // throwing a stone: the arm drawn back behind him with t
   L.ck0 = throwing('Low Stone Throw', (f, o) => alchemistStone(f, o, 24, {}), { wind: 'alThrowW', pose: 'alThrowLow', crouch: true });
   L.ck1 = order('Order: Core Blaster', 'gTwin', golem('hk'), { crouch: true });
   L.jk0 = throwing('Air Stone Throw', (f, o) => alchemistStone(f, o, 70, {}), { startup: 7 });
-  L.jk1 = throwing('Air Stone Volley', (f, o) => alchemistVolley(f, o, 0), { startup: 7 });
+  L.jk1 = throwing('Air Stone Volley', (f, o) => alchemistVolley(f, o, 0, 1), { startup: 7 });
   L.sk1 = { label: 'Stone Volley', held: true, startup: 999, active: 2, recovery: 14, wind: 'alThrowW', pose: 'alThrow', hitbox: null, chain: null, launch: false, kd: false, antiDone: true, onFrame: stoneCharged,
     poseFn: (f, mf) => { const mv = f.move; if (!mv.fired || mf < mv.startup - 2) return null; const k = (mf - mv.startup + 2) % 7; return lerpPose(POSES.alThrowW, POSES.alThrow, clamp(k / 2, 0, 1)); } };
 }
@@ -57,11 +57,12 @@ function useStone(f) { // one stone from his pockets (false, with a click, when 
   if (!(f.dryT > game.frame - 12)) { f.dryT = game.frame; sfx('dry'); popText(f.x + f.facing * 40, GROUND - f.y - 150, L('NO STONES', '石切れ'), '225,225,235'); }
   return false;
 }
-function alchemistVolley(f, o, lvl, i = 1) { alchemistStone(f, o, 70, { k: 0.7 + 0.25 * lvl, sp: 10 + lvl * 1.5, big: lvl >= 2, label: 'Stone Volley', fan: i - 1 }); }
+function alchemistVolley(f, o, lvl, i = 0) { alchemistStone(f, o, 70, { k: 0.7 + 0.25 * lvl, sp: 10 + lvl * 1.5, big: lvl >= 2, label: 'Stone Volley', fan: i, h: i === 2 ? { kd: true, kdVx: 9, kdVy: 7 } : {} }); } // (the third stone knocks them down)
 function alchemistStone(f, o, y, ex) { // one glowing stone, thrown flat (aimed at them when he or they are in the air)
   if (!useStone(f)) return;
   const d = f.facing, air = f.y > 20 || o.y > 40, x0 = f.x + d * 40, y0 = f.y + (air ? 70 : y), cols = ['110,255,220', '255,190,80', '150,170,255'];
-  const h = { dmg: Math.round(26 * (ex.k || 1)), stun: 17, bstun: 10, push: 1.4, gdrain: 6, hitstop: 5, low: !air && y < 40, label: ex.label || 'Stone Throw', ...(ex.h || {}) };
+  const h = { dmg: Math.round(26 * (ex.k || 1) * (f.golem && f.golem.hold ? 1.6 : 1)), // (the golem is holding them: his stones hit harder)
+    stun: 17, bstun: 10, push: 1.4, gdrain: 6, hitstop: 5, low: !air && y < 40, label: ex.label || 'Stone Throw', ...(ex.h || {}) };
   let vx = d * (ex.sp || 10), vy = 0;
   if (air) { const an = Math.atan2(o.y + 60 - y0, o.x - x0) + (ex.fan || 0) * 0.12, sp = 11; vx = Math.cos(an) * sp; vy = Math.sin(an) * sp; }
   spawnPJ(f, 'stone', { dir: Math.sign(vx) || d, x: x0, y: y0, vx, vy, life: 64, r: ex.big ? 14 : 11, glow: cols[(ex.fan || 0) % 3], h }); sfx('throw');
@@ -96,18 +97,17 @@ TECH_TIER.alUpStone = 'fast'; TECH_TIER.alTrap = 'fast';
 const GOLEM_ACT = { // startup / active / recovery (frames), and the blow
   lp: { su: 7, ac: 3, rec: 12, reach: [10, 85], y: [10, 135], h: { dmg: 28, stun: 30, bstun: 11, push: 1.6, hitstop: 6, str: 0, gdrain: 4, label: 'Golem Punch' } },
   lowp: { su: 8, ac: 3, rec: 14, reach: [10, 95], y: [0, 40], h: { dmg: 26, stun: 30, bstun: 11, push: 1.6, hitstop: 6, str: 0, gdrain: 4, low: true, label: 'Golem Low Punch' } },
-  hp: { su: 14, ac: 4, rec: 20, reach: [10, 105], y: [10, 140], h: { dmg: 62, stun: 24, bstun: 14, push: 3, hitstop: 10, str: 1, gdrain: 14, kd: true, kdVx: 9, kdVy: 7, label: 'Golem Smash', heavy: true } },
-  upper: { su: 11, ac: 4, rec: 24, reach: [0, 85], y: [0, 160], h: { dmg: 46, stun: 24, bstun: 14, push: 1, hitstop: 9, str: 1, gdrain: 12, launch: true, launchVy: 13.5, label: 'Golem Uppercut', heavy: true } }, // U, U, I
+  hp: { su: 10, ac: 2, rec: 22, grab: true, reach: [0, 95], y: [0, 150], h: { dmg: 18, stun: 12, bstun: 12, push: 0, hitstop: 6, str: 1, gdrain: 0, grab: true, label: 'Golem Grab', heavy: true } }, // I: it seizes them and holds them for three seconds
   sand: { su: 13, ac: 1, rec: 22 }, // U, U, K: it scoops up sand and stones and flings them into the air, to rain down on them
   core: { su: 18, ac: 1, rec: 26 }, // K: the core blaster
 };
-const GOLEM_ARMS = { lp: [[8, -92], [0, -92]], lowp: [[10, -60], [0, -30]], hp: [[4, -118], [90, -60]], upper: [[14, -22], [60, -138]], sand: [[26, -20], [64, -150]], core: [[-16, -102], [-12, -102]] }; // each blow's arm: drawn back, then thrown (x forward of the golem, y up)
-function newGolem(f) { return { x: f.x - f.facing * 90, facing: f.facing, act: null, queue: null, qT: 0, cd: 30, dashT: 0, ph: 0, spd: 0, y: 0, vy: 0, js: 0, crouch: false }; }
-function golemOrder(f, kind) { // U, U, I is the uppercut; U, U, K the sand toss; K alone the core blaster
+const GOLEM_ARMS = { lp: [[8, -92], [0, -92]], lowp: [[10, -60], [0, -30]], hp: [[30, -96], [62, -98]], sand: [[26, -20], [64, -150]], core: [[-16, -102], [-12, -102]] }; // each blow's arm: drawn back, then thrown (x forward of the golem, y up)
+function newGolem(f) { return { x: f.x - f.facing * 90, facing: f.facing, act: null, queue: null, qT: 0, cd: 30, dashT: 0, ph: 0, spd: 0, y: 0, vy: 0, js: 0, crouch: false, hp: 300, max: 300, broken: false, brokenT: 0, seen: {}, hold: null, flash: 0 }; }
+function golemOrder(f, kind) { // I (also U, U, I) is the grab; U, U, K the sand toss; ↓ + K the core blaster
   const g = f.golem; if (!g || f.ko) return;
   if (!g.seq || game.frame - g.seqT > 50) g.seq = []; g.seqT = game.frame; g.seq.push(kind); if (g.seq.length > 3) g.seq.shift();
   const seq = g.seq.join(',');
-  if (kind === 'hp' && seq.endsWith('lp,lp,hp')) kind = 'upper'; else if (kind === 'hk') kind = seq.endsWith('lp,lp,hk') ? 'sand' : 'core';
+  if (kind === 'hk') kind = seq.endsWith('lp,lp,hk') ? 'sand' : 'core';
   g.queue = kind; g.qT = 0;
 }
 function golemStart(f, kind, auto) { const g = f.golem, o = other(f); g.facing = Math.sign(o.x - g.x) || g.facing; g.alt = !g.alt; g.act = { kind, t: 0, id: ++serial, hit: false, auto: !!auto, alt: g.alt }; g.queue = null; if (kind === 'hp') sfx('swing'); }
@@ -126,6 +126,28 @@ function golemBlast(f, o) { // a beam of glowing core energy straight out of its
   game.shake = Math.max(game.shake, 4); g.x -= d * 6; sfx('flame');
   for (let i = 0; i < 10; i++) parts.push({ type: 'spark', x: g.x + d * 36, y: GROUND - 80 - g.y, vx: d * rnd(2, 9), vy: rnd(-3, 3), life: 12, max: 12, col: '255,200,90' });
 }
+const live0 = (f, o) => game.phase === 'fight' && !f.ko && !o.ko;
+function golemSeize(f, o) { // the grab: held for three seconds, so J, J, K can't miss
+  const g = f.golem; g.hold = { t: 180 }; setState(o, 'stunned'); o.stunT = 184; o.stunKind = 'held'; o.stunUsed = true;
+  popText(o.x, GROUND - 190, L('GRABBED!', '捕まえた！'), '255,215,140'); sfx('block'); game.shake = Math.max(game.shake, 3);
+}
+function golemBox(g) { return { x0: g.x - 46, x1: g.x + 46, y0: g.y, y1: g.y + (g.crouch ? 130 : 165) }; }
+function golemDamage(f, n, x, y) { // the golem takes a hit; at zero it comes apart
+  const g = f.golem; if (g.broken) return; g.hp = Math.max(0, g.hp - n); g.flash = 5; sfx('hitH'); sparks(x, y, 'hit');
+  if (g.hp <= 0) { g.broken = true; g.brokenT = 600; g.act = null; g.queue = null; if (g.hold) { const o = other(f); g.hold = null; if (o.state === 'stunned') setState(o, 'recover'); }
+    popText(g.x, GROUND - 200, L('GOLEM DOWN!', 'ゴーレム撃破！'), '255,170,110'); game.shake = Math.max(game.shake, 7); sfx('break');
+    for (let i = 0; i < 22; i++) parts.push({ type: 'spark', x: g.x + rnd(-40, 40), y: GROUND - rnd(10, 150), vx: rnd(-5, 5), vy: rnd(-3, 5), life: 22, max: 22, col: '170,130,80' }); dustAt(g.x, true); }
+}
+function golemTakeHits(f, o) { // the opponent's attacks can hit the golem too
+  const g = f.golem, gb = golemBox(g);
+  if (o.state === 'attack' && o.move && o.move.hitbox && o.mf > o.move.startup && o.mf <= o.move.startup + (o.move.active || 1) && !g.seen['m' + o.serial]) {
+    const hb = boxOf(o, o.move.hitbox); if (overlap(hb, gb)) { g.seen['m' + o.serial] = 1; golemDamage(f, Math.round((o.move.dmg || 20) * (o.ch.dmgMul || 1) * 0.7), g.x, GROUND - 90 - g.y); }
+  }
+  for (const p of projs) {
+    if (p.owner !== o || p.dead || g.seen['p' + p.id] || !(p.h || p.dmg) || p.type === 'decoy' || p.type === 'guardShadow') continue;
+    if (overlap(projBox(p), gb)) { g.seen['p' + p.id] = 1; golemDamage(f, Math.round(((p.h && p.h.dmg) || p.dmg || 15) * (o.ch.dmgMul || 1) * 0.8), p.x, GROUND - p.y); if (!p.pierce && !p.hold && p.type !== 'beam' && p.type !== 'flame') p.dead = true; }
+  }
+}
 function golemHit(f, o, h, hb, hu) { // resolved as if the golem were the attacker: its side decides the guard
   const g = f.golem, sv = [f.x, f.facing, f.vx, f.serial, f.kb]; f.x = g.x; f.facing = g.facing; f.serial = g.act.id;
   let res; try { res = applyHit(f, o, h, Math.sign(o.x - g.x) || g.facing, hb, hu); } finally { [f.x, f.facing, f.vx, f.serial, f.kb] = sv; } // (the wall pushes the attacker back: not the alchemist, when it's the golem that hit)
@@ -133,17 +155,27 @@ function golemHit(f, o, h, hb, hu) { // resolved as if the golem were the attack
 }
 function golemUpdate(f, o) {
   const g = f.golem; if (!g) return;
+  if (g.flash > 0) g.flash--;
+  if (g.broken) { g.act = null; g.queue = null; g.hold = null; if (--g.brokenT <= 0) { g.broken = false; g.hp = g.max; g.seen = {}; sfx('select'); popText(g.x, GROUND - 190, L('GOLEM REBUILT', 'ゴーレム復活'), '255,220,140'); for (let i = 0; i < 14; i++) parts.push({ type: 'spark', x: g.x + rnd(-40, 40), y: GROUND - rnd(5, 120), vx: 0, vy: 2, life: 14, max: 14, col: '255,200,110' }); } return; }
   const live = game.phase === 'fight' && !f.ko && !o.ko, dx = o.x - g.x, dir = Math.sign(dx) || g.facing, dist = Math.abs(dx);
   if (f.inp && f.inp.dashTap === 1) g.dashT = 18; // → → : the golem runs in too
   if (g.dashT > 0) g.dashT--;
   if (g.cd > 0) g.cd--;
   g.spd = 0;
+  if (live0(f, o)) golemTakeHits(f, o);
+  if (g.broken) return;
   if (game.phase === 'fight' && !f.ko) { if (f.ammo < f.ch.ammo) { if ((f.stoneT = (f.stoneT || 0) + 1) >= STONE_REGEN) { f.stoneT = 0; f.ammo++; sfx('select'); parts.push({ type: 'ring', x: f.x, y: GROUND - f.y - 60, r: 8, vr: 3, life: 10, max: 10, col: '255,220,140' }); } } else f.stoneT = 0; } // (the stones come back one at a time)
   const inp = f.inp || EMPTY; // the golem copies the alchemist: where he walks, when he jumps or crouches
   if (g.js !== f.jumpSerial) { g.js = f.jumpSerial; if (f.state === 'jump' && g.y <= 0) g.vy = f.ch.jumpV || JUMP_V; }
   if (g.y > 0 || g.vy > 0) { g.vy -= G; g.y += g.vy; if (g.y <= 0) { g.y = 0; g.vy = 0; dustAt(g.x, false); } }
   g.crouch = !!inp.down && g.y <= 0;
   if (!live) { g.act = null; g.queue = null; return; }
+  if (g.hold) { // holding them: pinned in front of it until the three seconds are up, or they're knocked loose
+    const hd = g.hold; hd.t--;
+    if (hd.t <= 0 || o.ko || ['knock', 'down', 'getup'].includes(o.state)) { g.hold = null; if (o.state === 'stunned') setState(o, 'recover'); }
+    else { o.x = clamp(g.x + g.facing * 70, WALL_L, WALL_R); o.vx = 0; if (o.state !== 'stunned') { setState(o, 'stunned'); o.stunT = hd.t + 4; } }
+    g.act = null; g.queue = null; g.spd = 0; return;
+  }
   const a = g.act;
   if (a) {
     const A = GOLEM_ACT[a.kind]; a.t++;
@@ -151,7 +183,7 @@ function golemUpdate(f, o) {
     if (A.reach) {
       if (a.t > A.su && a.t <= A.su + A.ac && !a.hit) {
         const x0 = g.x + g.facing * A.reach[0], x1 = g.x + g.facing * A.reach[1], hb = { x0: Math.min(x0, x1), x1: Math.max(x0, x1), y0: A.y[0] + g.y, y1: A.y[1] + g.y }, hu = hurtbox(o, false, !!A.h.low); // (a low punch reaches someone lying on the floor too)
-        if (hu && overlap(hb, hu)) { const res = golemHit(f, o, { type: 'mid', chip: false, proj: false, gbstun: 45, ...A.h }, hb, hu); if (res) a.hit = true; }
+        if (hu && overlap(hb, hu) && !(A.grab && (o.y > 20 || o.state === 'knock'))) { const res = golemHit(f, o, { type: 'mid', chip: false, proj: false, gbstun: 45, ...A.h }, hb, hu); if (res) { a.hit = true; if (A.grab && res === 'hit') golemSeize(f, o); } }
       }
     } else if (a.t === A.su) { if (a.kind === 'sand') golemSand(f, o); else golemBlast(f, o); }
     if (a.t >= A.su + A.ac + A.rec || (a.hit && g.queue && (a.kind === 'lp' || a.kind === 'lowp') && a.t >= A.su + A.ac + 2)) { g.act = null; g.cd = a.auto ? 36 : 10; } // (a punch that landed can be cancelled into the next order: strings link)
@@ -205,15 +237,26 @@ function drawAlchemist(J, C, o) {
   seg(J.sh, J.e1, 9, C.coat); seg(J.e1, J.h1, 8, C.coat); seg(mid(J.e1, J.h1, 0.85), J.h1, 6, C.coatB); dot(J.h1, 4.8, C.skin);
 }
 DRAWERS.alchemist = drawAlchemist;
+function drawGolemPile(g) { // it has come apart: pieces fall and settle in a heap, then pull together again for the last moments
+  const t = 600 - g.brokenT, fall = Math.min(1, t / 30), rise = Math.max(0, 1 - g.brokenT / 45), k = fall * (1 - rise * rise);
+  ctx.save(); ctx.translate(g.x, GROUND); ctx.scale(1.4, 1.4); ctx.lineJoin = 'round';
+  ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(0, 0, 40, 8, 0, 0, Math.PI * 2); ctx.fill();
+  const PIECES = [[-30, -34, 20, 24, -38, -6, 0.3], [8, -34, 20, 24, 18, -5, -0.4], [-34, -86, 30, 34, -44, -12, 0.9], [4, -80, 34, 40, 6, -9, -0.5], [-16, -122, 30, 30, -10, -22, 1.2], [-42, -70, 14, 26, -58, -6, 1.4], [30, -64, 14, 26, 40, -7, -1.1], [14, -50, 18, 18, 26, -12, 0.7], [-12, -60, 16, 16, -22, -15, -0.9]];
+  for (const [x, y, w, h, hx, hy, rot] of PIECES) { const px = lerp(x, hx, k), py = lerp(y, hy - h * 0.2 + 14, k) + (rise > 0 ? Math.sin(t * 0.8 + x) * 2 * rise : 0);
+    ctx.save(); ctx.translate(px + w / 2, py + h / 2); ctx.rotate(rot * k); ctx.fillStyle = '#8b6a47'; ctx.strokeStyle = '#4a3523'; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, 4); ctx.fill(); ctx.stroke(); ctx.restore(); }
+  if (rise > 0) { ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(0, -60, 2, 0, -60, 70); gg.addColorStop(0, `rgba(255,190,80,${0.7 * rise})`); gg.addColorStop(1, 'rgba(255,150,40,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(0, -60, 70, 0, Math.PI * 2); ctx.fill(); }
+  ctx.restore();
+  const w = 60, x = g.x - w / 2, y = GROUND - 62; ctx.fillStyle = 'rgba(8,8,20,.7)'; ctx.fillRect(x - 2, y - 2, w + 4, 8); ctx.fillStyle = '#ffd98a'; ctx.fillRect(x, y, w * (1 - g.brokenT / 600), 4); // the time until it's rebuilt
+}
 function drawGolem(f) { // a brown stone golem, drawn in the world where it stands
   const g = f.golem; if (!g) return;
+  if (g.broken) { drawGolemPile(g); return; }
   const t = globalT, a = g.act, A = a && GOLEM_ACT[a.kind], s = 1.4, wk = Math.sin(g.ph * 6) * (g.spd > 0 ? 1 : 0), e = x => x * x * (3 - 2 * x);
   let squat = g.crouch ? 0.78 : 1, lean = 0, glow = 1, front = 0;
   if (a) { const k = a.t, su = A.su;
-    if (a.kind === 'upper') { squat = k <= su ? 1 - 0.2 * e(k / su) : lerp(0.8, 1.06, Math.min(1, (k - su) / 3)); lean = k <= su ? -0.12 : 0.1; }  // sinks low, then drives up
     if (a.kind === 'sand') { squat = k <= su ? 1 - 0.22 * e(k / su) : lerp(0.78, 1.05, Math.min(1, (k - su) / 3)); lean = k <= su ? 0.1 : -0.08; }
     if (a.kind === 'core') { glow = 1 + 2.4 * e(Math.min(1, k / su)) * (k <= su + 4 ? 1 : Math.max(0, 1 - (k - su - 4) / 14)); lean = k <= su ? -0.1 : 0.06; squat = k <= su ? 0.97 : 1; } // the core swells, then fires
-    if (a.kind === 'hp') lean = k <= su ? -0.12 : 0.14; if (a.kind === 'lp' || a.kind === 'lowp') lean = k <= su ? -0.04 : 0.06; }
+    if (a.kind === 'hp') lean = k <= su ? -0.06 : 0.1; if (a.kind === 'lp' || a.kind === 'lowp') lean = k <= su ? -0.04 : 0.06; }
   ctx.save(); ctx.translate(g.x, GROUND - g.y); ctx.scale(g.facing * s, s); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(0, 0, 38, 8, 0, 0, Math.PI * 2); ctx.fill();
   const rock = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.strokeStyle = '#4a3523'; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(x, y, w, h, 5); ctx.fill(); ctx.stroke(); };
@@ -222,11 +265,11 @@ function drawGolem(f) { // a brown stone golem, drawn in the world where it stan
   ctx.save(); ctx.translate(0, -34); ctx.rotate(lean); ctx.scale(1, squat); ctx.translate(0, 34); // the whole upper body sinks, leans and rises
   const arm = (sx, sy, fx, fy, c) => { ctx.strokeStyle = '#4a3523'; ctx.lineWidth = 19; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(fx, fy); ctx.stroke(); ctx.strokeStyle = c; ctx.lineWidth = 13; ctx.stroke(); ctx.fillStyle = c; ctx.strokeStyle = '#4a3523'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(fx, fy, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); };
   const hand = (rest, two) => { if (!a) return rest; const [pull, fw] = GOLEM_ARMS[a.kind] || GOLEM_ARMS.lp, k = a.t, su = A.su, end = su + A.ac;
-    const fwd = A.reach ? [30 + A.reach[1] * 0.8 * (a.kind === 'upper' ? 0.7 : 1), fw[1]].map((v, i) => i ? v : (a.kind === 'hp' ? fw[0] : a.kind === 'upper' ? fw[0] : v)) : fw;
+    const fwd = A.reach ? [a.kind === 'hp' ? fw[0] : 30 + A.reach[1] * 0.8, fw[1]] : fw;
     const sh = two ? -2 : 0; // (the other hand of a two-handed blow trails a little)
     return k <= su ? [lerp(rest[0], pull[0], e(k / su)), lerp(rest[1], pull[1], e(k / su))] : k <= end + 2 ? [lerp(pull[0], fwd[0] + sh, Math.min(1, (k - su) / 2)), lerp(pull[1], fwd[1], Math.min(1, (k - su) / 2))]
       : [lerp(fwd[0], rest[0], e(Math.min(1, (k - end - 2) / (A.rec * 0.8)))), lerp(fwd[1], rest[1], e(Math.min(1, (k - end - 2) / (A.rec * 0.8))))]; };
-  const twoHanded = a && (a.kind === 'sand' || a.kind === 'core' || a.kind === 'upper' || a.kind === 'hp');
+  const twoHanded = (a && (a.kind === 'sand' || a.kind === 'core' || a.kind === 'hp')) || !!g.hold;
   const farRest = [-42, -46 - bob], nearRest = [34, -48 - bob], useFar = a && a.alt && !twoHanded;
   const farH = twoHanded ? hand([-30, -50], true) : useFar ? hand(farRest) : farRest, nearH = (a && !useFar) ? hand(nearRest) : nearRest;
   if (!useFar) arm(-30, -86 - bob, farH[0] - (twoHanded ? 8 : 0), farH[1], '#7a5b3b');                       // the far arm
@@ -239,6 +282,8 @@ function drawGolem(f) { // a brown stone golem, drawn in the world where it stan
   else arm(30, -86 - bob, nearH[0], nearH[1], '#9a7852');
   ctx.restore();
   ctx.restore();
+  const w = 60, x = g.x - w / 2, y = GROUND - g.y - 176 * (g.crouch ? 0.85 : 1); ctx.fillStyle = 'rgba(8,8,20,.7)'; ctx.fillRect(x - 2, y - 2, w + 4, 8); ctx.fillStyle = g.hp / g.max > 0.35 ? '#d9a65a' : '#e06a4a'; ctx.fillRect(x, y, w * g.hp / g.max, 4); // its health
+  if (g.flash > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(255,255,255,${0.12 * g.flash})`; ctx.fillRect(g.x - 50, GROUND - g.y - 170, 100, 170); ctx.restore(); }
 }
 STRINGS.alchemist = (() => { // in a juggle he throws aimed stones at them (the golem can't reach the air)
   const th = (label) => SJ('p', label, 'alThrowW', 'alThrow', { hitbox: null, stay: true, startup: 9, recovery: 14, onFrame: (f, o, mf) => { if (mf === f.move.startup) alchemistThrow(f, o); } });
