@@ -136,7 +136,7 @@ function startMove(f, mv, str, keepBuffer) {
     mv.windW = heavy || !mv.normal ? 1 : 0.55; // a jab winds up smaller than a heavy blow
   }
   const FM = f.ch.frameMod; // a fighter's own frame tuning: how much quicker his attacks come out, how much longer they stay out and how much longer he recovers
-  if (FM && !mv.super && !mv.air && !mv.jug && mv.startup < 900 && !mv.fmDone) { // (not supers, air attacks or juggle hits: combos keep their timing)
+  if (FM && !mv.super && !mv.air && !mv.jug && !mv.fixedFrames && mv.startup < 900 && !mv.fmDone) { // (fixedFrames: a string hit with its own hand-set frames) // (not supers, air attacks or juggle hits: combos keep their timing)
     mv.fmDone = true; const cls = !mv.normal ? 'tech' : (mv.str === 1 || mv.launch) ? 'heavy' : 'light';
     if (cls === 'tech') { if (mv.tellPre) { const cut = Math.round(mv.tellPre * (1 - FM.tell)); f.pre -= cut; mv.tellPre -= cut; } } // (shorter hand signs)
     else { const cut = Math.min(FM.su[cls], Math.max(0, (mv.antiPre || 0) - 1)); f.pre -= cut; if (mv.antiPre) mv.antiPre -= cut; } // (a shorter wind-up: the move's own frames are untouched)
@@ -248,7 +248,8 @@ function runMove(f, o, inp) {
     const id = f.chainQ; f.chainQ = null;
     const nm = chainMove(id, f);
     // only the press that queued this hit is used up, so a quick next press still counts for the following hit
-    if (nm) { nm.chainDepth = (mv.chainDepth || 0) + 1; nm.fiveEnder = nm.chainDepth >= 4 && !nm.air && !nm.jug; startMove(f, nm, nm.str, true); if (f.ctrl.consumeIf) f.ctrl.consumeIf(f.chainBt); return; } // (the fifth hit of a string: punishable when guarded)
+    if (nm) { const gap = nm.guardGap && f.lastResult === 'block' ? nm.guardGap : 0; nm.chainDepth = (mv.chainDepth || 0) + 1; nm.fiveEnder = nm.chainDepth >= 4 && !nm.air && !nm.jug; startMove(f, nm, nm.str, true); if (gap) { f.pre += gap; nm.preTotal = f.pre; } // (guardGap: when the last hit was guarded, this one comes later — a hole to hit into; on a hit the string stays a combo)
+      if (f.ctrl.consumeIf) f.ctrl.consumeIf(f.chainBt); return; } // (the fifth hit of a string: punishable when guarded)
   }
   // natural combos (Tekken style): a light attack that hit or was guarded can go straight into any other attack —
   // into another light one only from the first hit, so U and J strings can't run into each other over and over

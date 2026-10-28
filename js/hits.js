@@ -67,7 +67,7 @@ function uReach(d) { // how far the defender's U reaches (Lyra and Jesse reach m
   return U_REACH[d.key];
 }
 function techGuardLag(a, d, h) {
-  const five = a.state === 'attack' && a.move && a.move.fiveEnder && a.move.startup < 900;
+  const five = a.state === 'attack' && a.move && a.move.fiveEnder && !a.move.noFiveLag && a.move.startup < 900; // (noFiveLag: an ender with its own block frames)
   if (a.state === 'attack' && a.move && a.move.super && a.move.startup < 900) { const left = a.move.startup + (a.move.active || 0) + a.move.recovery - a.mf, cap = (h.bstun || 10) + 8; if (left > cap) a.move.recovery = Math.max(2, a.move.recovery - (left - cap)); return; } // (supers are safe when guarded)
   if ((!a.lastMoveTech && !five) || a.ko) return;
   const R = uReach(d), dist = Math.abs(a.x - d.x) + 30, travel = dist > R ? 16 + Math.ceil(Math.max(0, dist - R - 110) / 8) : 0; // (a dash in takes about 16 frames; the guard pushes them apart a little more)
@@ -146,7 +146,7 @@ const chipOf = (h, big) => Math.max(1, Math.ceil((h.dmg || 0) * (big ? CHIP_BIG 
 const LAUNCH_LAG = 36, LAUNCH_LAG_STRESS = 30;
 function launcherGuardLag(a, d, h) {
   const mv = a.move;
-  if (a.state !== 'attack' || !mv || !(mv.launch || h.launch) || h.proj || mv.super || mv.startup >= 900 || a.y > 0 || a.ko) return;
+  if (a.state !== 'attack' || !mv || !(mv.launch || h.launch) || mv.trip || h.proj || mv.super || mv.startup >= 900 || a.y > 0 || a.ko) return; // (a trip — a low that makes them fall — isn't a launcher)
   const need = (h.bstun || 10) + LAUNCH_LAG + Math.round(LAUNCH_LAG_STRESS * stressK(a)), left = mv.startup + (mv.active || 0) + mv.recovery - a.mf;
   if (left < need) mv.recovery += need - left;
   mv.lagLock = true; a.guardLagT = need; a.guardLagUntil = Math.max(a.guardLagUntil || 0, game.frame + need);

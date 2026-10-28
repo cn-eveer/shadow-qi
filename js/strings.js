@@ -17,10 +17,15 @@ const tieWhip = f => { // Tanaka's necktie, cracked like a whip
 const LCR = (label, o = {}) => ({ kind: 'p', str: 0, label, wind: 'psyRaise', pose: 'psyUp', jug: true, stay: true, startup: 13, active: 10, recovery: 10, dmg: 0, hitbox: null, jugVy: 7.5, onFrame: lyraCrystals, ...o, active: (o.crystals || 2) * (o.gap || 3) + 2 });
 const STRINGS = {
   ninja: { // Kuro: kunai slashes and shadow steps
-    n2: SG('p', 'Kunai Slash', 'slashW', 'slash', { blade: true, trail: { cx: 15, cy: 105, r: 70, a0: 70, a1: -30, col: '225,235,255' } }),
-    n3: SG('p', 'Reverse Slash', 'slash', 'kReverse', { blade: true, trail: { cx: 15, cy: 110, r: 70, a0: -30, a1: 70, col: '225,235,255' } }),
-    n4: SG('p', 'Shadow Step', 'dash', 'kStepSlash', { blade: true, step: 10, speedFx: true, startup: 7, hitbox: [10,100,30,120] }),
-    nF: SF('k', 'Shadow Crescent', 'spinW', 'roundhouse', { spin: [3, 9], trail: { cx: 0, cy: 80, r: 100, a0: -70, a1: 60, col: '190,150,255' } }),
+    // U, U, U, U, K (Street Fighter 6 style: on a hit it's one combo; guarded, it has holes — each hit is a different test)
+    //  2nd U: guard the first U and a U of their own beats it
+    //  3rd U: a slow high: guard the 2nd U and a fast or medium attack beats it, or duck it and hit back crouching
+    //  4th U: a quick low right after it — no gap to hit into, safe when guarded; on a hit it trips them, and the K catches them as they fall
+    //  K:     the final blow, slow, out a long time and slow to recover; guarded, a fast attack punishes it from up close
+    n2: SG('p', 'Kunai Slash', 'slashW', 'slash', { fixedFrames: true, guardGap: 12, startup: 4, active: 6, recovery: 12, advHit: 14, advBlock: -2, blade: true, trail: { cx: 15, cy: 105, r: 70, a0: 70, a1: -30, col: '225,235,255' } }),
+    n3: SG('p', 'Reverse Slash', 'slash', 'kReverse', { fixedFrames: true, pre: 8, guardGap: 12, startup: 6, active: 6, recovery: 18, advHit: 14, advBlock: -3, high: true, hitbox: [20,95,112,160], blade: true, trail: { cx: 15, cy: 110, r: 70, a0: -30, a1: 70, col: '225,235,255' } }),
+    n4: SG('p', 'Shadow Step', 'crouch', 'cPunch', { fixedFrames: true, startup: 3, active: 6, recovery: 10, advBlock: -2, low: true, hitbox: [15,105,0,42], launch: true, launchVy: 9, trip: true, blade: true, step: 10, speedFx: true }),
+    nF: SF('k', 'Shadow Crescent', 'spinW', 'roundhouse', { fixedFrames: true, pre: 8, startup: 10, active: 9, recovery: 24, advBlock: -6, /* (−12 once the guard stall is added) */ bpush: 3.5, noFiveLag: true, spin: [3, 9], trail: { cx: 0, cy: 80, r: 100, a0: -70, a1: 60, col: '190,150,255' } }),
     nL: SL('Kunai Rise', 'uppercutW', 'kunaiRise', { blade: true, trail: { cx: 10, cy: 90, r: 95, a0: -30, a1: 95, col: '225,235,255' } }),
     nE: SF('k', 'Crescent Kick', 'kickW', 'highKick', { dmg: 50, trail: { cx: 0, cy: 62, r: 78, a0: -45, a1: 95, col: '190,150,255' } }),
     nl2: SG('k', 'Sweep Slash', 'crouch', 'lowKick', { low: true, blade: true, hitbox: [20,90,8,44] }),

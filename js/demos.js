@@ -60,7 +60,7 @@ const KURO_DEMOS = [
     steps: [S('I', 'start', { btn: 'hp', holdFor: 80 })] },
   // punishes: their technique (played by a mirror) is countered during its tell, or guarded and then punished — or it's safe
   { name: "Punish U, U, U, U, K: Shadow Crescent", vs: 'self', tail: '', note: '', ax: 440, bx: 520, dummy: { at: 4, steps: [S('U', 'start', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })], guardAfter: true },
-    steps: [S('Guard ←', 'guard', {}), S("↓ + I", "punish", {"btn": "hp", "down": true, "reach": 100}), S("U", "air", {"btn": "lp"}), S("U", "chain", {"btn": "lp"}), S("K", "chain", {"btn": "hk"})] },
+    steps: [S('Guard ←', 'guard', {}), S("U", "punish", {"btn": "lp", "reach": 110}), S("U", "chain", {"btn": "lp"}), S("I", "chain", {"btn": "hp"}), S("U", "air", {"btn": "lp"}), S("K", "chain", {"btn": "hk"})] }, // (the K is only −12 now: a quick U, U, I punishes it, a launcher is too slow)
   { name: "Counter → → + U: Shadow Charge Upper", vs: 'self', tail: '', note: '', ax: 440, bx: 520, dummy: {"at": 4, "inp": {"ff": true, "btn": "lp"}, "guardAfter": true},
     steps: [S("U", "counterTell", {"btn": "lp"}), S("U", "chain", {"btn": "lp"}), S("I", "chain", {"btn": "hp"}), S("U", "air", {"btn": "lp"}), S("U", "chain", {"btn": "lp"}), S("K", "chain", {"btn": "hk"})] },
   { name: "Punish → → + U: Shadow Charge Upper", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"ff": true, "btn": "lp"}, "guardAfter": true},
