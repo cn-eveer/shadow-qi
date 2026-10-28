@@ -217,8 +217,12 @@ body.mobile .drawer{width:100vw;border-left:0}
 body.mobile .srow{padding:6px 0}
 body.mobile .drawer :is(small,.blurb,.note,h3,.scroll.combo){display:none}
 /* training: the fighter's moves over the game, to try each one */
-.tlist{position:absolute;left:50%;top:19%;transform:translateX(-50%);z-index:7;display:flex;align-items:center;gap:8px;background:rgba(8,6,26,.6);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:5px 6px;color:#fff;font:600 clamp(11px,1.6cqw,15px)/1.25 var(--body);text-align:center;user-select:none;-webkit-user-select:none}
+.tlist{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:7;display:flex;align-items:center;gap:8px;background:rgba(8,6,26,.6);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:5px 6px;color:#fff;font:600 clamp(11px,1.6cqw,15px)/1.25 var(--body);text-align:center;user-select:none;-webkit-user-select:none}
 .tlist[hidden]{display:none}
 .tlist button{flex:none;width:clamp(26px,4cqw,40px);aspect-ratio:1;border-radius:50%;border:2px solid rgba(255,255,255,.4);background:rgba(255,255,255,.1);color:#fff;font:700 clamp(10px,1.5cqw,15px) var(--body);padding:0;cursor:pointer;touch-action:none}
 .tlist .tm{min-width:clamp(150px,24cqw,280px)}
 .tlist .tc{font:400 clamp(14px,2.4cqw,24px) var(--hud);color:#ffd98a;letter-spacing:.02em;white-space:nowrap}
+.tlist .tm small{font-weight:400;opacity:.6}
+.tlist .tk{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:3px 5px;max-width:min(76cqw,720px);margin-top:3px}
+.tlist .tk span{font:400 clamp(12px,1.9cqw,19px) var(--hud);color:#ffd98a;letter-spacing:.02em;white-space:nowrap;padding:1px 6px;border:1px solid rgba(255,217,138,.35);border-radius:6px;background:rgba(255,255,255,.06)}
+.tlist .tk i{font-style:normal;opacity:.5}
