@@ -30,11 +30,12 @@ Object.assign(POSES, { // throwing a stone: the arm drawn back behind him with t
   alThrowLow: P(30, 70,86, -10,30, 40,4, -26,-12),
   alKnuckleW: P(-6, 20,120, -30,20, 24,6, -24,-10), alKnuckle: P(18, 92,92, -30,40, 34,6, -26,-10), // a stone held in the fist, driven straight out
   alOpus: P(-8, 160,172, 150,168, 22,4, -22,-8), // both arms raised
-  alIdle: P(-2, 26,82, -34,-112, 16,3, -16,-5), // composed: a glowing stone held loosely at the waist, the other hand behind his back
-  alGlasses: P(-3, 52,170, -34,-112, 16,3, -16,-5), // a finger pushing his spectacles up
-  alStoneUp: P(-5, 118,158, -34,-112, 18,3, -18,-6), // a glowing stone held up to the light
-  alBowDoc: P(26, 22,140, -36,-110, 16,2, -16,-6), // a polite doctor's bow, hand on the chest
-  alPresent: P(-4, 26,82, -78,-52, 20,3, -20,-6), // presenting his golem with an open hand
+  alIdle: P(-4, -13,32, -26,25, 18,3, -15,-5), // relaxed, chest up, both hands in his coat pockets
+  alGlasses: P(-3, 52,170, -27,24, 18,3, -15,-5), // a finger pushing his spectacles up (the other hand stays in its pocket)
+  alStoneUp: P(-5, 118,158, -25,26, 18,3, -18,-6), // a glowing stone held up to the light
+  alBowDoc: P(10, -27,18, -40,11, 16,2, -16,-6), // a curt nod, hands still in his pockets
+  alPresent: P(-4, 70,100, -26,25, 20,3, -20,-6), // a hand out toward his golem, the other in its pocket
+  alArmorIdle: P(6, 48,138, 26,122, 24,5, -24,-10), // in the golem armour: stone fists up, weight forward
   alBrace: P(10, 60,150, 50,150, 40,-30, -30,-30) }); // set low, arms crossed before him: the stone skin
 // U, I: the golem · J, K: Hohen · ↓ + U: golem low punch · ↓ + I: golem uppercut (a launcher) · ↓ + J / ↓ + K: his low stones
 // → → + J: stone lob (stuns) · → → + K: trap stone · → → + U: shield bash · → → + I: tackle (in a juggle: Golem Meteor, the bounce)
@@ -485,7 +486,9 @@ function drawAlchemist(J, C, o) {
   if (hurt || o.face === 'attack') { ctx.fillStyle = '#5a2a2a'; ctx.beginPath(); ctx.ellipse(7.2, -5.4, 2, hurt ? 2.4 : 1.4, 0, 0, Math.PI * 2); ctx.fill(); } else seg([5.6, -5.4], [9, -5.8], 1.2, '#8a4a3a');
   if (has(9)) armourHelmet(pal, fx, t);
   ctx.restore();
-  seg(J.sh, J.e1, 9, C.coat); seg(J.e1, J.h1, 8, C.coat); seg(mid(J.e1, J.h1, 0.85), J.h1, 6, C.coatB); dot(J.h1, 4.8, C.skin);
+  const pkt = add(add(J.hip, n, 4), td, 3), pocketed = !A && Math.hypot(J.h1[0] - pkt[0], J.h1[1] - pkt[1]) < 8; // (the front hand resting in its coat pocket)
+  seg(J.sh, J.e1, 9, C.coat); seg(J.e1, J.h1, 8, C.coat); seg(mid(J.e1, J.h1, 0.85), J.h1, 6, C.coatB);
+  if (pocketed) { const q = add(pkt, td, -4.5); seg(add(q, n, -3), add(q, n, 3), 9, C.coat); seg(add(pkt, n, -5.5), add(pkt, n, 5.5), 1.6, C.coatB); } else dot(J.h1, 4.8, C.skin); // (the cuff slips under the pocket's mouth)
   if (A) armourArm(J.e1, J.h1, pal, has, 1);
   if (A && has(6)) armourPauldron(add(J.sh, n, 9), td, pal, 1); // (the near shoulder's guard, over the arm)
 }
@@ -677,7 +680,7 @@ STRINGS.alchemist = { // the duet strings (any mix of U and J, three presses, th
 // in the golem armour: he fights in its stone himself
 const FUSED_LOOK = {}; for (const k of ['sk0', 'ck0', 'ck1', 'jk0', 'jk1', 'sk1']) FUSED_LOOK[k] = CHARS.alchemist.normalLook[k];
 Object.assign(FUSED_LOOK, { sp0: { label: 'Stone Jab', advHit: 11, push: 2 }, cp0: { label: 'Low Stone Jab' }, sp1: { label: 'Stone Smash' }, cp1: { label: 'Stone Uppercut' }, jp0: { label: 'Air Stone Jab' }, jp1: { label: 'Air Stone Smash' } }); // (his own stone fists)
-const FUSED_CH = { ...CHARS.alchemist, fused: true, lookKey: 'alchemistFused', normalLook: FUSED_LOOK, dmgMul: 1.15 * 1.3, takeMul: 0.7, scale: 1.12, walk: 3.3, back: 2.8, pDmg: 1.1,
+const FUSED_CH = { ...CHARS.alchemist, fused: true, lookKey: 'alchemistFused', normalLook: FUSED_LOOK, dmgMul: 1.15 * 1.3, takeMul: 0.7, scale: 1.12, idle: 'alArmorIdle', walk: 3.3, back: 2.8, pDmg: 1.1,
   sp: { fP: 'afBeam', fPH: 'afBoulder', fK: 'afSlide', fKH: 'afShoulder', bP: 'afBoulderRoll', bPH: 'afWall', bK: 'afQuake', bKH: 'afCyclone', dP: 'afPillar' }, sup: 'afCannon', fuseSp: null }; // (Tetsu's commands, his own techniques)
 STRINGS.alchemistFused = { // stone fists: overhand smashes, a core-light burst from his belly, pillars of rock
   n2: SG('p', 'Stone Straight', 'jabW', 'straight'), n3: SG('p', 'Stone Hook', 'alKnuckleW', 'alKnuckle', { dmg: 30 }), n4: SG('p', 'Overhand Smash', 'alOpus', 'alThrowLow', { hitbox: [20, 90, 40, 130], push: 2 }),

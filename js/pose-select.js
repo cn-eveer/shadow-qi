@@ -334,7 +334,7 @@ function finerMotion(f, p) { // little secondary motions layered on top of the p
   } else if (f.key === 'paladin') { // heavy plate: a slow deep breath, the shield arm settling, weight shifting foot to foot
     if (idle) { const b = Math.sin(t * 0.045); p.t += b * 1.2; p.a2u += Math.sin(t * 0.05 + 0.8) * 2.5; p.a1l += b * 2; p.l1l -= Math.max(0, b) * 2; p.l2l -= Math.max(0, -b) * 2; }
     if (walk) { const s = Math.sin(t * 0.32); p.t += 2 + s * 1.5; p.a2u += s * 3; }
-  } else if (f.key === 'alchemist' && !f.ch.fused) { // a composed doctor: a slow breath, the stone turning in his hand, and now and then a finger pushing his glasses up
+  } else if (f.key === 'alchemist' && !f.ch.fused) { // a composed doctor: a slow breath, hands easy in his pockets, and now and then a finger pushing his glasses up
     if (idle) { const b = Math.sin(t * 0.05); p.t += b * 0.9; p.a1l += Math.sin(t * 0.07) * 3; const g = t % 300; if (g < 40) { const k = Math.sin(Math.PI * g / 40); const q2 = lerpPose(p, POSES.alGlasses, 0.85 * k); return q2; } }
     if (walk) { const s = Math.sin(t * 0.3); p.t += 1 + s * 0.8; p.a1l += s * 4; }
   } else if (f.key === 'psychic') { // she floats: a slow drift, sleeves and the open hand flowing
