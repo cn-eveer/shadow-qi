@@ -164,7 +164,8 @@ Object.assign(CHARS, {
 CHARS.salary.lookKey = 'salary';
 // each fighter's own heavy attack in the air (I while jumping)
 const addLook = (ch, look) => { ch.normalLook = { ...(ch.normalLook || {}), ...look }; };
-addLook(CHARS.ninja, { jp1: { label: 'Air Kunai Slash', pose: 'slash', blade: true, trail: { cx: 15, cy: 100, r: 75, a0: 70, a1: -40, col: '225,235,255' } } });
+addLook(CHARS.ninja, { jp1: { label: 'Air Kunai Slash', pose: 'slash', blade: true, trail: { cx: 15, cy: 100, r: 75, a0: 70, a1: -40, col: '225,235,255' } },
+  ck1: { hitbox: [20,150,0,30], cpLaunch: true, launchVy: 13 } }); // ↓ + K, the Sweep: reaches further, and like the Crescent Kick it launches on a counter or a punish (a juggle), knocking down otherwise
 addLook(CHARS.brawler, { jp1: { label: 'Air Hammer Fist', pose: 'tHammer', burst: [70, 70], aura: true } });
 addLook(CHARS.salary, { jp1: { label: 'Air Briefcase Drop', pose: 'sCase' }, jk1: { label: 'Air Briefcase Swing', pose: 'sCase' }, ck1: { label: 'Briefcase Trip', wind: 'crouch', pose: 'sCase', hitbox: [20,120,0,40] } });
 for (const k in CHARS) CHARS[k].key = k;
