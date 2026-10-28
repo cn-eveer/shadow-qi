@@ -170,8 +170,9 @@ function comboBreak(f, o) {
   sparks(f.x + away * 40, cy, 'big'); sfx('break'); popText(f.x, GROUND - f.y - 190, L('COMBO BREAK!', 'コンボブレイク！'), '255,140,150');
   game.freeze = Math.max(game.freeze, 6); game.shake = Math.max(game.shake, 6);
 }
-// auto guard (Settings, on by default): the player — on this machine, not online, not the CPU — guards everything by himself, at the
-// right height and from either side, whenever he isn't attacking and isn't moving toward the opponent (toward: the way to them)
+// auto guard (Settings, on by default): the player — on this machine, not online, not the CPU — guards without holding back whenever
+// he isn't attacking and isn't moving toward the opponent (toward: the way to them): standing still guards standing (not lows),
+// crouching guards crouching (lows only); a back dash guards too
 const autoGuardFor = (f, toward) => game.autoGuard && !game.online && f.ctrl instanceof Human && f.inp && f.inp.h !== toward;
 const GUARD_STALL = 6; // frames an attacker loses when his attack is guarded (shown as a recoil)
 const JUG_HOLD_MAX = 150; // frames (2.5 s) U, U... can keep them up after the last lift or bounce: then only a new lift or the finisher still lands
@@ -186,7 +187,8 @@ const BOUNCE_DMG = 1.3; // a bounce (slammed into the floor and back up) hits 30
 //   'low'     legs only (sweeps, slides, floor shockwaves): a crouching guard stops it, a standing one doesn't; jump over it
 //   'midlow'  reaches the legs and the body (launchers rising off the floor, bounces and drops crashing down to it,
 //             big low swings, supers that fill the screen): it hits a crouching guard; a standing guard stops it; jump over it
-//   'mid'     the body, or the body and the head: both guards stop it (punches and anything higher pass over a crouching fighter)
+//   'mid'     the body, or the body and the head: a standing guard stops it; it hits a crouching fighter, as a counter hit
+//             (punches and anything higher pass over a crouching fighter)
 const LOW_TOP = 45, SHIN = 24; // (in game units from the floor)
 const fromAbove = m => !!(m && (m.bounce || m.meteor || m.overhead)), rising = m => !!(m && (m.launch || m.relaunch || m.neutralLaunch));
 function heightClass(h, hb) {
@@ -280,9 +282,9 @@ function applyHit(a, d, h, side, hb, hu) {
     return 'block';
   }
   const airGuard = (d.state === 'jump' || (d.state === 'land' && d.y > 0)) && !h.grab; // jumping (not launched): they can guard in the air
-  const canGuard = !d.ch.noGuard && ((d.state === 'stand' || d.state === 'crouch' || d.state === 'guard' || d.state === 'blockstun' || d.state === 'recover') && d.y <= 0 && !h.grab) || airGuard; // a throw can't be guarded
-  const autoAll = autoGuardFor(d, -side), hc = heightClass(h, hb);
-  const low = autoAll ? hc === 'low' : !!d.inp.down; // (auto guard: crouches for a low, stands for anything else)
+  const canGuard = !d.ch.noGuard && ((d.state === 'stand' || d.state === 'crouch' || d.state === 'guard' || d.state === 'blockstun' || d.state === 'recover' || d.state === 'bdash') && d.y <= 0 && !h.grab) || airGuard; // a throw can't be guarded; a back dash still guards
+  const autoAll = !airGuard && autoGuardFor(d, -side), hc = heightClass(h, hb);
+  const low = !!d.inp.down || d.state === 'crouch'; // (crouching: the guard is a crouching one — lows only)
   // holding away guards every attack, standing or crouching;
   // for a moment after the sides swap (a cross-up), holding either direction still guards
   const holding = d.inp.h === side || (!h.noGrace && d.inp.h !== 0 && game.frame - d.sideT <= 10)
@@ -291,10 +293,11 @@ function applyHit(a, d, h, side, hb, hu) {
   const autoBlock = d.ch.autoBlock && !d.ch.noGuard && d.state === 'stand' && d.y <= 0 && d.st >= 10 && Math.abs(d.vx) < 0.5 && !(d.inp && (d.inp.h || d.inp.btn || d.inp.down)) && !h.grab
     && !(d.ctrl instanceof Dummy && game.dummyMode !== 'guard'); // (a training dummy set to stand still stays hittable, for practising combos)
   if (autoBlock && !holding) popTextOnce(d, L('AUTO GUARD', 'オートガード'));
-  // a crouching guard stops lows and mids but not a mid + low attack; a standing guard stops mids and mid + lows but not lows
-  const lowHit = !airGuard && ((hc === 'low' && !low) || (hc === 'midlow' && low));
+  // a crouching guard stops lows only — a mid or a mid + low hits someone crouching, as a counter hit (highs pass over them);
+  // a standing guard stops highs, mids and mid + lows but not lows
+  const lowHit = !airGuard && ((hc === 'low' && !low) || ((hc === 'midlow' || hc === 'mid') && low));
   showHeight(d, side, hb, h);
-  if (hc === 'midlow' && low && !airGuard && canGuard && holding) popText(d.x, GROUND - d.y - 175, L('MID + LOW!', '中下段！'), '255,200,120'); // (crouch-guarding a mid + low: it hits)
+  if (hc !== 'low' && low && !airGuard && canGuard && (holding || autoAll)) popText(d.x, GROUND - d.y - 175, hc === 'midlow' ? L('MID + LOW!', '中下段！') : L('MID!', '中段！'), '255,200,120'); // (crouch-guarding a mid or a mid + low: it hits)
   if (canGuard && (holding || autoBlock || autoAll) && !lowHit) {
     const pushB = (h.bpush != null ? h.bpush : (h.push || 1) * 0.9) * (h.rushTag ? 1 : a.ch.pushMul || 1); // (rush strings keep their own spacing)
     const big = guardBig(a, h); d.guard -= guardCost(a, d, h, big); d.guardIdle = 0;
@@ -327,7 +330,8 @@ function applyHit(a, d, h, side, hb, hu) {
   const juggling = d.state === 'knock' && d.juggle;
   const punish = (d.state === 'attack' && d.move && d.mf > d.move.startup + d.move.active) || d.state === 'land';
   if (d.spirit && !d.spirit.broken && d.state === 'attack' && d.move && (d.pre > 0 || d.mf <= d.move.startup)) d.spirit.broken = game.frame; // (his technique was stopped: the seal breaks)
-  const counter = d.state === 'attack' && d.move && (d.mf <= d.move.startup || d.move.heal); // (praying leaves Aldric wide open)
+  const crouchCaught = !airGuard && d.y <= 0 && low && hc !== 'low' && ['stand', 'crouch', 'guard', 'blockstun', 'recover'].includes(d.state); // a mid caught them crouching
+  const counter = (d.state === 'attack' && d.move && (d.mf <= d.move.startup || d.move.heal)) || crouchCaught; // (praying leaves Aldric wide open)
   if (d.state === 'attack' && d.move && (d.pre > 0 || ((d.move.pre || d.move.slow) && d.mf <= d.move.startup))) { popText(d.x, GROUND - 200, 'INTERRUPTED!', '255,220,120'); d.pre = 0; } // a technique hit while gathering or casting is lost
   const cpl = h.cpLaunch && (punish || counter) && d.y <= 0; // Kuro's Crescent Kick launches on a counter or punish
   const meteorBounce = h.meteor && !d.mBounced && (d.y > 0 || d.juggle); // the meteor bounces someone in the air once per combo; otherwise it knocks down
