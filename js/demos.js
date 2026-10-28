@@ -1063,7 +1063,7 @@ function comboStep(f, o, steps, st, out) {
     const oAtk = o.state === 'attack' && o.move, rec = oAtk && o.move.startup < 900 && o.mf > o.move.startup + (o.move.active || 0) + 1;
     const shots = projs.some(p => p.owner === o && (p.dmg || (p.h && p.h.dmg)) && Math.abs(p.x - f.x) < 220 && (!p.vx || Math.sign(p.vx) === Math.sign(f.x - p.x))); // (their projectile still coming at him; one flying away doesn't matter)
     const done = free && ((rec && !shots) || (st.blocked && !oAtk && !shots) || (!oAtk && !shots && (game.demoState.t || 0) > 60));
-    if (!done) { if (threatened(f, o) || f.state === 'blockstun' || projs.some(p => p.owner === o)) { out.h = -fwd; if (isLowAtk(o)) out.down = true; } return out; }
+    if (!done) { if (threatened(f, o) || f.state === 'blockstun' || projs.some(p => p.owner === o)) { out.h = -(golemGuardDir(f, o) || fwd); if (isLowAtk(o)) out.down = true; } return out; } // (against Hohen's golem: guard away from it)
     st.i++; return comboStep(f, o, steps, st, out);
   }
   if (s.when === 'punish' && free && s.inp.reach && dist > s.inp.reach) { out.dashTap = 1; return out; } // too far: dash in first
@@ -1081,7 +1081,7 @@ function comboStep(f, o, steps, st, out) {
     go = free;
   }
   else if (s.when === 'air' && o.state === 'knock' && o.juggle) { // chase a launched opponent: dash if they're far
-    if (dist > (f.key === 'psychic' ? LYRA_RANGE - 40 : f.key === 'gunman' ? 330 : 100) && free) { if (dist > 120) out.dashTap = 1; else out.h = fwd; return out; } // (Lyra casts from where she stands)
+    if (dist > (f.key === 'psychic' ? LYRA_RANGE - 40 : f.key === 'gunman' || (f.key === 'alchemist' && !f.ch.fused) || s.inp.noChase ? 330 : 100) && free) { if (dist > 120) out.dashTap = 1; else out.h = fwd; return out; } // (Lyra casts from where she stands)
     const Fh = s.btn === 'lp' || s.btn === 'lk' ? 10 : 15, yF = o.y + o.vy * Fh - 0.5 * G * 0.62 * Fh * Fh; // where they'll be when the attack (wind-up included) lands
     go = (free && o.vy < 4 && (o.y < 150 || (o.vy < 0 && yF < 90))) || canCancel; // (a slower attack starts sooner as they fall from high up) juggle attacks reach up high; wait until they stop shooting upward
   } else if (s.when === 'counter') {
@@ -1120,6 +1120,9 @@ function pickRoute(f, kind, dist) {
   const list = DEMOS[f.key].filter(d => {
     const c = d.cpu, s0 = d.steps[0].inp; if (!c) return false;
     if (c.meter && f.meter < 100) return false;
+    if (f.golem) { // Hohen: routes for the golem armour only in it; a route that needs the golem in front of him or behind them only when it's there
+      if (!!c.fused !== !!f.ch.fused || (c.fuse && !(f.fuseG >= 100))) return false;
+      if (c.golem) { const g = f.golem, o = other(f); if (g.broken || g.hidden || (c.golem === 'front') !== (Math.sign(g.x - o.x) === Math.sign(f.x - o.x))) return false; } }
     if (kind === 'neutral') return !c.counter && !c.parry && dist >= c.min && dist <= c.max;
     if (kind === 'confirm') return s0.btn === 'hp' && s0.down && !s0.ff && !s0.bb; // starts with ↓ + I
     if (kind === 'stun') return d.steps.some(st => st.when === 'stun');
@@ -1143,7 +1146,8 @@ function setupDemo(i) {
   resetPositions();
   const d = curDemos()[i], [a, b] = fighters;
   if (d.bMeter) b.meter = d.bMeter;
-  a.x = d.ax; b.x = d.bx; a.facing = 1; b.facing = -1; a.meter = 100;
+  a.x = d.ax; b.x = d.bx; a.facing = 1; b.facing = -1; a.meter = 100; if (a.golem) { a.golem.x = d.gx != null ? d.gx : a.x + 70; a.fuseG = 100; } if (b.golem) b.golem.x = b.x + 70 * b.facing; // (Hohen's golem starts just ahead of him; his fusion gauge full)
+  if (d.armored && a.golem) armourUp(a); // (Hohen's armour samples start with it already on)
   if (d.ahp) { a.hp = d.ahp; a.healT = 600; }
   fighters.forEach(updatePose);
   game.demoState = { phase: 'intro', t: 0, i: 0, idle: 0 };

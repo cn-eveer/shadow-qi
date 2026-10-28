@@ -12,20 +12,21 @@ const IS_MOBILE = (() => { try { return /Android|iPhone|iPad|iPod|Mobile|Silk/i.
 const keys = new Set(), pressed = new Set(), pressT = {}; // pressT: real tick of each key press (keeps counting through hit pauses)
 class Human {
   constructor(map) { this.m = map; this.reset(); }
-  reset() { this.held = null; this.lastP = -99; this.lastK = -199; this.tapDir = 0; this.tapT = -99; this.ffDir = 0; this.ffT = -99; }
+  reset() { this.held = null; this.lastP = -99; this.lastK = -199; this.tapDir = 0; this.tapT = -99; this.ffDir = 0; this.ffT = -99; this.bfT = -99; this.lastJ = -99; this.lastKk = -199; }
   consume() { this.held = null; }
   consumeIf(t) { if (this.held && this.held.t === t) this.held = null; }
   read(f, frame, o) {
-    const m = this.m, k = c => keys.has(m[c]) || keys.has(ALT[c]);
+    const m = this.m, k = c => keys.has(m[c]) || keys.has(ALT[c]), toward0 = Math.sign(o.x - f.x) || f.facing;
     const h = (k('right') ? 1 : 0) - (k('left') ? 1 : 0);
     // double tap: the same direction pressed twice within 14 frames
     for (const [c, dir] of [['left', -1], ['right', 1]]) {
       if (!pressed.has(m[c]) && !pressed.has(ALT[c])) continue;
+      if (dir === toward0 && this.lastTap && this.lastTap.dir === -toward0 && frame - this.lastTap.t <= 16) this.bfT = frame; // ← then → (back, then toward them)
       if (this.tapDir === dir && frame - this.tapT <= 14) { this.ffDir = dir; this.ffT = frame; this.tapT = -99; }
       else { this.tapDir = dir; this.tapT = frame; }
       this.lastTap = { dir, t: frame };
     }
-    const toward = Math.sign(o.x - f.x) || f.facing;
+    const toward = toward0;
     const tap = this.lastTap && frame - this.lastTap.t <= 6 ? this.lastTap.dir : 0;
     const ff = this.ffDir === toward && frame - this.ffT <= 12, bb = this.ffDir === -toward && frame - this.ffT <= 18; // (← ← then → + button: a little longer to fit the → in)
     let btn = null;
@@ -34,12 +35,13 @@ class Human {
       // Punch + Kick only counts as "together" if the real key presses were close, even across a hit pause
       if (pressed.has(m.lp) || pressed.has(m.hp)) this.lastP = Math.max(pressed.has(m.lp) ? pressT[m.lp] : -999, pressed.has(m.hp) ? pressT[m.hp] : -999);
       if (pressed.has(m.lk) || pressed.has(m.hk)) this.lastK = Math.max(pressed.has(m.lk) ? pressT[m.lk] : -999, pressed.has(m.hk) ? pressT[m.hk] : -999);
-      // Punch + Kick within 4 frames of each other = super
-      this.held = { btn, sup: Math.abs(this.lastP - this.lastK) <= 4, ff, bb, t: frame };
+      if (pressed.has(m.lk)) this.lastJ = pressT[m.lk]; if (pressed.has(m.hk)) this.lastKk = pressT[m.hk];
+      // Punch + Kick within 4 frames of each other = super; ← → then J + K together = Hohen's fusion
+      this.held = { btn, sup: Math.abs(this.lastP - this.lastK) <= 4, fuse: Math.abs(this.lastJ - this.lastKk) <= 4 && frame - this.bfT <= 20, ff, bb, t: frame };
     }
     // a press stays buffered for a few frames, so a punish can be entered during guard stun
     const hb = this.held && frame - this.held.t <= 5 ? this.held : null;
-    return { held: { lp: k('lp'), hp: k('hp'), lk: k('lk'), hk: k('hk') }, h, down: k('down'), up: k('up'), upPress: pressed.has(m.up) || pressed.has(ALT.up), btn: hb ? hb.btn : null, sup: hb ? hb.sup : false, ff: hb ? hb.ff : false, bb: hb ? hb.bb : false, bt: hb ? hb.t : -1,
+    return { held: { lp: k('lp'), hp: k('hp'), lk: k('lk'), hk: k('hk') }, h, down: k('down'), up: k('up'), upPress: pressed.has(m.up) || pressed.has(ALT.up), btn: hb ? hb.btn : null, sup: hb ? hb.sup : false, fuse: hb ? !!hb.fuse : false, ff: hb ? hb.ff : false, bb: hb ? hb.bb : false, bt: hb ? hb.t : -1,
       ffNow: this.ffDir === toward && frame - this.ffT <= 2, bbNow: this.ffDir === -toward && frame - this.ffT <= 2, tap, charge: keys.has(m.charge),
       dashTap: this.ffT === frame ? (this.ffDir === toward ? 1 : -1) : 0 }; // the second tap itself: dash forward or roll back
   }
@@ -48,10 +50,10 @@ class Human {
 /* ================= CPU ================= */
 function threatOfLowDummy() {}
 // a low is coming (guard crouching)? judged like the hit itself (heightClass): anything else is guarded standing
-const isLowAtk = o => !!(o && o.state === 'attack' && o.move && (o.move.hitbox ? heightClass(o.move, boxOf(o, o.move.hitbox)) === 'low' : (!fromAbove(o.move) && (o.move.low || (!rising(o.move) && /low|Low|slide|Sweep|sweep|Belly/.test(o.move.pose || '')))))) ||
+const isLowAtk = o => golemLowAtk(o) || !!(o && o.state === 'attack' && o.move && (o.move.hitbox ? heightClass(o.move, boxOf(o, o.move.hitbox)) === 'low' : (!fromAbove(o.move) && (o.move.low || (!rising(o.move) && /low|Low|slide|Sweep|sweep|Belly/.test(o.move.pose || '')))))) ||
   projs.some(p => p.owner === o && p.type !== 'decoy' && p.type !== 'guardShadow' && (p.h ? heightClass(p.h, projBox(p)) : (p.low && !fromAbove(p) ? 'low' : 'mid')) === 'low'); // (a shockwave along the floor, a shot at the feet...; a ring that rises into a column isn't)
 function threatOf(f, o) {
-  const dist = Math.abs(o.x - f.x);
+  const dist = Math.abs(o.x - f.x), gt = golemThreat(f, o); if (gt) return gt; // (the golem's blow)
   if (o.state === 'attack' && o.move && o.move.hitbox && o.mf <= o.move.startup + o.move.active && dist < 210)
     return { key: 'm' + o.serial, kind: o.y > 0 ? 'air' : o.move.high ? 'high' : isLowAtk(o) ? 'low' : 'mid' };
   if (o.state === 'jump' && dist < 200 && o.vx !== 0 && Math.sign(o.vx) === Math.sign(f.x - o.x))
@@ -85,7 +87,7 @@ class CPU {
   }
   think(f, frame, o) {
     const out = { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false };
-    const dx = o.x - f.x, dist = Math.abs(dx), fwd = Math.sign(dx) || f.facing, N = f.key === 'ninja';
+    const dx = o.x - f.x, dist = Math.abs(dx), fwd = Math.sign(dx) || f.facing, N = f.key === 'ninja', gdir = golemGuardDir(f, o) || fwd; // (gdir: which way to guard — toward the golem when it is the one attacking, else toward the alchemist)
     if (f.state === 'down' && !f.ko) { // roll away or get up
       if (this.wakeFor !== f.kdSerial) { this.wakeFor = f.kdSerial; const r = Math.random(); this.wakeRoll = r < 0.3 ? -fwd : r < 0.42 ? fwd : 0; this.wakeAtk = Math.random() < 0.3; }
       if (this.wakeRoll && f.st >= 20) out.tap = this.wakeRoll;
@@ -166,7 +168,7 @@ class CPU {
     // like a player, it keeps holding guard as it comes out of a hit while they're still pressing (so a string can't just be restarted on it)
     if (f.state === 'hitstun' || f.state === 'blockstun') { if (!this.holdDecided) { this.holdDecided = true; this.holdGuard = Math.random() < (game.watch ? 0.6 : dif().block); } this.holdUntil = frame + 14; }
     else this.holdDecided = false;
-    if (canAct && this.holdGuard && frame < this.holdUntil && dist < 170 && (o.state === 'attack' || o.atkCD > 0)) { out.h = -fwd; if (isLowAtk(o)) out.down = true; return out; }
+    if (canAct && this.holdGuard && frame < this.holdUntil && dist < 170 && (o.state === 'attack' || o.atkCD > 0)) { out.h = -gdir; if (isLowAtk(o)) out.down = true; return out; }
     if (canAct && f.atkCD <= 0 && o.state === 'attack' && o.move && o.y <= 0 && this.routeReact !== o.serial && dist < 150) {
       this.routeReact = o.serial;
       const early = o.mf <= Math.min(3, o.move.startup);
@@ -189,14 +191,14 @@ class CPU {
     if (th) {
       if (this.threatKey !== th.key) {
         this.threatKey = th.key; this.reactAt = frame + (game.watch ? 4 + Math.random() * 7 : dif().react[0] + Math.random() * (dif().react[1] - dif().react[0])) | 0; // reacts later against a player
-        const r = Math.random(), jumpProj = game.watch ? 0.7 : 0.85, blockP = game.watch ? 0.62 : dif().block; // (more defensive: guards most attacks) // watching: a little less perfect defense, so more combos land
+        const r = Math.random(), jumpProj = game.watch ? 0.7 : 0.85, blockP = Math.max(game.watch ? 0.62 : dif().block, f.ch.cpuBlock || 0, th.kind === 'proj' && o.golem ? 0.85 : 0); // (Hohen's stones: guard them) // (more defensive: guards most attacks) // watching: a little less perfect defense, so more combos land
         this.def = (th.kind === 'high' && r < 0.3) ? 'duck' : r < blockP ? 'block' : (th.kind === 'proj' && r < jumpProj) ? 'jump' : (th.kind === 'air' && !N && r < 0.72) ? 'dp' : (th.kind === 'air' && r < 0.88) ? 'aa' : 'none';
         this.duckHit = false;
       }
     } else { this.threatKey = null; this.def = null; }
     const free = f.state === 'stand' || f.state === 'crouch' || f.state === 'guard' || f.state === 'blockstun' || f.state === 'charge' || f.state === 'recover';
     if (th && this.def && frame >= this.reactAt && free) {
-      if (this.def === 'block') { out.h = -fwd; if (th.kind === 'low' || isLowAtk(o)) out.down = true; return out; } // (crouching for a low)
+      if (this.def === 'block') { out.h = -gdir; if (th.kind === 'low' || isLowAtk(o)) out.down = true; return out; } // (crouching for a low)
       if (this.def === 'duck') { // duck under a punch, then kick low
         out.down = true;
         if (!this.duckHit && o.mf > o.move.startup + o.move.active) { this.duckHit = true; out.btn = 'lk'; }
@@ -220,7 +222,7 @@ class CPU {
       this.wakeWait = o.kdSerial; if (dist < 90) out.h = -fwd * 0.5; return out; }
     if (actionable && this.wakeWait != null && o.state === 'stand' && !(o.wakeT > 0)) { // the moment they're hittable again: press in (or keep guarding)
       this.wakeWait = null; if (dist < 115 && Math.random() < (game.watch ? 0.7 : 0.55)) { out.btn = 'lp'; return out; } }
-    if (actionable && !th && o.state === 'attack' && o.move && dist < 140 && o.mf <= o.move.startup && Math.random() < 0.5) { out.h = -fwd; if (isLowAtk(o)) out.down = true; return out; } // they're starting something nearby: guard first
+    if (actionable && !th && o.state === 'attack' && o.move && dist < 140 && o.mf <= o.move.startup && Math.random() < 0.5) { out.h = -gdir; if (isLowAtk(o)) out.down = true; return out; } // they're starting something nearby: guard first
     if (actionable && !th && o.state === 'attack' && o.move && o.move.normal && !o.move.air && o.mf > o.move.startup + o.move.active && dist < 105 && this.punishKey !== o.serial) {
       this.punishKey = o.serial;
       if (Math.random() < (game.watch ? 0.65 : dif().punish)) { out.btn = dist < 82 ? 'lp' : 'lk'; this.chargeUntil = 0; return out; }
@@ -233,7 +235,7 @@ class CPU {
     if (p.jump) { out.up = true; out.h = p.jump * fwd; p.jump = 0; }
     if (p.dash) { out.dashTap = p.dash; p.dash = 0; }
     if (p.btn) {
-      out.btn = p.btn; out.sup = !!p.sup;
+      out.btn = p.btn; out.sup = !!p.sup; out.fuse = !!p.fuse; // (fuse: Hohen's ← → + J + K)
       if (p.ff) out.ff = true; else if (p.bb) out.bb = true; else if (p.dir === 'd') out.down = true;
       if (p.down) out.down = true; // rising version of a special
       p.btn = null;
@@ -244,6 +246,8 @@ class CPU {
   }
   decide(f, o, dist) {
     const N = f.key === 'ninja', r = Math.random(), s = Math.random() < 0.5 ? 'l' : 'h';
+    if (f.golem && (f.fuseG >= 100 || f.meter >= 100)) { const hp = hohenPlan(f, o, dist, r); if (hp && (hp.fuse || hp.sup)) return hp; } // (Hohen: the armour or the super first, when they're ready)
+    if (o.golem && Math.random() < 0.75) { const vg = vsGolemPlan(f, o, dist); if (vg) return vg; } // (against Hohen: over the golem, or through it)
     if (Math.random() < (game.watch ? (dist < 95 ? 0.1 : 0.5) : Math.min(0.6, 0.18 * dif().combo))) { const rt = pickRoute(f, 'neutral', dist); if (rt) { this.route = rt; return {}; } } // go for one of the sample combos
     if (f.meter >= 100 && dist < 520 && r < 0.3) return { btn: 'hp', sup: true };
     if (dist < 330 && Math.random() < 0.07) { // rising versions used on their own
@@ -251,6 +255,7 @@ class CPU {
         : (dist < 110 ? [{ btn: 'lp', ff: true, down: true }, { btn: 'hk', ff: true, down: true }, { btn: 'hk', bb: true, down: true }] : [{ btn: 'lp', bb: true, down: true }, { btn: 'hp', ff: true, down: true }]);
       return opts[Math.random() * opts.length | 0];
     }
+    if (f.golem) { const hp = hohenPlan(f, o, dist, Math.random()); if (hp) return hp; } // Hohen: zones with stones and keeps the golem between them
     if (f.key === 'staff') { // Mei: jumps in a lot, pokes with the staff from mid range
       if (dist > 340) return r < 0.3 ? { dash: 1 } : r < 0.4 ? { jump: 1 } : (r < 0.6 && f.meter < 100) ? { chargeMP: rnd(40, 90) | 0 } : r < 0.7 ? { btn: 'hp', bb: true } : { walk: 1 };
       if (dist > 150) return r < 0.26 ? { btn: 'lp', ff: true } : r < 0.38 ? { btn: 'hp', ff: true } : r < 0.52 ? { btn: 'lk', ff: true } : r < 0.58 ? { jump: 1 } : r < 0.64 ? { btn: 'hp', bb: true }
@@ -305,13 +310,13 @@ class Dummy {
       const st = game.demoState, d = curDemos()[game.demoIdx];
       if (d.dummy && d.dummy.guard && st && st.phase === 'run') {
         if (f.state === 'blockstun') st.guardSeen = true; else if (st.guardSeen && d.dummy.guard !== 'all') st.guardDone = true; // 'all': keeps guarding the whole time
-        if (!st.guardDone && (threatened(f, o) || f.state === 'blockstun')) return { h: -(Math.sign(o.x - f.x) || f.facing), down: isLowAtk(o), up: false, btn: null, sup: false, ff: false, bb: false, charge: false };
+        if (!st.guardDone && (threatened(f, o) || f.state === 'blockstun')) return { h: -(golemGuardDir(f, o) || Math.sign(o.x - f.x) || f.facing), down: isLowAtk(o), up: false, btn: null, sup: false, ff: false, bb: false, charge: false };
         if (!st.guardDone) return { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false };
       }
       if (d.dummy && d.dummy.steps && st && st.phase === 'run' && st.t >= (d.dummy.at || 0)) { st.dSt = st.dSt || { i: 0 }; const out = comboStep(f, o, d.dummy.steps, st.dSt, { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false }); if (st.dSt.i >= d.dummy.steps.length) st.dummyDone = true; if (!st.dummyDone || out.btn) return out; }
       if (d.dummy && d.dummy.seq && st && st.phase === 'run') { const e = d.dummy.seq.find(q => q[0] === st.t); if (e) { if (e[2]) st.dummyDone = true; return { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false, ...e[1] }; } } // (a sequence of presses: a whole string)
       if (d.dummy && d.dummy.inp && st && st.phase === 'run' && !st.dummyDone && st.t >= (d.dummy.at || 0)) { st.dummyDone = true; return { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false, ...d.dummy.inp }; }
-      if (d.dummy && d.dummy.guardAfter && st && st.dummyDone && f.state !== 'attack' && (threatened(f, o) || f.state === 'blockstun')) return { h: -(Math.sign(o.x - f.x) || f.facing), down: isLowAtk(o), up: false, btn: null, sup: false, ff: false, bb: false, charge: false }; // (a punish sample: once its technique is over, the opponent guards — only a real punish gets in)
+      if (d.dummy && d.dummy.guardAfter && st && st.dummyDone && f.state !== 'attack' && (threatened(f, o) || f.state === 'blockstun')) return { h: -(golemGuardDir(f, o) || Math.sign(o.x - f.x) || f.facing), down: isLowAtk(o), up: false, btn: null, sup: false, ff: false, bb: false, charge: false }; // (a punish sample: once its technique is over, the opponent guards — only a real punish gets in)
     }
     if (game.dummyMode === 'cpu') return this.cpu.read(f, frame, o);
     const out = { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false };

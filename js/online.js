@@ -13,7 +13,7 @@ function netLocalMask() { // this player's buttons right now
 }
 class NetHuman { // turns a player's button history into the same inputs the keyboard controller produces
   constructor(side) { this.side = side; this.reset(); }
-  reset() { this.held = null; this.lastP = -99; this.lastK = -199; this.tapDir = 0; this.tapT = -99; this.ffDir = 0; this.ffT = -99; this.lastTick = -1; this.lastTap = null; }
+  reset() { this.held = null; this.lastP = -99; this.lastK = -199; this.tapDir = 0; this.tapT = -99; this.ffDir = 0; this.ffT = -99; this.lastTick = -1; this.lastTap = null; this.bfT = -99; this.lastJ = -99; this.lastKk = -199; }
   consume() { this.held = null; }
   consumeIf(t) { if (this.held && this.held.t === t) this.held = null; }
   read(f, frame, o) {
@@ -22,9 +22,10 @@ class NetHuman { // turns a player's button history into the same inputs the key
     let press = 0; for (let t = from; t <= cur; t++) press |= mask(t) & ~mask(t - 1); // presses since the last read, even during a hit pause
     this.lastTick = cur;
     const m = mask(cur), has = b => !!(m & b), pr = b => !!(press & b);
-    const h = (has(NBIT.right) ? 1 : 0) - (has(NBIT.left) ? 1 : 0);
+    const h = (has(NBIT.right) ? 1 : 0) - (has(NBIT.left) ? 1 : 0), toward0 = Math.sign(o.x - f.x) || f.facing;
     for (const [bit, dir] of [[NBIT.left, -1], [NBIT.right, 1]]) {
       if (!pr(bit)) continue;
+      if (dir === toward0 && this.lastTap && this.lastTap.dir === -toward0 && frame - this.lastTap.t <= 16) this.bfT = frame; // ← then →
       if (this.tapDir === dir && frame - this.tapT <= 14) { this.ffDir = dir; this.ffT = frame; this.tapT = -99; } else { this.tapDir = dir; this.tapT = frame; }
       this.lastTap = { dir, t: frame };
     }
@@ -35,10 +36,11 @@ class NetHuman { // turns a player's button history into the same inputs the key
     if (btn) {
       if (pr(NBIT.lp) || pr(NBIT.hp)) this.lastP = frame;
       if (pr(NBIT.lk) || pr(NBIT.hk)) this.lastK = frame;
-      this.held = { btn, sup: Math.abs(this.lastP - this.lastK) <= 4, ff, bb, t: frame };
+      if (pr(NBIT.lk)) this.lastJ = frame; if (pr(NBIT.hk)) this.lastKk = frame;
+      this.held = { btn, sup: Math.abs(this.lastP - this.lastK) <= 4, fuse: Math.abs(this.lastJ - this.lastKk) <= 4 && frame - this.bfT <= 20, ff, bb, t: frame };
     }
     const hb = this.held && frame - this.held.t <= 5 ? this.held : null;
-    return { held: { lp: has(NBIT.lp), hp: has(NBIT.hp), lk: has(NBIT.lk), hk: has(NBIT.hk) }, h, down: has(NBIT.down), up: has(NBIT.up), upPress: pr(NBIT.up), btn: hb ? hb.btn : null, sup: hb ? hb.sup : false, ff: hb ? hb.ff : false, bb: hb ? hb.bb : false, bt: hb ? hb.t : -1,
+    return { held: { lp: has(NBIT.lp), hp: has(NBIT.hp), lk: has(NBIT.lk), hk: has(NBIT.hk) }, h, down: has(NBIT.down), up: has(NBIT.up), upPress: pr(NBIT.up), btn: hb ? hb.btn : null, sup: hb ? hb.sup : false, fuse: hb ? !!hb.fuse : false, ff: hb ? hb.ff : false, bb: hb ? hb.bb : false, bt: hb ? hb.t : -1,
       ffNow: this.ffDir === toward && frame - this.ffT <= 2, bbNow: this.ffDir === -toward && frame - this.ffT <= 2, tap, charge: has(NBIT.charge),
       dashTap: this.ffT === frame ? (this.ffDir === toward ? 1 : -1) : 0 };
   }

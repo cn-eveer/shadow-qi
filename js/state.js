@@ -39,6 +39,7 @@ function resetFighter(f) {
     hipUp: null, serial: 0, jumpSerial: 0, guard: 100, guardIdle: 0, lastToward: 0, sideT: -99, calm: 0,
     shadow: false, followQ: null, lastResult: null, shadowRun: false, atkCD: 0, resting: 0, ammo: f.ch.ammo || 0, reloadT: 0,
   });
+  f.golem = f.key === 'alchemist' ? newGolem(f) : null; // (the alchemist's stone golem, standing behind him)
   if (f.ctrl.reset) f.ctrl.reset();
 }
 function setState(f, s) {
@@ -84,6 +85,7 @@ function countProj(f, type) { let n = 0; for (const p of projs) if (p.owner === 
 const inAir = o => (o.state === 'knock' && o.juggle) || ((o.state === 'jump' || o.state === 'attack') && o.y > 25);
 function resolveSpecial(f, o, inp) {
   if (!inp.btn) return null;
+  if (inp.fuse && f.ch.fuseSp && f.fuseG >= 100) return f.ch.fuseSp; // ← → + J + K with his fusion gauge full (Hohen's golem armour)
   if (inp.sup && f.meter >= 100) return f.ch.sup;
   const isP = inp.btn[1] === 'p', heavy = inp.btn[0] === 'h';
   if (inp.ff || inp.bb) {
@@ -204,7 +206,7 @@ function runMove(f, o, inp) {
   if (mv.fx && FX_TICK[mv.fx]) FX_TICK[mv.fx](f, mv);
   // combos: the next button pressed while this hit is still going queues the next hit of the chain
   const ckey = inp.btn && mv.chain ? ((inp.down && mv.chain['d' + inp.btn]) ? 'd' + inp.btn : inp.btn) : null; // ↓ + button can pick a different next hit
-  if (ckey && !f.chainQ && mv.chain[ckey] && !inp.ff && !inp.bb && !inp.sup) { f.chainQ = mv.chain[ckey]; f.chainBt = inp.bt; }
+  if (ckey && !f.chainQ && mv.chain[ckey] && !inp.ff && !inp.bb && !inp.sup && !inp.fuse) { f.chainQ = mv.chain[ckey]; f.chainBt = inp.bt; }
   if (f.chainQ && f.mf >= mv.startup + mv.active) {
     const id = f.chainQ; f.chainQ = null;
     const nm = chainMove(id, f);
@@ -214,7 +216,7 @@ function runMove(f, o, inp) {
   // natural combos (Tekken style): a light attack that hit or was guarded can go straight into any other attack —
   // into another light one only from the first hit, so U and J strings can't run into each other over and over
   if (mv.normal && mv.str === 0 && !mv.air && f.y <= 0 && f.hitConnected && inp.btn && !f.chainQ && !(mv.chain && mv.chain[inp.btn])
-      && !inp.ff && !inp.bb && !inp.sup && f.mf >= mv.startup + mv.active) {
+      && !inp.ff && !inp.bb && !inp.sup && !inp.fuse && f.mf >= mv.startup + mv.active) {
     if (tryAttack(f, o, inp, !!mv.chainDepth)) { f.move.chainDepth = (mv.chainDepth || 0) + 1; return; }
   }
   // follow-ups (Shadow Ambush, Sky Drop Kick): a button inside the window queues the next move
@@ -237,10 +239,10 @@ function runMove(f, o, inp) {
   }
   if (mv.normal && f.y <= 0 && inp.btn) {
     // cancel into a special after a hit, or into the super if Punch + Kick were pressed a frame or two apart
-    const early = f.mf <= 4 && inp.sup && f.meter >= 100;
+    const early = f.mf <= 4 && ((inp.sup && f.meter >= 100) || (inp.fuse && f.fuseG >= 100)); // (← → + J + K: the same grace for Hohen's fusion)
     if (early || (f.hitConnected && f.mf > mv.startup)) {
       const sid = resolveSpecial(f, o, inp);
-      if (sid && (!early || sid === f.ch.sup)) {
+      if (sid && (!early || sid === f.ch.sup || sid === f.ch.fuseSp)) {
         const s2 = specialMove(sid);
         if (s2 && !s2.air && (!s2.proj || countProj(f, s2.proj) < s2.limit)) { if (mv.chainDepth) s2.chainDepth = mv.chainDepth + 1; startMove(f, s2, STR[inp.btn[0]]); return; } // (out of a string: still a string, so it ends with a rest)
       }
@@ -253,6 +255,7 @@ function runMove(f, o, inp) {
 }
 function threatened(f, o) {
   const d = Math.abs(o.x - f.x);
+  if (o.golem && golemThreatening(f, o)) return true; // (the golem is attacking)
   if (o.state === 'attack' && o.move && d < 280 && o.mf <= o.move.startup + o.move.active + 2 && !(o.move.walkAway && o.mf <= o.move.startup)) return true;
   for (const p of projs) if (p.owner === o && !p.dead && (p.type === 'beam' || p.type === 'flame' || (Math.sign(f.x - p.x) === Math.sign(p.vx) && Math.abs(p.x - f.x) < 300))) return true;
   return false;
@@ -285,6 +288,7 @@ function land(f) {
 
 function update(f, o, inp) {
   f.inp = inp; f.st++;
+  if (f.golem) golemUpdate(f, o);
   if (f.brands && --f.brandT <= 0) f.brands = 0; // holy brands fade
   if (f.healT > 0) f.healT--;
   if (f.possT > 0 && --f.possT === 0) endPossession(f);

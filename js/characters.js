@@ -126,7 +126,7 @@ Object.assign(CHARS, {
     meterCol: ['#3fb39a', '#b8f3ff'], bannerCol: 'rgba(40,150,130,.88)', idle: 'kIdle', chargePose: 'kEat', winPose: 'kWin', atkCD: 9, recoverT: 9, hitFx: 'claw',
   },
   gunman: {
-    idle: 'gHolster', name: 'JESSE', title: 'Gunslinger', nameJa: 'ジェシー', titleJa: 'ガンマン', ammo: 10, dmgMul: 1.43, scale: 1.02, walk: 3.3, back: 2.9, jumpX: 4.4, jumpV: 17.5, jugDmg: 1.05,
+    idle: 'gHolster', name: 'JESSE', title: 'Gunslinger', nameJa: 'ジェシー', titleJa: 'ガンマン', ammo: 15, dmgMul: 1.43, scale: 1.02, walk: 3.3, back: 2.9, jumpX: 4.4, jumpV: 17.5, jugDmg: 1.05,
     pDmg: 0.95, kDmg: 0.95, pReach: 1.0, kReach: 1.0, chargeRate: 0.6, auraCol: '255,210,140', fxCol: '255,230,160',
     sp: { fP: 'gnFan', fPH: 'gnQuick', fK: 'gnRoll', fKH: 'gnJumpShot', bP: 'gnDyna', bPH: 'gnDance', bK: 'gnBackflip', bKH: 'gnShowdown' }, sup: 'gnHighNoon',
     heavy: { // no kicks: both heavies are gunshots at mid range
@@ -227,7 +227,7 @@ const DEVIL_CH = { ...CHARS.salary, spLow: { fK: 'sdCrawl', bK: 'sdTail', fKH: '
   sp: { fP: 'sdLunge', fPH: 'sdMaul', fK: 'sdTailLash', fKH: 'sdTailUpper', bP: 'sdBeckon', bPH: 'smAngel', bK: 'sdWhip', bKH: 'sdDrain' }, sup: 'sdInferno',
   heavy: { p: { label: 'Hellclaw', startup: 10, active: 6, recovery: 18, hitbox: [10,160,40,170], wind: 'palmW', pose: 'kClaw', lunge: [3, 9, 4], hitstop: 11, kd: true, kdVx: 9 },
            k: { label: 'Demon Kick', startup: 10, active: 5, recovery: 18, hitbox: [10,150,30,130], wind: 'kickW', pose: 'highKick', lunge: [3, 8, 4], cpLaunch: true, launchVy: 12 } } };
-const DOUBLE_CH = { ...DEVIL_CH, possess: 'double', lookKey: 'salaryDevil', dmgMul: 2.1, drain: 2.2, scale: 1.4, armorAll: true, /* (both spirits in him: far bigger, and nothing short of a super or a throw stops him) */ regen: 0, noGuard: true, doubleJump: true, auraCol: '255,170,200', fxCol: '255,190,160', meterCol: ['#d0607a', '#ffe0c0'], // angel and devil both: wings and halo, horns and tail
+const DOUBLE_CH = { ...DEVIL_CH, possess: 'double', lookKey: 'salaryDevil', dmgMul: 2.1, drain: 2.2, scale: 1.4, tallBox: true, armorAll: true, /* (both spirits in him: far bigger, and nothing short of a super or a throw stops him) */ regen: 0, noGuard: true, doubleJump: true, auraCol: '255,170,200', fxCol: '255,190,160', meterCol: ['#d0607a', '#ffe0c0'], // angel and devil both: wings and halo, horns and tail
   sp: { fP: 'saJab', fPH: 'sdMaul', fK: 'sdTailLash', fKH: 'sdTailUpper', bP: 'sdBeckon', bPH: 'saFist', bK: 'saRay', bKH: 'sdDrain' },
   spLow: { bK: 'saRayLow', fK: 'sdCrawl', fKH: 'sdTrail' }, spUp: { bK: 'saRayFly' }, spFwd: { bK: 'sdChainB' } };
 Object.assign(ANGEL_CH, { spAuto: angelAuto }); Object.assign(DEVIL_CH, { spAuto: devilAuto }); Object.assign(DOUBLE_CH, { spAuto: (f, o, k) => angelAuto(f, o, k) || devilAuto(f, o, k) });
@@ -239,6 +239,7 @@ Object.assign(DEVIL_CH, { normalLook: { // the devil's kicks are all tail now, a
 } });
 ANGEL_CH.normalLook = { ...(CHARS.salary.normalLook || {}), jp1: { label: 'Air Light Fist', pose: 'blast', burst: [80, 90] }, sp0: { label: 'Light Jab', burst: [70, 120] }, ck1: { label: 'Feather Sweep', wind: 'crouch', pose: 'slideKick', hitbox: [20,120,0,34] }, jk1: { label: 'Air Wing Kick', pose: 'roundhouse' } };
 DEVIL_CH.normalLook = { ...(CHARS.salary.normalLook || {}), ...(DEVIL_CH.normalLook || {}), jp1: { label: 'Air Hellclaw', pose: 'kClawDown', claw: [80, 80, 0.9, 60, '255,120,90'] }, sp0: { label: 'Devil Swipe', pose: 'kClawDown', claw: [70, 100, 0.8, 40, '255,120,90'] }, ck1: { label: 'Tail Sweep', wind: 'crouch', pose: 'slideKick', hitbox: [20,130,0,34] }, jk1: { label: 'Air Tail Lash', pose: 'roundhouse' } };
+DOUBLE_CH.normalLook = DEVIL_CH.normalLook; // (double possession fights with the devil's claws and tail too: it was copied from the devil before these were set)
 // second palette, used when both online players pick the same fighter
 CHARS.gunman.idle = 'gHolster'; CHARS.gunman.crouchPose = CHARS.gunman.crouchPose || 'crouch'; // Jesse stands with his hands resting on the holstered guns
 Object.assign(CHARS.kappa, { altColors: { ...CHARS.kappa.colors, skin: '#7fb6e6', skinB: '#5a8fc0', shell: '#3d5f8a', shellB: '#2a4466', hair: '#24456b' } });

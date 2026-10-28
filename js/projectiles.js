@@ -138,10 +138,10 @@ function aimShot(f, o, h) { // a shot aimed straight at a juggled opponent, from
   const mx = sx + (tx - sx) / dd * 58 * s, my = sy + (ty - sy) / dd * 58 * s, d = Math.hypot(tx - mx, ty - my) || 1, sp = 40; // (fast: it lands before the next shot of the juggle)
   shoot(f, { x: mx, y: my, vx: (tx - mx) / d * sp * f.facing, vy: (ty - my) / d * sp, life: 12, ...h }); // (vx is relative to his facing; aimed even if they drift behind the muzzle)
 }
-// Jesse's guns hold 10 bullets. Each shooting attack uses one, however many shots it fires; when the last is gone he reloads for
-// 5 seconds (he can still move, jump and guard), and until then a shot only clicks on an empty chamber. Dynamite, the Showdown
+// Jesse's guns hold 15 bullets. Each shooting attack uses one, however many shots it fires; when the last is gone he reloads for
+// 4 seconds (he can still move, jump and guard), and until then a shot only clicks on an empty chamber. Dynamite, the Showdown
 // counter and High Noon don't need bullets.
-const RELOAD_T = 300;
+const RELOAD_T = 240;
 function useBullet(f) {
   const mv = f.move;
   if (mv && mv.shot) return mv.shot === 'live'; // (the rest of this attack's shots)

@@ -5,7 +5,7 @@
 <h1 align="center">Shadow ✕ Qi</h1>
 
 <p align="center"><b>A 2D fighting game that runs in your browser.</b><br>
-Eight fighters · combos & supers · CPU battles (4 difficulties) · training · real-time online battles · 日本語 / English</p>
+Nine fighters · combos & supers · CPU battles (4 difficulties) · training · real-time online battles · 日本語 / English</p>
 
 <p align="center"><a href="https://cn-eveer.github.io/shadow-qi/"><b>▶ Play now</b></a></p>
 
@@ -23,6 +23,7 @@ Eight fighters · combos & supers · CPU battles (4 difficulties) · training ·
 | 🐸 | **Kappa** — Mythic Kappa | dish water, shell tricks, poison, and a riptide (← ← + K) that drags runaways back |
 | 🤠 | **Jesse** — Gunslinger | quick draw from the holster, charge shots, aimed juggles — ten bullets, then a five-second reload |
 | 💼 | **Tanaka** — Salaryman | office supplies — and angel, devil, or **double** possession |
+| 🪨 | **Hohen** — Golem Doctor | duets with his stone golem (U / I its blows, J / K his own stones), a solid golem to jump or break, and stone armour that locks on piece by piece |
 
 <p align="center">
   <img src="assets/shot-super.jpg" width="32%"> <img src="assets/shot-double.jpg" width="32%"> <img src="assets/shot-sanctuary.jpg" width="32%">
@@ -108,7 +109,7 @@ The scripts are plain `<script>` files that share one scope, loaded in the order
 | `js/movelist/*.js` | each fighter's move list, English and Japanese (one file per fighter, plus `controls.js`) |
 | `js/setup.js` | constants, the skeleton and every pose |
 | `js/charge-attacks.js` | held (charged) heavy attacks |
-| `js/characters.js` | the eight fighters: stats, colours, move sets |
+| `js/characters.js` | the first eight fighters: stats, colours, move sets |
 | `js/moves.js` | every move's timing, hitboxes and effects |
 | `js/input-cpu.js` | keyboard input, the CPU opponent and its difficulty levels |
 | `js/demos.js` | sample combos and punishes |
@@ -124,6 +125,7 @@ The scripts are plain `<script>` files that share one scope, loaded in the order
 | `js/opening.js` | the render loop and the opening movie (prologue, highlight reel, finale) |
 | `js/online.js` | online play (PeerJS / WebRTC) |
 | `js/audio.js` | sound effects, the announcer and the music |
+| `js/alchemist.js` | Hohen and his golem: moves, the golem, the armour, his drawing, sample combos and his CPU plans |
 | `js/updates.js` | the version, the release notes (更新情報) and the update check |
 | `js/menus.js` | menus, keyboard, settings, touch controls, training move card |
 | `version.json` | the version that's live, for the update check |

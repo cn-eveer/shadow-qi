@@ -149,6 +149,7 @@ function drawTellFX(f, mv, el) {
   } else if (T.fx === 'light') { const [sx, sy] = at(J.head); const g = ctx.createLinearGradient(sx, sy - 70, sx, sy); g.addColorStop(0, 'rgba(255,245,200,0)'); g.addColorStop(1, `rgba(255,245,200,${0.25 + 0.35 * k})`); ctx.fillStyle = g; ctx.fillRect(sx - 14, sy - 70, 28, 70); // light falls on him
   } else if (T.fx === 'splash') { for (let i = 0; i < 3; i++) { const an = -Math.PI / 2 + (i - 1) * 0.6, r = 10 + ((el * 3 + i * 7) % 18); const [dx, dy] = at(J.head); ctx.fillStyle = `rgba(150,215,255,${0.7 - r / 40})`; ctx.beginPath(); ctx.arc(dx + Math.cos(an) * r, dy - 10 + Math.sin(an) * r, 3, 0, Math.PI * 2); ctx.fill(); } // water slops from his dish
   } else if (T.fx === 'spin') { const [gx, gy] = at(J.h1); ctx.strokeStyle = `rgba(255,220,150,${0.5 + 0.4 * k})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(gx, gy, 10, el * 0.8, el * 0.8 + 4.5); ctx.stroke(); // twirling the revolver
+  } else if (T.fx === 'gems') { const cols = ['110,255,220', '255,190,80', '150,170,255']; for (let i = 0; i < 3; i++) { const an = el * 0.22 + i * Math.PI * 2 / 3, x = hx + Math.cos(an) * (16 + 6 * k), y = hy - 6 + Math.sin(an) * (7 + 3 * k); const g = ctx.createRadialGradient(x, y, 0.5, x, y, 9); g.addColorStop(0, `rgba(${cols[i]},.95)`); g.addColorStop(1, `rgba(${cols[i]},0)`); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.fill(); } // Hohen: three glowing stones circle his hands
   } else if (T.fx === 'sweat') { const [dx, dy] = at(J.head); ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = 'rgba(150,200,255,.9)'; ctx.beginPath(); ctx.ellipse(dx + f.facing * 14, dy - 6 + (el % 8), 3, 5, 0, 0, Math.PI * 2); ctx.fill(); } // a nervous drop of sweat
   ctx.restore();
 }
@@ -333,6 +334,9 @@ function finerMotion(f, p) { // little secondary motions layered on top of the p
   } else if (f.key === 'paladin') { // heavy plate: a slow deep breath, the shield arm settling, weight shifting foot to foot
     if (idle) { const b = Math.sin(t * 0.045); p.t += b * 1.2; p.a2u += Math.sin(t * 0.05 + 0.8) * 2.5; p.a1l += b * 2; p.l1l -= Math.max(0, b) * 2; p.l2l -= Math.max(0, -b) * 2; }
     if (walk) { const s = Math.sin(t * 0.32); p.t += 2 + s * 1.5; p.a2u += s * 3; }
+  } else if (f.key === 'alchemist' && !f.ch.fused) { // a composed doctor: a slow breath, hands easy in his pockets, and now and then a finger pushing his glasses up
+    if (idle) { const b = Math.sin(t * 0.05); p.t += b * 0.9; p.a1l += Math.sin(t * 0.07) * 3; const g = t % 300; if (g < 40) { const k = Math.sin(Math.PI * g / 40); const q2 = lerpPose(p, POSES.alGlasses, 0.85 * k); return q2; } }
+    if (walk) { const s = Math.sin(t * 0.3); p.t += 1 + s * 0.8; p.a1l += s * 4; }
   } else if (f.key === 'psychic') { // she floats: a slow drift, sleeves and the open hand flowing
     const b = Math.sin(t * 0.06); p.a2u += Math.sin(t * 0.07 + 1) * 5; p.a2l += Math.sin(t * 0.09) * 7; p.l1l += b * 4; p.l2l -= b * 4; p.t += b * 1.2;
   }

@@ -141,6 +141,13 @@ function winFX(f, t) {
     if (tier === 'c' && t % 18 === 4) sweat();
     if (fin && t > 115 && t % 7 === 0) P({ type: 'smoke', x: x + vrnd(-200, 200), y: y - 6, vx: vrnd(-1.5, 1.5), vy: -0.3, r: 10, vr: 0.3, life: 40, max: 40, col: '200,170,130' }); // dust blowing across
   }
+  if (k === 'alchemist') { // his stones: they glint, circle him, and for the match a transmutation circle opens under him
+    const gem = i => ['110,255,220', '255,190,80', '150,170,255'][i % 3];
+    if (tier === 'a' && t > 20 && t < 60 && t % 4 === 0) sparkle(gem(t / 4), 60);
+    if (tier === 'b' && t === 40) for (let i = 0; i < 6; i++) P({ type: 'spark', x: x + d * 12, y: y - 150 * s, vx: vrnd(-2, 2), vy: -vrnd(1, 3), life: 14, max: 14, col: '235,245,255' }); // a glint off his spectacles
+    if (tier === 'c' && t % 16 === 6) sweat();
+    if (fin) { if (t === 40) ring('255,200,110', 50, 3); if (t > 40 && t < 140 && t % 5 === 0) { const an = t * 0.12, q = 70; P({ type: 'spark', x: x + Math.cos(an) * q, y: y - 100 * s + Math.sin(an) * q * 0.4, vx: 0, vy: -0.6, life: 16, max: 16, col: gem(t / 5) }); } if (t > 90 && t % 4 === 0) rise('255,220,150'); }
+  }
   if (k === 'salary') {
     if (tier === 'a' && t === 55) for (let i = 0; i < 10; i++) P({ type: 'paper', x, y: y - 160 * s, vx: vrnd(-4, 4), vy: -vrnd(3, 7), rot: vrnd(0, 6), vr: vrnd(-0.3, 0.3), life: 60, max: 60 });
     if (tier === 'c' && t % 12 === 2) sweat();
