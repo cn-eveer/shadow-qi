@@ -44,7 +44,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
         </tbody>
       </table></div>
       <p class="note">Press the next button while the previous hit is still going. Pressed later, it’s just a single attack. On top of these strings, any light attack (U or J) that hits or is guarded can go straight into another attack, so you can build your own combos, for example J then I. Crouching ducks the jabs, and kicking low between hits interrupts a combo.</p>
-      <p class="note"><b>Stress.</b> Every attack you throw while the opponent isn’t caught in a combo — whiffed or guarded — fills the stress meter under your MP gauge; it drains once you stop, and the fuller it is the slower it drains. Past the mark at half you’re stressed: every attack comes out much later and recovers slower (time for them to guard, or to jab you first), you move slower, and your guard wears out faster and doesn’t come back. A real combo never adds stress. Lyra and Hohen have no stress meter.</p>
+      <p class="note"><b>Stress.</b> Every attack you throw while the opponent isn’t caught in a combo — whiffed or guarded — fills the stress meter under your MP gauge; it drains once you stop, and the fuller it is the slower it drains. Past the mark at half you’re stressed: every attack comes out much later and recovers slower (time for them to guard, or to jab you first), you move slower, and your guard wears out faster and doesn’t come back. A real combo never adds stress. Kuro, Lyra and Hohen have no stress meter.</p>
       <p class="note"><b>Guarded launchers.</b> A launcher that’s guarded (U, U, I, ↓ + I, anything that lifts them) leaves a big opening, and a bigger one when you’re stressed.</p>
       <h3>Launchers and juggles</h3>
       <div class="scroll"><table>
@@ -109,7 +109,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>必殺技キャンセル<small>通常技が当たった直後に必殺技を入力するとつながる。</small></td><td class="cmd">ヒット → 必殺技</td></tr>
         </tbody>
       </table></div>
-      <p class="note"><b>ストレス。</b>相手がコンボ中でない時に出した攻撃（空振り・ガードされた攻撃）はMPゲージの下のストレスゲージをためる。攻撃をやめると減っていくが、たまっているほどゆっくりになる。半分の印を超えるとストレス状態：すべての攻撃の出が大きく遅れ、硬直も長くなり（相手はガードや割り込みができる）、動きも遅くなり、ガードゲージが減りやすく回復しなくなる。コンボがつながっている間の攻撃はストレスにならない。ライラとホーエンにはストレスゲージがない。</p>
+      <p class="note"><b>ストレス。</b>相手がコンボ中でない時に出した攻撃（空振り・ガードされた攻撃）はMPゲージの下のストレスゲージをためる。攻撃をやめると減っていくが、たまっているほどゆっくりになる。半分の印を超えるとストレス状態：すべての攻撃の出が大きく遅れ、硬直も長くなり（相手はガードや割り込みができる）、動きも遅くなり、ガードゲージが減りやすく回復しなくなる。コンボがつながっている間の攻撃はストレスにならない。クロ、ライラ、ホーエンにはストレスゲージがない。</p>
       <p class="note"><b>ガードされた打ち上げ技。</b>打ち上げ技（U、U、I・↓＋Iなど相手を浮かせる技）はガードされると大きな隙ができる。ストレス状態ではさらに大きくなる。</p>
       <h3>打ち上げと追撃</h3>
       <p class="note">打ち上げた相手が空中にいる間、U・I・Kは追撃技になる。近くでジャンプすると空中連続技。1回のコンボで打ち上げ（L）とバウンド（B）ができる順番は、L・L、L・L・B、L・B、L・B・L、B・B、B・L のみ（そのあと締めの一撃）。空中追撃のU、U、Iも打ち上げに数える。それを超えると相手はコンボから外れ（「打ち上げ上限」／「バウンド上限」）、着地するまで当たらない。気絶は数えない。</p>

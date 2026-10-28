@@ -380,7 +380,7 @@ function healthBar(f, x, left) {
   // MP gauge, just under the guard meter
   const my = gy + gh + 6, mh = 11;
   meterBar(f, gx, my, gw, mh, left);
-  // stress meter, just under the MP gauge (not for Lyra or Hohen)
+  // stress meter, just under the MP gauge (not for fighters without one: Kuro, Lyra, Hohen)
   const sy = my + mh + 5;
   if (!f.ch.noStress) stressBar(f, gx, sy, gw, 4, left, x, w);
   // name row

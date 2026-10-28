@@ -203,7 +203,7 @@ function endMove(f) {
 // single U or J that hit or was guarded they wait a moment too. Either way they can't attack again until the opponent has been out of
 // hit-stun or guard for that long (shots still in the air included), so the opponent always gets a moment to act.
 const STRING_REST = 12, JAB_REST = 6;
-// The stress meter (everyone but Lyra and Hohen): every attack started while the opponent isn't caught in a combo — whiffed or guarded —
+// The stress meter (everyone but Kuro, Lyra and Hohen — noStress): every attack started while the opponent isn't caught in a combo — whiffed or guarded —
 // fills it, and it drains once they stop — slower the fuller it is. From half full they're stressed: every attack comes out much later
 // (time to guard, or to jab them first) and recovers slower, they move slower, their guard wears out faster and doesn't come back, and a guarded launcher leaves an even
 // bigger opening. Mashing U, U, I is punished; a real combo never counts.
