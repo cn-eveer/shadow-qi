@@ -45,6 +45,7 @@ function updateTbar() {
   tbar.querySelector('[data-t="mp"]').textContent = L(`MP refill: ${game.mpFull ? 'on' : 'off'} (M)`, `MP回復：${game.mpFull ? 'オン' : 'オフ'} (M)`);
   tbar.querySelector('[data-t="reset"]').textContent = L('Reset to start position (R)', '初期位置に戻す (R)');
   const lb = tbar.querySelector('[data-t="list"]'); lb.textContent = L(`Moves: ${game.moveList ? 'on' : 'off'} (L)`, `技表：${game.moveList ? 'オン' : 'オフ'} (L)`); lb.setAttribute('aria-pressed', String(!!game.moveList));
+  const cb = tbar.querySelector('[data-t="combos"]'); cb.textContent = L(`Combos: ${game.comboList ? 'on' : 'off'} (C)`, `コンボ：${game.comboList ? 'オン' : 'オフ'} (C)`); cb.setAttribute('aria-pressed', String(!!game.comboList));
   const dl = game.demoSet === 'punish' ? { prev: ['Previous punish (A)', '前の反撃 (A)'], replay: ['Replay (R)', 'もう一度 (R)'], next: ['Next punish (D)', '次の反撃 (D)'], switch: ['Switch fighter (F)', 'キャラ切替 (F)'] }
     : { prev: ['Previous combo (A)', '前のコンボ (A)'], replay: ['Replay (R)', 'もう一度 (R)'], next: ['Next combo (D)', '次のコンボ (D)'], switch: ['Switch fighter (F)', 'キャラ切替 (F)'] };
   dbar.querySelectorAll('button').forEach(b => { const t = dl[b.dataset.d]; if (t) b.textContent = L(t[0], t[1]); });
@@ -54,7 +55,8 @@ function trainingAction(t) {
   if (t === 'dummy') game.dummyMode = DUMMY_MODES[(DUMMY_MODES.indexOf(game.dummyMode) + 1) % DUMMY_MODES.length];
   else if (t === 'mp') game.mpFull = !game.mpFull;
   else if (t === 'reset') resetPositions();
-  else if (t === 'list') game.moveList = !game.moveList;
+  else if (t === 'list') { game.moveList = !game.moveList; if (game.moveList) game.comboList = false; }
+  else if (t === 'combos') { game.comboList = !game.comboList; if (game.comboList) game.moveList = false; } // (the moves and the combos share one place over the game)
   sfx('select'); updateTbar();
 }
 tbar.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { initAudio(); trainingAction(b.dataset.t); b.blur(); }));
@@ -206,8 +208,9 @@ window.addEventListener('keydown', e => {
       else if (e.code === 'KeyM') trainingAction('mp');
       else if (e.code === 'KeyR') trainingAction('reset');
       else if (e.code === 'KeyL') trainingAction('list');
-      else if (e.code === 'Comma' && game.moveList) stepMoveList(-1);
-      else if (e.code === 'Period' && game.moveList) stepMoveList(1);
+      else if (e.code === 'KeyC') trainingAction('combos');
+      else if (e.code === 'Comma' && (game.moveList || game.comboList)) stepMoveList(-1);
+      else if (e.code === 'Period' && (game.moveList || game.comboList)) stepMoveList(1);
     }
   }
 });
@@ -334,8 +337,8 @@ function updateTouchUI() { // shown only on a phone or tablet, during play (not 
   if (portrait) { const ja = game.lang === 'ja'; document.getElementById('rotTxt').textContent = ja ? 'スマホを横向きにしてください' : 'Turn your phone sideways to play'; document.getElementById('rotSub').textContent = ja ? 'Shadow ✕ Qi は横画面でプレイします' : 'Shadow ✕ Qi plays in landscape'; }
 }
 updateTouchUI();
-// training: one move at a time, just its name and command, shown over the game (taken from the move list);
-// ◀ ▶ or , . step through them
+// training: one move at a time, just its name and command, shown over the game (taken from the move list),
+// or one sample combo at a time, its keys in order; ◀ ▶ or , . step through them
 document.querySelectorAll('.card .scroll').forEach(d => { const c = d.querySelector('tbody td'); if (c && /^\d+\./.test(c.textContent.trim())) d.classList.add('combo'); });
 const tlistUI = document.getElementById('tlist'); let tlistCh = '', tlistKey = '', tlistMoves = [], tlistIdx = 0;
 function moveListOf(ch) {
@@ -350,17 +353,28 @@ function moveListOf(ch) {
   });
   return out;
 }
-function stepMoveList(d) { if (!tlistMoves.length) return; tlistIdx = (tlistIdx + d + tlistMoves.length) % tlistMoves.length; sfx('select'); updateMoveList(); }
+const comboListOf = ch => (COMBO_SET[ch] || []).map(d => ({ name: L(d.name, (JA_DEMO[d.name] || {}).n || d.name), keys: d.steps.map(s => s.key) })); // (the same combos as the sample combos)
+let tcomboIdx = 0;
+function stepMoveList(d) {
+  const n = game.comboList ? comboListOf(tlistCh).length : tlistMoves.length; if (!n) return;
+  if (game.comboList) tcomboIdx = (tcomboIdx + d + n) % n; else tlistIdx = (tlistIdx + d + n) % n;
+  sfx('select'); updateMoveList();
+}
 tlistUI.addEventListener('pointerdown', e => { const b = e.target.closest('button'); if (!b) return; e.preventDefault(); e.stopPropagation(); stepMoveList(+b.dataset.m); });
 function updateMoveList() {
-  const show = !!game.moveList && game.mode === 'fight' && game.training && !game.demo && !game.paused && drawer.hidden;
+  const show = !!(game.moveList || game.comboList) && game.mode === 'fight' && game.training && !game.demo && !game.paused && drawer.hidden;
   if (tlistUI.hidden === show) tlistUI.hidden = !show;
   if (!show) return;
   const ch = fighters[0] ? fighters[0].key : game.p1Char;
-  if (ch !== tlistCh) { tlistCh = ch; tlistIdx = 0; tlistKey = ''; }
-  const key = ch + game.lang + tlistIdx; if (key === tlistKey) return; tlistKey = key;
-  tlistMoves = moveListOf(ch); const m = tlistMoves[tlistIdx]; if (!m) { tlistUI.innerHTML = ''; return; }
+  if (ch !== tlistCh) { tlistCh = ch; tlistIdx = 0; tcomboIdx = 0; tlistKey = ''; }
+  const key = ch + game.lang + (game.comboList ? 'c' + tcomboIdx : tlistIdx); if (key === tlistKey) return; tlistKey = key;
   const esc = t => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+  if (game.comboList) {
+    const list = comboListOf(ch), c = list[tcomboIdx]; if (!c) { tlistUI.innerHTML = ''; return; }
+    tlistUI.innerHTML = `<button data-m="-1" aria-label="${L('Previous combo', '前のコンボ')}">◀</button><div class="tm"><b>${esc(c.name)}</b> <small>${tcomboIdx + 1}/${list.length}</small><div class="tk">${c.keys.map(k => `<span>${esc(k)}</span>`).join('<i>›</i>')}</div></div><button data-m="1" aria-label="${L('Next combo', '次のコンボ')}">▶</button>`;
+    return;
+  }
+  tlistMoves = moveListOf(ch); const m = tlistMoves[tlistIdx]; if (!m) { tlistUI.innerHTML = ''; return; }
   tlistUI.innerHTML = `<button data-m="-1" aria-label="${L('Previous move', '前の技')}">◀</button><div class="tm"><b>${esc(m.name)}</b><div class="tc">${esc(m.cmd)}</div></div><button data-m="1" aria-label="${L('Next move', '次の技')}">▶</button>`;
 }
 requestAnimationFrame(loop);
