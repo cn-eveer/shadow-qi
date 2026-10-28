@@ -4,6 +4,19 @@
 // version.json on the server says which version is live. When the two differ, the player is asked to reload without the
 // browser's cache, or to erase the site's saved data and reload.
 const RELEASES = [ // notes: a string, or { g: 'group', items: [...] } (groups nest)
+  { v: '1.4.2', date: '2026-10-29', notes: [
+    { g: 'トレーニング', items: [
+      'コンボ表を追加（C）：コンボ見本の入力を1つずつ表示。◀ ▶ または , . で切り替え。技表（L）とは切り替えで表示',
+      '技表・コンボ表を少し下に表示（ホーエンの石と融合ゲージに重ならないように）',
+    ] },
+    { g: 'キャラクター', items: [
+      { g: 'カッパ', items: ['ジャンプが少し高く（最高点 約184 → 207）'] },
+      { g: 'ホーエン', items: [
+        'ゴーレムを飛び越えやすく：ジャンプで越えようとする相手の下に、ゴーレムが走り込まなくなった（以前はホーエンが下がると約半分のジャンプが押し戻されていた）',
+        'ゴーレムの復活は5秒後に（以前は4秒）',
+      ] },
+    ] },
+  ] },
   { v: '1.4.1', date: '2026-10-28', notes: [
     { g: 'システム', items: [
       'オープニングが最初の画面で止まったまま始まらないことがある不具合を修正',
