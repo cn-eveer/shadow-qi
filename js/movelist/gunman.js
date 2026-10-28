@@ -9,7 +9,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="note"><b>High Noon (v1.3.9).</b> It now reaches across the whole stage and every shot strikes at their feet — a low: they have to guard it crouching, or jump over it — with bright tracers from his guns to the floor, sparks where it hits and one huge last shot.</p>
       <p class="note"><b>Holstered.</b> At rest his hands sit on his guns in their holsters; they come out in a flash only when he attacks, and go back a moment after. Every shot now has a bigger muzzle flash.</p>
       <p class="note"><b>Guns.</b> His bullets are fast with long tracers and big muzzle flashes; charged shots are huge, shake the screen and kick him back with the recoil.</p>
-      <p class="note"><b>Ten bullets.</b> His guns hold 10 bullets, shown next to his name. Every shooting attack uses one, however many shots it fires. When the last one is gone he reloads for 5 seconds: he can still move, jump and guard, but a shot only clicks on an empty chamber until the bullets turn gold again. Dynamite, Showdown and High Noon don’t need bullets.</p>
+      <p class="note"><b>Fifteen bullets.</b> His guns hold 15 bullets, shown next to his name. Every shooting attack uses one, however many shots it fires. When the last one is gone he reloads for 4 seconds: he can still move, jump and guard, but a shot only clicks on an empty chamber until the bullets turn gold again. Dynamite, Showdown and High Noon don’t need bullets.</p>
       <p class="note"><b>Theme.</b> Desert sundown · amber and dust. A drifter who never draws second. Signatures: U, U, K Hammer Fan Finale (a gun twirl, then three fanned shots); U, U, I Ricochet Launcher (a shot off the floor lifts them).</p>
       <div class="scroll"><table>
         <tbody>
@@ -49,7 +49,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="note"><b>真昼の決闘（v1.3.9）。</b>画面のどこにいても届き、すべての弾が足元を撃つ下段に。しゃがみガードかジャンプでしか防げない。銃から床まで光る弾道、着弾の火花、最後の一発は特大。</p>
       <p class="note"><b>ホルスター。</b>構えでは手をホルスターの銃に添えている。攻撃するときだけ一瞬で抜き、少しすると戻す。発砲の閃光も大きくなった。</p>
       <p class="note"><b>銃。</b> 弾は速く、長い光跡と大きな銃口の閃光。溜め撃ちは巨大で画面が揺れ、反動で後ろに下がる。</p>
-      <p class="note"><b>弾は10発。</b>残りの弾は名前の横に表示。射撃する攻撃は1回につき1発を使う（何発撃つ技でも1発）。撃ち尽くすと5秒間のリロード：移動・ジャンプ・ガードはできるが、弾が金色に戻るまでは撃っても「カチッ」と空撃ちになる。ダイナマイト、決闘、真昼の決闘は弾を使わない。</p>
+      <p class="note"><b>弾は15発。</b>残りの弾は名前の横に表示。射撃する攻撃は1回につき1発を使う（何発撃つ技でも1発）。撃ち尽くすと4秒間のリロード：移動・ジャンプ・ガードはできるが、弾が金色に戻るまでは撃っても「カチッ」と空撃ちになる。ダイナマイト、決闘、真昼の決闘は弾を使わない。</p>
       <p class="note"><b>テーマ.</b> 砂漠の夕日・琥珀と砂ぼこり。決して後れを取らない流れ者。決め技：U、U、K「ファニング・フィナーレ」（銃を回して3連射）／U、U、I「跳弾打ち上げ」（床で跳ねた弾が浮かせる）。</p>
       <div class="scroll"><table>
         <tbody>
