@@ -142,7 +142,7 @@ function startMove(f, mv, str, keepBuffer) {
       if (f.ch.slowAtk && !(oc.state === 'attack' && oc.move && oc.mf > oc.move.startup + (oc.move.active || 0))) { f.pre += f.ch.slowAtk; mv.slowPre = f.ch.slowAtk; } // (not a punish)
       if (!f.ch.noStress) {
         const k = stressK(f);
-        if (k && !mv.air && (mv.normal || mv.launch)) { const x = Math.round(STRESS_SLOW * k); f.pre += x; mv.stressPre = x; } // stressed: strings and launchers come out late (time to guard, or to jab first)
+        if (k && !mv.air) { const x = Math.round(STRESS_SLOW * k); f.pre += x; mv.stressPre = x; if (mv.recovery < 90) mv.recovery = Math.round(mv.recovery * (1 + STRESS_REC * k)); } // stressed: every attack comes out much later (time to guard, or to jab first) and recovers slower
         f.stress = Math.min(100, (f.stress || 0) + (mv.launch ? STRESS_ADD.launch : !mv.normal ? STRESS_ADD.tech : mv.str ? STRESS_ADD.heavy : STRESS_ADD.light)); f.stressIdle = 0;
         if (f.stress >= STRESS_ON && !f.stressShown) { f.stressShown = true; popText(f.x, GROUND - f.y - 205, L('STRESSED!', 'ストレス！'), '255,120,90'); }
       }
@@ -195,10 +195,10 @@ function endMove(f) {
 // hit-stun or guard for that long (shots still in the air included), so the opponent always gets a moment to act.
 const STRING_REST = 12, JAB_REST = 6;
 // The stress meter (everyone but Lyra and Hohen): every attack started while the opponent isn't caught in a combo — whiffed or guarded —
-// fills it, and it drains once they stop. From half full they're stressed: their strings and launchers come out late (time to guard,
-// or to jab them first), they move slower, their guard wears out faster and doesn't come back, and a guarded launcher leaves an even
+// fills it, and it drains once they stop — slower the fuller it is. From half full they're stressed: every attack comes out much later
+// (time to guard, or to jab them first) and recovers slower, they move slower, their guard wears out faster and doesn't come back, and a guarded launcher leaves an even
 // bigger opening. Mashing U, U, I is punished; a real combo never counts.
-const STRESS_ADD = { light: 8, heavy: 12, tech: 12, launch: 18 }, STRESS_ON = 50, STRESS_IDLE = 40, STRESS_DRAIN = 0.35, STRESS_SLOW = 14;
+const STRESS_ADD = { light: 8, heavy: 12, tech: 12, launch: 18 }, STRESS_ON = 50, STRESS_IDLE = 40, STRESS_DRAIN = 0.35, STRESS_SLOW = 28, STRESS_REC = 0.6; // (drain per frame when empty, a quarter of it when full; up to 28 frames later and 60% more recovery)
 const stressK = f => f && !f.ch.noStress && f.stress >= STRESS_ON ? 0.5 + 0.5 * (f.stress - STRESS_ON) / (100 - STRESS_ON) : 0; // 0 calm, 0.5 – 1 stressed
 const stressMove = f => 1 - 0.3 * stressK(f);
 // no attack carries its user further than this (dashes, rushes, lunges, step-ins, leaps out of them; supers and air attacks aside)
@@ -479,7 +479,7 @@ function update(f, o, inp) {
   const guarding = f.state === 'guard' || f.state === 'blockstun' || f.state === 'gbreak' || (f.state === 'crouch' && f.backHeld) || (f.state === 'attack' && f.move && f.move.aegis); // (no recovery while the Aegis is up)
   if (guarding) f.guardIdle = 0;
   else if (++f.guardIdle > 45 && !stressK(f)) f.guard = Math.min(100, f.guard + (f.guardSlowT > 0 ? 0.02 : 0.07)); // (slowly after the Aegis; not at all while stressed)
-  if (!f.ch.noStress && ++f.stressIdle > STRESS_IDLE) { f.stress = Math.max(0, (f.stress || 0) - STRESS_DRAIN); if (f.stress < STRESS_ON - 15) f.stressShown = false; }
+  if (!f.ch.noStress && ++f.stressIdle > STRESS_IDLE) { f.stress = Math.max(0, (f.stress || 0) - STRESS_DRAIN * (1 - 0.75 * (f.stress || 0) / 100)); if (f.stress < STRESS_ON - 15) f.stressShown = false; }
   if (f.guardSlowT > 0) f.guardSlowT--;
   if (f.meter >= 100 && globalT % 9 === 0) auraParticle(f);
 }
