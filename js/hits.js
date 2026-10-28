@@ -18,10 +18,10 @@ function staffTipBox(f, mv, hb0) {
   return out;
 }
 function boxOf(f, hb) {
-  const s = f.ch.scale, [x0, x1, y0, y1] = hb;
+  const s = f.ch.scale, [x0, x1, y0, y1] = hb, b0 = f.y + y0 * (f.ch.tallBox ? 1 : s); // tallBox (Tanaka's double possession, 1.4× his size): the blow grows forward and up, but still reaches as low as at normal size
   return f.facing > 0
-    ? { x0: f.x + x0 * s, x1: f.x + x1 * s, y0: f.y + y0 * s, y1: f.y + y1 * s }
-    : { x0: f.x - x1 * s, x1: f.x - x0 * s, y0: f.y + y0 * s, y1: f.y + y1 * s };
+    ? { x0: f.x + x0 * s, x1: f.x + x1 * s, y0: b0, y1: f.y + y1 * s }
+    : { x0: f.x - x1 * s, x1: f.x - x0 * s, y0: b0, y1: f.y + y1 * s };
 }
 // every → → and ← ← technique can be punished when it's guarded, at least by a quick U, U:
 // its user stays stuck in recovery until the guard ends, plus the 9 frames of a U, a margin, and time to dash in if they're far away
