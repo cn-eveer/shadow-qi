@@ -103,7 +103,7 @@ function stoneCharged(f, o, mf) { // K: hold to charge (three gauges), let go: t
   }
   const k = mf - mv.startup; if (k >= 0 && k <= 14 && k % 7 === 0) alchemistVolley(f, o, mv.lvl, k / 7);
 }
-const GOLEM_LIFE = 1800, GOLEM_REBUILD = 240, GOLEM_HP = 350; // frames the golem lasts before it crumbles (thirty seconds) and takes to rebuild (four); its own health (a third of a fighter's)
+const GOLEM_LIFE = 1800, GOLEM_REBUILD = 300, GOLEM_HP = 350; // frames the golem lasts before it crumbles (thirty seconds) and takes to rebuild (five); its own health (a third of a fighter's)
 const STONE_REGEN = 90; // frames for a stone to come back (a second and a half)
 const GRAB_CD = 150; // frames after a hold lets go before the golem can grab again (no grab loops)
 const HOLD_HITS = 4; // hits a held opponent takes before the golem's grip gives (no endless stones on someone held)
@@ -334,7 +334,7 @@ function golemSeize(f, o) { // the grab: if the golem was in front of him, it tu
 }
 function golemRelease(f, o, recover) { const g = f.golem; g.hold = null; g.grabCD = GRAB_CD; if (recover && o.state === 'stunned') setState(o, 'recover'); }
 function golemBox(g) { return { x0: g.x - 46, x1: g.x + 46, y0: g.y, y1: g.y + (g.crouch || (g.act && g.act.kind === 'lowp') ? 125 : 165) }; }
-function golemBreak(f, text) { // it comes apart (beaten apart, or worn out): a heap of stones that pulls itself together four seconds later
+function golemBreak(f, text) { // it comes apart (beaten apart, or worn out): a heap of stones that pulls itself together five seconds later
   const g = f.golem; g.broken = true; g.brokenT = GOLEM_REBUILD; g.act = null; g.queue = null; g.vy = 0; g.y = 0; if (g.hold) golemRelease(f, other(f), true);
   popText(g.x, GROUND - 200, text, '255,170,110'); game.shake = Math.max(game.shake, 7); sfx('break');
   for (let i = 0; i < 22; i++) parts.push({ type: 'spark', x: g.x + rnd(-40, 40), y: GROUND - rnd(10, 150), vx: rnd(-5, 5), vy: rnd(-3, 5), life: 22, max: 22, col: golemPal(f).spark }); dustAt(g.x, true);
@@ -421,7 +421,8 @@ function golemUpdate(f, o) {
     const q = g.queue;
     if (q) { g.qT++; const Q = GOLEM_ACT[q]; if (!Q.reach || Q.rush || dist <= 100) golemStart(f, q); else if (g.qT > 45) g.queue = null; } // (the tackle starts from anywhere; punches and the grab come in first)
     if (!g.act) {
-      if (inp.h) { const away = Math.sign(inp.h) === -(Math.sign(o.x - f.x) || f.facing), sp = g.dashT > 0 || away ? 7 : g.y > 0 ? 3.5 : 2.6; g.x += dir * sp; g.spd = sp; } // it always moves toward the opponent: when he backs away it dashes in, when he walks in it walks in
+      const overhead = o.state === 'jump' && o.y > 40 && dist < GOLEM_GAP; // (someone jumping over it: it holds its ground rather than run in under them and push them back)
+      if (inp.h && !overhead) { const away = Math.sign(inp.h) === -(Math.sign(o.x - f.x) || f.facing), sp = g.dashT > 0 || away ? 7 : g.y > 0 ? 3.5 : 2.6; g.x += dir * sp; g.spd = sp; } // it always moves toward the opponent: when he backs away it dashes in, when he walks in it walks in
       else if (g.y <= 0 && !g.crouch && dist > (q ? 80 : GOLEM_GAP + 6)) { const sp = g.dashT > 0 || q ? 6.5 : 2.5; g.x += dir * sp; g.spd = sp; } // otherwise it walks to the opponent itself
       const between = Math.sign(g.x - o.x) === Math.sign(f.x - o.x); // (it belongs between him and them: on their far side, with nothing to do, it hops back over them)
       g.farT = !between && !q && !inp.h && g.y <= 0 ? (g.farT || 0) + 1 : 0;
