@@ -63,10 +63,10 @@ function trainingAction(t) {
 tbar.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { initAudio(); trainingAction(b.dataset.t); b.blur(); }));
 // punish training (dummy mode "Repeat a move"): pick one of the dummy's own commands and how often; it does it again and again
 // (the list: the basic attacks and strings, then every command in its move list that can be done on the ground)
-const trep = document.getElementById('trep'), trepMove = document.getElementById('trepMove'), trepEvery = document.getElementById('trepEvery');
+const trep = document.getElementById('trep'), stageBox = document.querySelector('.stage');
 const REP_EVERY = [1, 1.5, 2, 3, 4], REP_BTN = { U: 'lp', I: 'hp', J: 'lk', K: 'hk' };
 const REP_BASICS = ['U', 'I', 'J', 'K', '↓ + U', '↓ + I', '↓ + J', '↓ + K', 'U, U', 'U, U, I', 'U, U, K', 'U, U, U, U, K', 'J, J, K', 'J, K'];
-let repKey = '', repId = 0;
+let repKey = '', repId = 0, repMoves = [], repShown = '';
 function repInput(tok) { // one command → its input (null: not one this can do)
   const m = tok.replace(/ \/ .*$/, '').trim().match(/^(→ → \+ |← ← \+ |↓ \+ |→ → then ↓ \+ |← ← then ↓ \+ )?([UIJK])$/); if (!m) return null;
   const p = m[1] || '', inp = { btn: REP_BTN[m[2]] }; if (p.startsWith('→ →')) inp.ff = true; if (p.startsWith('← ←')) inp.bb = true; if (p.includes('↓')) inp.down = true;
@@ -103,22 +103,26 @@ function repList(ch) {
   return out;
 }
 function setRepeat() {
-  const m = trepMove._list && trepMove._list[+trepMove.value]; game.repEvery = +trepEvery.value || 1.5;
+  const m = repMoves[game.repIdx || 0]; game.repEvery = game.repEvery || 1.5; repShown = '';
   game.repeat = m ? { id: ++repId, label: m.label, steps: m.steps, sup: !!m.sup, every: Math.round(game.repEvery * 60), reach: 120 } : null;
 }
-function updateRepeat() {
-  const on = game.mode === 'fight' && game.training && !game.demo && game.dummyMode === 'repeat';
-  if (trep.hidden === on) trep.hidden = !on;
+function stepRepeat(d) { const n = repMoves.length; if (!n) return; game.repIdx = ((game.repIdx || 0) + d + n) % n; setRepeat(); sfx('select'); updateRepeat(); }
+function stepEvery(d) { const i = REP_EVERY.indexOf(game.repEvery || 1.5); game.repEvery = REP_EVERY[clamp(i + d, 0, REP_EVERY.length - 1)]; setRepeat(); sfx('select'); updateRepeat(); }
+function updateRepeat() { // over the game, like the move list: ◀ the move (its keys, its name) ▶, and how often
+  const on = game.mode === 'fight' && game.training && !game.demo && game.dummyMode === 'repeat' && !game.paused && drawer.hidden;
+  if (trep.hidden === on) trep.hidden = !on; stageBox.classList.toggle('rep', on);
   if (!on) return;
-  const ch = fighters[1] ? fighters[1].key : game.p2Char, key = ch + game.lang; if (key === repKey) return; repKey = key;
-  const esc = t => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]), list = repList(ch), was = game.repeat && game.repeat.label;
-  trepMove._list = list; const shown = c => L(c, c.replace(', then ', '、続けて ').replace(' then ', ' から ').replace(' (hold)', '（長押し）'));
-  trepMove.innerHTML = list.map((m, i) => `<option value="${i}">${esc(shown(m.label))}${m.name ? ' — ' + esc(m.name) : ''}</option>`).join('');
-  trepMove.value = String(Math.max(0, list.findIndex(m => m.label === was)));
-  trepEvery.innerHTML = REP_EVERY.map(v => `<option value="${v}">${L(`every ${v} s`, `${v}秒ごと`)}</option>`).join(''); trepEvery.value = String(game.repEvery || 1.5);
-  setRepeat();
+  const ch = fighters[1] ? fighters[1].key : game.p2Char, key = ch + game.lang;
+  if (key !== repKey) { repKey = key; const was = game.repeat && game.repeat.label; repMoves = repList(ch); game.repIdx = Math.max(0, repMoves.findIndex(m => m.label === was)); setRepeat(); }
+  const m = repMoves[game.repIdx], sig = key + game.repIdx + '/' + game.repEvery; if (!m || sig === repShown) return; repShown = sig;
+  const esc = t => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+  const keys = m.label.replace(' (hold)', L(' (hold)', '（長押し）')).split(/, then | then |, /).map(k => `<span>${esc(k)}</span>`).join('<i>›</i>');
+  trep.innerHTML = `<button data-r="-1" aria-label="${L('Previous move', '前の技')}">◀</button><div class="tm"><small>${L('Dummy repeats', 'ダミーが繰り返す技')} ${game.repIdx + 1}/${repMoves.length}`
+    + (IS_MOBILE ? '' : ` · ${L('[ ] move, − = how often', '[ ] 技、− = 間隔')}`) + `</small>${m.name ? `<b>${esc(m.name)}</b>` : ''}<div class="trow"><div class="tk">${keys}</div>`
+    + `<span class="tev"><button data-e="-1" aria-label="${L('Shorter interval', '間隔を短く')}">−</button>${L(`every ${game.repEvery} s`, `${game.repEvery}秒ごと`)}<button data-e="1" aria-label="${L('Longer interval', '間隔を長く')}">+</button></span></div>`
+    + `</div><button data-r="1" aria-label="${L('Next move', '次の技')}">▶</button>`;
 }
-for (const el of [trepMove, trepEvery]) el.addEventListener('change', () => { setRepeat(); el.blur(); });
+trep.addEventListener('pointerdown', e => { const b = e.target.closest('button'); if (!b) return; e.preventDefault(); e.stopPropagation(); if (b.dataset.r) stepRepeat(+b.dataset.r); else if (b.dataset.e) stepEvery(+b.dataset.e); });
 function showMenu() {
   game.mode = 'menu'; game.paused = false; game.netMenu = false; tbar.hidden = true; dbar.hidden = true;
   const c = game.p1Char;
@@ -268,6 +272,8 @@ window.addEventListener('keydown', e => {
       else if (e.code === 'KeyR') trainingAction('reset');
       else if (e.code === 'KeyL') trainingAction('list');
       else if (e.code === 'KeyC') trainingAction('combos');
+      else if (game.dummyMode === 'repeat' && (e.code === 'BracketLeft' || e.code === 'BracketRight')) stepRepeat(e.code === 'BracketLeft' ? -1 : 1); // punish training: the move…
+      else if (game.dummyMode === 'repeat' && (e.code === 'Minus' || e.code === 'Equal')) stepEvery(e.code === 'Minus' ? -1 : 1); // …and how often
       else if (e.code === 'Comma' && (game.moveList || game.comboList)) stepMoveList(-1);
       else if (e.code === 'Period' && (game.moveList || game.comboList)) stepMoveList(1);
     }
@@ -422,6 +428,7 @@ function stepMoveList(d) {
 }
 tlistUI.addEventListener('pointerdown', e => { const b = e.target.closest('button'); if (!b) return; e.preventDefault(); e.stopPropagation(); stepMoveList(+b.dataset.m); });
 function updateMoveList() {
+  updateRepeat();
   const show = !!(game.moveList || game.comboList) && game.mode === 'fight' && game.training && !game.demo && !game.paused && drawer.hidden;
   if (tlistUI.hidden === show) tlistUI.hidden = !show;
   if (!show) return;
