@@ -4,6 +4,11 @@
 // version.json on the server says which version is live. When the two differ, the player is asked to reload without the
 // browser's cache, or to erase the site's saved data and reload.
 const RELEASES = [ // notes: a string, or { g: 'group', items: [...] } (groups nest)
+  { v: '1.4.1', date: '2026-10-28', notes: [
+    { g: 'システム', items: [
+      'オープニングが最初の画面で止まったまま始まらないことがある不具合を修正',
+    ] },
+  ] },
   { v: '1.4.0', date: '2026-10-28', notes: [
     { g: 'システム', items: [
       'キャラ選択は9人を3×3で表示',
