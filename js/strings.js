@@ -24,8 +24,12 @@ const STRINGS = {
     //  K:     the final blow, slow, out a long time and slow to recover; guarded, a fast attack punishes it from up close
     n2: SG('p', 'Kunai Slash', 'slashW', 'slash', { fixedFrames: true, guardGap: 12, startup: 4, active: 6, recovery: 12, advHit: 14, advBlock: -2, blade: true, trail: { cx: 15, cy: 105, r: 70, a0: 70, a1: -30, col: '225,235,255' } }),
     n3: SG('p', 'Reverse Slash', 'slash', 'kReverse', { fixedFrames: true, pre: 8, guardGap: 12, startup: 6, active: 6, recovery: 18, advHit: 14, advBlock: -3, high: true, hitbox: [20,95,112,160], blade: true, trail: { cx: 15, cy: 110, r: 70, a0: -30, a1: 70, col: '225,235,255' } }),
-    n4: SG('p', 'Shadow Step', 'crouch', 'cPunch', { fixedFrames: true, startup: 3, active: 6, recovery: 10, advBlock: -2, low: true, hitbox: [15,105,0,42], launch: true, launchVy: 9, trip: true, blade: true, step: 10, speedFx: true }),
-    nF: SF('k', 'Shadow Crescent', 'spinW', 'roundhouse', { fixedFrames: true, pre: 8, startup: 10, active: 9, recovery: 24, advBlock: -6, /* (−12 once the guard stall is added) */ bpush: 3.5, noFiveLag: true, spin: [3, 9], trail: { cx: 0, cy: 80, r: 100, a0: -70, a1: 60, col: '190,150,255' } }),
+    n4: SG('p', 'Shadow Step', 'crouch', 'cPunch', { fixedFrames: true, startup: 3, active: 6, recovery: 10, advBlock: 0, /* (−6 with the guard stall: safe even against an 8F jab) */ low: true, hitbox: [15,105,0,42], launch: true, launchVy: 9, trip: true, blade: true, step: 10, speedFx: true }),
+    nF: SF('k', 'Shadow Crescent', 'spinW', 'roundhouse', { fixedFrames: true, pre: 8, startup: 10, active: 9, recovery: 24, advBlock: -6, /* (−12 once the guard stall is added) */ bpush: 3.5, noFiveLag: true, spin: [3, 9],
+      dmg: 88, hitstop: 16, gdrain: 26, kdVx: 17, kdVy: 10, push: 6, // a heavy blow: hits hard, freezes the screen longer, sends them flying, tears into a guard
+      trail: { cx: 0, cy: 80, r: 120, a0: -80, a1: 70, col: '190,150,255' },
+      onFrame(f, o, mf) { if (mf === f.move.startup + 1) { sfx('swing'); game.shake = Math.max(game.shake, 4); const x = f.x + f.facing * 70, y = GROUND - f.y - 90; parts.push({ type: 'ring', x, y, r: 10, vr: 7, life: 14, max: 14, col: '190,150,255' }); for (let i = 0; i < 8; i++) parts.push({ type: 'speed', x, y: y + rnd(-30, 30), vx: f.facing * rnd(6, 11), vy: rnd(-1, 1), life: 10, max: 10, col: '190,150,255' }); }
+        if (f.hitConnected && f.lastResult === 'hit' && !f.move.heavyHit) { f.move.heavyHit = true; game.shake = Math.max(game.shake, 9); sfx('hitH'); } } }),
     nL: SL('Kunai Rise', 'uppercutW', 'kunaiRise', { blade: true, trail: { cx: 10, cy: 90, r: 95, a0: -30, a1: 95, col: '225,235,255' } }),
     nE: SF('k', 'Crescent Kick', 'kickW', 'highKick', { dmg: 50, trail: { cx: 0, cy: 62, r: 78, a0: -45, a1: 95, col: '190,150,255' } }),
     nl2: SG('k', 'Sweep Slash', 'crouch', 'lowKick', { low: true, blade: true, hitbox: [20,90,8,44] }),
