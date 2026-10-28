@@ -103,7 +103,7 @@ const CHARS = {
 };
 Object.assign(CHARS, {
   kappa: {
-    name: 'KAPPA', title: 'Mythic Kappa', nameJa: 'カッパ', titleJa: '幻獣カッパ', dmgMul: 1.03, scale: 0.86, walk: 3.3, back: 2.9, jumpX: 4.4, jumpV: 17, jugDmg: 1.1,
+    name: 'KAPPA', title: 'Mythic Kappa', nameJa: 'カッパ', titleJa: '幻獣カッパ', dmgMul: 1.03, scale: 0.86, walk: 3.3, back: 2.9, jumpX: 4.4, jumpV: 18, jugDmg: 1.1,
     pDmg: 1.0, kDmg: 1.0, pReach: 1.1, kReach: 0.9, chargeRate: 0.62, auraCol: '120,220,200', fxCol: '140,215,255',
     sp: { fP: 'kpPlate', fPH: 'kpCannon', fK: 'kpPounce', fKH: 'kpFrenzy', bP: 'kpBubble', bPH: 'kpGeyser', bK: 'kpShell', bKH: 'kpRiptide' }, sup: 'kpFlood',
     heavy: { // no kicks: the K button grabs and throws
