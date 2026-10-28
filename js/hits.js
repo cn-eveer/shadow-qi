@@ -170,6 +170,9 @@ function comboBreak(f, o) {
   sparks(f.x + away * 40, cy, 'big'); sfx('break'); popText(f.x, GROUND - f.y - 190, L('COMBO BREAK!', 'コンボブレイク！'), '255,140,150');
   game.freeze = Math.max(game.freeze, 6); game.shake = Math.max(game.shake, 6);
 }
+// auto guard (Settings, on by default): the player — on this machine, not online, not the CPU — guards everything by himself, at the
+// right height and from either side, whenever he isn't attacking and isn't moving toward the opponent (toward: the way to them)
+const autoGuardFor = (f, toward) => game.autoGuard && !game.online && f.ctrl instanceof Human && f.inp && f.inp.h !== toward;
 const GUARD_STALL = 6; // frames an attacker loses when his attack is guarded (shown as a recoil)
 const JUG_HOLD_MAX = 150; // frames (2.5 s) U, U... can keep them up after the last lift or bounce: then only a new lift or the finisher still lands
 const JUG_ATTACKS_MAX = 7; // attacks a juggle can take before a new lift or bounce (finishers still land)
@@ -278,7 +281,8 @@ function applyHit(a, d, h, side, hb, hu) {
   }
   const airGuard = (d.state === 'jump' || (d.state === 'land' && d.y > 0)) && !h.grab; // jumping (not launched): they can guard in the air
   const canGuard = !d.ch.noGuard && ((d.state === 'stand' || d.state === 'crouch' || d.state === 'guard' || d.state === 'blockstun' || d.state === 'recover') && d.y <= 0 && !h.grab) || airGuard; // a throw can't be guarded
-  const low = !!d.inp.down;
+  const autoAll = autoGuardFor(d, -side), hc = heightClass(h, hb);
+  const low = autoAll ? hc === 'low' : !!d.inp.down; // (auto guard: crouches for a low, stands for anything else)
   // holding away guards every attack, standing or crouching;
   // for a moment after the sides swap (a cross-up), holding either direction still guards
   const holding = d.inp.h === side || (!h.noGrace && d.inp.h !== 0 && game.frame - d.sideT <= 10)
@@ -288,10 +292,10 @@ function applyHit(a, d, h, side, hb, hu) {
     && !(d.ctrl instanceof Dummy && game.dummyMode !== 'guard'); // (a training dummy set to stand still stays hittable, for practising combos)
   if (autoBlock && !holding) popTextOnce(d, L('AUTO GUARD', 'オートガード'));
   // a crouching guard stops lows and mids but not a mid + low attack; a standing guard stops mids and mid + lows but not lows
-  const hc = heightClass(h, hb), lowHit = !airGuard && ((hc === 'low' && !low) || (hc === 'midlow' && low));
+  const lowHit = !airGuard && ((hc === 'low' && !low) || (hc === 'midlow' && low));
   showHeight(d, side, hb, h);
   if (hc === 'midlow' && low && !airGuard && canGuard && holding) popText(d.x, GROUND - d.y - 175, L('MID + LOW!', '中下段！'), '255,200,120'); // (crouch-guarding a mid + low: it hits)
-  if (canGuard && (holding || autoBlock) && !lowHit) {
+  if (canGuard && (holding || autoBlock || autoAll) && !lowHit) {
     const pushB = (h.bpush != null ? h.bpush : (h.push || 1) * 0.9) * (h.rushTag ? 1 : a.ch.pushMul || 1); // (rush strings keep their own spacing)
     const big = guardBig(a, h); d.guard -= guardCost(a, d, h, big); d.guardIdle = 0;
     if (d.guard <= 0) {

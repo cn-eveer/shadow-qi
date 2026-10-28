@@ -11,7 +11,8 @@ const JA_SUPER = { 'ANGEL POSSESSION!': '天使憑依！', 'DEVIL POSSESSION!': 
 const game = { mode: 'menu', paused: false, vsCPU: true, p1Char: 'ninja', p2Char: 'brawler', lang: (() => { try { return localStorage.getItem('sq-lang') || 'ja'; } catch (e) { return 'ja'; } })(), diff: (() => { try { return localStorage.getItem('sq-diff') || 'medium'; } catch (e) { return 'medium'; } })(), round: 1, phase: 'intro', phaseT: 0, timer: 99 * 60,
   frame: 0, freeze: 0, slow: 0, shake: 0, combo: null, superFlash: null, roundWinner: null,
   training: false, watch: false, dummyMode: 'stand', mpFull: true, track: null, advInfo: null,
-  heights: (() => { try { return localStorage.getItem('sq-heights') !== '0'; } catch (e) { return true; } })() }; // training: show each attack's height
+  heights: (() => { try { return localStorage.getItem('sq-heights') !== '0'; } catch (e) { return true; } })(), // training: show each attack's height
+  autoGuard: (() => { try { return localStorage.getItem('sq-autoguard') !== '0'; } catch (e) { return true; } })() }; // the player guards by himself (Settings)
 let fighters = [];
 const projs = [], parts = [];
 // mirror matches: the second fighter (the one in the second palette) has its effects — sparks, auras, projectiles, spells — drawn in another hue,
@@ -362,7 +363,7 @@ function update(f, o, inp) {
       if (inp.up) { startJump(f, inp); break; }
       // (charging MP by holding P has been removed: MP fills only by fighting)
       if (inp.down) { if (f.state !== 'crouch') setState(f, 'crouch'); f.vx = !f.backHeld && Math.sign(inp.h) === toward ? toward * f.ch.walk * 0.45 * (f.poisonT > 0 ? 0.6 : 1) * floodWalkMul(f) : 0; break; } // (crouching, ↓ + forward edges forward; ↓ + back stays the crouching guard)
-      if (f.backHeld && threatened(f, o)) { if (f.state !== 'guard') setState(f, 'guard'); f.vx = 0; break; }
+      if ((f.backHeld || autoGuardFor(f, toward)) && threatened(f, o)) { if (f.state !== 'guard') setState(f, 'guard'); f.vx = 0; break; } // (auto guard: standing still is enough)
       if (f.state !== 'stand') setState(f, 'stand');
       f.vx = inp.h * (f.backHeld ? f.ch.back : f.ch.walk) * (f.ctrl instanceof CPU && !game.watch ? 0.75 : 1) * (f.poisonT > 0 ? 0.6 : 1) * floodWalkMul(f) * stressMove(f); // the CPU walks slower against a player; poison slows anyone; in the flood the kappa swims fast and the other wades
       if (f.vx) f.walkPh += Math.abs(f.vx) * 0.085 * (f.backHeld ? -1 : 1);

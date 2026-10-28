@@ -288,6 +288,7 @@ function toggleSound() { sound = !sound; initAudio(); if (!sound) musicStop(); e
 function toggleMusic() { music = !music; initAudio(); if (music && sound) musicStart(); else musicStop(); applyLang(); }
 function setLang(l) { game.lang = l; try { localStorage.setItem('sq-lang', l); } catch (e) {} applyLang(); if (game.mode === 'menu') showMenu(); else if (game.mode === 'result') showResult(game.lastWinner); else if (game.paused) refreshPause(); else if (game.netMenu) netMenu(true); updateTbar(); }
 function toggleHeights() { game.heights = !game.heights; try { localStorage.setItem('sq-heights', game.heights ? '1' : '0'); } catch (e) {} if (!game.heights) parts.forEach(q => { if (q.type === 'htag') q.life = 0; }); applyLang(); }
+function toggleAutoGuard() { game.autoGuard = !game.autoGuard; try { localStorage.setItem('sq-autoguard', game.autoGuard ? '1' : '0'); } catch (e) {} applyLang(); }
 function setDiff(k) { game.diff = k; try { localStorage.setItem('sq-diff', k); } catch (e) {} applyLang(); if (game.mode === 'menu') showMenu(); }
 function applyLang() { // header, drawer, tabs and which language of the command lists shows
   if (document.documentElement) document.documentElement.lang = game.lang;
@@ -296,6 +297,7 @@ function applyLang() { // header, drawer, tabs and which language of the command
   [bgmBtn, document.getElementById('bgmD')].forEach(b => { b.textContent = on(music, 'Music', 'BGM'); b.setAttribute('aria-pressed', String(music)); });
   [langBtn, document.getElementById('langD')].forEach(b => { b.textContent = game.lang === 'ja' ? 'English' : '日本語'; b.lang = game.lang === 'ja' ? 'en' : 'ja'; });
   const hgt = document.getElementById('hgtD'); hgt.textContent = L(game.heights ? 'On' : 'Off', game.heights ? 'オン' : 'オフ'); hgt.setAttribute('aria-pressed', String(game.heights));
+  const ag = document.getElementById('agD'); ag.textContent = L(game.autoGuard ? 'On' : 'Off', game.autoGuard ? 'オン' : 'オフ'); ag.setAttribute('aria-pressed', String(game.autoGuard));
   setBtn.textContent = L('⚙ Settings', '⚙ 設定');
   document.getElementById('dTitle').textContent = drawerMode === 'settings' ? L('Settings', '設定') : drawerMode === 'news' ? L('What’s new', '更新情報') : L('Move list', '技表');
   if (drawerMode === 'news' && !drawer.hidden) renderNews();
@@ -322,6 +324,7 @@ langBtn.addEventListener('click', () => setLang(game.lang === 'ja' ? 'en' : 'ja'
 setBtn.addEventListener('click', () => openDrawer(drawer.hidden || drawerMode !== 'settings', 'settings'));
 document.getElementById('movesD').addEventListener('click', () => { drawerTab = fighters[0] && game.mode === 'fight' ? fighters[0].key : game.p1Char; openDrawer(true, 'moves'); });
 document.getElementById('hgtD').addEventListener('click', () => { initAudio(); toggleHeights(); sfx('select'); });
+document.getElementById('agD').addEventListener('click', () => { initAudio(); toggleAutoGuard(); sfx('select'); });
 document.getElementById('newsD').addEventListener('click', () => openDrawer(true, 'news'));
 document.getElementById('reloadD').addEventListener('click', freshReload);
 document.getElementById('eraseD').addEventListener('click', () => { if (confirm(L('Erase everything this site has saved (settings included) and reload?', 'このサイトに保存されたデータ（設定を含む）をすべて消去して、再読み込みしますか？'))) eraseSiteData(); });
