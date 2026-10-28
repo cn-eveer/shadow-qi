@@ -107,23 +107,26 @@ function opRenderClip(i, k) { // the live game, filmed: zoomed in on the action,
 const OP = { t: 0, clip: -1, muted: false };
 function warmOpening() { // prepare the opening's titles ahead of time, a few per frame, so none is drawn for the first time mid-movie
   if (OP.warm) return; OP.warm = true;
+  let jobs; try { // (if the titles can't be listed, the movie still starts: the warm-up only saves a stutter)
   const line = L('NINE WARRIORS. ONE STAGE.', '九人の戦士、ひとつの舞台。'), tag = L('NINE WARRIORS. ONE STAGE.', '九人の戦士。ひとつの舞台。');
-  const jobs = [[line, 48, '#ffe7b0', true], [line, 52, '#ffe7b0', true], [line, 56, '#ffe7b0', true], [line, 60, '#ffe7b0', true], ['SHADOW', 84, '#ffffff', false], ['✕', 72, '#ff6b8a', false], ['QI', 84, '#ffffff', false],
+  jobs = [[line, 48, '#ffe7b0', true], [line, 52, '#ffe7b0', true], [line, 56, '#ffe7b0', true], [line, 60, '#ffe7b0', true], ['SHADOW', 84, '#ffffff', false], ['✕', 72, '#ff6b8a', false], ['QI', 84, '#ffffff', false],
     [tag, 24, '#ffd27a', false], [L('SUPER!', '超必殺！'), 48, '#ffd23f', true], [L('PRESS ENTER', 'Enterキーで開始'), 20, '#ffffff', false], [L('TAP TO START', 'タップで開始'), 20, '#ffffff', false],
     ...OP_BATTLE.map(c => [L(CHARS[c.key].title, CHARS[c.key].titleJa).toUpperCase(), 32, '#ffffff', true]),
     ...OP_BATTLE.filter(c => c.pre).flatMap(c => [[nm(CHARS[c.key]), L(86, 72), '#ffffff', true], [L(CHARS[c.key].title, CHARS[c.key].titleJa).toUpperCase(), 24, `rgb(${OP_ROSTER.find(r => r.key === c.key).col})`, false]]),
     [OP_NEWS.head(), L(56, 48), '#ffffff', true], [OP_NEWS.sub(), 24, '#ffd27a', false], [OP_NEWS.badge(), L(20, 15), '#ffffff', true]];
   for (let n = 2; n <= 24; n++) jobs.push([L(`${n} HITS`, `${n} ヒット`), 40, '#ffd23f', true]);
   jobs.push([L('COMBO', 'コンボ'), 16, '#ffffff', false]);
-  jobs.push(() => { const c = document.createElement('canvas'); c.width = c.height = 32; const x = c.getContext('2d'); x.font = `18px ${HUD}`; x.fillText('ᚠᚢᚦᚨᚱᚲᚷᚹ', 0, 20); }); // the prologue's runes (the browser has to find a font for them)
+  jobs.push(() => { const c = document.createElement('canvas'); c.width = c.height = 32; const x = c.getContext('2d'); x.font = `18px ${HUD}`; x.fillText('ᚠᚢᚦᚨᚱᚲᚷᚹᚺ', 0, 20); }); // the prologue's runes (the browser has to find a font for them)
   jobs.push(() => { ctx.save(); ctx.globalAlpha = 0.004; ctx.drawImage(bg, 0, 0, 2, 2); ctx.restore(); }); // the stage picture, sent to the graphics card once before the first clip needs it
+  } catch (e) { OP.ready = true; return; }
   const t0 = performance.now(); let i = 0;
   const next = () => { // one title per frame; the movie's clock waits until they're all ready (2 seconds at most)
     if (i < jobs.length && performance.now() - t0 < 2000) { const j = jobs[i++]; try { if (typeof j === 'function') j(); else textBitmap(...j); } catch (e) {} requestAnimationFrame(next); } else OP.ready = true;
   };
   requestAnimationFrame(next);
 }
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(warmOpening); else warmOpening();
+const warmWhenLoaded = () => { if (document.fonts && document.fonts.ready) document.fonts.ready.then(warmOpening); else warmOpening(); };
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', warmWhenLoaded); else warmWhenLoaded(); // (only once every script has run: the titles need every fighter, and Hohen's are in alchemist.js, loaded after this file)
 function startOpening() { warmOpening();
   if (game.mode !== 'opening') OP.save = { p1: game.p1Char, p2: game.p2Char }; // the footage borrows the fighter picks; put them back afterwards
   initAudio(); game.mode = 'opening'; OP.t = 0; OP.clip = -1; OP.prep = null; ov.hidden = true; ov.innerHTML = '';
