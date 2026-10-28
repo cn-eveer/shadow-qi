@@ -380,8 +380,11 @@ function healthBar(f, x, left) {
   // MP gauge, just under the guard meter
   const my = gy + gh + 6, mh = 11;
   meterBar(f, gx, my, gw, mh, left);
+  // stress meter, just under the MP gauge (not for Lyra or Hohen)
+  const sy = my + mh + 5;
+  if (!f.ch.noStress) stressBar(f, gx, sy, gw, 4, left, x, w);
   // name row
-  const ny = my + mh + 7;
+  const ny = sy + 4 + 7;
   ctx.textBaseline = 'top'; ctx.textAlign = left ? 'left' : 'right';
   ctx.font = `18px ${HUD}`;
   ctx.fillStyle = '#000'; ctx.fillText(nm(f.ch), (left ? x : x + w) + 1, ny + 1);
@@ -419,6 +422,16 @@ function ammoRow(f, x, y, left) { // Jesse's bullets, beside the round markers: 
     ctx.font = `11px ${HUD}`; ctx.textBaseline = 'middle'; ctx.textAlign = left ? 'right' : 'left'; ctx.fillStyle = '#ffd98a';
     ctx.fillText(L('RELOAD', 'リロード'), left ? x - n * gap - 2 : x + n * gap + 2, y + 1);
   }
+}
+function stressBar(f, x, y, w, h, left, lx, lw) { // amber while calm; red and pulsing once stressed (past the mark at half)
+  ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(x - 2, y - 2, w + 4, h + 4);
+  ctx.fillStyle = '#1d1414'; ctx.fillRect(x, y, w, h);
+  const on = stressK(f) > 0, len = w * Math.min(100, f.stress || 0) / 100;
+  ctx.fillStyle = on ? (globalT % 16 < 8 ? '#ff5a4a' : '#c8322a') : '#e8a64a';
+  if (left) ctx.fillRect(x + w - len, y, len, h); else ctx.fillRect(x, y, len, h);
+  ctx.fillStyle = 'rgba(255,255,255,.45)'; ctx.fillRect(x + w / 2 - 0.5, y - 1, 1, h + 2); // (the half mark: stressed from here)
+  ctx.font = `9px ${HUD}`; ctx.textBaseline = 'middle'; ctx.textAlign = left ? 'left' : 'right';
+  ctx.fillStyle = on ? '#ff8a7a' : 'rgba(255,255,255,.6)'; ctx.fillText(L('STRESS', 'ストレス'), left ? lx : lx + lw, y + h / 2 + 1);
 }
 function meterBar(f, x, y, w, h, left) { // MP: violet with stripes running along it (a possessed Tanaka shows his form's colour); gold and pulsing when full
   const full = f.meter >= 100, m = w * Math.min(100, f.meter) / 100, fx = left ? x + w - m : x;

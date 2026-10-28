@@ -37,7 +37,7 @@ function resetFighter(f) {
     airAttacked: false, airShuri: false, invul: 0, stun: 0, combo: 0, flash: 0, inp: EMPTY, hidden: false, landT: 0,
     ko: false, cguard: false, crouchHit: false, backHeld: false, walkPh: 0, pose: { ...POSES.idle }, prevPose: { ...POSES.idle },
     hipUp: null, serial: 0, jumpSerial: 0, guard: 100, guardIdle: 0, lastToward: 0, sideT: -99, calm: 0,
-    shadow: false, followQ: null, lastResult: null, shadowRun: false, atkCD: 0, resting: 0, ammo: f.ch.ammo || 0, reloadT: 0,
+    shadow: false, followQ: null, lastResult: null, shadowRun: false, atkCD: 0, resting: 0, ammo: f.ch.ammo || 0, reloadT: 0, stress: 0, stressIdle: 0, stressShown: false,
   });
   f.golem = f.key === 'alchemist' ? newGolem(f) : null; // (the alchemist's stone golem, standing behind him)
   if (f.ctrl.reset) f.ctrl.reset();
@@ -86,7 +86,7 @@ const inAir = o => (o.state === 'knock' && o.juggle) || ((o.state === 'jump' || 
 function resolveSpecial(f, o, inp) {
   if (!inp.btn) return null;
   if (inp.fuse && f.ch.fuseSp && f.fuseG >= 100) return f.ch.fuseSp; // ← → + J + K with his fusion gauge full (Hohen's golem armour)
-  if (inp.sup && f.meter >= 100) return f.ch.sup;
+  if (inp.sup && f.meter >= 100 && !(f.ch.sup === 'kpFlood' && floodVictim(f))) return f.ch.sup; // (kappa against kappa: no flood while the other's is up)
   const isP = inp.btn[1] === 'p', heavy = inp.btn[0] === 'h';
   if (inp.ff || inp.bb) {
     const k = (inp.ff ? 'f' : 'b') + (isP ? 'P' : 'K'), sid = (heavy && f.ch.sp[k + 'H']) || f.ch.sp[k] || null;
@@ -135,6 +135,19 @@ function startMove(f, mv, str, keepBuffer) {
     mv.preTotal = f.pre;
     mv.windW = heavy || !mv.normal ? 1 : 0.55; // a jab winds up smaller than a heavy blow
   }
+  if (!mv.super && mv.startup < 900 && !mv.stressDone && game.phase === 'fight') { // (the stress meter, and the kappa's slower attacks: only in neutral, never inside a combo)
+    mv.stressDone = true;
+    const oc = other(f), caught = oc && ['hitstun', 'knock', 'stunned', 'down', 'getup', 'slashed', 'gbreak'].includes(oc.state);
+    if (!caught) {
+      if (f.ch.slowAtk && !(oc.state === 'attack' && oc.move && oc.mf > oc.move.startup + (oc.move.active || 0))) { f.pre += f.ch.slowAtk; mv.slowPre = f.ch.slowAtk; } // (not a punish)
+      if (!f.ch.noStress) {
+        const k = stressK(f);
+        if (k && !mv.air && (mv.normal || mv.launch)) { const x = Math.round(STRESS_SLOW * k); f.pre += x; mv.stressPre = x; } // stressed: strings and launchers come out late (time to guard, or to jab first)
+        f.stress = Math.min(100, (f.stress || 0) + (mv.launch ? STRESS_ADD.launch : !mv.normal ? STRESS_ADD.tech : mv.str ? STRESS_ADD.heavy : STRESS_ADD.light)); f.stressIdle = 0;
+        if (f.stress >= STRESS_ON && !f.stressShown) { f.stressShown = true; popText(f.x, GROUND - f.y - 205, L('STRESSED!', 'ストレス！'), '255,120,90'); }
+      }
+    }
+  }
   if (f.ch.fastAtk && mv.normal && !mv.fastDone && mv.startup < 900) { mv.fastDone = true; mv.startup = Math.max(3, mv.startup - 2); mv.recovery = Math.max(4, Math.round(mv.recovery * 0.8)); } // the devil: wild and fast
   if (mv.held && f.inp) { if (!mv.holdBtn) mv.holdBtn = f.inp.btn; if (f.inp.holdFor && mv.holdFor == null) mv.holdFor = f.inp.holdFor; }
   if (f.pre) sfx('charge');
@@ -181,6 +194,21 @@ function endMove(f) {
 // single U or J that hit or was guarded they wait a moment too. Either way they can't attack again until the opponent has been out of
 // hit-stun or guard for that long (shots still in the air included), so the opponent always gets a moment to act.
 const STRING_REST = 12, JAB_REST = 6;
+// The stress meter (everyone but Lyra and Hohen): every attack started while the opponent isn't caught in a combo — whiffed or guarded —
+// fills it, and it drains once they stop. From half full they're stressed: their strings and launchers come out late (time to guard,
+// or to jab them first), they move slower, their guard wears out faster and doesn't come back, and a guarded launcher leaves an even
+// bigger opening. Mashing U, U, I is punished; a real combo never counts.
+const STRESS_ADD = { light: 8, heavy: 12, tech: 12, launch: 18 }, STRESS_ON = 50, STRESS_IDLE = 40, STRESS_DRAIN = 0.35, STRESS_SLOW = 14;
+const stressK = f => f && !f.ch.noStress && f.stress >= STRESS_ON ? 0.5 + 0.5 * (f.stress - STRESS_ON) / (100 - STRESS_ON) : 0; // 0 calm, 0.5 – 1 stressed
+const stressMove = f => 1 - 0.3 * stressK(f);
+// no attack carries its user further than this (dashes, rushes, lunges, step-ins, leaps out of them; supers and air attacks aside)
+const MOVE_TRAVEL = 180;
+function capTravel(f) {
+  const mv = f.move; if (!mv || mv.super || mv.air) return; // (a ground move that leaps counts too: its flight is part of the move)
+  const fw = f.vx * f.facing; if (fw <= 0) return;
+  const left = MOVE_TRAVEL - (mv.travel || 0); if (fw > left) f.vx = f.facing * Math.max(0, left);
+  mv.travel = (mv.travel || 0) + f.vx * f.facing;
+}
 const reeling = o => o.state === 'hitstun' || o.state === 'blockstun' || o.state === 'recover';
 function restAfter(f, n, breath) {
   const o = other(f), s = f.ch.scale;
@@ -206,7 +234,7 @@ function runMove(f, o, inp) {
   if (mv.fx && FX_TICK[mv.fx]) FX_TICK[mv.fx](f, mv);
   // combos: the next button pressed while this hit is still going queues the next hit of the chain
   const ckey = inp.btn && mv.chain ? ((inp.down && mv.chain['d' + inp.btn]) ? 'd' + inp.btn : inp.btn) : null; // ↓ + button can pick a different next hit
-  if (ckey && !f.chainQ && mv.chain[ckey] && !inp.ff && !inp.bb && !inp.sup && !inp.fuse) { f.chainQ = mv.chain[ckey]; f.chainBt = inp.bt; }
+  if (ckey && !f.chainQ && !mv.lagLock && mv.chain[ckey] && !inp.ff && !inp.bb && !inp.sup && !inp.fuse) { f.chainQ = mv.chain[ckey]; f.chainBt = inp.bt; }
   if (f.chainQ && f.mf >= mv.startup + mv.active) {
     const id = f.chainQ; f.chainQ = null;
     const nm = chainMove(id, f);
@@ -215,12 +243,12 @@ function runMove(f, o, inp) {
   }
   // natural combos (Tekken style): a light attack that hit or was guarded can go straight into any other attack —
   // into another light one only from the first hit, so U and J strings can't run into each other over and over
-  if (mv.normal && mv.str === 0 && !mv.air && f.y <= 0 && f.hitConnected && inp.btn && !f.chainQ && !(mv.chain && mv.chain[inp.btn])
+  if (mv.normal && mv.str === 0 && !mv.air && !mv.lagLock && f.y <= 0 && f.hitConnected && inp.btn && !f.chainQ && !(mv.chain && mv.chain[inp.btn])
       && !inp.ff && !inp.bb && !inp.sup && !inp.fuse && f.mf >= mv.startup + mv.active) {
     if (tryAttack(f, o, inp, !!mv.chainDepth)) { f.move.chainDepth = (mv.chainDepth || 0) + 1; return; }
   }
   // follow-ups (Shadow Ambush, Sky Drop Kick): a button inside the window queues the next move
-  if (mv.follow && inp.btn && !f.followQ && f.mf >= mv.follow.from && f.mf <= mv.follow.to && mv.follow.opts[inp.btn] && !(mv.follow.notOnHit && f.lastResult === 'hit')
+  if (mv.follow && inp.btn && !f.followQ && !mv.lagLock && f.mf >= mv.follow.from && f.mf <= mv.follow.to && mv.follow.opts[inp.btn] && !(mv.follow.notOnHit && f.lastResult === 'hit')
       && (!mv.rushTag || (f.rushN || 0) < 4 || FINISHERS.has(mv.follow.opts[inp.btn]))) f.followQ = mv.follow.opts[inp.btn]; // a rush allows four parts, then only its finisher
   if (f.followQ && mv.follow && mv.follow.notOnHit && f.lastResult === 'hit') f.followQ = null; // it connected: juggle instead
   if (f.followQ && f.mf >= (mv.follow.at || 0)) {
@@ -240,7 +268,7 @@ function runMove(f, o, inp) {
   if (mv.normal && f.y <= 0 && inp.btn) {
     // cancel into a special after a hit, or into the super if Punch + Kick were pressed a frame or two apart
     const early = f.mf <= 4 && ((inp.sup && f.meter >= 100) || (inp.fuse && f.fuseG >= 100)); // (← → + J + K: the same grace for Hohen's fusion)
-    if (early || (f.hitConnected && f.mf > mv.startup)) {
+    if (early || (f.hitConnected && f.mf > mv.startup && !mv.lagLock)) { // (not out of a guarded launcher)
       const sid = resolveSpecial(f, o, inp);
       if (sid && (!early || sid === f.ch.sup || sid === f.ch.fuseSp)) {
         const s2 = specialMove(sid);
@@ -289,6 +317,7 @@ function land(f) {
 function update(f, o, inp) {
   f.inp = inp; f.st++;
   if (f.golem) golemUpdate(f, o);
+  if (inp.brk && BREAK_STATES.includes(f.state) && !f.ko && !f.ch.noGuard && game.phase === 'fight' && !game.superFlash && !(o.move && o.move.super) && !o.opus) comboBreak(f, o); // P while being hit
   if (f.brands && --f.brandT <= 0) f.brands = 0; // holy brands fade
   if (f.healT > 0) f.healT--;
   if (f.possT > 0 && --f.possT === 0) endPossession(f);
@@ -325,7 +354,7 @@ function update(f, o, inp) {
       if (inp.down) { if (f.state !== 'crouch') setState(f, 'crouch'); f.vx = !f.backHeld && Math.sign(inp.h) === toward ? toward * f.ch.walk * 0.45 * (f.poisonT > 0 ? 0.6 : 1) * floodWalkMul(f) : 0; break; } // (crouching, ↓ + forward edges forward; ↓ + back stays the crouching guard)
       if (f.backHeld && threatened(f, o)) { if (f.state !== 'guard') setState(f, 'guard'); f.vx = 0; break; }
       if (f.state !== 'stand') setState(f, 'stand');
-      f.vx = inp.h * (f.backHeld ? f.ch.back : f.ch.walk) * (f.ctrl instanceof CPU && !game.watch ? 0.75 : 1) * (f.poisonT > 0 ? 0.6 : 1) * floodWalkMul(f); // the CPU walks slower against a player; poison slows anyone; in the flood the kappa swims fast and the other wades
+      f.vx = inp.h * (f.backHeld ? f.ch.back : f.ch.walk) * (f.ctrl instanceof CPU && !game.watch ? 0.75 : 1) * (f.poisonT > 0 ? 0.6 : 1) * floodWalkMul(f) * stressMove(f); // the CPU walks slower against a player; poison slows anyone; in the flood the kappa swims fast and the other wades
       if (f.vx) f.walkPh += Math.abs(f.vx) * 0.085 * (f.backHeld ? -1 : 1);
       break;
     }
@@ -388,7 +417,7 @@ function update(f, o, inp) {
     case 'dash': // forward dash: a quick burst toward the opponent; attacks (and → → specials) come straight out of it
       f.facing = toward;
       if (f.atkCD <= 0 && tryAttack(f, o, inp)) break;
-      f.vx = f.facing * (f.st < 9 ? 8 : 4) * (f.poisonT > 0 ? 0.6 : 1) * (f.key === 'kappa' ? 1.35 : 1); // (the kappa darts in fast and low, under projectiles)
+      f.vx = f.facing * (f.st < 9 ? 8 : 4) * (f.poisonT > 0 ? 0.6 : 1) * (f.key === 'kappa' ? 1.35 : 1) * stressMove(f); // (the kappa darts in fast and low, under projectiles)
       if (f.st % 3 === 0) dustAt(f.x, false);
       if (f.st >= 14) setState(f, 'stand');
       break;
@@ -437,6 +466,7 @@ function update(f, o, inp) {
     if (f.state === 'knock' && f.juggle && !f.jugSpent && (f.airT = (f.airT || 0) + 1) > AIR_MAX) { f.jugSpent = true; f.juggle = false; popText(f.x, GROUND - f.y - 200, 'LIFT LIMIT', '205,205,220'); } // no juggle lasts longer than this, whatever is used
     if (f.y <= 0) { f.y = 0; f.vy = 0; land(f); }
   }
+  if (f.state === 'attack') capTravel(f);
   f.x += f.vx;
   if (f.kb) { f.x += f.kb; f.kb *= 0.8; if (Math.abs(f.kb) < 0.1) f.kb = 0; } // pushback from hitting someone against the wall
   if (f.y <= 0) {
@@ -448,7 +478,8 @@ function update(f, o, inp) {
   // guard meter refills slowly once you stop guarding
   const guarding = f.state === 'guard' || f.state === 'blockstun' || f.state === 'gbreak' || (f.state === 'crouch' && f.backHeld) || (f.state === 'attack' && f.move && f.move.aegis); // (no recovery while the Aegis is up)
   if (guarding) f.guardIdle = 0;
-  else if (++f.guardIdle > 45) f.guard = Math.min(100, f.guard + (f.guardSlowT > 0 ? 0.02 : 0.07)); // (slowly after the Aegis)
+  else if (++f.guardIdle > 45 && !stressK(f)) f.guard = Math.min(100, f.guard + (f.guardSlowT > 0 ? 0.02 : 0.07)); // (slowly after the Aegis; not at all while stressed)
+  if (!f.ch.noStress && ++f.stressIdle > STRESS_IDLE) { f.stress = Math.max(0, (f.stress || 0) - STRESS_DRAIN); if (f.stress < STRESS_ON - 15) f.stressShown = false; }
   if (f.guardSlowT > 0) f.guardSlowT--;
   if (f.meter >= 100 && globalT % 9 === 0) auraParticle(f);
 }

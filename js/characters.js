@@ -27,7 +27,7 @@ const CHARS = {
     meterCol: ['#14a8c8', '#b4f7ff'], bannerCol: 'rgba(16,150,190,.88)', fxCol: '125,235,255', idle: 'idleT', chargePose: 'charge', winPose: 'win', atkCD: 14, recoverT: 12, hitFx: 'hex',
   },
   staff: {
-    reachAdd: 28, name: 'MEI', title: 'Staff Prodigy', nameJa: 'メイ', titleJa: '棍の天才', dmgMul: 0.88, guardDmgMul: 0.6, slowTech: 4, pushMul: 1.6, prePose: 'chargeB', jugDmg: 1.15, scale: 0.94, walk: 3.6, back: 3.0, jumpX: 4.8, jumpV: 19.5, doubleJump: true,
+    reachAdd: 28, name: 'MEI', title: 'Staff Prodigy', nameJa: 'メイ', titleJa: '棍の天才', dmgMul: 0.74, guardDmgMul: 0.6, slowTech: 4, pushMul: 1.6, prePose: 'chargeB', jugDmg: 1.15, scale: 0.94, walk: 3.6, back: 3.0, jumpX: 4.8, jumpV: 19.5, doubleJump: true,
     pDmg: 1.35, kDmg: 1.2, pReach: 1.9, kReach: 1.0, chargeRate: 0.66, auraCol: '255,200,90', fxCol: '255,205,110',
     sp: { fP: 'extendStaff', fPH: 'vaultSmash', fK: 'sweepStaff', fKH: 'poleKick', bP: 'windmill', bPH: 'cloudLeap', bK: 'somersault', bKH: 'feint' }, sup: 'greatSage',
     heavy: {
@@ -52,7 +52,7 @@ const CHARS = {
     meterCol: ['#d98a1c', '#ffe28a'], bannerCol: 'rgba(200,120,20,.88)', idle: 'idleB', chargePose: 'chargeB', winPose: 'winB', atkCD: 8, recoverT: 8, hitFx: 'star',
   },
   psychic: {
-    name: 'LYRA', title: 'Psychic Sage', nameJa: 'ライラ', titleJa: '超能力の賢者', dmgMul: 1.23, slowTech: 13, normalPre: 6, pushMul: 1.5, reachMul: 1.22, stringDelay: 9, prePose: 'psyCast', jugDmg: 1.0, jugHitMul: 1.2, scale: 1.0, walk: 4.0, back: 4.0, jumpX: 5.0, // (her magic is the slowest to come out, but she moves quickly)
+    name: 'LYRA', title: 'Psychic Sage', nameJa: 'ライラ', titleJa: '超能力の賢者', noStress: true, dmgMul: 1.4, slowTech: 13, normalPre: 6, pushMul: 1.5, reachMul: 1.22, stringDelay: 9, prePose: 'psyCast', jugDmg: 1.0, jugHitMul: 1.2, scale: 1.0, walk: 4.0, back: 4.0, jumpX: 5.0, // (her magic is the slowest to come out, but she moves quickly)
     hover: true, orbs: true,
     pDmg: 0.9, kDmg: 0.9, pReach: 1.15, kReach: 1.0, chargeRate: 0.48, auraCol: '200,160,255', fxCol: '210,190,255',
     sp: { fP: 'phantomFist', fPH: 'crushFist', fK: 'psyLift', fKH: 'forceWave', bP: 'orbBurst', bPH: 'tripleRay', bK: 'orbStrong', bKH: 'orbLong' }, sup: 'thousandFists',
@@ -103,7 +103,7 @@ const CHARS = {
 };
 Object.assign(CHARS, {
   kappa: {
-    name: 'KAPPA', title: 'Mythic Kappa', nameJa: 'カッパ', titleJa: '幻獣カッパ', dmgMul: 1.03, scale: 0.86, walk: 3.3, back: 2.9, jumpX: 4.4, jumpV: 18, jugDmg: 1.1,
+    name: 'KAPPA', title: 'Mythic Kappa', nameJa: 'カッパ', titleJa: '幻獣カッパ', slowAtk: 2, dmgMul: 1.03, scale: 0.86, walk: 3.3, back: 2.9, jumpX: 4.4, jumpV: 18, jugDmg: 1.1,
     pDmg: 1.0, kDmg: 1.0, pReach: 1.1, kReach: 0.9, chargeRate: 0.62, auraCol: '120,220,200', fxCol: '140,215,255',
     sp: { fP: 'kpPlate', fPH: 'kpCannon', fK: 'kpPounce', fKH: 'kpFrenzy', bP: 'kpBubble', bPH: 'kpGeyser', bK: 'kpShell', bKH: 'kpRiptide' }, sup: 'kpFlood',
     heavy: { // no kicks: the K button grabs and throws
@@ -189,8 +189,8 @@ makeCharged('staff', [
     act: (f, o, mf) => { f.vx *= 0.5; if (mf === f.move.startup) { sfx('swing'); parts.push({ type: 'ring', x: f.x, y: GROUND - 90, r: 30, vr: 9, life: 16, max: 16, col: '255,210,110' }); for (let i = 0; i < 6; i++) parts.push({ type: 'star', x: f.x + rnd(-100, 100), y: GROUND - rnd(40, 160), vx: f.facing * rnd(2, 5), vy: -rnd(0, 2), r: 3, vr: -0.1, life: 18, max: 18, col: '255,210,110', rot: R() * 3 }); } } },
 ]);
 makeCharged('psychic', [
-  { set: { label: 'Rising Glyph', dmg: 50, launch: true, launchVy: 13.5, pose: 'psyUp', recovery: 20, hitbox: [40,195,0,200], floorGlyph: 150, psyFist: null }, rel: 8, onFire: (f, o) => lyraReach(f, o, 430, 100) },
-  { set: { label: 'Nova Glyph', dmg: 90, kd: true, kdVx: 17, kdVy: 8, push: 8, pose: 'psyPush', recovery: 24, gdrain: 18, psyFist: [150, 115, 1.6], burst: [150, 115] }, rel: 9, onFire: (f, o) => lyraReach(f, o, 430, 120),
+  { set: { label: 'Rising Glyph', dmg: 50, launch: true, launchVy: 13.5, pose: 'psyUp', recovery: 20, hitbox: [40,195,0,200], floorGlyph: 150, psyFist: null }, rel: 8, onFire: (f, o) => lyraReach(f, o, 320, 100) },
+  { set: { label: 'Nova Glyph', dmg: 90, kd: true, kdVx: 17, kdVy: 8, push: 8, pose: 'psyPush', recovery: 24, gdrain: 18, psyFist: [150, 115, 1.6], burst: [150, 115] }, rel: 9, onFire: (f, o) => lyraReach(f, o, 320, 120),
     act: (f, o, mf) => { f.vx *= 0.6; if (mf === f.move.startup) { sfx('hitH'); game.shake = Math.max(game.shake, 5); } } },
 ]);
 makeCharged('kappa', [

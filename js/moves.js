@@ -93,6 +93,7 @@ function heavyFX(f, mv) {
   if (mv.trail) sfx('slash');
 }
 // Kuro's techniques recover faster (kept long enough for each one's animation to finish)
+const POUNCE_MAX = 240, RIP_REACH = 380, RIP_PULL = 240; // the kappa's Pounce leaps this far at most; Riptide catches them this far away at most, and drags them this far at most
 const KURO_REC = { cloneStrike: 12, shadowCharge: 20, counterVanish: 12, swordSlash: 24, ambushBehind: 16, ambushLeap: 20, ambushSlide: 16, ambushKick: 18, // Shadow Charge and its follow-ups can be punished
   teleKick: 10, teleSlide: 9, teleSpin: 12, flame: 10, fireballs: 8, vanishDrop: 10, vanishSlide: 9, jFire: 10, jRain: 8, jClone: 8, jIai: 15, jVanishHeel: 9, shadowArmy: 14 };
 const SLOW_SPECIALS = { staff: new Set(['extendStaff', 'vaultSmash', 'sweepStaff', 'poleKick', 'windmill', 'cloudLeap', 'somersault', 'feint']),
@@ -478,8 +479,8 @@ function specialMoveBase(id) {
         if (mv.ended) { f.vx *= 0.5; return; }
         mv.aegisOn = mf >= 14;
         f.vx = mv.aegisOn ? (f.inp ? f.inp.h : 0) * f.ch.walk * 0.6 : 0; // he can walk while he holds it
-        if (mv.aegisOn) f.guard = Math.max(0, f.guard - 0.16); // (the light feeds on his guard meter: about ten a second)
-        if (mf > 16 && (!holding(f) || mf >= 254 || f.guard <= 0)) { mv.ended = true; mv.aegisOn = false; mv.active = Math.max(1, mf - mv.startup); aegisSpent(f); } // (four seconds at most)
+        if (mv.aegisOn) f.guard = Math.max(0, f.guard - 0.1); // (the light feeds on his guard meter: about six a second)
+        if (mf > 16 && (!holding(f) || mf >= 434 || f.guard <= 0)) { mv.ended = true; mv.aegisOn = false; mv.active = Math.max(1, mf - mv.startup); aegisSpent(f); } // (seven seconds at most)
       } };
     // ← ← + K: Lay on Hands. Hold K: he kneels and prays, turning MP into health. Hit him while he prays and it's a counter hit
     case 'plPray': return { id, label: 'Lay on Hands', startup: 10, active: 999, recovery: 18, wind: 'chargeP', pose: 'chargeP', held: true, heal: true,
@@ -526,7 +527,7 @@ function specialMoveBase(id) {
     // → → + J: Pounce. Leaps on them like a wild animal, latches on and rakes three times, then kicks off them into the air
     case 'kpPounce': return { id, label: 'Pounce', startup: 8, active: 22, recovery: 18, wind: 'kIdle', pose: 'kPounce', manualY: true, noPush: true, selfMove: true, speedFx: true,
       hitbox: [0,120,20,150], dmg: 14, stun: 30, bstun: 14, push: 0.3, type: 'mid', hitstop: 6, gdrain: 10,
-      onStart(f, o) { f.pz = { x0: f.x, tx: clamp(o.x - (Math.sign(o.x - f.x) || f.facing) * 40, WALL_L, WALL_R) }; sfx('rise'); },
+      onStart(f, o) { f.pz = { x0: f.x, tx: clamp(clamp(o.x - (Math.sign(o.x - f.x) || f.facing) * 40, f.x - POUNCE_MAX, f.x + POUNCE_MAX), WALL_L, WALL_R) }; sfx('rise'); }, // (a leap of POUNCE_MAX at most: from further away it falls short)
       onFrame(f, o, mf) {
         const mv = f.move; f.vx = 0;
         if (!mv.latch) {
@@ -563,13 +564,14 @@ function specialMoveBase(id) {
     // On a hit they arrive stunned in front of him, so his ground string follows. The answer to anyone who keeps their distance. Jump the wave and it passes under them
     case 'kpRiptide': return { id, label: 'Riptide', startup: 16, active: 40, recovery: 18, wind: 'kToss', pose: 'kBlast', hitbox: null,
       onFrame(f, o, mf) { const mv = f.move; f.vx = 0;
-        if (mf === 4) { const side = Math.sign(o.x - f.x) || f.facing; mv.dir = -side; mv.wx = clamp(o.x + side * 150, WALL_L - 20, WALL_R + 20); sfx('flame'); }
+        if (mf === 4) { const side = Math.sign(o.x - f.x) || f.facing; mv.dir = -side; mv.wx = clamp(Math.abs(o.x - f.x) <= RIP_REACH ? o.x + side * 150 : f.x + side * RIP_REACH, WALL_L - 20, WALL_R + 20); sfx('flame'); } // (the water rises behind them — if they're within RIP_REACH; further away it rises short of them and misses)
         if (mf < 16 || mv.wx == null) return;
         if (mf === 16) { sfx('splash'); game.shake = Math.max(game.shake, 3); }
         mv.wx += mv.dir * 13;
         if (mv.dir * (f.x - mv.wx) < 50) { mv.done = true; if (mv.carry === 'hit' && o.state === 'hitstun') { o.stun = Math.max(o.stun, 26); o.x = clamp(f.x + f.facing * 72, WALL_L, WALL_R); popText(o.x, GROUND - 190, L('DRAGGED IN!', '引き寄せ！'), '150,215,255'); } else if (mv.carry) o.x = clamp(f.x + f.facing * 80, WALL_L, WALL_R); hitRecover(f, 6); return; } // (it breaks at his feet, leaving them right in front of him: on a hit, still stunned — start the string)
         const near = Math.abs(o.x - mv.wx) < 60 && o.y < 80;
-        if (near && !mv.hit) { mv.hit = true; const r = columnHit(f, o, { dmg: 34, stun: 40, bstun: 16, push: 0, gdrain: 10, label: 'Riptide' }); mv.carry = o.state === 'hitstun' ? 'hit' : 'guard'; }
+        if (near && !mv.hit) { mv.hit = true; const r = columnHit(f, o, { dmg: 34, stun: 40, bstun: 16, push: 0, gdrain: 10, label: 'Riptide' }); mv.carry = o.state === 'hitstun' ? 'hit' : 'guard'; mv.cx = o.x; }
+        if (mv.carry && !mv.done && Math.abs(o.x - mv.cx) >= RIP_PULL) { mv.done = true; hitRecover(f, 6); return; } // (it carries them RIP_PULL at most, then lets go where they are)
         if (mv.carry && !mv.done) { // caught in it — hit or guarding — they're carried along to him
           o.x = clamp(lerp(o.x, mv.wx + mv.dir * 10, 0.6), WALL_L, WALL_R); o.vx = 0;
           if (o.state === 'hitstun') o.stun = Math.max(o.stun, 30); else if (o.state === 'blockstun') o.bstun = Math.max(o.bstun || 0, 8); else if (['stand', 'guard', 'crouch', 'walk'].includes(o.state)) { setState(o, 'blockstun'); o.bstun = 8; } }
@@ -599,6 +601,7 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { // no direct hit: a great wave rolls across and the whole stage floods for eight seconds — the kappa swims, they wade
         f.vx = 0; if (mf < 18) return;
         if (mf === 18) { sfx('flame'); game.shake = Math.max(game.shake, 6); }
+        if (mf === 40 && floodVictim(f)) { popText(f.x, GROUND - 200, L('ALREADY FLOODED', 'すでに水没中'), '150,215,255'); return; } // (kappa against kappa: one flood at a time)
         if (mf === 40) { game.flood = { owner: f, t: FLOOD_T }; popText(W / 2, GROUND - 230, L('THE STAGE FLOODS!', '水没！'), '150,215,255'); sfx('charge'); }
       },
       drawFX(f) { if (f.mf < 18 || f.mf > 72) return; const front = f.x + f.facing * ((f.mf - 18) * 40 - 60), back = front - f.facing * 520, a = f.mf > 64 ? Math.max(0, 1 - (f.mf - 64) / 8) : 1;

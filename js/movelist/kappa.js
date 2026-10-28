@@ -22,7 +22,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Water Bubble<small>A lobbed bubble that bursts and leaves them dizzy and dripping (stunned).</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>Geyser<small>A column of water bursts up under them, wherever they are, and throws them high.</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>Shell Guard<small>Pulls into his shell: everything bounces off, and if something did, he spins out of it.</small></td><td class="cmd">← ← + J</td></tr>
-          <tr><td>Riptide<small>The water rises up behind them and rolls in toward him, carrying them right up to him — even if they guard. On a hit they arrive stunned in front of him: start his ground string (U, U, U, U, K). Jump the wave to escape.</small></td><td class="cmd">← ← + K</td></tr>
+          <tr><td>Riptide<small>The water rises up behind them (if they’re no more than about two fifths of the stage away) and rolls in toward him, carrying them toward him — a quarter of the stage at most — even if they guard. On a hit they arrive stunned in front of him: start his ground string (U, U, U, U, K). Jump the wave to escape.</small></td><td class="cmd">← ← + K</td></tr>
           <tr class="super"><td>Super: Great Flood<small>No direct hit: a great wave rolls in and the stage floods for ten seconds, the water a little above head height (a gauge under the timer shows the time left). The kappa swims — faster, ↑ strokes up (a little above a normal jump), ↓ dives — his attacks come out a fifth faster, <b>reach them anywhere on the stage</b> (the water carries every blow), and the water heals him (about 70 health). They wade: three-quarter speed, jumps a quarter slower, attacks a fifth slower to come out — recovery is untouched, so they can still get away and punish — and they slowly drown (about 90 health).</small></td><td class="cmd">U + J</td></tr>
         </tbody>
       </table></div>
@@ -58,7 +58,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>水玉<small>山なりの水玉。はじけると相手はずぶ濡れで目を回す（気絶）。</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>間欠泉<small>相手の足元から水柱が噴き上がり、高く打ち上げる。</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>甲羅ガード<small>甲羅にこもる：すべて弾き、何かを弾いたら回転して飛び出す。</small></td><td class="cmd">← ← + J</td></tr>
-          <tr><td>引き波<small>相手の背後から水がせり上がり、カッパの方へ押し寄せて目の前まで運ぶ（ガードしていても引き寄せる）。当たれば気絶したまま目の前に来るので、地上の連続技（U、U、U、U、K）を始められる。波をジャンプすればかわせる。</small></td><td class="cmd">← ← + K</td></tr>
+          <tr><td>引き波<small>相手の背後から水がせり上がり（相手が画面の約5分の2以内にいる時）、カッパの方へ押し寄せて引き寄せる（最大で画面の約4分の1。ガードしていても引き寄せる）。当たれば気絶したまま目の前に来るので、地上の連続技（U、U、U、U、K）を始められる。波をジャンプすればかわせる。</small></td><td class="cmd">← ← + K</td></tr>
           <tr class="super"><td>超必殺技：大洪水<small>直接は当たらない：大波が押し寄せ、10秒間ステージが水没する（水面は頭の少し上。タイマーの下のゲージで残り時間がわかる）。カッパは泳いで速く動き（↑で上へ・普通のジャンプより少し高くまで、↓で潜る）、攻撃の出も5分の1速く、<b>攻撃はステージのどこにいても届く</b>（水が一撃を運ぶ）。水で体力も回復する（約70）。相手は水の中を歩くので、移動は4分の3、ジャンプは4分の1ゆっくり、攻撃の出も5分の1遅い（硬直は変わらないので回避も反撃もできる）。さらに溺れて体力が少しずつ減る（約90）。</small></td><td class="cmd">U + J</td></tr>
         </tbody>
       </table></div>

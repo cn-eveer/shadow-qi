@@ -17,6 +17,10 @@ function staffTipBox(f, mv, hb0) {
   if (mv.launch || mv.jug || mv.air || f.y > 0 || /rise|Rise|Up\b|up\b|Upper|Cudgel|Swing/.test((mv.pose || '') + ' ' + (mv.label || ''))) out = U(out, hb0); // (rising swings and juggle hits scoop up close to her too)
   return out;
 }
+// no blow reaches further than this in front of its user (Lyra's spells have their own range, LYRA_RANGE; Excalibur's reach is what
+// its three-second charge buys)
+const MELEE_REACH = 220;
+const meleeBox = (f, hb) => f.key === 'psychic' || hb[1] <= MELEE_REACH || (f.move && f.move.excal) ? hb : [hb[0], Math.max(hb[0] + 30, MELEE_REACH), hb[2], hb[3]];
 function boxOf(f, hb) {
   const s = f.ch.scale, [x0, x1, y0, y1] = hb, b0 = f.y + y0 * (f.ch.tallBox ? 1 : s); // tallBox (Tanaka's double possession, 1.4× his size): the blow grows forward and up, but still reaches as low as at normal size
   return f.facing > 0
@@ -129,6 +133,43 @@ const TECH_DMG = 0.8, AIR_TECH = 0.6; // strong techniques do a little less, and
 // every super's full damage evened out to about 220 (measured landing in full on a standing opponent); the kappa's Great Flood and Aldric's Sanctuary keep their own
 const SUPER_EQ = { shadowArmy: 0.756, qiCannon: 1.142, greatSage: 1.154, thousandFists: 0.923, gnHighNoon: 0.841, smDeadline: 1.115, saHeavenangel: 0.969, sdInfernodevil: 0.55, sdInfernodouble: 0.559 };
 const SUPER_REF = { ninja: 1.08, brawler: 0.9, staff: 1.08, psychic: 1.25, gunman: 1.42, salary: 1.15 }; // each fighter's overall damage when the supers were evened out
+// guarding costs: every guarded hit takes a little health and a piece of the guard meter — techniques, charged attacks and supers far more
+// (and a stressed fighter's guard wears out faster)
+const CHIP = 0.03, CHIP_BIG = 0.12;
+const guardBig = (a, h) => !!(h.superHit || h.spx || (!h.proj && a.state === 'attack' && a.move && (a.move.super || !a.move.normal || a.move.lvl)));
+function guardCost(a, d, h, big) {
+  const sup = h.superHit || (a.move && a.move.super), rush = a.move && ((a.move.rushTag && !a.move.rushOpen) || FINISHERS.has(a.move.id)), base = (h.gdrain || 0) * 0.6 + (h.dmg || 0) * 0.1;
+  return base * (big ? (sup ? 1.3 : rush ? 1.2 : 2.6) : 1) /* (a rush is one technique: only its opening costs the full price) */ * (d.ch.guardMul || 1) * (a.ch.guardDmgMul || 1) * (1 + 0.6 * stressK(d));
+}
+const chipOf = (h, big) => Math.max(1, Math.ceil((h.dmg || 0) * (big ? CHIP_BIG : h.chip ? 0.075 : CHIP)));
+// a launcher (U, U, I, ↓ + I, any attack that lifts them) that's guarded leaves a big opening — bigger still when its user is stressed
+const LAUNCH_LAG = 36, LAUNCH_LAG_STRESS = 30;
+function launcherGuardLag(a, d, h) {
+  const mv = a.move;
+  if (a.state !== 'attack' || !mv || !(mv.launch || h.launch) || h.proj || mv.super || mv.startup >= 900 || a.y > 0 || a.ko) return;
+  const need = (h.bstun || 10) + LAUNCH_LAG + Math.round(LAUNCH_LAG_STRESS * stressK(a)), left = mv.startup + (mv.active || 0) + mv.recovery - a.mf;
+  if (left < need) mv.recovery += need - left;
+  mv.lagLock = true; a.guardLagT = need; a.guardLagUntil = Math.max(a.guardLagUntil || 0, game.frame + need);
+  if (!a.lagShown || game.frame - a.lagShown > 30) { a.lagShown = game.frame; popText(a.x, GROUND - a.y - 175, L('OPEN!', '隙あり！'), '255,170,120'); }
+}
+// the combo breaker: P while being hit. A burst throws the attacker off and stops whatever he was doing, for a third of the guard meter.
+// The one breaking out is untouchable for a moment but can't attack straight away: it's a reset, not a free punish.
+const BREAK_STATES = ['hitstun', 'knock', 'stunned', 'slashed'], BREAK_COST = 100 / 3;
+function comboBreak(f, o) {
+  if (f.guard < BREAK_COST) { if (!f.brkNoT || game.frame - f.brkNoT > 30) { f.brkNoT = game.frame; popText(f.x, GROUND - f.y - 170, L('NOT ENOUGH GUARD', 'ガード不足'), '255,150,150'); } return; }
+  f.guard -= BREAK_COST; f.guardIdle = 0;
+  const away = Math.sign(o.x - f.x) || -f.facing;
+  f.combo = 0; f.juggle = false; f.stun = 0; f.stunT = 0; f.pendingStun = 0; f.invul = Math.max(f.invul || 0, 24); f.atkCD = Math.max(f.atkCD || 0, 16); f.airAttacked = true;
+  if (f.y > 0) { setState(f, 'jump'); f.vx = -away * 3; f.vy = Math.min(f.vy, 4); } else { setState(f, 'stand'); f.vx = -away * 2; }
+  if (o.golem) { const g = o.golem; if (g.hold) golemRelease(o, f, true); g.act = null; g.queue = null; }
+  o.move = null; o.chainQ = null; o.followQ = null; o.pre = 0; o.shadow = false; o.hidden = false; o.shadowRun = false;
+  setState(o, o.y > 0 ? 'jump' : 'hitstun'); o.stun = 18; o.vx = away * 11; if (o.y > 0) { o.vy = Math.min(o.vy, 2); o.airAttacked = true; }
+  for (const p of projs) if (p.owner === o && !p.dead && p.type !== 'trap' && Math.abs(p.x - f.x) < 200) p.dead = true; // (his shots close by are blown away too)
+  const cy = GROUND - f.y - 90 * f.ch.scale;
+  parts.push({ type: 'ring', x: f.x, y: cy, r: 20, vr: 9, life: 16, max: 16, col: '255,140,150' }, { type: 'ring', x: f.x, y: cy, r: 8, vr: 5, life: 12, max: 12, col: '255,255,255' });
+  sparks(f.x + away * 40, cy, 'big'); sfx('break'); popText(f.x, GROUND - f.y - 190, L('COMBO BREAK!', 'コンボブレイク！'), '255,140,150');
+  game.freeze = Math.max(game.freeze, 6); game.shake = Math.max(game.shake, 6);
+}
 const GUARD_STALL = 6; // frames an attacker loses when his attack is guarded (shown as a recoil)
 const JUG_HOLD_MAX = 150; // frames (2.5 s) U, U... can keep them up after the last lift or bounce: then only a new lift or the finisher still lands
 const JUG_ATTACKS_MAX = 7; // attacks a juggle can take before a new lift or bounce (finishers still land)
@@ -252,7 +293,7 @@ function applyHit(a, d, h, side, hb, hu) {
   if (hc === 'midlow' && low && !airGuard && canGuard && holding) popText(d.x, GROUND - d.y - 175, L('MID + LOW!', '中下段！'), '255,200,120'); // (crouch-guarding a mid + low: it hits)
   if (canGuard && (holding || autoBlock) && !lowHit) {
     const pushB = (h.bpush != null ? h.bpush : (h.push || 1) * 0.9) * (h.rushTag ? 1 : a.ch.pushMul || 1); // (rush strings keep their own spacing)
-    d.guard -= (h.gdrain || 0) * 0.6 * (d.ch.guardMul || 1) * (a.ch.guardDmgMul || 1); d.guardIdle = 0; // the guard meter lasts twice as long as it used to
+    const big = guardBig(a, h); d.guard -= guardCost(a, d, h, big); d.guardIdle = 0;
     if (d.guard <= 0) {
       d.guard = 0; setState(d, 'gbreak'); d.stun = h.gbstun || 45; d.vx = side * 3; d.move = null;
       popText(d.x, GROUND - d.y - 165, 'GUARD BREAK!', '255,120,130');
@@ -263,14 +304,14 @@ function applyHit(a, d, h, side, hb, hu) {
     }
     if (airGuard) { // guarded in the air: pushed back a little, still falling, can't attack until the block wears off
       d.vx = side * Math.max(2, pushB * 0.7); d.vy = Math.min(d.vy, 3); d.atkCD = Math.max(d.atkCD || 0, h.bstun || 10); d.airAttacked = true;
-      if (h.chip) d.hp = Math.max(1, d.hp - Math.ceil(h.dmg * 0.075));
+      d.hp = Math.max(1, d.hp - chipOf(h, big));
       d.meter = Math.min(100, d.meter + 2); sparks(cx, cy, 'block'); sfx('block'); popTextOnce(d, L('AIR GUARD', '空中ガード'));
-      trackAdv(a, d, 'block', h.label); game.freeze = Math.max(game.freeze, 3); techGuardLag(a, d, h);
+      trackAdv(a, d, 'block', h.label); game.freeze = Math.max(game.freeze, 3); techGuardLag(a, d, h); launcherGuardLag(a, d, h);
       return 'block';
     }
     setState(d, 'blockstun'); d.stun = h.bstun || 10; d.cguard = low; d.vx = side * pushB;
-    techGuardLag(a, d, h); // a technique that's guarded leaves its user open
-    if (h.chip) d.hp = Math.max(1, d.hp - Math.ceil(h.dmg * 0.075)); // chip damage through the guard: half what it was
+    techGuardLag(a, d, h); launcherGuardLag(a, d, h); // a technique or a launcher that's guarded leaves its user open
+    d.hp = Math.max(1, d.hp - chipOf(h, big)); // chip damage through the guard: a little for anything, more for techniques and supers
     if (!h.proj) wallPush(a, d, side); // guarded against the wall: the attacker slides back instead
     d.meter = Math.min(100, d.meter + 3); // ...and guarding
     sparks(cx, cy, 'block'); sfx('block');
@@ -399,7 +440,7 @@ function checkHits(a, o) {
   const multi = mv.multi || 1;
   if (a.hitCount >= multi) return;
   if (a.hitCount > 0 && a.mf - a.lastHitMf < (mv.interval || 99)) return;
-  let hb = boxOf(a, mv.hitbox);
+  let hb = boxOf(a, meleeBox(a, mv.hitbox));
   if (a.key === 'staff') hb = staffTipBox(a, mv, hb);
   if (floodOwner(a)) hb = { ...hb, x0: -200, x1: W + 200 }; // the flood carries the kappa's every blow: it reaches them anywhere on the stage // Mei: the staff hits along its front half, out to the tip — not at her fists
   if (hitDecoys(a, hb)) { // a guarding shadow soaked up this attack

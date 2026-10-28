@@ -620,6 +620,9 @@ function projBox(p) {
 const PJ = new Set(['spikes', 'puddle', 'skidcase', 'brimstone', 'pen', 'stapler', 'mug', 'plate', 'dish', 'crescent', 'water', 'bubble', 'bullet', 'dyna', 'card', 'feather', 'haloP', 'hellfire', 'stone', 'core', 'trap']);
 function spawnPJ(f, type, o) {
   const p = Object.assign({ id: ++serial, type, owner: f, dir: f.facing, x: f.x + f.facing * 60, y: 100, vx: f.facing * 10, vy: 0, g: 0, life: 60, r: 14, hits: 1, interval: 8, n: 0, last: -99, t: 0, spin: 0 }, o);
+  const mv = f.state === 'attack' && f.move;
+  if (mv && (!mv.normal || mv.lvl || mv.super) && p.h) p.h = { ...p.h, spx: true }; // (thrown by a technique, a charged attack or a super: costs far more to guard)
+  p.x0 = p.x; p.sup = !!((mv && mv.super) || (p.h && p.h.superHit)); // (where it started: see PROJ_RANGE)
   projs.push(p); return p;
 }
 function pjExplode(p) { // dynamite and water bubbles burst, hitting anyone close
@@ -710,11 +713,15 @@ function pjDraw(p) {
   }
   ctx.restore();
 }
+// no shot travels further than this from where it was thrown (supers, and the shield that comes back, aside): it fades out
+const PROJ_RANGE = 520, PROJ_FREE = new Set(['beam', 'aegis', 'decoy', 'guardShadow', 'trap']);
 function updateProjs() {
   for (const p of projs) {
     FX_OWNER = p.owner; // (sparks from a projectile are its owner's)
     if (p.dead) continue;
     p.t = (p.t || 0) + 1;
+    if (p.vx && !p.sup && !p.boomerang && p.x0 != null && !PROJ_FREE.has(p.type) && Math.abs(p.x - p.x0) > PROJ_RANGE) {
+      p.dead = true; for (let i = 0; i < 5; i++) parts.push({ type: 'aura', x: p.x, y: GROUND - p.y, vx: rnd(-1, 1), vy: rnd(-1, 1), life: 12, max: 12, r: 3, col: '220,220,235' }); continue; }
     if (PJ.has(p.type)) { pjUpdate(p); continue; }
     if (p.type === 'beam') {
       const own = p.owner;

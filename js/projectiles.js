@@ -171,7 +171,7 @@ function shoot(f, o) { // bullets fly 40% faster than before; o.range (in pixels
   sfx('shot'); if (lvl === 2) sfx('hitH');
 }
 // Lyra's crystals: they form above the opponent and fall on them, wherever they are (up to half the stage away); she never has to move
-const LYRA_RANGE = 480;
+const LYRA_RANGE = 400;
 function drawCrystal(x, y, r, a, rot) { // a long crystal of light, pale blue to pink
   ctx.save(); ctx.translate(x, y); ctx.rotate(rot || 0); ctx.globalAlpha = a;
   const g = ctx.createLinearGradient(0, -r * 1.6, 0, r * 1.6); g.addColorStop(0, '#f6f0ff'); g.addColorStop(0.5, '#b9dcff'); g.addColorStop(1, '#ff9be8');

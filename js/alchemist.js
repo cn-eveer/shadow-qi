@@ -14,7 +14,7 @@
      · it has its own health (it can be beaten apart) and lasts thirty seconds before it crumbles; either way it's rebuilt.
    Its blows are resolved from the golem's own position, so a defender guards relative to whoever is attacking. */
 CHARS.alchemist = {
-  name: 'HOHEN', title: 'Golem Doctor', nameJa: 'ホーエン', titleJa: 'ゴーレム博士', dmgMul: 1.15, scale: 1, walk: 3.0, back: 2.6, jumpX: 4.0, jumpV: 17, jugDmg: 1,
+  name: 'HOHEN', title: 'Golem Doctor', nameJa: 'ホーエン', titleJa: 'ゴーレム博士', noStress: true, dmgMul: 1.15, scale: 1, walk: 3.0, back: 2.6, jumpX: 4.0, jumpV: 17, jugDmg: 1,
   pDmg: 1, kDmg: 1, pReach: 1, kReach: 1, chargeRate: 0.6, auraCol: '255,200,120', fxCol: '255,200,120',
   ammo: 10, // ten glowing stones in his pockets: every stone he throws or sets as a trap uses one, and they come back one at a time
   sp: { fK: 'alUpStone', fKH: 'alTrap', fP: 'alShield', fPH: 'alTackle', bKH: 'alBedrock' }, sup: 'alOpus', fuseSp: 'alFuse', // (← → + J + K with a full fusion gauge: the golem armour)
@@ -103,7 +103,7 @@ function stoneCharged(f, o, mf) { // K: hold to charge (three gauges), let go: t
   }
   const k = mf - mv.startup; if (k >= 0 && k <= 14 && k % 7 === 0) alchemistVolley(f, o, mv.lvl, k / 7);
 }
-const GOLEM_LIFE = 1800, GOLEM_REBUILD = 300, GOLEM_HP = 350; // frames the golem lasts before it crumbles (thirty seconds) and takes to rebuild (five); its own health (a third of a fighter's)
+const GOLEM_LIFE = 1800, GOLEM_REBUILD = 300, GOLEM_HP = 260; // frames the golem lasts before it crumbles (thirty seconds) and takes to rebuild (five); its own health (about a quarter of a fighter's)
 const STONE_REGEN = 90; // frames for a stone to come back (a second and a half)
 const GRAB_CD = 150; // frames after a hold lets go before the golem can grab again (no grab loops)
 const HOLD_HITS = 4; // hits a held opponent takes before the golem's grip gives (no endless stones on someone held)
@@ -346,7 +346,7 @@ function golemDamage(f, n, x, y) { // the golem takes a hit; at zero health it c
 function golemTakeHits(f, o) { // the opponent's attacks can hit the golem too (it stands in the way of blows meant for him)
   const g = f.golem, gb = golemBox(g);
   if (o.state === 'attack' && o.move && o.move.hitbox && o.mf > o.move.startup && o.mf <= o.move.startup + (o.move.active || 1) && !g.seen['m' + o.serial]) {
-    const hb = boxOf(o, o.move.hitbox); if (overlap(hb, gb)) { g.seen['m' + o.serial] = 1; golemDamage(f, Math.round((o.move.dmg || 20) * (o.ch.dmgMul || 1)), g.x, GROUND - 90 - g.y); }
+    const hb = boxOf(o, meleeBox(o, o.move.hitbox)); if (overlap(hb, gb)) { g.seen['m' + o.serial] = 1; golemDamage(f, Math.round((o.move.dmg || 20) * (o.ch.dmgMul || 1)), g.x, GROUND - 90 - g.y); }
   }
   for (const p of projs) {
     if (p.owner !== o || p.dead || g.seen['p' + p.id] || !(p.h || p.dmg) || p.type === 'decoy' || p.type === 'guardShadow') continue;

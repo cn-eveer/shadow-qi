@@ -12,7 +12,7 @@ function chargedHeavy(f, o, mf) {
     if (!holding(f) || mf >= 100) {
       mv.fired = true;
       if (!mv.lvl) mv.startup = Math.max(mf + 2, heavyTap(mv.tapStartup)); // a tap is a heavy attack too: a full wind-up
-      else { const L = mv.chargeLv[mv.lvl - 1]; Object.assign(mv, L.set); mv.startup = mf + (L.rel || 6); if (L.dash) { mv.dashLeft = lerp(W / 4 - 30, W / 2 - 34, clamp((mf - 30) / 41, 0, 1)); mv.dashV = mv.dashLeft / (L.rel || 6); } if (L.onFire) L.onFire(f, o); sfx('draw'); } // (a dash covers a quarter to half the stage)
+      else { const L = mv.chargeLv[mv.lvl - 1]; Object.assign(mv, L.set); mv.startup = mf + (L.rel || 6); if (L.dash) { mv.dashLeft = lerp(110, MOVE_TRAVEL, clamp((mf - 30) / 41, 0, 1)); mv.dashV = mv.dashLeft / (L.rel || 6); } if (L.onFire) L.onFire(f, o); sfx('draw'); } // (a dash covers 110 to 180: never more than any attack carries its user)
     }
     return;
   }

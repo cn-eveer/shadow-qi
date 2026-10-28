@@ -283,7 +283,7 @@ function vKey(code, down) { window.dispatchEvent(new KeyboardEvent(down ? 'keydo
   pad.addEventListener('pointerdown', e => { e.preventDefault(); pid = e.pointerId; pad.setPointerCapture(pid); move(e); });
   pad.addEventListener('pointermove', e => { if (e.pointerId === pid) move(e); });
   for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) pad.addEventListener(ev, e => { if (e.pointerId === pid) end(); });
-  for (const b of document.querySelectorAll('#tbtns button')) { // U I / J K: hold works too (charges, guard-break holds); two at once (U + J) is the super
+  for (const b of document.querySelectorAll('#tbtns button, #tbrk')) { // U I / J K: hold works too (charges, guard-break holds); two at once (U + J) is the super; P: the combo breaker
     const code = () => MAPS.p1[b.dataset.k];
     b.addEventListener('pointerdown', e => { e.preventDefault(); b.setPointerCapture(e.pointerId); b.classList.add('on'); vKey(code(), true); if (navigator.vibrate) navigator.vibrate(8); });
     for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) b.addEventListener(ev, () => { if (b.classList.contains('on')) { b.classList.remove('on'); vKey(code(), false); } });
@@ -314,6 +314,7 @@ function layoutTouch() {
   btns.querySelectorAll('button').forEach(b => { b.style.fontSize = Math.round(size * 0.19) + 'px'; });
   pad.querySelectorAll('.ar').forEach(a => { a.style.fontSize = Math.round(size * 0.12) + 'px'; });
   const ps = Math.max(36, Math.min(48, size * 0.36));
+  const brk = document.getElementById('tbrk'), bs = Math.round(size * 0.34); Object.assign(brk.style, { left: (btnL - bs * 0.15) + 'px', top: (top - bs - 10) + 'px', width: bs + 'px', height: bs + 'px', right: 'auto', bottom: 'auto', fontSize: Math.round(bs * 0.45) + 'px' }); // (P, the combo breaker: above the buttons)
   Object.assign(pause.style, side ? { left: (vw - ins.r - side / 2 - ps / 2) + 'px', top: '14px', width: ps + 'px', height: ps + 'px', right: 'auto', fontSize: Math.round(ps * 0.38) + 'px' }
     : (() => { const r = stageEl.getBoundingClientRect(); return { left: (r.right - ps - 10) + 'px', top: (r.top + r.height * 0.2) + 'px', width: ps + 'px', height: ps + 'px', right: 'auto', fontSize: Math.round(ps * 0.38) + 'px' }; })());
   fitCanvas();
