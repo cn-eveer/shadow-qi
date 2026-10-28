@@ -135,6 +135,15 @@ function startMove(f, mv, str, keepBuffer) {
     mv.preTotal = f.pre;
     mv.windW = heavy || !mv.normal ? 1 : 0.55; // a jab winds up smaller than a heavy blow
   }
+  const FM = f.ch.frameMod; // a fighter's own frame tuning: how much quicker his attacks come out, how much longer they stay out and how much longer he recovers
+  if (FM && !mv.super && !mv.air && !mv.jug && mv.startup < 900 && !mv.fmDone) { // (not supers, air attacks or juggle hits: combos keep their timing)
+    mv.fmDone = true; const cls = !mv.normal ? 'tech' : (mv.str === 1 || mv.launch) ? 'heavy' : 'light';
+    if (cls === 'tech') { if (mv.tellPre) { const cut = Math.round(mv.tellPre * (1 - FM.tell)); f.pre -= cut; mv.tellPre -= cut; } } // (shorter hand signs)
+    else { const cut = Math.min(FM.su[cls], Math.max(0, (mv.antiPre || 0) - 1)); f.pre -= cut; if (mv.antiPre) mv.antiPre -= cut; } // (a shorter wind-up: the move's own frames are untouched)
+    if (mv.preTotal != null) mv.preTotal = f.pre;
+    if (mv.active < 60) mv.active += FM.act;
+    if (mv.recovery < 90) { mv.recovery += FM.rec[cls]; mv.fmRec = FM.rec[cls]; } // (normals: hit and block stun grow with it, so only a miss costs more; techniques: see checkHits)
+  }
   if (!mv.super && mv.startup < 900 && !mv.stressDone && game.phase === 'fight') { // (the stress meter, and the kappa's slower attacks: only in neutral, never inside a combo)
     mv.stressDone = true;
     const oc = other(f), caught = oc && ['hitstun', 'knock', 'stunned', 'down', 'getup', 'slashed', 'gbreak'].includes(oc.state);

@@ -11,8 +11,10 @@ function chargedHeavy(f, o, mf) {
     if (mf === 30 || mf === 72) { sfx('charge'); parts.push({ type: 'ring', x: f.x, y: GROUND - f.y - 100, r: 40 + mv.lvl * 14, vr: -2, life: 14, max: 14, col: f.ch.auraCol }); }
     if (!holding(f) || mf >= 100) {
       mv.fired = true;
-      if (!mv.lvl) mv.startup = Math.max(mf + 2, heavyTap(mv.tapStartup)); // a tap is a heavy attack too: a full wind-up
+      const FM = f.ch.frameMod; // (the fighter's own frame tuning, as for his other heavy attacks: see startMove)
+      if (!mv.lvl) mv.startup = Math.max(mf + 2, heavyTap(mv.tapStartup) - (FM ? FM.su.heavy : 0)); // a tap is a heavy attack too: a full wind-up
       else { const L = mv.chargeLv[mv.lvl - 1]; Object.assign(mv, L.set); mv.startup = mf + (L.rel || 6); if (L.dash) { mv.dashLeft = lerp(110, MOVE_TRAVEL, clamp((mf - 30) / 41, 0, 1)); mv.dashV = mv.dashLeft / (L.rel || 6); } if (L.onFire) L.onFire(f, o); sfx('draw'); } // (a dash covers 110 to 180: never more than any attack carries its user)
+      if (FM) { mv.active += FM.act; mv.recovery += FM.rec.heavy; mv.fmRec = FM.rec.heavy; }
     }
     return;
   }

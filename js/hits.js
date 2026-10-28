@@ -414,6 +414,7 @@ function applyHit(a, d, h, side, hb, hu) {
   game.freeze = Math.max(game.freeze, h.hitstop || 6);
   if (big) game.shake = Math.max(game.shake, 6);
   trackAdv(a, d, 'hit', h.label);
+  if (a.state === 'attack' && a.move && a.move.fmRec && !(a.move.normal && !a.move.air)) { a.move.recovery -= a.move.fmRec; a.move.fmRec = 0; } // (a technique's longer recovery (frameMod) is for misses and guards: a hit, by blade, shot or clone, keeps the combo's timing — a normal's hit-stun already grows with it)
   return 'hit';
 }
 // an attack that touches the opponent's clone or decoy breaks it; one that touches a guarding shadow is blocked
