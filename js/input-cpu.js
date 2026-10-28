@@ -300,13 +300,13 @@ class CPU {
   }
 }
 // training dummy: guards, stands, jumps, or hands control to the CPU
-const DUMMY_MODES = ['stand', 'guard', 'crouch', 'jump', 'cpu'];
-const DUMMY_LABEL_EN = { guard: 'Guard', stand: 'Stand still', crouch: 'Crouch', jump: 'Jump', cpu: 'Fight back' };
-const DUMMY_LABEL_JA = { guard: 'ガード', stand: '立ち', crouch: 'しゃがみ', jump: 'ジャンプ', cpu: '反撃' };
+const DUMMY_MODES = ['stand', 'guard', 'crouch', 'jump', 'cpu', 'repeat'];
+const DUMMY_LABEL_EN = { guard: 'Guard', stand: 'Stand still', crouch: 'Crouch', jump: 'Jump', cpu: 'Fight back', repeat: 'Repeat a move' };
+const DUMMY_LABEL_JA = { guard: 'ガード', stand: '立ち', crouch: 'しゃがみ', jump: 'ジャンプ', cpu: '反撃', repeat: '技を繰り返す' };
 const DUMMY_LABEL = new Proxy({}, { get: (t, k) => (game.lang === 'ja' ? DUMMY_LABEL_JA : DUMMY_LABEL_EN)[k] });
 class Dummy {
   constructor() { this.cpu = new CPU(); }
-  reset() { this.cpu.reset(); }
+  reset() { this.cpu.reset(); this.rst = null; this.next = null; }
   read(f, frame, o) {
     if (game.demo) { // in Kuro's sample combos the dummy sometimes attacks once, so he can counter it
       const st = game.demoState, d = curDemos()[game.demoIdx];
@@ -321,11 +321,29 @@ class Dummy {
       if (d.dummy && d.dummy.guardAfter && st && st.dummyDone && f.state !== 'attack' && (threatened(f, o) || f.state === 'blockstun')) return { h: -(golemGuardDir(f, o) || Math.sign(o.x - f.x) || f.facing), down: isLowAtk(o), up: false, btn: null, sup: false, ff: false, bb: false, charge: false }; // (a punish sample: once its technique is over, the opponent guards — only a real punish gets in)
     }
     if (game.dummyMode === 'cpu') return this.cpu.read(f, frame, o);
+    if (game.dummyMode === 'repeat') return this.repeat(f, frame, o);
     const out = { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false };
     if (game.dummyMode === 'guard' && (threatened(f, o) || f.state === 'blockstun')) { out.h = -(Math.sign(o.x - f.x) || f.facing); if (isLowAtk(o)) out.down = true; }
     if (game.dummyMode === 'jump') out.up = true;
     if (game.dummyMode === 'crouch') out.down = true;
     return out;
+  }
+  // punish training: the chosen command (game.repeat, picked in the training bar), again and again — walks in to striking distance,
+  // does it, then waits the chosen interval before the next one
+  repeat(f, frame, o) {
+    const R = game.repeat, idle = { ...EMPTY };
+    if (!R) return idle;
+    if (this.rid !== R.id) { this.rid = R.id; this.rst = null; this.next = frame + 30; }
+    if (this.rst) { // doing it
+      const out = comboStep(f, o, R.steps, this.rst, { ...EMPTY });
+      if ((this.rst.i >= R.steps.length && f.state !== 'attack' && f.y <= 0) || frame - this.rt0 > 420) { this.rst = null; this.next = frame + R.every; }
+      return out;
+    }
+    if (frame < this.next || !((f.state === 'stand' || f.state === 'crouch') && f.atkCD <= 0)) return idle;
+    if (Math.abs(o.x - f.x) > R.reach) return { ...idle, h: Math.sign(o.x - f.x) || f.facing }; // (too far: walk in first)
+    if (R.sup) f.meter = 100; // (a super needs a full gauge)
+    this.rst = { i: 0 }; this.rt0 = frame;
+    return comboStep(f, o, R.steps, this.rst, { ...EMPTY });
   }
 }
 

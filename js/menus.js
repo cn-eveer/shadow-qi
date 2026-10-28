@@ -49,7 +49,8 @@ function updateTbar() {
   const dl = game.demoSet === 'punish' ? { prev: ['Previous punish (A)', '前の反撃 (A)'], replay: ['Replay (R)', 'もう一度 (R)'], next: ['Next punish (D)', '次の反撃 (D)'], switch: ['Switch fighter (F)', 'キャラ切替 (F)'] }
     : { prev: ['Previous combo (A)', '前のコンボ (A)'], replay: ['Replay (R)', 'もう一度 (R)'], next: ['Next combo (D)', '次のコンボ (D)'], switch: ['Switch fighter (F)', 'キャラ切替 (F)'] };
   dbar.querySelectorAll('button').forEach(b => { const t = dl[b.dataset.d]; if (t) b.textContent = L(t[0], t[1]); });
-  if (IS_MOBILE) [...tbar.children, ...dbar.children].forEach(b => { b.textContent = b.textContent.replace(/ \([A-Z]\)$/, ''); }); // no keyboard on a phone
+  if (IS_MOBILE) [...tbar.children, ...dbar.children].forEach(b => { if (b.tagName === 'BUTTON') b.textContent = b.textContent.replace(/ \([A-Z]\)$/, ''); }); // no keyboard on a phone
+  updateRepeat();
 }
 function trainingAction(t) {
   if (t === 'dummy') game.dummyMode = DUMMY_MODES[(DUMMY_MODES.indexOf(game.dummyMode) + 1) % DUMMY_MODES.length];
@@ -60,6 +61,64 @@ function trainingAction(t) {
   sfx('select'); updateTbar();
 }
 tbar.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { initAudio(); trainingAction(b.dataset.t); b.blur(); }));
+// punish training (dummy mode "Repeat a move"): pick one of the dummy's own commands and how often; it does it again and again
+// (the list: the basic attacks and strings, then every command in its move list that can be done on the ground)
+const trep = document.getElementById('trep'), trepMove = document.getElementById('trepMove'), trepEvery = document.getElementById('trepEvery');
+const REP_EVERY = [1, 1.5, 2, 3, 4], REP_BTN = { U: 'lp', I: 'hp', J: 'lk', K: 'hk' };
+const REP_BASICS = ['U', 'I', 'J', 'K', '↓ + U', '↓ + I', '↓ + J', '↓ + K', 'U, U', 'U, U, I', 'U, U, K', 'U, U, U, U, K', 'J, J, K', 'J, K'];
+let repKey = '', repId = 0;
+function repInput(tok) { // one command → its input (null: not one this can do)
+  const m = tok.replace(/ \/ .*$/, '').trim().match(/^(→ → \+ |← ← \+ |↓ \+ |→ → then ↓ \+ |← ← then ↓ \+ )?([UIJK])$/); if (!m) return null;
+  const p = m[1] || '', inp = { btn: REP_BTN[m[2]] }; if (p.startsWith('→ →')) inp.ff = true; if (p.startsWith('← ←')) inp.bb = true; if (p.includes('↓')) inp.down = true;
+  return inp;
+}
+function repSteps(cmd) { // a command → the presses that do it (as the sample combos play them)
+  cmd = cmd.replace(/（長押し）/, ' (hold)').replace(/\s+/g, ' ').trim();
+  if (/^(U \+ J|Punch \+ Kick)$/.test(cmd)) return { steps: [S(cmd, 'start', { btn: 'lp', sup: true })], sup: true };
+  const hold = /\(hold\)/.test(cmd); cmd = cmd.replace(/ ?\(hold\)/, '');
+  const [first, then] = cmd.split(/, then /);
+  if (then) { const a = repInput(first), b = repInput(then); return a && b ? { steps: [S(first, 'start', a), S(then, 'follow', b)] } : null; }
+  const one = repInput(cmd); if (one) { if (hold) one.holdFor = 60; return { steps: [S(cmd, 'start', one)] }; }
+  const keys = cmd.split(/,? /); if (keys.length > 1 && keys.every(k => REP_BTN[k])) return { steps: keys.map((k, i) => S(k, i ? 'chain' : 'start', { btn: REP_BTN[k] })) };
+  return null;
+}
+function repList(ch) {
+  const rows = lang => [...document.querySelectorAll(`article.card[data-tab="${ch}"][data-lang="${lang}"] .scroll:not(.combo) tbody tr`)];
+  const en = rows('en'), loc = rows(game.lang), same = en.length === loc.length, out = [];
+  const nameOf = td => [...td.childNodes].filter(n => !(n.nodeType === 1 && n.tagName === 'SMALL')).map(n => n.textContent).join('').trim();
+  for (const c of REP_BASICS) { const r = repSteps(c); if (r) out.push({ label: c, ...r }); }
+  let parent = null, juggle = false;
+  en.forEach((tr, i) => {
+    const td = tr.querySelectorAll('td'); if (td.length < 2) { juggle = /juggle/i.test(tr.textContent); return; } // (a heading row: Hohen's juggle-only moves follow)
+    if (td[0].querySelector('b')) juggle = false;
+    const last = td[td.length - 1], kb = [...last.querySelectorAll('kbd')].map(k => k.textContent.trim()), name = nameOf((same ? loc[i] : tr).querySelector('td'));
+    let cmd = last.textContent.replace(/\s+/g, ' ').trim();
+    if (kb.length > 1 && kb.every(k => k === kb[0])) cmd = kb.join(', '); else if (kb.length === 2 && cmd.includes('+')) cmd = 'U + J';
+    if (/^then /.test(cmd) && parent) cmd = parent + ', ' + cmd; else parent = cmd; // (a follow-up: the move it comes out of, then its button)
+    if (juggle || name.startsWith('·')) return; // (juggle-only, or only in Hohen's armour)
+    const alt = cmd.match(/^(.*, then )([UIJK](?: \/ [UIJK])+)$/); // (a choice of follow-ups: one entry each)
+    const cmds = alt ? alt[2].split(' / ').map(k => alt[1] + k) : kb.length > 1 && !kb.every(k => k === kb[0]) && !cmd.includes('+') ? kb : [cmd]; // (one row, two buttons: two moves)
+    for (const c of cmds) { const r = repSteps(c); if (!r) continue; const had = out.find(m => m.label === c); if (had) had.name = had.name || name; else out.push({ label: c, name, ...r }); }
+  });
+  return out;
+}
+function setRepeat() {
+  const m = trepMove._list && trepMove._list[+trepMove.value]; game.repEvery = +trepEvery.value || 1.5;
+  game.repeat = m ? { id: ++repId, label: m.label, steps: m.steps, sup: !!m.sup, every: Math.round(game.repEvery * 60), reach: 120 } : null;
+}
+function updateRepeat() {
+  const on = game.mode === 'fight' && game.training && !game.demo && game.dummyMode === 'repeat';
+  if (trep.hidden === on) trep.hidden = !on;
+  if (!on) return;
+  const ch = fighters[1] ? fighters[1].key : game.p2Char, key = ch + game.lang; if (key === repKey) return; repKey = key;
+  const esc = t => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]), list = repList(ch), was = game.repeat && game.repeat.label;
+  trepMove._list = list; const shown = c => L(c, c.replace(', then ', '、続けて ').replace(' then ', ' から ').replace(' (hold)', '（長押し）'));
+  trepMove.innerHTML = list.map((m, i) => `<option value="${i}">${esc(shown(m.label))}${m.name ? ' — ' + esc(m.name) : ''}</option>`).join('');
+  trepMove.value = String(Math.max(0, list.findIndex(m => m.label === was)));
+  trepEvery.innerHTML = REP_EVERY.map(v => `<option value="${v}">${L(`every ${v} s`, `${v}秒ごと`)}</option>`).join(''); trepEvery.value = String(game.repEvery || 1.5);
+  setRepeat();
+}
+for (const el of [trepMove, trepEvery]) el.addEventListener('change', () => { setRepeat(); el.blur(); });
 function showMenu() {
   game.mode = 'menu'; game.paused = false; game.netMenu = false; tbar.hidden = true; dbar.hidden = true;
   const c = game.p1Char;

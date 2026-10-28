@@ -149,7 +149,7 @@ function startMove(f, mv, str, keepBuffer) {
     const oc = other(f), caught = oc && ['hitstun', 'knock', 'stunned', 'down', 'getup', 'slashed', 'gbreak'].includes(oc.state);
     if (!caught) {
       if (f.ch.slowAtk && !(oc.state === 'attack' && oc.move && oc.mf > oc.move.startup + (oc.move.active || 0))) { f.pre += f.ch.slowAtk; mv.slowPre = f.ch.slowAtk; } // (not a punish)
-      if (!f.ch.noStress) {
+      if (!f.ch.noStress && !(f.ctrl instanceof Dummy)) { // (not the training dummy: a move it repeats keeps its frames)
         const k = stressK(f);
         if (k && !mv.air) { const x = Math.round(STRESS_SLOW * k); f.pre += x; mv.stressPre = x; if (mv.recovery < 90) mv.recovery = Math.round(mv.recovery * (1 + STRESS_REC * k)); } // stressed: every attack comes out much later (time to guard, or to jab first) and recovers slower
         f.stress = Math.min(100, (f.stress || 0) + (mv.launch ? STRESS_ADD.launch : !mv.normal ? STRESS_ADD.tech : mv.str ? STRESS_ADD.heavy : STRESS_ADD.light)); f.stressIdle = 0;
