@@ -174,6 +174,9 @@ function comboBreak(f, o) {
 // he isn't attacking and isn't moving toward the opponent (toward: the way to them): standing still guards standing (not lows),
 // crouching guards crouching (lows only); a back dash guards too
 const autoGuardFor = (f, toward) => game.autoGuard && !game.online && f.ctrl instanceof Human && f.inp && f.inp.h !== toward;
+// a ground combo (not in the air, not stunned) only keeps its first two attacks for sure: from the third on, whoever is being hit can
+// guard again — holding back, or standing or crouching with auto guard. Juggles, stuns and knockdowns are untouched
+const MIDCOMBO_GUARD = 2;
 const GUARD_STALL = 6; // frames an attacker loses when his attack is guarded (shown as a recoil)
 const JUG_HOLD_MAX = 150; // frames (2.5 s) U, U... can keep them up after the last lift or bounce: then only a new lift or the finisher still lands
 const JUG_ATTACKS_MAX = 7; // attacks a juggle can take before a new lift or bounce (finishers still land)
@@ -282,7 +285,8 @@ function applyHit(a, d, h, side, hb, hu) {
     return 'block';
   }
   const airGuard = (d.state === 'jump' || (d.state === 'land' && d.y > 0)) && !h.grab; // jumping (not launched): they can guard in the air
-  const canGuard = !d.ch.noGuard && ((d.state === 'stand' || d.state === 'crouch' || d.state === 'guard' || d.state === 'blockstun' || d.state === 'recover' || d.state === 'bdash') && d.y <= 0 && !h.grab) || airGuard; // a throw can't be guarded; a back dash still guards
+  const midCombo = d.state === 'hitstun' && d.y <= 0 && (d.comboMoves || 0) >= MIDCOMBO_GUARD && a.serial !== d.comboMoveSerial; // a ground combo past its second attack: the next one can be guarded
+  const canGuard = !d.ch.noGuard && ((d.state === 'stand' || d.state === 'crouch' || d.state === 'guard' || d.state === 'blockstun' || d.state === 'recover' || d.state === 'bdash' || midCombo) && d.y <= 0 && !h.grab) || airGuard; // a throw can't be guarded; a back dash still guards
   const autoAll = !airGuard && autoGuardFor(d, -side), hc = heightClass(h, hb);
   const low = !!d.inp.down || d.state === 'crouch'; // (crouching: the guard is a crouching one — lows only)
   // holding away guards every attack, standing or crouching;

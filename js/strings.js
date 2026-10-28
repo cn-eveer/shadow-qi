@@ -17,15 +17,16 @@ const tieWhip = f => { // Tanaka's necktie, cracked like a whip
 const LCR = (label, o = {}) => ({ kind: 'p', str: 0, label, wind: 'psyRaise', pose: 'psyUp', jug: true, stay: true, startup: 13, active: 10, recovery: 10, dmg: 0, hitbox: null, jugVy: 7.5, onFrame: lyraCrystals, ...o, active: (o.crystals || 2) * (o.gap || 3) + 2 });
 const STRINGS = {
   ninja: { // Kuro: kunai slashes and shadow steps
-    // U, U, U, U, K (Street Fighter 6 style: on a hit it's one combo; guarded, it has holes — each hit is a different test)
-    //  2nd U: guard the first U and a U of their own beats it
-    //  3rd U: a slow high: guard the 2nd U and a fast or medium attack beats it, or duck it and hit back crouching
-    //  4th U: a quick low right after it — no gap to hit into, safe when guarded; on a hit it trips them, and the K catches them as they fall
-    //  K:     the final blow, slow, out a long time and slow to recover; guarded, a fast attack punishes it from up close
+    // U, U, U, U, K (Street Fighter 6 style: every hit has its own job; guarded, the string has holes)
+    //  U, U:  two fast hits (high, mid); guard the first U and a U of their own beats the second
+    //  3rd U: a medium (a mid), slower — the third attack of a combo, so they can start guarding here (MIDCOMBO_GUARD); guarded, a 20-frame hole before it
+    //  4th U: fast and low, no gap after the 3rd, safe when guarded; on a hit it trips them, and the K catches them as they fall
+    //  K:     the final blow, a high: guard the low 4th crouching and it passes over; slow, out a long time and slow to recover;
+    //         guarded standing, a fast attack punishes it from up close
     n2: SG('p', 'Kunai Slash', 'slashW', 'slash', { fixedFrames: true, guardGap: 12, startup: 4, active: 6, recovery: 12, advHit: 14, advBlock: -2, blade: true, trail: { cx: 15, cy: 105, r: 70, a0: 70, a1: -30, col: '225,235,255' } }),
-    n3: SG('p', 'Reverse Slash', 'slash', 'kReverse', { fixedFrames: true, pre: 8, guardGap: 12, startup: 6, active: 6, recovery: 18, advHit: 14, advBlock: -3, high: true, hitbox: [20,95,112,160], blade: true, trail: { cx: 15, cy: 110, r: 70, a0: -30, a1: 70, col: '225,235,255' } }),
+    n3: SG('p', 'Reverse Slash', 'slash', 'kReverse', { fixedFrames: true, str: 1, dmg: 40, pre: 10, guardGap: 12, startup: 6, active: 6, recovery: 18, advHit: 14, advBlock: -5, hitbox: [20,98,55,140], blade: true, trail: { cx: 15, cy: 110, r: 70, a0: -30, a1: 70, col: '225,235,255' } }),
     n4: SG('p', 'Shadow Step', 'crouch', 'cPunch', { fixedFrames: true, startup: 3, active: 6, recovery: 10, advBlock: 0, /* (−6 with the guard stall: safe even against an 8F jab) */ low: true, hitbox: [15,105,0,42], launch: true, launchVy: 9, trip: true, blade: true, step: 10, speedFx: true }),
-    nF: SF('k', 'Shadow Crescent', 'spinW', 'roundhouse', { fixedFrames: true, pre: 8, startup: 10, active: 9, recovery: 24, advBlock: -6, /* (−12 once the guard stall is added) */ bpush: 3.5, noFiveLag: true, spin: [3, 9],
+    nF: SF('k', 'Shadow Crescent', 'spinW', 'roundhouse', { fixedFrames: true, pre: 8, startup: 10, active: 9, recovery: 24, advBlock: -6, /* (−12 once the guard stall is added) */ bpush: 3.5, noFiveLag: true, spin: [3, 9], hitbox: [15,105,112,175], high: true, // (a high: it passes over someone crouching)
       dmg: 88, hitstop: 16, gdrain: 26, kdVx: 17, kdVy: 10, push: 6, // a heavy blow: hits hard, freezes the screen longer, sends them flying, tears into a guard
       trail: { cx: 0, cy: 80, r: 120, a0: -80, a1: 70, col: '190,150,255' },
       onFrame(f, o, mf) { if (mf === f.move.startup + 1) { sfx('swing'); game.shake = Math.max(game.shake, 4); const x = f.x + f.facing * 70, y = GROUND - f.y - 90; parts.push({ type: 'ring', x, y, r: 10, vr: 7, life: 14, max: 14, col: '190,150,255' }); for (let i = 0; i < 8; i++) parts.push({ type: 'speed', x, y: y + rnd(-30, 30), vx: f.facing * rnd(6, 11), vy: rnd(-1, 1), life: 10, max: 10, col: '190,150,255' }); }

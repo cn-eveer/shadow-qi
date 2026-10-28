@@ -60,7 +60,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Anti-air<small>Near a jumping opponent, U, I and K become the rising palm, Rising Kunai and spin kick, and the specials above come out on their own. In the air, U, I and K start the air string against them.</small></td><td class="cmd">U, I, K</td></tr>
         </tbody>
       </table></div>
-      <p class="note"><b>Combo strings.</b> U, U, U, U, K: kunai slash, reverse slash, shadow step, shadow crescent. I from any point: Kunai Rise launches; K ends early with a crescent kick. J, J, K: sweep slash, shadow sweep. In a juggle: rising kunai slash, twin kunai, shadow upper, moon crescent.</p>
+      <p class="note"><b>Combo strings.</b> U, U, U, U, K: kunai slash (fast, high), kunai slash (fast, mid), reverse slash (medium, mid — they can start guarding here), shadow step (fast, low: it trips them), shadow crescent (the final blow, a high: crouch to duck it). I from any point: Kunai Rise launches; K ends early with a crescent kick. J, J, K: sweep slash, shadow sweep. In a juggle: rising kunai slash, twin kunai, shadow upper, moon crescent.</p>
     </article>
     <article class="card ninja" data-tab="ninja" data-lang="ja" hidden>
       <h2>クロ<span>影の忍者</span></h2>
@@ -104,6 +104,6 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
         </tbody>
       </table></div>
       <p class="note">空中の相手に←←+U・←←+I・→→+J・→→+I・←←+Kを使うと追撃版（火柱・雷の雨・分身中継・空中居合・消身踵）になる。ボタンと一緒に↓を押すと単体でも使える。空中で↓+Kは影流星（急降下蹴り）。</p>
-      <p class="note"><b>連続技。</b> U、U、U、U、K：クナイ斬り・逆斬り・影踏み・影の三日月。途中のIでクナイ昇り（打ち上げ）、Kで三日月蹴り。J、J、K：払い斬り・影の足払い。空中追撃：昇りクナイ斬り・双クナイ・影アッパー・月の三日月。</p>
+      <p class="note"><b>連続技。</b> U、U、U、U、K：クナイ斬り（速い・上段）・クナイ斬り（速い・中段）・逆斬り（中くらい・中段：ここからガードできる）・影踏み（速い・下段：転ばせる）・影の三日月（締めの一撃・上段：しゃがめばかわせる）。途中のIでクナイ昇り（打ち上げ）、Kで三日月蹴り。J、J、K：払い斬り・影の足払い。空中追撃：昇りクナイ斬り・双クナイ・影アッパー・月の三日月。</p>
     </article>
 `);

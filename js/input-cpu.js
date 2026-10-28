@@ -83,6 +83,10 @@ class CPU {
   read(f, frame, o) { // (Jesse reloading doesn't shoot: he backs off and guards, and only throws Dynamite, counters with Showdown or goes for High Noon)
     if (f.reloadT > 0) { this.route = null; this.chainSeq = null; }
     if (BREAK_STATES.includes(f.state) && (f.combo || 0) >= 3 && f.guard > 45 && Math.random() < 0.015 * (game.watch ? 0.5 : dif().punish)) return { ...EMPTY, brk: true }; // (a long combo: now and then it breaks out, more often on harder levels)
+    if (f.state === 'hitstun' && f.y <= 0 && (f.comboMoves || 0) >= MIDCOMBO_GUARD) { // a ground combo past its second attack: it may guard the rest (decided once per combo)
+      if (this.mcFor !== f.comboSerial) { this.mcFor = f.comboSerial; this.mcGuard = Math.random() < (game.watch ? 0.6 : dif().block); }
+      if (this.mcGuard) return { ...EMPTY, h: -(golemGuardDir(f, o) || Math.sign(o.x - f.x) || f.facing), down: isLowAtk(o) };
+    }
     const out = this.think(f, frame, o);
     if (f.reloadT > 0 && out.btn && !out.sup && !(out.bb && (out.btn === 'lp' || out.btn === 'hk'))) Object.assign(out, { btn: null, ff: false, down: false, h: -(Math.sign(o.x - f.x) || f.facing) });
     return out;
