@@ -8,7 +8,6 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="note"><b>v1.3.9: her staff.</b> She holds it low down — a short end below her hand, the long end with the crystal out in front — and her rays and Crystal Shard come out of the crystal at its tip.</p>
       <p class="note"><b>Slow magic, quick feet.</b> Her attacks are the slowest in the game to come out — every magic circle holds for a moment before its crystal falls — but she walks, backs off and jumps faster than anyone.</p>
       <p class="note"><b>Crystals.</b> On the ground, a rune circle flares right where they stand, then a crystal falls into it out of a second magic circle that opens above them (or spears up out of a floor rune). Her U, U, K uses magic circles only. In a juggle she never moves: crystals form above them, wherever they are up to half the stage away, and fall on them, several at a time (U: a rune bursts on them, U: a chain of runes, I: a magic circle opens above them and the crystal meteor falls out of it and lifts them again, K: a triangular magic circle closes around them and explodes).</p>
-      <p class="note"><b>Charge (hold I).</b> Qi gathers into him while you hold. Half a second: Rising Glyph, a rune under their feet lifts them, wherever they are — follow it with a juggle. Over a second: Nova Glyph, a giant starburst rune blasts them away. A tap is the normal heavy attack.</p>
       <p class="note"><b>Theme.</b> Astral crystal · lilac and crystal blue. A calm sage who reads the stars. Signatures: U, U, K Constellation Burst (three runes join into a constellation and burst); U, U, I Crystal Ascension (crystal spires grow under them).</p>
       <div class="scroll"><table>
         <tbody>
@@ -24,7 +23,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Orb Burst<small>Every health orb fires a ray at them (with none, one ray from her hand).</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>Triple Ray<small>Three rays at once from her hands, reaching almost half the stage; the third leaves them stunned.</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>Ground Burst<small>Up close: she barely moves, only raises her hand, and the ground bursts open under them in a column of light that launches.</small></td><td class="cmd">↓ + I</td></tr>
-          <tr class="super"><td>Super: Crystal Storm<small>Crystal shards rain in from every side, then one giant crystal. Up close it bounces them back to her. Needs a full MP gauge.</small></td><td class="cmd">Punch + Kick</td></tr>
+          <tr class="super"><td>Super: Crystal Storm<small>Crystal shards rain in from every side, then one giant crystal. Up close it bounces them back to her. Not invincible: until the crystals come, light hits from up close don't stop it (she still takes their full damage — enough of it finishes her), but heavy attacks, techniques and anything from further away do. Needs a full MP gauge.</small></td><td class="cmd">Punch + Kick</td></tr>
         </tbody>
       </table></div>
       <button class="pill watch" data-watch="psychic">▶ Watch Lyra’s sample combos</button>
@@ -50,7 +49,6 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="note"><b>v1.3.9：杖。</b>杖の下の方を握るように（手の下は短く、水晶のついた長い方が前に）。光線と水晶の欠片は、杖の先の水晶から放たれる。</p>
       <p class="note"><b>遅い魔法、速い足。</b>攻撃の発生は全キャラで一番遅い（魔法陣が少し留まってから水晶が落ちる）が、歩き・後退・ジャンプは誰よりも速い。</p>
       <p class="note"><b>水晶。</b> 地上では相手の立っている場所に魔法陣が光り、頭上に開いたもう一つの魔法陣から水晶が落ちる（床の紋からは水晶が突き上がる）。U、U、Kは魔法陣だけで戦う。空中追撃ではライラは動かない：画面の半分まで、相手がどこにいてもその上に水晶が現れて次々と降り注ぐ（U：魔法陣の炸裂、U：魔法陣の連鎖、I：頭上高くに大きな魔法陣が開き、巨大な水晶の流星が落ちて再び浮かせる、K：三角の爆発）。</p>
-      <p class="note"><b>溜め技（I長押し）。</b> 押している間、気が集まる。0.5秒：昇る紋（どこにいても足元の紋で浮かせる）、空中追撃につながる。1秒以上：新星の紋（巨大な星の紋で吹き飛ばす）。押すだけなら通常の強攻撃。</p>
       <p class="note"><b>テーマ.</b> 星と水晶・薄紫と水晶色。星を読む静かな賢者。決め技：U、U、K「星座の爆発」（3つの紋が星座を結び炸裂）／U、U、I「水晶の昇天」（足元から水晶の柱）。</p>
       <div class="scroll"><table>
         <tbody>
@@ -66,7 +64,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>オーブ破裂<small>手から光線を放つ。</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>三連光線<small>両手から3本の光線を同時に放つ。3本目で気絶。</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>大地噴出<small>至近距離で手を上げるだけで、相手の足元から光の柱が噴き上がって打ち上げる。</small></td><td class="cmd">↓ + I</td></tr>
-          <tr class="super"><td>超必殺技：水晶の嵐<small>四方から水晶の欠片が降り注ぎ、最後に巨大な水晶。至近距離なら手前にバウンド。MP満タンが必要。</small></td><td class="cmd">パンチ + キック</td></tr>
+          <tr class="super"><td>超必殺技：水晶の嵐<small>四方から水晶の欠片が降り注ぎ、最後に巨大な水晶。至近距離なら手前にバウンド。無敵ではない：水晶が来るまで、近くからの弱い攻撃では止まらない（ダメージはそのまま受け、体力が尽きればKO）が、強い攻撃・必殺技・離れた位置からの攻撃では止まる。MP満タンが必要。</small></td><td class="cmd">パンチ + キック</td></tr>
         </tbody>
       </table></div>
       <button class="pill watch" data-watch="psychic">▶ ライラのコンボ見本を見る</button>

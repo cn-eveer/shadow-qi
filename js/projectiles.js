@@ -88,7 +88,7 @@ function spawnCrush(f, o, juggle) { // a giant fist forms above them, then comes
   const tx = juggle ? o.x : clamp(f.x + clamp(o.x - f.x, -400, 400), WALL_L, WALL_R);
   const y = juggle ? Math.min(290, o.y + 160) : 280, x = juggle ? clamp(tx - f.facing * 150, 20, W - 20) : tx;
   if (juggle) parts.push({ type: 'skycircle', x, y: GROUND - y, r: 70, life: 14, max: 14 }); // in a combo: the meteor comes out of a magic circle
-  projs.push({ id: ++serial, type: 'crush', owner: f, x, tx, y, vx: 0, vy: 0, r: 34, t: 0, hold: juggle ? 4 : 14, juggle, life: 60, dir: f.facing, trail: [],
+  projs.push({ id: ++serial, type: 'crush', owner: f, x, tx, y, vx: 0, vy: 0, r: 34, t: 0, hold: juggle ? 4 : 10, /* (on its own: it hangs a moment, then drops) */ juggle, life: 60, dir: f.facing, trail: [],
     dmg: juggle ? 36 : 50, stun: 20, bstun: 14, push: 2, hitstop: 11, chip: true });
 }
 function spawnLift(f, o, juggle) { // a glowing ring on the floor (or around them), then a column that lifts them

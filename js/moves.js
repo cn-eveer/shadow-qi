@@ -991,7 +991,8 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { if (mf === 12) summonOrbs(f, 'long', 5); } };
     case 'barrier': return { id, label: 'Barrier', startup: 4, active: 26, recovery: 14, wind: 'psyBoth', pose: 'psyBoth', barrier: true, fx: 'barrier' };
     case 'thousandFists': return { id, super: true, name: 'CRYSTAL STORM', label: 'Crystal Storm', startup: 16, active: 48, recovery: 14, wind: 'psyCast', pose: 'chargeL', aura: true,
-      onStart(f) { f.invul = 24; },
+      supArmor: true, // not invincible: until the crystals come, light hits from up close don't stop her (taken in full); strong ones do
+      onStart(f) {},
       onFrame(f, o, mf) {
         if (mf >= 16 && mf <= 51 && (mf - 16) % 5 === 0) { // phantom fists from all around them
           const a = rnd(0, Math.PI * 2), r = 150, cx = o.x, cy = o.y + 80;

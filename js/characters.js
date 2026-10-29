@@ -103,6 +103,14 @@ const CHARS = {
     hover: true, orbs: true,
     pDmg: 0.9, kDmg: 0.9, pReach: 1.15, kReach: 1.0, chargeRate: 0.48, auraCol: '200,160,255', fxCol: '210,190,255',
     sp: { fP: 'phantomFist', fPH: 'crushFist', fK: 'psyLift', fKH: 'forceWave', bP: 'orbBurst', bPH: 'tripleRay', bK: 'orbStrong', bKH: 'orbLong' }, sup: 'thousandFists',
+    frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
+      U: { su: 10, blk: -4 }, dU: { su: 10, blk: -4 }, J: { su: 10, blk: -4 }, dJ: { su: 10, blk: -4 },
+      I: { su: 16, blk: -12 }, K: { su: 18, blk: -14 }, dI: { su: 16, blk: -16 }, dK: { su: 16, blk: -14 },
+      $y2: { su: 12, blk: -6 }, $y3: { su: 12, blk: -6 }, $y4: { su: 12, blk: -6 }, $yF: { su: 18, blk: -18 }, $yL: { su: 16, blk: -15 }, /* (−16 measured) */ $yE: { su: 20, blk: -15 }, /* (U, K: −16 measured) */
+      $yl2: { su: 12, blk: -6 }, $ylE: { su: 18, blk: -16 },
+      phantomFist: { su: 18, blk: -6 }, crushFist: { su: 19, blk: -16 }, /* (the star drops on its own time) */ psyLift: { su: 22, blk: -16 }, forceWave: { su: 18, blk: -16 },
+      orbBurst: { su: 18, blk: -12 }, tripleRay: { su: 20, blk: -14 }, orbStrong: { su: 14 }, orbLong: { su: 16 },
+    },
     heavy: {
       p: { label: 'Glyph Burst', startup: 12, active: 5, recovery: 18, hitbox: [40,195,85,145], wind: 'psyW', pose: 'psyPush', lunge: [2, 8, 1], hitstop: 10, push: 8, psyFist: [150, 115, 1], onStart: (f, o) => lyraReach(f, o, LYRA_RANGE, 120) },
       k: { label: 'Gravity Well', startup: 13, active: 4, recovery: 19, hitbox: [40,185,0,170], wind: 'psyRaise', pose: 'psyDown', lunge: [2, 8, 1], cpLaunch: true, launchVy: 13, kd: true, psyFist: [130, 55, 1.15, 1], onStart: (f, o) => lyraReach(f, o, LYRA_RANGE, 110) },
@@ -219,11 +227,7 @@ for (const k in CHARS) CHARS[k].key = k;
 // ---------- charge attacks (hold I) ----------
 // (Tetsu's I is no longer held to charge)
 // (Mei's I is no longer held to charge)
-makeCharged('psychic', [
-  { set: { label: 'Rising Glyph', dmg: 50, launch: true, launchVy: 13.5, pose: 'psyUp', recovery: 20, hitbox: [40,195,0,200], floorGlyph: 150, psyFist: null }, rel: 8, onFire: (f, o) => lyraReach(f, o, 320, 100) },
-  { set: { label: 'Nova Glyph', dmg: 90, kd: true, kdVx: 17, kdVy: 8, push: 8, pose: 'psyPush', recovery: 24, gdrain: 18, psyFist: [150, 115, 1.6], burst: [150, 115] }, rel: 9, onFire: (f, o) => lyraReach(f, o, 320, 120),
-    act: (f, o, mf) => { f.vx *= 0.6; if (mf === f.move.startup) { sfx('hitH'); game.shake = Math.max(game.shake, 5); } } },
-]);
+// (Lyra's I is no longer held to charge)
 makeCharged('kappa', [
   { set: { label: 'Ambush', dmg: 50, hitbox: [0,120,0,170], launch: true, launchVy: 13, pose: 'kClawUp', recovery: 18, claw: [60, 140, -1.3, 70], speedFx: true }, rel: 14, // short: he darts in low and rakes upward
     dash: true, act: (f, o, mf) => { const mv = f.move; if (mf <= mv.startup && mv.dashLeft > 0 && Math.abs(o.x - f.x) > 55) { f.vx = f.facing * mv.dashV; mv.dashLeft -= mv.dashV; if (mf % 2 === 0) parts.push({ type: 'aura', x: f.x - f.facing * 16, y: GROUND - 6, vx: -f.facing, vy: -1.2, life: 12, max: 12, r: 3, col: '150,215,255' }); } else f.vx *= 0.5; } },
