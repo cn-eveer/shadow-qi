@@ -914,7 +914,8 @@ function specialMoveBase(id) {
              hold: !last, juggle: !last, jugVy: 3, launch: last, launchVy: 12, hitstop: last ? 12 : 4, label: 'Hellish Frenzy', superHit: true },
             { x0: Math.min(f.x, f.x + f.facing * 230), x1: Math.max(f.x, f.x + f.facing * 230), y0: 40, y1: Math.max(128, o.y + 80) }); } } }; // (it follows anyone who jumps; the tail swings high, mid and low, but it always strikes the body: a mid, guarded standing or crouching)
     case 'greatSage': return { id, super: true, name: 'GREAT SAGE PILLAR', label: 'Great Sage Pillar', startup: 18, active: 40, recovery: 12, wind: 'slamW', pose: 'winB', aura: true, spinWind: true, spinStaff: true,
-      onStart(f) { f.invul = 26; },
+      supArmor: true, // not invincible: until the pillar comes down, light hits from up close don't stop her (taken in full); strong ones do
+      onStart(f) {},
       onFrame(f, o, mf) { if (mf === 18) spawnPillar(f, o, f.move.lockX); },
       drawFX(f) { const mv = f.move; if (mv.lockX == null || f.mf > 22) return; const x = clamp(f.x + clamp(mv.lockX - f.x, -420, 420), WALL_L, WALL_R), k = (globalT % 20) / 20; // the golden mark where it will land
         ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = 'rgba(255,205,110,.85)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(x, GROUND - 4, 62, 13, 0, 0, Math.PI * 2); ctx.stroke();

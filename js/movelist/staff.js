@@ -23,7 +23,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Somersault Kick<small>A flipping kick that launches; she can’t be hit at the very start.</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>Monkey Feint<small>Flips back out of reach, then springs straight back in with a thrust.</small></td><td class="cmd">← ← + K</td></tr>
           <tr><td>Rising Staff<small>Up close: sweeps the staff upward and launches.</small></td><td class="cmd">↓ + I</td></tr>
-          <tr class="super"><td>Super: Great Sage Pillar<small>A giant golden-banded staff crashes down on them with a wide shockwave, six hits. Up close the last hit bounces them back to Mei. Needs a full MP gauge.</small></td><td class="cmd">Punch + Kick</td></tr>
+          <tr class="super"><td>Super: Great Sage Pillar<small>A giant golden-banded staff crashes down on them with a wide shockwave, six hits. Up close the last hit bounces them back to Mei. Not invincible: until the pillar comes down, light hits from up close don't stop it (she still takes their full damage — enough of it finishes her), but heavy attacks, techniques and anything from further away do. Needs a full MP gauge.</small></td><td class="cmd">Punch + Kick</td></tr>
         </tbody>
       </table></div>
       <button class="pill watch" data-watch="staff">▶ Watch Mei’s sample combos</button>
@@ -64,7 +64,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>宙返り蹴り<small>打ち上げの宙返り蹴り。出始めは無敵。</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>猿のフェイント<small>後ろに宙返りして間合いを外し、すぐ突きで飛び込む。</small></td><td class="cmd">← ← + K</td></tr>
           <tr><td>昇り棍<small>至近距離で棍を振り上げて打ち上げ。</small></td><td class="cmd">↓ + I</td></tr>
-          <tr class="super"><td>超必殺技：斉天大聖の柱<small>金の帯の巨大な棍が衝撃波とともに落ちてくる。6ヒット、広い範囲。至近距離なら手前にバウンド。MP満タンが必要。</small></td><td class="cmd">パンチ + キック</td></tr>
+          <tr class="super"><td>超必殺技：斉天大聖の柱<small>金の帯の巨大な棍が衝撃波とともに落ちてくる。6ヒット、広い範囲。至近距離なら手前にバウンド。無敵ではない：柱が落ちるまで、近くからの弱い攻撃では止まらない（ダメージはそのまま受け、体力が尽きればKO）が、強い攻撃・必殺技・離れた位置からの攻撃では止まる。MP満タンが必要。</small></td><td class="cmd">パンチ + キック</td></tr>
         </tbody>
       </table></div>
       <button class="pill watch" data-watch="staff">▶ メイのコンボ見本を見る</button>
