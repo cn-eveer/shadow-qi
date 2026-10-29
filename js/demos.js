@@ -328,8 +328,6 @@ const LYRA_DEMOS = [
     steps: [S('Guard ←', 'guard', {}), S("U", "punish", {"btn": "lp", "reach": 420}), S("U", "chain", {"btn": "lp"})] },
   { name: "Guard ← ← + U: Orb Burst (safe)", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"bb": true, "btn": "lp"}, "guardAfter": true},
     steps: [S('Guard ←', 'guard', {})] }, /* (it hits from range: nothing reaches her in time) */
-  { name: "Counter ← ← + I: Triple Ray", vs: 'self', tail: '', note: '', ax: 440, bx: 520, dummy: {"at": 4, "inp": {"bb": true, "btn": "hp"}, "guardAfter": true},
-    steps: [S("↓ + I", "counterTell", {"btn": "hk", "down": true}), S("U", "air", {"btn": "lp"}), S("U", "chain", {"btn": "lp"}), S("K", "chain", {"btn": "hk"})] },
   { name: "Punish ← ← + I: Triple Ray", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"bb": true, "btn": "hp"}, "guardAfter": true},
     steps: [S('Guard ←', 'guard', {}), S("U", "punish", {"btn": "lp", "reach": 420}), S("U", "chain", {"btn": "lp"})] },
   { name: "Counter ← ← + J: Strong Orbs", vs: 'self', tail: '', note: '', ax: 440, bx: 520, dummy: {"at": 4, "inp": {"bb": true, "btn": "lk"}, "guardAfter": true},
@@ -409,7 +407,6 @@ const JA_DEMO = {
   "Punish → → + J: Psychic Lift": { n: "反撃 →→+J：Psychic Lift", tail: '', note: '' },
   "Punish → → + K: Spirit Fist": { n: "反撃 →→+K：Spirit Fist", tail: '', note: '' },
   "Guard ← ← + U: Orb Burst (safe)": { n: "ガード ←←+U：オーブ連射（安全）", tail: '', note: '' },
-  "Counter ← ← + I: Triple Ray": { n: "カウンター ←←+I：Triple Ray", tail: '', note: '' },
   "Punish ← ← + I: Triple Ray": { n: "反撃 ←←+I：Triple Ray", tail: '', note: '' },
   "Counter ← ← + J: Strong Orbs": { n: "カウンター ←←+J：Strong Orbs", tail: '', note: '' },
   "Punish ← ← + J: Strong Orbs": { n: "反撃 ←←+J：Strong Orbs", tail: '', note: '' },

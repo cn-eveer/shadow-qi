@@ -108,8 +108,8 @@ const CHARS = {
       I: { su: 16, suFar: 28, act: 10, rec: 14, blk: -10 }, K: { su: 16, suFar: 28, act: 10, rec: 14, blk: -10 }, dI: { su: 16, suFar: 28, act: 10, rec: 14, blk: -16 }, dK: { su: 16, suFar: 28, act: 10, rec: 14, blk: -14 }, // (her heavy spells reach end to end: 16F up close, up to 28F across the stage)
       $y2: { su: 12, act: 8, rec: 12, blk: -6 }, $y3: { su: 12, act: 8, rec: 12, blk: -6 }, $y4: { su: 12, act: 8, rec: 12, blk: -6 }, $yF: { su: 18, act: 8, rec: 18, blk: -18 }, $yL: { su: 16, act: 6, rec: 18, blk: -15 }, /* (−16 measured) */ $yE: { su: 20, act: 6, rec: 18, blk: -15 }, /* (U, K: −16 measured) */
       $yl2: { su: 12, act: 8, rec: 12, blk: -6 }, $ylE: { su: 18, act: 8, rec: 18, blk: -16 },
-      phantomFist: { su: 18, blk: -6 }, crushFist: { su: 19, blk: -16 }, /* (the star drops on its own time) */ psyLift: { su: 22, blk: -16 }, forceWave: { su: 18, blk: -16 },
-      orbBurst: { su: 18, blk: -12 }, tripleRay: { su: 20, blk: -14 }, orbStrong: { su: 14 }, orbLong: { su: 16 },
+      phantomFist: { su: 18, blk: -6 }, crushFist: { su: 19, blk: -16 }, /* (the star drops on its own time) */ psyLift: { su: 22, blk: -16 }, forceWave: { su: 14, blk: -16, set: { kdVx: 18, kdVy: 7, hitbox: [30,290,30,170], giantFist: [190, 105, 1.4] } }, // (Spirit Fist: quicker, reaches further, sends them flying further)
+      orbBurst: { su: 24, blk: -12 }, tripleRay: { su: 13.5, blk: -14 }, /* (14F measured) */ orbStrong: { su: 14 }, orbLong: { su: 16 },
     },
     heavy: {
       p: { label: 'Glyph Burst', startup: 12, active: 5, recovery: 18, hitbox: [40,195,85,145], wind: 'psyW', pose: 'psyPush', lunge: [2, 8, 1], hitstop: 10, push: 8, psyFist: [150, 115, 1], onStart: (f, o) => lyraReach(f, o, LYRA_FAR, 120) },

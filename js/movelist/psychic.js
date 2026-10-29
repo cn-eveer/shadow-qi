@@ -11,19 +11,19 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="note"><b>Theme.</b> Astral crystal · lilac and crystal blue. A calm sage who reads the stars. Signatures: U, U, K Constellation Burst (three runes join into a constellation and burst); U, U, I Crystal Ascension (crystal spires grow under them).</p>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>Strong Orbs<small>Summons 3 strong pink orbs. Each of her next attacks also fires one heavy ray at them, then that orb is spent.</small></td><td class="cmd">← ← + J</td></tr>
-          <tr><td>Long Orbs<small>Summons 5 blue orbs that last much longer. Every ready one fires a lighter ray whenever she attacks.</small></td><td class="cmd">← ← + K</td></tr>
+          <tr><td>Strong Orbs<small>Summons 3 strong pink orbs. Each time one of her attacks hits or is guarded, one also fires a heavy ray at them, then that orb is spent.</small></td><td class="cmd">← ← + J</td></tr>
+          <tr><td>Long Orbs<small>Summons 5 blue orbs that last much longer. Every ready one fires a lighter ray whenever one of her attacks hits or is guarded.</small></td><td class="cmd">← ← + K</td></tr>
           <tr><td>Ripple and Glyph Burst<small>Light and heavy punch: a rune circle flares right where they stand. Ripple reaches about 400px; Glyph Burst reaches from one end of the stage to the other, but the further away they are, the longer it takes (16F up close, up to 28F across the stage).</small></td><td class="keys"><kbd>U</kbd> <kbd>I</kbd></td></tr>
           <tr><td>Floor Glyph<small>Light kick button: no kick. A rune circle flares on the floor at their feet, wherever they are (out to about 450px), and light bursts up. Hits low.</small></td><td class="keys"><kbd>J</kbd></td></tr>
           <tr><td>Gravity Well<small>Heavy kick. A gravity glyph crushes down on them — from one end of the stage to the other, slower the further away they are (16F to 28F); launches if it counters or punishes.</small></td><td class="keys"><kbd>K</kbd></td></tr>
           <tr><td>Crystal Shard<small>Sends a crystal of light flying across the stage.</small></td><td class="cmd">→ → + U</td></tr>
           <tr><td>Falling Star<small>A giant fist of light forms above them and falls, bouncing them back toward her. In a combo it becomes a blazing star meteor out of a magic circle that slams them into the floor, and they bounce up again.</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>Psychic Lift<small>A glowing ring under their feet, then a column of light that lifts them and draws them toward her. Works from across the stage, but they can see it coming.</small></td><td class="cmd">→ → + J</td></tr>
-          <tr><td>Spirit Fist<small>A giant fist of light punches out in front of her, three hits that push them far away.</small></td><td class="cmd">→ → + K</td></tr>
+          <tr><td>Spirit Fist<small>A giant fist of light punches far out in front of her (about a third of the stage), three hits that send them flying.</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>Orb Burst<small>Every health orb fires a ray at them (with none, one ray from her hand).</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>Triple Ray<small>Three rays at once from her hands, reaching almost half the stage; the third leaves them stunned.</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>Ground Burst<small>She barely moves, only raises her hand, and the ground bursts open under them in a column of light: a low, three hits — wherever they are, slower the further away (16F to 28F).</small></td><td class="cmd">↓ + I</td></tr>
-          <tr class="super"><td>Super: Crystal Storm<small>Crystal shards rain in from every side, then one giant crystal. Up close it bounces them back to her. Not invincible: until the crystals come, light hits from up close don't stop it (she still takes their full damage — enough of it finishes her), but heavy attacks, techniques and anything from further away do. Needs a full MP gauge.</small></td><td class="cmd">Punch + Kick</td></tr>
+          <tr class="super"><td>Super: Crystal Storm<small>Crystal shards rain in from every side, then one giant crystal. Up close it bounces them back to her. Sixteen hits. Not invincible and no armor: hit her before the crystals come and it stops. Needs a full MP gauge.</small></td><td class="cmd">Punch + Kick</td></tr>
         </tbody>
       </table></div>
       <button class="pill watch" data-watch="psychic">▶ Watch Lyra’s sample combos</button>
@@ -52,8 +52,8 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="note"><b>テーマ.</b> 星と水晶・薄紫と水晶色。星を読む静かな賢者。決め技：U、U、K「星座の爆発」（3つの紋が星座を結び炸裂）／U、U、I「水晶の昇天」（足元から水晶の柱）。</p>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>強オーブ<small>強いピンクのオーブを3つ召喚。次の攻撃ごとに1つが強い光線を放って消える。</small></td><td class="cmd">← ← + J</td></tr>
-          <tr><td>長オーブ<small>長持ちする青いオーブを5つ召喚。攻撃するたびに準備のできたオーブが光線を放つ。</small></td><td class="cmd">← ← + K</td></tr>
+          <tr><td>強オーブ<small>強いピンクのオーブを3つ召喚。攻撃が当たるかガードされるたびに、1つが強い光線を放って消える。</small></td><td class="cmd">← ← + J</td></tr>
+          <tr><td>長オーブ<small>長持ちする青いオーブを5つ召喚。攻撃が当たるかガードされるたびに、準備のできたオーブが光線を放つ。</small></td><td class="cmd">← ← + K</td></tr>
           <tr><td>波紋と紋章爆発<small>弱・強パンチ：相手の立っている場所に魔法陣が光る。波紋は約400pxまで。紋章爆発は画面の端から端まで届くが、遠いほど発生が遅い（近くで16F、最大28F）。</small></td><td class="keys"><kbd>U</kbd> <kbd>I</kbd></td></tr>
           <tr><td>床の紋<small>キックではなく、相手がどこにいても（約450pxまで）足元の床に魔法陣が現れて光が噴き上がる。下段。</small></td><td class="keys"><kbd>J</kbd></td></tr>
           <tr><td>重力井戸<small>強キック。重力の紋で押し潰す。画面の端から端まで届き、遠いほど発生が遅い（16F〜28F）。カウンターで打ち上げ。</small></td><td class="keys"><kbd>K</kbd></td></tr>
@@ -64,7 +64,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>オーブ破裂<small>手から光線を放つ。</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>三連光線<small>両手から3本の光線を同時に放つ。3本目で気絶。</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>大地噴出<small>手を上げるだけで、相手の足元から光の柱が噴き上がる。下段3ヒット。どこにいても届き、遠いほど発生が遅い（16F〜28F）。</small></td><td class="cmd">↓ + I</td></tr>
-          <tr class="super"><td>超必殺技：水晶の嵐<small>四方から水晶の欠片が降り注ぎ、最後に巨大な水晶。至近距離なら手前にバウンド。無敵ではない：水晶が来るまで、近くからの弱い攻撃では止まらない（ダメージはそのまま受け、体力が尽きればKO）が、強い攻撃・必殺技・離れた位置からの攻撃では止まる。MP満タンが必要。</small></td><td class="cmd">パンチ + キック</td></tr>
+          <tr class="super"><td>超必殺技：水晶の嵐<small>四方から水晶の欠片が降り注ぎ、最後に巨大な水晶。至近距離なら手前にバウンド。16ヒット。無敵もアーマーもなく、水晶が来る前に攻撃を受けると止まる。MP満タンが必要。</small></td><td class="cmd">パンチ + キック</td></tr>
         </tbody>
       </table></div>
       <button class="pill watch" data-watch="psychic">▶ ライラのコンボ見本を見る</button>

@@ -990,19 +990,19 @@ function specialMoveBase(id) {
     case 'orbLong': return { id, label: 'Long Orbs', summon: true, startup: 12, active: 2, recovery: 16, wind: 'psyCast', pose: 'chargeL',
       onFrame(f, o, mf) { if (mf === 12) summonOrbs(f, 'long', 5); } };
     case 'barrier': return { id, label: 'Barrier', startup: 4, active: 26, recovery: 14, wind: 'psyBoth', pose: 'psyBoth', barrier: true, fx: 'barrier' };
-    case 'thousandFists': return { id, super: true, name: 'CRYSTAL STORM', label: 'Crystal Storm', startup: 16, active: 48, recovery: 14, wind: 'psyCast', pose: 'chargeL', aura: true,
-      supArmor: true, // not invincible: until the crystals come, light hits from up close don't stop her (taken in full); strong ones do
+    case 'thousandFists': return { id, super: true, name: 'CRYSTAL STORM', label: 'Crystal Storm', startup: 16, active: 54, recovery: 14, wind: 'psyCast', pose: 'chargeL', aura: true,
+      noInvul: true, // not invincible, and no armor either: any hit before the crystals come stops her
       onStart(f) {},
       onFrame(f, o, mf) {
-        if (mf >= 16 && mf <= 51 && (mf - 16) % 5 === 0) { // phantom fists from all around them
+        if (mf >= 16 && mf <= 58 && (mf - 16) % 3 === 0) { // phantom fists from all around them (fifteen of them)
           const a = rnd(0, Math.PI * 2), r = 150, cx = o.x, cy = o.y + 80;
           const x = cx + Math.cos(a) * r, y = Math.max(20, cy + Math.sin(a) * r * 0.7);
           const dx = cx - x, dy = cy - y, L = Math.hypot(dx, dy) || 1;
-          spawnPFist(f, { x, y, vx: dx / L * 13, vy: dy / L * 13, sc: 0.55, dmg: 14, push: 0.5, life: 24, juggle: true, superHit: true, stun: 22 });
+          spawnPFist(f, { x, y, vx: dx / L * 13, vy: dy / L * 13, sc: 0.55, dmg: 16, push: 0.5, life: 24, juggle: true, superHit: true, stun: 22 });
         }
-        if (mf === 56) { // and one giant fist; up close it bounces them back to her
+        if (mf === 62) { // and one giant fist; up close it bounces them back to her
           const close = Math.abs(o.x - f.x) < 240;
-          spawnPFist(f, { x: o.x - f.facing * 160, y: o.y + 90, vx: f.facing * 14, vy: 0, sc: 1.3, dmg: 65, push: 3, life: 20, juggle: true, superHit: true, stun: 24,
+          spawnPFist(f, { x: o.x - f.facing * 160, y: o.y + 90, vx: f.facing * 14, vy: 0, sc: 1.3, dmg: 90, push: 3, life: 20, juggle: true, superHit: true, stun: 24,
             kd: !close, kdVx: 9, kdVy: 10, launch: close, launchVy: 12, bounce: close, endOwner: close, r: 40 });
         }
       } };
