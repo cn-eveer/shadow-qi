@@ -328,7 +328,7 @@ const fxLighter = (fn) => { ctx.save(); ctx.globalCompositeOperation = 'lighter'
 const confetti = (x, y, n = 12) => { const cols = ['255,90,90', '255,210,80', '120,220,140', '120,180,255', '230,140,255']; for (let i = 0; i < n; i++) parts.push({ type: 'spark', x, y, vx: rnd(-5, 5), vy: rnd(-7, -2), life: 26, max: 26, col: cols[i % cols.length] }); };
 Object.assign(STRINGS.ninja, {
   nE: { kind: 'k', str: 1, label: 'Crescent Moon Drop', wind: 'jump', pose: 'axe', startup: 16, active: 6, recovery: 18, dmg: 60, hitbox: [-20,90,0,170],
-    launch: true, launchVy: 8, bounce: true, hitstop: 12, gdrain: 14, advBlock: -12, manualY: true, noPush: true,
+    launch: true, launchVy: 8, bounce: true, hitstop: 12, gdrain: 14, advBlock: -6, /* (−12 once the guard stall is added) */ manualY: true, noPush: true,
     poseFn: (f, mf) => mf < 9 ? POSES.slashW : mf < f.move.startup ? POSES.jump : null,
     onFrame(f, o, mf) { // vanishes, reappears above them, and drops a crescent-moon heel
       const S = f.move.startup;
