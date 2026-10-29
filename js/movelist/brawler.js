@@ -4,7 +4,7 @@
 document.getElementById('info').insertAdjacentHTML('beforeend', `
     <article class="card brawler" data-tab="brawler" data-lang="en">
       <h2>TETSU<span>Qi Brawler</span></h2>
-      <p class="blurb">Slower but hits hard. Heavy fists up close, qi to cover the distance, and six ways to launch you into a juggle. Charges MP faster than Kuro. Before each technique he pulls his fists back to gather qi. During Shoulder Charge (→ → + K) and Cyclone Lariat (← ← + K) he shrugs off up to three weak hits (ARMOR), but anything heavier still stops him.</p>
+      <p class="blurb">Slower but hits hard. Heavy fists up close, qi to cover the distance, and six ways to launch you into a juggle. Charges MP faster than Kuro. Before each technique he pulls his fists back to gather qi. During Shoulder Charge (→ → + K) and Cyclone Lariat (← ← + K) light hits don't stop him (ARMOR: he still takes most of the damage), but a heavy attack or a technique does.</p>
       <p class="note"><b>v1.3.9: long juggles pay.</b> For every fighter, adding a second lift or bounce to a combo earns a one-time +26 bonus on top of the extra hits, so two juggles always beat one. The limits on lifts and bounces are unchanged.</p>
       <p class="note"><b>Theme.</b> Iron qi & mountains · cyan and bronze. A temple brawler who trained by breaking stone. Signatures: U, U, K Mountain Splitter (stomps the ground open, then twin palms); U, U, I Ascending Dragon (a qi dragon coils up around him).</p>
       <div class="scroll"><table>
@@ -22,7 +22,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Earth Stomp<small>A shockwave along the floor. Hits low, even someone lying down. Projectiles and rays pass through him while he stomps. Safe when guarded.</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>Cyclone Lariat<small>Backsteps, then spins forward with both arms out: three hits that launch. While he spins, projectiles and rays (Lyra’s shots, fireballs, lightning) pass through him; only close-range attacks can hit him.</small></td><td class="cmd">← ← + K</td></tr>
           <tr><td>Rising Fist<small>An invincible corkscrew uppercut that launches.</small></td><td class="cmd">↓ + I</td></tr>
-          <tr class="super"><td>Super: Great Qi Cannon<small>A screen-long qi beam that hits 13 times. Needs a full MP gauge.</small></td><td class="cmd">Punch + Kick</td></tr>
+          <tr class="super"><td>Super: Great Qi Cannon<small>A screen-long qi beam that hits 13 times. Not invincible: until the beam fires, light hits from up close don't stop it (he still takes their full damage — enough of it finishes him), but heavy attacks, techniques and anything from further away do. Needs a full MP gauge.</small></td><td class="cmd">Punch + Kick</td></tr>
         </tbody>
       </table></div>
       <button class="pill watch" data-watch="brawler">▶ Watch Tetsu’s sample combos</button>
@@ -57,7 +57,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
     </article>
     <article class="card brawler" data-tab="brawler" data-lang="ja" hidden>
       <h2>テツ<span>気の拳士</span></h2>
-      <p class="blurb">動きは遅いが一撃が重い。技の前に拳を引いて気を溜める（その間に攻撃されると中断）。肩当て（→→+K）と旋風ラリアット（←←+K）の間は弱い攻撃を3回まで耐える（アーマー）。</p>
+      <p class="blurb">動きは遅いが一撃が重い。技の前に拳を引いて気を溜める（その間に攻撃されると中断）。肩当て（→→+K）と旋風ラリアット（←←+K）の間は弱い攻撃では止まらない（アーマー：ダメージはほぼ受ける）。強い攻撃や必殺技では止まる。</p>
       <p class="note"><b>v1.3.9：長い空中コンボほど強い。</b>全キャラ共通で、コンボに2回目の打ち上げ・バウンドを入れると、追加の攻撃に加えて一度だけ+26のボーナス。2回打ち上げは必ず1回より強い。回数制限はそのまま。</p>
       <p class="note"><b>テーマ.</b> 鉄の気と山・水色と青銅。岩を砕いて修行した寺の拳士。決め技：U、U、K「山割り」（地面を踏み割り、双掌）／U、U、I「昇龍」（気の龍が体に巻きつき昇る）。</p>
       <div class="scroll"><table>
@@ -75,7 +75,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>大地踏み<small>地を這う衝撃波。下段で、倒れた相手にも当たる。踏み込み中は飛び道具がすり抜ける。ガードされても安全。</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>旋風ラリアット<small>下がってから両腕を広げて回転、3段で打ち上げ。回転中は飛び道具や光線がすり抜ける（近接攻撃だけ当たる）。</small></td><td class="cmd">← ← + K</td></tr>
           <tr><td>昇龍拳<small>無敵の螺旋アッパーで打ち上げ。</small></td><td class="cmd">↓ + I</td></tr>
-          <tr class="super"><td>超必殺技：大気功砲<small>画面を貫く気のビームで13ヒット。MP満タンが必要。</small></td><td class="cmd">パンチ + キック</td></tr>
+          <tr class="super"><td>超必殺技：大気功砲<small>画面を貫く気のビームで13ヒット。無敵ではない：ビームが出るまで、近くからの弱い攻撃では止まらない（ダメージはそのまま受け、体力が尽きればKO）が、強い攻撃・必殺技・離れた位置からの攻撃では止まる。MP満タンが必要。</small></td><td class="cmd">パンチ + キック</td></tr>
         </tbody>
       </table></div>
       <button class="pill watch" data-watch="brawler">▶ テツのコンボ見本を見る</button>

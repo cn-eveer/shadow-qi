@@ -1142,7 +1142,8 @@ function specialMoveBase(id) {
         if (!f.move.dodge && mf === 86) { f.move.active = 86 - f.move.startup; f.move.recovery = 8; } // (in a combo he's free right after the last clone lands: follow up as they bounce)
       } };
     case 'qiCannon': return { id, super: true, name: 'GREAT QI CANNON', label: 'Qi Cannon', startup: 26, active: 56, recovery: 20, wind: 'blastW', pose: 'blast', aura: true,
-      onStart(f) { f.invul = 30; },
+      supArmor: true, // Tetsu: not invincible — until the beam fires, light hits from up close don't stop him (he still takes them in full); strong ones do
+      onStart(f) { if (f.key !== 'brawler') f.invul = 30; }, // (Hohen's Core Cannon, built on this one, keeps its invincibility)
       onFrame(f, o, mf) { if (mf === 27) spawnBeam(f); if (mf < 27 && mf % 2 === 0) auraParticle(f); } };
   }
   return null;

@@ -225,8 +225,10 @@ function applyHit(a, d, h, side, hb, hu) {
   // but they don't stop him: the technique keeps going (no counter). They can only be punished afterwards.
   const dblArmor = d.ch.possess === 'double' && !h.grab && !h.superHit && !['knock', 'down', 'getup'].includes(d.state); // double possession: light hits can't stop him
   const kDash = d.key === 'kappa' && d.state === 'dash' && !h.grab && !h.superHit; // the kappa's dash has armor: hits land, but don't stop him
-  if (dblArmor || kDash || (d.state === 'attack' && d.move && !h.grab && !h.superHit && hasArmor(d) && (d.pre > 0 || d.move.startup >= 900 || d.mf <= d.move.startup + (d.move.active || 0)))) {
-    const dmg = Math.max(1, Math.round(h.dmg * 0.85));
+  const strong = !!(h.heavy || h.tech || h.launch || h.kd || (h.str || 0) >= 1); // (a heavy blow, a technique, a launcher, a knockdown)
+  const supArmor = d.state === 'attack' && d.move && d.move.supArmor && d.key === 'brawler' && d.mf <= d.move.startup && !h.grab && !h.superHit && !strong && Math.abs(a.x - d.x) < 220; // Tetsu's super, before the beam: light hits from up close don't stop it (strong ones and anything from further away do)
+  if (supArmor || dblArmor || kDash || (d.state === 'attack' && d.move && !h.grab && !h.superHit && hasArmor(d) && !(d.key === 'brawler' && strong) && (d.pre > 0 || d.move.startup >= 900 || d.mf <= d.move.startup + (d.move.active || 0)))) {
+    const dmg = Math.max(1, Math.round(h.dmg * (supArmor ? 1 : 0.85))); // (the super's armor takes them in full: one that would finish him still does)
     if (d.hp - dmg > 0) {
       d.hp -= dmg; d.flash = 4; d.healT = 0;
       sparks(cx, cy, 'hit'); sfx('hitL'); if (!d.armorT || game.frame - d.armorT > 20) { d.armorT = game.frame; popText(d.x, GROUND - d.y - 175, L('ARMOR', 'アーマー'), '125,235,255'); }
