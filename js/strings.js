@@ -61,14 +61,16 @@ const STRINGS = {
     aSpin: SAF('Air Qi Burst', 'blast', { burst: [80, 110] }),
   },
   staff: { // Mei: thrusts, twirls and sweeps with the staff
-    m2: SG('p', 'Twin Thrust', 'thrustW', 'thrust', { hitbox: [20,170,80,130], staffExt: 30 }),
-    m3: SG('p', 'Staff Twirl', 'staffSwingW', 'staffSwing', { hitbox: [20,160,50,150], spinStaff: true, multi: 2, interval: 4, dmg: 16, lastDmg: 16 }),
-    m4: SG('k', 'Pole Spin Kick', 'kickW', 'highKick', { spinStaff: true, hitbox: [10,100,40,140], dmg: 32, spin: [2, 8] }),
-    mF: SF('p', 'Great Sweep', 'staffSwingW', 'staffSweep', { hitbox: [10,180,0,120], spinStaff: true, trail: { cx: 30, cy: 40, r: 140, a0: -70, a1: 40, col: GOLD } }),
-    mL: SL('Rising Staff', 'staffLow', 'staffRise', { hitbox: [10,160,40,200], trail: { cx: 20, cy: 90, r: 130, a0: -40, a1: 100, col: GOLD } }),
-    mE: SF('p', 'Overhead Crash', 'slamW', 'staffSlam', { hitbox: [10,170,0,170], dmg: 56, kdVx: 6, kdVy: 10 }),
-    ml2: SG('k', 'Low Staff Sweep', 'staffLowW', 'staffLow', { low: true, hitbox: [20,160,0,44] }),
-    mlE: SF('k', 'Floor Sweep', 'crouch', 'staffSweep', { low: true, hitbox: [0,175,0,40], spinStaff: true, dmg: 50 }),
+    m2: SG('p', 'Twin Thrust', 'thrustW', 'thrust', { step: 0, hitbox: [20,170,80,130], staffExt: 30 }), // (her string stays at the staff's length: no stepping in)
+    m3: SG('p', 'Low Staff Twirl', 'staffLowW', 'staffLow', { step: 0, low: true, hitbox: [20,170,0,44], spinStaff: true, dmg: 28 }), // U, U, U: low
+    m4: SG('k', 'Low Spin Sweep', 'crouch', 'staffSweep', { step: 0, low: true, hitbox: [10,175,0,40], spinStaff: true, dmg: 30 }), // U, U, U, U: low
+    mD: SG('k', 'Ground Thrust', 'staffHighW', 'staffLowThrust', { step: 0, low: true, hitbox: [20,185,0,44], staffExt: 30, dmg: 44, counterStun: 12 }), // U, U, U, U, ↓ + K: low, and a counter leaves them stunned longer
+    mUD: SF('k', 'Dragon Tail Sweep', 'crouch', 'staffSweep', { step: 0, low: true, hitbox: [0,185,0,40], spinStaff: true, dmg: 52, kdVx: 4, kdVy: 6 }), // U, ↓ + K: a low sweep that trips them
+    mF: SF('p', 'Great Sweep', 'staffSwingW', 'staffSweep', { step: 0, hitbox: [10,180,0,120], spinStaff: true, trail: { cx: 30, cy: 40, r: 140, a0: -70, a1: 40, col: GOLD } }),
+    mL: SL('Rising Staff', 'staffLow', 'staffRise', { step: 0, hitbox: [10,160,40,200], trail: { cx: 20, cy: 90, r: 130, a0: -40, a1: 100, col: GOLD } }),
+    mE: SF('p', 'Overhead Crash', 'slamW', 'staffSlam', { step: 0, hitbox: [10,170,0,170], dmg: 56, kdVx: 6, kdVy: 10 }),
+    ml2: SG('k', 'Staff Jab', 'thrustW', 'thrust', { step: 0, hitbox: [20,170,70,125], staffExt: 30 }), // J, J: a mid
+    mlE: SF('k', 'Floor Sweep', 'crouch', 'staffSweep', { step: 0, low: true, hitbox: [0,175,0,40], spinStaff: true, dmg: 50 }),
   },
   psychic: { // Lyra: every hit comes from her staff, as runes and crystals at a distance
     y2: SG('p', 'Glyph Spark', 'lStaffBack', 'lStaffThrust', { noCrystal: true, step: 0, onStart: (f, o) => lyraReach(f, o, LYRA_RANGE, 90), onFrame: (f, o, mf) => { if (mf <= f.move.startup) lyraReach(f, o, LYRA_RANGE, 90); }, hitbox: [40,130,80,140], psyFist: [105, 115, 0.6] }),
@@ -310,6 +312,7 @@ Object.assign(STRINGS.salaryDevil, {
 });
 wireStrings(); // chain the aerial versions as well
 STRINGS.ninja.n2.chain = { ...STRINGS.ninja.n2.chain, dhk: 'nD' }; // Kuro: U, U, ↓ + K ends low
+STRINGS.staff.m4.chain = { ...STRINGS.staff.m4.chain, dhk: 'mD' }; STRINGS.staff.$start.p = { ...STRINGS.staff.$start.p, dhk: 'mUD' }; // Mei: U, U, U, U, ↓ + K and U, ↓ + K end low
 STRINGS.brawler.t4.chain = { ...STRINGS.brawler.t4.chain, dhk: 'tD' }; STRINGS.brawler.tl2.chain = { ...STRINGS.brawler.tl2.chain, dhk: 'tlD' }; // Tetsu: U, U, U, U, ↓ + K ends low; J, J, ↓ + K with a mid kick (J, J, K the high one)
 STRINGS.kappa.$start.k = null;
 // fists, kunai and briefcases are short: in a juggle these fighters spring up to where the opponent is, so the blow really reaches them
@@ -337,7 +340,7 @@ Object.assign(STRINGS.ninja, {
     poseFn: (f, mf) => mf < 9 ? POSES.slashW : mf < f.move.startup ? POSES.jump : null,
     onFrame(f, o, mf) { // vanishes, reappears above them, and drops a crescent-moon heel
       const S = f.move.startup;
-      if (mf === 1) { f.cm = { x0: f.x, tx: clamp(o.x - f.facing * 36, WALL_L, WALL_R), landed: false }; sfx('vanish'); for (let i = 0; i < 8; i++) parts.push({ type: 'smoke', x: f.x + rnd(-20, 20), y: GROUND - rnd(30, 150), vx: rnd(-1, 1), vy: -0.6, r: rnd(6, 10), vr: 0.3, life: 20, max: 20, col: '120,90,190' }); }
+      if (mf === 1) { f.cm = { x0: f.x, tx: clamp(f.x + f.facing * Math.min(100, Math.max(0, f.facing * (o.x - f.x) - 36)), WALL_L, WALL_R), landed: false }; /* (a short hop: 100px at most — from further away it comes down short) */ sfx('vanish'); for (let i = 0; i < 8; i++) parts.push({ type: 'smoke', x: f.x + rnd(-20, 20), y: GROUND - rnd(30, 150), vx: rnd(-1, 1), vy: -0.6, r: rnd(6, 10), vr: 0.3, life: 20, max: 20, col: '120,90,190' }); }
       f.hidden = mf >= 3 && mf <= 8;
       if (mf <= S) { const e = mf / S; f.x = lerp(f.cm.x0, f.cm.tx, ease(e)); f.y = 140 * Math.sin(Math.PI / 2 * Math.min(1, e / 0.7)); }
       else f.y = Math.max(0, 140 - (mf - S) * 30);
@@ -628,6 +631,7 @@ function projBox(p) {
   if (p.type === 'clone') { const t = other(p.owner), up = p.superHit && !p.fall && t && caughtIn(t) ? Math.max(0, t.y + 60 - p.h1) : 0; return { x0: p.x - p.w, x1: p.x + p.w, y0: p.h0 + (p.yOff || 0), y1: p.h1 + (p.yOff || 0) + up }; } // (in a combo, the super's clones leap up to catch someone already juggled)
   if (p.type === 'decoy' || p.type === 'guardShadow') return { x0: p.x - 25, x1: p.x + 25, y0: 0, y1: 135 };
   if (p.type === 'wave') return { x0: p.x - p.w, x1: p.x + p.w, y0: 0, y1: 34 };
+  if (p.type === 'staffBoom') return { x0: p.x - 46, x1: p.x + 46, y0: p.y - 40, y1: p.y + 40 };
   const back = p.vx && Math.abs(p.vx) > p.r ? p.vx : 0; // a fast projectile (a bullet) sweeps the whole stretch it crossed this frame, so it can't skip through someone point-blank
   return { x0: Math.min(p.x, p.x - back) - p.r, x1: Math.max(p.x, p.x - back) + p.r, y0: p.y - p.r, y1: p.y + p.r };
 }
@@ -735,7 +739,7 @@ function pjDraw(p) {
   ctx.restore();
 }
 // no shot travels further than this from where it was thrown (supers, and the shield that comes back, aside): it fades out
-const PROJ_RANGE = 520, PROJ_FREE = new Set(['beam', 'aegis', 'decoy', 'guardShadow', 'trap']);
+const PROJ_RANGE = 520, PROJ_FREE = new Set(['beam', 'aegis', 'staffBoom', 'decoy', 'guardShadow', 'trap']);
 function updateProjs() {
   for (const p of projs) {
     FX_OWNER = p.owner; // (sparks from a projectile are its owner's)
@@ -767,6 +771,22 @@ function updateProjs() {
       if (!p.hit && hu && overlap(hb, hu) && tgt.state !== 'knock') { p.hit = true; // (it rolls under someone already in the air)
         applyHit(p.owner, tgt, { dmg: 40, stun: 24, bstun: 14, push: 3, kd: true, kdVx: 6, kdVy: 9, type: 'mid', low: true, chip: true, hitstop: 8, proj: true, str: 1, gdrain: 20, label: 'Heaven Splitter' }, p.dir, hb, hu);
         p.dead = true; }
+      continue;
+    }
+    if (p.type === 'staffBoom') { // Mei's thrown staff: out, then back to her hand
+      const own = p.owner, tgt = other(own); p.life--;
+      if (p.stay > 0) { p.stay--; p.vx = (tgt.x - p.x) * 0.35; } else if (p.t < p.outT) p.vx *= p.mode === 'boom' ? 0.955 : 0.96; else { /* (stay: the whirlwind stops where it catches them, for its three hits) */ const dx = own.x - p.x; p.vx = Math.sign(dx) * Math.min(16, Math.abs(dx) * 0.2 + 7); }
+      p.x += p.vx; p.y += ((100 + Math.max(0, own.y)) - p.y) * 0.1;
+      if ((p.t > p.outT && Math.abs(own.x - p.x) < 34) || p.life <= 0 || p.x < -60 || p.x > W + 60 || own.ko) { p.dead = true; own.staffOut = false; sfx('block'); continue; }
+      const hu = hurtbox(tgt, true), hb = { x0: p.x - 46, x1: p.x + 46, y0: p.y - 40, y1: p.y + 40 }, back = p.t > p.outT;
+      const can = p.mode === 'boom' ? (p.hits === 0 && !back) || (p.hits <= 1 && back && !p.backHit) : p.hits < 3 && !back && p.t - p.last >= 6;
+      if (can && hu && overlap(hb, hu)) {
+        const last = p.mode === 'triple' && p.hits === 2;
+        applyHit(own, tgt, { dmg: p.mode === 'boom' ? (back ? 30 : 42) : (last ? 30 : 20), stun: p.mode === 'boom' ? 22 : 18, bstun: p.mode === 'boom' ? 14 : 10, push: last || back ? 3 : 1.2, type: 'mid', chip: true, hitstop: last ? 8 : 5, proj: true, str: 1, gdrain: 8,
+          juggle: true, jugVy: 5, label: p.mode === 'boom' ? 'Staff Boomerang' : 'Staff Whirlwind' }, Math.sign(p.vx) || p.dir, hb, hu);
+        if (back) p.backHit = true; p.hits++; p.last = p.t;
+        if (p.mode === 'triple') { if (p.hits < 3) p.stay = 7; else { p.stay = 0; p.t = Math.max(p.t, p.outT + 1); } } // (it whirls on the spot, then comes back)
+      }
       continue;
     }
     if (p.type === 'aegis') { // out, then back to Aldric's hand
@@ -939,9 +959,10 @@ function updateProjs() {
       if (++ga.hits >= 2) { ga.dead = true; puff(ga.x, 60); }
       continue;
     }
-    const sa = a.type === 'beam' || a.type === 'flame', sb = b.type === 'beam' || b.type === 'flame';
+    const strong = p => p.type === 'beam' || p.type === 'flame' || !!p.sup || !!p.superHit, sa = strong(a), sb = strong(b); // (a super's shot beats an ordinary one)
     if (sa && sb) continue;
-    if (sa) b.dead = true; else if (sb) a.dead = true; else { a.dead = true; b.dead = true; }
+    const knock = p => { if (p.type === 'staffBoom' || p.type === 'aegis') { p.t = Math.max(p.t, (p.outT || 22) + 1); p.stay = 0; return; } p.dead = true; if (p.type === 'plate' && p.owner) p.owner.plateOut = false; }; // (a thrown staff or shield is knocked back to its owner)
+    if (sa) knock(b); else if (sb) knock(a); else { knock(a); knock(b); }
     const mx = (Math.max(ba.x0, bb.x0) + Math.min(ba.x1, bb.x1)) / 2, my = GROUND - (Math.max(ba.y0, bb.y0) + Math.min(ba.y1, bb.y1)) / 2;
     sparks(mx, my, 'clash'); sfx('block');
   }

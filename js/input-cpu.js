@@ -351,7 +351,6 @@ class Dummy {
       return out;
     }
     if (frame < this.next || !((f.state === 'stand' || f.state === 'crouch') && f.atkCD <= 0)) return idle;
-    if (Math.abs(o.x - f.x) > R.reach) return { ...EMPTY, h: Math.sign(o.x - f.x) || f.facing }; // (too far: walk in first)
     if (R.sup) f.meter = 100; // (a super needs a full gauge)
     this.rst = { i: 0 }; this.rt0 = frame;
     return comboStep(f, o, R.steps, this.rst, { ...EMPTY });

@@ -61,11 +61,26 @@ const CHARS = {
   staff: {
     reachAdd: 28, name: 'MEI', title: 'Staff Prodigy', nameJa: 'メイ', titleJa: '棍の天才', dmgMul: 0.88, guardDmgMul: 0.6, slowTech: 4, pushMul: 1.6, prePose: 'chargeB', jugDmg: 1.15, scale: 0.94, walk: 3.6, back: 3.0, jumpX: 4.8, jumpV: 19.5, doubleJump: true,
     pDmg: 1.35, kDmg: 1.2, pReach: 1.9, kReach: 1.0, chargeRate: 0.66, auraCol: '255,200,90', fxCol: '255,205,110',
-    sp: { fP: 'extendStaff', fPH: 'vaultSmash', fK: 'sweepStaff', fKH: 'poleKick', bP: 'windmill', bPH: 'cloudLeap', bK: 'somersault', bKH: 'feint' }, sup: 'greatSage',
+    spBF: { lp: 'staffThrow', hp: 'staffWhirl' }, // ← → + U: Staff Boomerang, ← → + I: Staff Whirlwind
+    sp: { fP: 'extendStaff', fPH: 'vaultSmash', fK: 'poleKick', fKH: 'sweepStaff', bP: 'windmill', bPH: 'cloudLeap', bK: 'somersault', bKH: 'feint' }, sup: 'greatSage',
+    recPlus: 5, // every attack recovers 5 frames slower (see moveFrames)
+    antiAir: 250, // her mid and top attacks reach up to here, over her head as well: they catch a jump or a drop from above
+    frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
+      U: { su: 6, act: 5, rec: 9, blk: -4 }, dU: { su: 8, act: 5, rec: 9, blk: -4 }, J: { su: 6, act: 5, rec: 9, blk: -4 }, dJ: { su: 8, act: 5, rec: 9, blk: -4 },
+      I: { su: 12, act: 6, rec: 16, blk: -12 }, K: { su: 16, act: 8, rec: 18, blk: -14 },
+      dI: { su: 13.5, act: 6, rec: 18, blk: -16 }, /* (14F measured: its wind-up speeds up unevenly) */ dK: { su: 14, act: 6, rec: 20, blk: -14 },
+      $m2: { su: 12, act: 5, rec: 12, blk: -6 }, $m3: { su: 14, act: 5, rec: 12, blk: -6 }, $m4: { su: 16, act: 5, rec: 12, blk: -6 }, // U, U / U, U, U (low) / U, U, U, U (low)
+      $mD: { su: 16, act: 6, rec: 16, blk: -14 }, $mUD: { su: 21, act: 6, rec: 20, blk: -16 }, // U×4, ↓ + K (low) / U, ↓ + K (low)
+      $mF: { su: 14, act: 6, rec: 20, blk: -12 }, $mL: { su: 14, blk: -13 }, /* (−16 measured: the launch adds 3) */ $mE: { su: 18, act: 6, rec: 20, blk: -16 }, // U×4, K / U, I / U, K
+      $ml2: { su: 10, act: 5, rec: 12, blk: -6 }, $mlE: { su: 15, act: 6, rec: 20, blk: -16 }, // J, J (mid) / J, J, K and J, K
+      extendStaff: { su: 21, blk: -10 }, vaultSmash: { su: 21, blk: -18 }, poleKick: { su: 14, blk: -14 }, sweepStaff: { su: 18, blk: -18 }, // (→ → + J Pole Spin Kick, → → + K Sweeping Staff)
+      staffThrow: { su: 16, act: 2, rec: 3, set: { noGuardLag: true } }, staffWhirl: { su: 18, act: 2, rec: 3, set: { noGuardLag: true } }, // (硬直 8 with her +5, guarded or not)
+      windmill: { su: 18, blk: -16 }, cloudLeap: { su: 21, act: 20, blk: -18 }, somersault: { su: 14, blk: -14 }, feint: { su: 18, blk: -8 },
+    },
     heavy: {
-      p: { label: 'Staff Sweep', startup: 10, active: 5, recovery: 18, hitbox: [10,195,50,150], wind: 'staffSwingW', pose: 'staffSwing', lunge: [3, 9, 3.5], hitstop: 10, spinWind: true,
+      p: { label: 'Staff Sweep', startup: 10, active: 5, recovery: 18, hitbox: [10,250,50,150], wind: 'staffSwingW', pose: 'staffSwing', lunge: [3, 9, 1], /* (a long sweep: she hardly steps in) */ hitstop: 10, spinWind: true,
         trail: { cx: 20, cy: 100, r: 120, a0: 120, a1: -20, col: '255,205,110' } },
-      k: { label: 'Round Swing', startup: 11, active: 8, recovery: 18, hitbox: [-150,195,20,170], wind: 'staffSwingW', pose: 'staffWhirl', lunge: [3, 9, 3], cpLaunch: true, launchVy: 13, kd: true, kdVx: 10,
+      k: { label: 'Round Swing', startup: 11, active: 8, recovery: 18, hitbox: [-150,195,20,170], wind: 'staffSwingW', pose: 'staffWhirl', lunge: [3, 9, 1], cpLaunch: true, launchVy: 13, kd: true, kdVx: 10,
         spin: [11, 19], spinStaff: true, trail: { cx: 0, cy: 95, r: 150, a0: -170, a1: 170, col: '255,205,110' } },
     },
     normalLook: {
@@ -203,12 +218,7 @@ for (const k in CHARS) CHARS[k].key = k;
 
 // ---------- charge attacks (hold I) ----------
 // (Tetsu's I is no longer held to charge)
-makeCharged('staff', [
-  { set: { label: 'Rising Cudgel', dmg: 52, hitbox: [10,175,40,225], launch: true, launchVy: 14, pose: 'staffRise', recovery: 18, trail: { cx: 20, cy: 90, r: 130, a0: -40, a1: 100, col: '255,205,110' } }, rel: 7,
-    act: (f, o, mf) => { if (mf <= f.move.startup && Math.abs(o.x - f.x) > 80) f.vx = f.facing * 5; else f.vx *= 0.6; } },
-  { set: { label: 'Typhoon Swing', dmg: 90, hitbox: [-90,215,10,190], kd: true, kdVx: 18, kdVy: 8, push: 8, pose: 'staffSwing', spinStaff: true, spin: [0, 10], recovery: 24, gdrain: 18 }, rel: 8,
-    act: (f, o, mf) => { f.vx *= 0.5; if (mf === f.move.startup) { sfx('swing'); parts.push({ type: 'ring', x: f.x, y: GROUND - 90, r: 30, vr: 9, life: 16, max: 16, col: '255,210,110' }); for (let i = 0; i < 6; i++) parts.push({ type: 'star', x: f.x + rnd(-100, 100), y: GROUND - rnd(40, 160), vx: f.facing * rnd(2, 5), vy: -rnd(0, 2), r: 3, vr: -0.1, life: 18, max: 18, col: '255,210,110', rot: R() * 3 }); } } },
-]);
+// (Mei's I is no longer held to charge)
 makeCharged('psychic', [
   { set: { label: 'Rising Glyph', dmg: 50, launch: true, launchVy: 13.5, pose: 'psyUp', recovery: 20, hitbox: [40,195,0,200], floorGlyph: 150, psyFist: null }, rel: 8, onFire: (f, o) => lyraReach(f, o, 320, 100) },
   { set: { label: 'Nova Glyph', dmg: 90, kd: true, kdVx: 17, kdVy: 8, push: 8, pose: 'psyPush', recovery: 24, gdrain: 18, psyFist: [150, 115, 1.6], burst: [150, 115] }, rel: 9, onFire: (f, o) => lyraReach(f, o, 320, 120),

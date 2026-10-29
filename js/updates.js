@@ -4,6 +4,28 @@
 // version.json on the server says which version is live. When the two differ, the player is asked to reload without the
 // browser's cache, or to erase the site's saved data and reload.
 const RELEASES = [ // notes: a string, or { g: 'group', items: [...] } (groups nest)
+  { v: '1.4.5', date: '2026-10-29', notes: [
+    { g: 'メイ', items: [
+      'すべての技のフレームを調整（U・Jは6F、Iは12Fでリーチ延長など）',
+      '新しい連続技：U、U、U、U、↓+K（下段）、U、↓+K（下段）。U、U、UとU、U、U、Uは下段、J、Jは中段に',
+      '→→+Jと→→+Kを入れ替え（→→+J 猿王連棍、→→+K 棍の舞）',
+      '新技：←→+U 回転棍投げ（ブーメラン）、←→+I 旋風棍（画面の約7割まで届く3ヒット）',
+      '攻撃でほとんど前に出ず、棍の長さで戦う。硬直は少し長く',
+      '中段・中下段の攻撃は頭上まで届き、ジャンプや上からの攻撃を迎え撃てる',
+      'I長押しの溜め技を削除',
+      '超必殺技：無敵をなくし、近くからの弱い攻撃に耐えるアーマーに',
+    ] },
+    { g: 'クロ', items: [
+      '天落蹴り（→→+K）：相手の上に現れた後は攻撃を受けるように',
+      '三日月落とし（U、K／U、U、K）：移動は短い距離のみ（遠くから相手の上に瞬間移動しない）',
+    ] },
+    { g: 'トレーニング', items: [
+      '技表にすべての連続技とコマンドを表示。「相手」タブのダミーがすべて再現し、その場で技を出す',
+    ] },
+    { g: 'システム', items: [
+      '飛び道具同士がぶつかると相殺（超必殺技の飛び道具は打ち消されない）',
+    ] },
+  ] },
   { v: '1.4.4', date: '2026-10-29', notes: [
     { g: 'テツ', items: [
       'すべての技のフレームを調整。ヒット時+4F、カウンター時+8F',

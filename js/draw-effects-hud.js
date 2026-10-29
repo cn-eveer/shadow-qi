@@ -39,6 +39,13 @@ function drawProjBase(p) {
     ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(p.x - 34 * p.dir, y); ctx.quadraticCurveTo(p.x + 26 * p.dir, y - 60, p.x - 6 * p.dir, y - 110); ctx.quadraticCurveTo(p.x + 6 * p.dir, y - 50, p.x - 14 * p.dir, y); ctx.closePath(); ctx.fill();
     ctx.restore(); return;
   }
+  if (p.type === 'staffBoom') { // Mei's staff, spinning end over end (the whirlwind spins faster)
+    const C = p.owner.alt && CHARS.staff.altColors ? CHARS.staff.altColors : CHARS.staff.colors, an = p.t * (p.mode === 'triple' ? 0.75 : 0.5) * p.dir, ux = Math.cos(an) * 92, uy = Math.sin(an) * 92, x = p.x, y = GROUND - p.y;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = 'rgba(255,205,110,.28)'; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(x, y, 92, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    seg([x - ux, y - uy], [x + ux, y + uy], 5.2, C.staffB); seg([x - ux, y - uy], [x + ux, y + uy], 3.6, C.staff);
+    seg([x - ux, y - uy], [x - ux * 0.9, y - uy * 0.9], 6, C.cap); seg([x + ux * 0.9, y + uy * 0.9], [x + ux, y + uy], 6, C.cap);
+    return;
+  }
   if (p.type === 'aegis') { // the thrown shield, spinning edge over edge
     const C = p.owner.alt && CHARS.paladin.altColors ? CHARS.paladin.altColors : CHARS.paladin.colors;
     ctx.save(); ctx.translate(p.x, GROUND - p.y); ctx.scale(Math.max(0.25, Math.abs(Math.cos(p.t * 0.45))), 1); ctx.rotate(p.t * 0.12 * p.dir);

@@ -149,6 +149,8 @@ function startMove(f, mv, str, keepBuffer) {
   if (f.ch.fastAtk && mv.normal && !mv.fastDone && mv.startup < 900) { mv.fastDone = true; mv.startup = Math.max(3, mv.startup - 2); mv.recovery = Math.max(4, Math.round(mv.recovery * 0.8)); } // the devil: wild and fast
   if (mv.held && f.inp) { if (!mv.holdBtn) mv.holdBtn = f.inp.btn; if (f.inp.holdFor && mv.holdFor == null) mv.holdFor = f.inp.holdFor; }
   moveFrames(f, mv); // (before onStart: with no wind-up left it starts right away)
+  if (f.staffOut && mv.proj !== 'staffBoom') staffBack(f); // (Mei attacks while her staff is out flying: it snaps back into her hands)
+  if (f.ch.antiAir && Array.isArray(mv.hitbox) && !mv.low && !mv.air && !mv.jug && !mv.antiAirDone) { mv.antiAirDone = true; const hb = mv.hitbox = mv.hitbox.slice(); hb[0] = Math.min(hb[0], -20); hb[3] = Math.max(hb[3], f.ch.antiAir); } // (her staff swings up over her head too: they catch someone coming down from above — Mei)
   if (f.pre) sfx('charge');
   else if (mv.onStart) mv.onStart(f, other(f));
   mv.t0 = game.frame; // (when it started: its 発生 decides whether someone in a combo can guard it — GUARD_BACK)
@@ -164,12 +166,14 @@ function moveFrames(f, mv) {
   const e = T[mv.inString ? '$' + mv.strKey : mv.normal ? (mv.stance === 'c' ? 'd' : '') + NORMAL_KEY[mv.kind + mv.str] : mv.id]; if (!e) return; // (a string hit: $ and its key, $t2, $tF…)
   mv.framesDone = true;
   if (e.set) Object.assign(mv, e.set);
+  if (mv.noGuardLag) f.lastMoveTech = false; // (guarded, no extra opening on top of its own recovery)
   if (e.su) { const now = f.pre + mv.startup, want = e.su - (mv.hitbox ? 2 : 1); // (frames before it can hit: a blow lands on the frame after, a shot is thrown on it)
     if (want > now) f.pre += want - now;
     else if (want < now) { const cut = Math.min(f.pre, now - want); f.pre -= cut; if (mv.tellPre) mv.tellPre = Math.max(0, mv.tellPre - cut); if (mv.preTotal != null) mv.preTotal = f.pre; // (a shorter wind-up first: the move itself, its dash or leap, keeps its pace…
       if (now - cut > want) mv.speedUp = (now - cut) / want; } } // …and only if that isn't enough does the move play faster)
   if (e.act != null) mv.active = e.act;
   if (e.rec != null) mv.recovery = e.rec;
+  if (f.ch.recPlus && mv.recovery < 90) { mv.recovery += f.ch.recPlus; mv.recPlusAmt = f.ch.recPlus; } // (a fighter who's slower to recover: a miss or a guard costs more — the guard number stays as set; a hit that launches or knocks down gives it back, see applyHit)
   if (e.blk != null) { mv.blockAdv = e.blk; mv.noGuardLag = true; f.lastMoveTech = false; } // (its own guard number: no extra off-balance on top)
 }
 function tryAttack(f, o, inp, noLight) { // (noLight: anything but a light attack — a string can't start itself over)
