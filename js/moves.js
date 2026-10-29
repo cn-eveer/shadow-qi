@@ -782,15 +782,15 @@ function specialMoveBase(id) {
     case 'sdTailUpper': return { id, label: 'Tail Hook', startup: 9, active: 7, recovery: 24, wind: 'sdIdle', pose: 'sdIdle', tail: { a0: -0.5, a1: 1.4, len: 170, h: 70 }, // → → + K: the tail scoops up under them and flings them into the air
       hitbox: [30,190,0,210], dmg: 48, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 13, type: 'mid', hitstop: 11, gdrain: 10, onFrame(f, o, mf) { if (mf === 8) sfx('rise'); } };
     case 'sdChainB': return { id, label: 'Hell Chain', startup: 12, active: 6, recovery: 18, wind: 'sdIdle', pose: 'sdBeckon', // ← ← → + J: the chain lashes out from his belly, at waist height
-      hitbox: [40,290,40,120], dmg: 24, stun: 30, bstun: 12, push: 0, type: 'mid', hitstop: 8, gdrain: 8,
+      hitbox: [40,290,20,150], dmg: 24, stun: 30, bstun: 12, push: 0, type: 'mid', hitstop: 8, gdrain: 8,
       onFrame(f, o, mf) { const mv = f.move; f.vx = 0; if (mf === 12) sfx('throw');
-        if (f.hitConnected && f.lastResult !== 'block' && !mv.pulled) { mv.pulled = true; mv.pullT = 10; popText(o.x, GROUND - 200, L('GET OVER HERE!', 'こっちへ来い！'), '255,90,60'); }
-        if (mv.pullT > 0) { mv.pullT--; o.x = lerp(o.x, clamp(f.x + f.facing * 70, WALL_L, WALL_R), 0.35); o.stun = Math.max(o.stun, 22); }
+        if (f.hitConnected && !mv.pulled) { mv.pulled = true; mv.pullT = 10; popText(o.x, GROUND - 200, L('GET OVER HERE!', 'こっちへ来い！'), '255,90,60'); }
+        if (mv.pullT > 0) { mv.pullT--; o.vx = 0; o.kb = 0; o.x = lerp(o.x, clamp(f.x + f.facing * 70, WALL_L, WALL_R), 0.35); if (o.state === 'blockstun') o.bstun = Math.max(o.bstun || 0, 14); else o.stun = Math.max(o.stun, 22); }
         if (mv.pulled) hitRecover(f, 6); },
       drawFX(f, o) { const mv = f.move; if (f.mf < 10 || f.mf > 30) return; const s0 = f.ch.scale, x0 = f.x + f.facing * 20 * s0, y0 = GROUND - f.y - 82 * s0; // from his belly
         const tip = mv.pulled && o ? o.x : f.x + f.facing * Math.min(290, (f.mf - 10) * 60), ty = mv.pulled && o ? GROUND - o.y - 80 : y0;
-        ctx.save(); ctx.strokeStyle = '#3a2a2a'; ctx.lineWidth = 5; ctx.setLineDash([8, 5]); ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(tip, ty); ctx.stroke(); ctx.setLineDash([]);
-        ctx.strokeStyle = '#ff6a3a'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(tip, ty); ctx.stroke(); ctx.fillStyle = '#8a1414'; ctx.beginPath(); ctx.moveTo(tip + f.facing * 12, ty); ctx.lineTo(tip, ty - 8); ctx.lineTo(tip, ty + 8); ctx.closePath(); ctx.fill(); ctx.restore(); } };
+        ctx.save(); ctx.strokeStyle = '#3a1a1a'; ctx.lineWidth = 15; ctx.lineCap = 'round'; ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(tip, ty); ctx.stroke(); ctx.setLineDash([]);
+        ctx.strokeStyle = '#ff6a3a'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(tip, ty); ctx.stroke(); ctx.fillStyle = '#8a1414'; ctx.beginPath(); ctx.moveTo(tip + f.facing * 22, ty); ctx.lineTo(tip, ty - 14); ctx.lineTo(tip, ty + 14); ctx.closePath(); ctx.fill(); ctx.restore(); } };
     // ---- the angel: rays of light from his eyes ----
     case 'saRay': return angelRay(id, 'Heaven\u2019s Gaze', 'mid'); // ← ← + J: a ray from his eyes, at waist height
     case 'saRayLow': return angelRay(id, 'Humble Gaze', 'low'); // ← ← ↓ + J: the ray aimed at their feet
@@ -799,13 +799,13 @@ function specialMoveBase(id) {
         if (mf === 2) { sfx('rise'); for (let i = 0; i < 8; i++) parts.push({ type: 'aura', x: f.x + vrnd(-20, 20), y: GROUND - 20, vx: vrnd(-1, 1), vy: -vrnd(2, 4), life: 18, max: 18, r: 3, col: '255,245,210' }); }
         if (mf === 26) { sfx('beam'); if (Math.abs(o.x - f.x) < 460) columnHit(f, o, { dmg: 38, stun: 22, bstun: 12, push: 2, type: 'mid', hitstop: 9, gdrain: 10, label: 'Ascending Gaze' }); } if (mf >= 40) f.y = 0; },
       drawFX(f, o) { if (f.mf < 22 || f.mf > 32 || !o) return; const e = eyePos(f), tx = o.x, ty = GROUND - o.y - 90 * o.ch.scale; rayDraw(e, [tx, ty], 1 - Math.max(0, f.mf - 27) / 6); } };
-    case 'saDive': return { id, label: 'Seraph Dive', startup: 24, active: 14, recovery: 22, wind: 'saPray', pose: 'saPray', manualY: true, armorDive: true, // ← ← → + J: up into the air (hit him now!), then a dive onto them — armored all the way down
+    case 'saDive': return { id, label: 'Seraph Dive', startup: 18, active: 12, recovery: 22, wind: 'saPray', pose: 'saPray', manualY: true, armorDive: true, armorFrom: 9, noPush: true, // ← ← → + J: a high jump and a dive straight at them — half the stage at most; armored on the way down
       hitbox: [-10,90,0,150], dmg: 50, stun: 24, bstun: 14, push: 3, kd: true, kdVx: 6, kdVy: 8, type: 'mid', hitstop: 12, gdrain: 12,
-      onFrame(f, o, mf) { const mv = f.move;
-        if (mf <= 18) { f.y = 150 * Math.sin(Math.PI / 2 * mf / 18); f.vx = 0; if (mf === 2) sfx('rise'); }
-        else if (mf < 24) { f.y = 150; f.vx = 0; }
-        else { if (mf === 24) { mv.dx = (clamp(o.x, WALL_L, WALL_R) - f.x) / 12; sfx('swing'); } f.y = Math.max(0, 150 - (mf - 24) * 13); f.vx = mf - 24 < 12 ? mv.dx : 0; if (mf % 2 === 0) parts.push({ type: 'aura', x: f.x, y: GROUND - f.y - 60, vx: 0, vy: 0, life: 14, max: 14, r: 8, col: '255,240,190' }); }
-        if (mf > 24 && f.y <= 0 && !mv.landed) { mv.landed = true; parts.push({ type: 'ring', x: f.x, y: GROUND - 6, r: 12, vr: 9, life: 16, max: 16, col: '255,240,190' }); game.shake = Math.max(game.shake, 5); } } };
+      onStart(f, o) { const sg = Math.sign(o.x - f.x) || f.facing; f.dv = { x0: f.x, tx: clamp(f.x + sg * Math.min(Math.abs(o.x - f.x), (WALL_R - WALL_L) / 2), WALL_L, WALL_R) }; }, // (from end to end it only goes as far as midway)
+      onFrame(f, o, mf) { const mv = f.move; f.vx = 0;
+        if (mf <= 18) { const e = mf / 18; f.x = lerp(f.dv.x0, f.dv.tx, e); f.y = 190 * Math.sin(Math.PI * e); if (mf === 2) sfx('rise'); if (mf >= 9 && mf % 2 === 0) parts.push({ type: 'aura', x: f.x, y: GROUND - f.y - 60, vx: 0, vy: 0, life: 14, max: 14, r: 8, col: '255,240,190' }); }
+        else f.y = 0;
+        if (mf === 18 && !mv.landed) { mv.landed = true; f.y = 0; parts.push({ type: 'ring', x: f.x, y: GROUND - 6, r: 12, vr: 9, life: 16, max: 16, col: '255,240,190' }); game.shake = Math.max(game.shake, 5); } } };
     // the angel: still and prayerful; he strikes with fists of light, and steps away
     case 'saJab': return { id, label: 'Divine Jab', startup: 5, active: 3, recovery: 14, wind: 'saPray', pose: 'straight', selfMove: true, burst: [90, 118],
       hitbox: [10,105,80,140], dmg: 30, stun: 20, bstun: 12, push: 2, type: 'mid', hitstop: 8, gdrain: 6,
@@ -856,10 +856,10 @@ function specialMoveBase(id) {
     case 'saGlide': return { id, label: 'Angel Glide', startup: 6, active: 20, recovery: 14, wind: 'jump', pose: 'blast', manualY: true, noPush: true, selfMove: true, speedFx: true, projInvul: [1, 26],
       hitbox: [0,130,30,160], dmg: 36, stun: 22, bstun: 12, push: 3, kd: true, kdVx: 8, kdVy: 8, type: 'mid', hitstop: 10, gdrain: 10,
       onFrame(f, o, mf) { f.vx = mf <= 26 && !f.hitConnected ? f.facing * 9 : f.hitConnected ? -f.facing * 7 : f.vx * 0.6; f.y = mf <= 26 ? 30 * Math.sin(Math.PI * mf / 26) : 0; if (mf % 3 === 0) parts.push({ type: 'spark', x: f.x - f.facing * 20, y: GROUND - f.y - 120, vx: -f.facing * 2, vy: 1, life: 14, max: 14, col: '255,250,230' }); } };
-    case 'saAscend': return { id, label: 'Holy Ascension', startup: 6, active: 10, recovery: 20, wind: 'uppercutW', pose: 'uppercut', manualY: true, noPush: true,
+    case 'saAscend': return { id, label: 'Holy Ascension', startup: 6, active: 10, recovery: 20, wind: 'uppercutW', pose: 'uppercut', manualY: true, noPush: true, selfMove: true, maxTravel: 300, // → → + K: he dashes in and rises with an uppercut of light — armor all the way
       hitbox: [0,130,40,230], dmg: 52, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 13.5, type: 'mid', hitstop: 11, gdrain: 10,
-      onStart(f) { f.invul = 8; },
-      onFrame(f, o, mf) { f.vx = 0; f.y = mf <= 16 ? 120 * Math.sin(Math.PI / 2 * mf / 16) : Math.max(0, 120 - (mf - 16) * 9); if (mf === 6) sfx('rise'); if (mf % 2 === 0 && mf < 16) parts.push({ type: 'spark', x: f.x + rnd(-20, 20), y: GROUND - f.y - rnd(40, 160), vx: 0, vy: 2, life: 14, max: 14, col: '255,245,200' }); } };
+      onFrame(f, o, mf) { if (mf <= 16 && !f.hitConnected && Math.abs(o.x - f.x) > 60) f.vx = f.facing * 11; else f.vx *= 0.5;
+        f.y = mf <= 16 ? 120 * Math.sin(Math.PI / 2 * mf / 16) : Math.max(0, 120 - (mf - 16) * 9); if (mf === 6) sfx('rise'); if (mf % 2 === 0 && mf < 16) parts.push({ type: 'spark', x: f.x + rnd(-20, 20), y: GROUND - f.y - rnd(40, 160), vx: 0, vy: 2, life: 14, max: 14, col: '255,245,200' }); } };
     case 'saBless': return { id, label: 'Blessing', startup: 8, active: 24, recovery: 14, wind: 'charge', pose: 'win', heal: true,
       onFrame(f, o, mf) { f.vx = 0; if (mf > 8 && mf <= 32) { if (f.ch.possess === 'angel') { f.hp = Math.min(1000, f.hp + 2.5); f.healT = 60; } f.guard = Math.min(100, f.guard + 1.6); if (mf % 8 === 0) { sfx('orb'); parts.push({ type: 'lbeam', x: f.x, w: 30, life: 12, max: 12 }); } } } };
     case 'saWard': return { id, label: 'Holy Ward', startup: 3, active: 26, recovery: 16, wind: 'charge', pose: 'blast', deflect: [2, 28], destroysProj: true,

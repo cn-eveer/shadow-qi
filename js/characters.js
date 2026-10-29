@@ -284,7 +284,7 @@ Object.assign(CHARS.salary, { normalLook: { ...(CHARS.salary.normalLook || {}),
     onFrame: (f, o, mf) => { if (mf === f.move.startup) { sfx('throw'); spawnPJ(f, 'mug', { x: f.x + f.facing * 30, y: f.y + 100, vx: f.facing * 7, vy: -7, life: 50, r: 14, h: { dmg: 64, stun: 24, bstun: 12, push: 2, gdrain: 10, overhead: true, label: 'Mug Drop' } }); } } }, // (a heavy mug: an overhead)
 } });
 // the salaryman's two possessed forms: the same body, a different move set (and look) until the timer runs out
-const ANGEL_CH = { ...CHARS.salary, spLow: { bK: 'saRayLow' }, spUp: { bK: 'saRayFly' }, spFwd: { bK: 'saDive' }, possess: 'angel', dmgMul: 1.15, regen: 0.08, lookKey: 'salaryAngel', idle: 'saPray', hover: false, doubleJump: true, pDmg: 1.1, kDmg: 1.1, walk: 3.5, auraCol: '255,235,170', fxCol: '255,240,190', hitFx: 'holy', meterCol: ['#e6b84a', '#fff4c8'],
+const ANGEL_CH = { ...CHARS.salary, spLow: { bK: 'saRayLow' }, spUp: { bK: 'saRayFly' }, spFwd: { bK: 'saDive' }, possess: 'angel', dmgMul: 1.15, regen: 0.2, lookKey: 'salaryAngel', idle: 'saPray', hover: false, doubleJump: true, pDmg: 1.1, kDmg: 1.1, walk: 3.5, auraCol: '255,235,170', fxCol: '255,240,190', hitFx: 'holy', meterCol: ['#e6b84a', '#fff4c8'],
   sp: { fP: 'saJab', fPH: 'saFist', fK: 'saGlide', fKH: 'saAscend', bP: 'saBless', bPH: 'saWard', bK: 'saRay', bKH: 'smDevil' }, sup: 'saHeaven',
   heavy: { p: { label: 'Holy Palm', startup: 10, active: 5, recovery: 18, hitbox: [10,150,50,150], wind: 'palmW', pose: 'palm', lunge: [3, 9, 3.5], hitstop: 10, cpLaunch: true, launchVy: 13, burst: [90, 110] },
            k: { label: 'Wing Kick', startup: 9, active: 5, recovery: 18, hitbox: [10,150,40,150], wind: 'kickW', pose: 'highKick', lunge: [3, 8, 4], cpLaunch: true, launchVy: 12 } } };
@@ -296,10 +296,10 @@ const DEVIL_CH = { ...CHARS.salary, spLow: { fK: 'sdCrawl', bK: 'sdTail', fKH: '
 // frames for the possessed forms (see moveFrames): the angel's strings and techniques, the devil's (two frames quicker: he is the faster of the two), and both for the double possession
 const ANGEL_FRAMES = { ...CHARS.salary.frames,
   $a2: { su: 12, blk: -6 }, $a3: { su: 12, blk: -6 }, $a4: { su: 12, blk: -6 }, $aF: { su: 18, blk: -18 }, $aL: { su: 16, blk: -15 }, $aE: { su: 20, blk: -12 }, $al2: { su: 12, blk: -6 }, $alE: { su: 18, blk: -16 },
-  saJab: { su: 12, blk: -6 }, saFist: { su: 20, blk: -16 }, saGlide: { su: 22, blk: -16 }, saAscend: { su: 22, blk: -16 }, saRay: { su: 24, blk: -16 }, saRayLow: { su: 24, blk: -16 }, saRayFly: { su: 24, blk: -15 }, saDive: { su: 24, blk: -16 } };
+  saJab: { su: 12, blk: -6 }, saFist: { su: 20, blk: -16 }, saGlide: { su: 18, blk: -16 }, saAscend: { su: 22, blk: -16 }, saRay: { su: 24, blk: -16 }, saRayLow: { su: 18, blk: -16 }, saRayFly: { su: 18, blk: -15 }, saDive: { su: 18, blk: -16 } };
 const DEVIL_FRAMES = { ...CHARS.salary.frames,
   $d2: { su: 10, blk: -6 }, $d3: { su: 10, blk: -6 }, $d4: { su: 10, blk: -6 }, $dF: { su: 16, blk: -18 }, $dL: { su: 14, blk: -16 }, $dE: { su: 18, blk: -12 }, $dl2: { su: 10, blk: -6 }, $dlE: { su: 16, blk: -16 },
-  sdLunge: { su: 20, blk: -16 }, sdMaul: { su: 20, blk: -16 }, sdTailLash: { su: 20, blk: -16 }, sdTailUpper: { su: 20, blk: -16 }, sdWhip: { su: 20, blk: -16 }, sdCrawl: { su: 20, blk: -16 }, sdTail: { su: 18, blk: -14 }, sdTailDrop: { su: 22, blk: -16 }, sdChainB: { su: 20, blk: -16 }, sdDrain: { su: 24 } };
+  sdLunge: { su: 20, blk: -16 }, sdMaul: { su: 20, blk: -16 }, sdTailLash: { su: 20, blk: -16 }, sdTailUpper: { su: 20, blk: -16 }, sdWhip: { su: 20, blk: -16 }, sdCrawl: { su: 18, blk: -16 }, sdTail: { su: 18, blk: -14 }, sdTailDrop: { su: 18, blk: -16 }, sdChainB: { su: 18, blk: -16 }, sdDrain: { su: 24 } };
 Object.assign(ANGEL_CH, { frames: ANGEL_FRAMES }); Object.assign(DEVIL_CH, { frames: DEVIL_FRAMES });
 const DOUBLE_CH = { ...DEVIL_CH, possess: 'double', lookKey: 'salaryDevil', dmgMul: 2.1, drain: 2.2, scale: 1.4, tallBox: true, armorAll: true, /* (both spirits in him: far bigger, and nothing short of a super or a throw stops him) */ regen: 0, noGuard: true, doubleJump: true, auraCol: '255,170,200', fxCol: '255,190,160', meterCol: ['#d0607a', '#ffe0c0'], // angel and devil both: wings and halo, horns and tail
   sp: { fP: 'saJab', fPH: 'sdMaul', fK: 'sdTailLash', fKH: 'sdTailUpper', bP: 'sdBeckon', bPH: 'saFist', bK: 'saRay', bKH: 'sdDrain' },
