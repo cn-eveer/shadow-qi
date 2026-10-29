@@ -105,6 +105,19 @@ function tanakaPlan(f, o, dist, r) {
   if (mid) return r < 0.2 ? { btn: 'lk', bb: true, fwdHold: true } : r < 0.34 ? { btn: 'lp', ff: true } : r < 0.46 ? { btn: 'hp', ff: true } : r < 0.58 ? { btn: 'lk', ff: true } : r < 0.66 ? { btn: 'hk', ff: true } : r < 0.74 ? { btn: 'lk', ff: true, down: true } : r < 0.82 ? { btn: 'lk', bb: true, up: true } : { dash: 1 };
   return r < 0.18 ? { btn: 'hk', bb: true } : r < 0.3 ? { btn: 'hk', ff: true } : r < 0.4 ? { btn: 'lk', bb: true, down: true } : null; // close: the grab, the hook, the sweep
 }
+// Jesse's plan: a gunslinger. Empty or reloading he keeps away and answers with what needs no bullets (Dynamite, Showdown); otherwise he fights from range —
+// the fan, the heavy shots, the dynamite, the dance — backs away when they come close, and uses the sky shot and the backflip to get out
+function jessePlan(f, o, dist, r) {
+  const air = o.y > 40;
+  if (f.reloadT > 0 || f.ammo <= 0) { // out of bullets
+    if (dist < 170) return r < 0.34 ? { btn: 'hk', bb: true } : r < 0.55 ? { btn: 'lp', bb: true } : r < 0.75 ? { dash: -1 } : { walk: -1 };
+    return r < 0.3 ? { btn: 'lp', bb: true } : r < 0.5 ? { walk: -1 } : null;
+  }
+  if (air && dist < 260 && r < 0.4) return { btn: 'hp', down: true }; // the sky shot at someone in the air
+  if (dist < 150) return r < 0.2 ? { btn: 'lk', bb: true } : r < 0.34 ? { btn: 'hp', down: true } : r < 0.46 ? { btn: 'hk', bb: true } : r < 0.58 ? { btn: 'hp', ff: true } : r < 0.7 ? { dash: -1 } : r < 0.82 ? { btn: 'lp', chain: ['lp', 'lp', 'hk'] } : null;
+  if (dist < 300) return r < 0.16 ? { btn: 'lp', bb: true } : r < 0.3 ? { btn: 'hk', bf: true } : r < 0.42 ? { btn: 'hp', ff: true } : r < 0.54 ? { btn: 'hp', bb: true } : r < 0.64 ? { btn: 'hk' } : r < 0.72 ? { btn: 'hp' } : r < 0.8 ? { btn: 'lk', ff: true } : r < 0.9 ? { walk: -1 } : null;
+  return r < 0.2 ? { btn: 'lp', ff: true } : r < 0.32 ? { btn: 'hk', ff: true } : r < 0.44 ? { btn: 'lk', ff: true } : r < 0.55 ? { btn: 'hp', bb: true } : r < 0.66 ? { btn: 'hk', bf: true } : r < 0.76 ? { btn: 'hk' } : r < 0.84 ? { btn: 'hp' } : r < 0.92 ? { walk: 1 } : { walk: -0.5 };
+}
 class CPU {
   constructor() { this.reset(); }
   reset() { this.plan = {}; this.next = 0; this.def = null; this.threatKey = null; this.reactAt = 0; this.chargeUntil = 0; this.cancelTried = false; this.punishKey = null; }
@@ -272,6 +285,7 @@ class CPU {
       if (p.ff) out.ff = true; else if (p.bb) out.bb = true; else if (p.dir === 'd') out.down = true;
       if (p.down) out.down = true; // rising version of a special
       if (p.up) out.up = true; // (← ← ↑ + button)
+      if (p.bf) out.bf = true; // (← → + button)
       if (p.fwdHold) out.h = fwd; // (← ← → + button: hold toward them)
       p.btn = null;
     }
@@ -285,6 +299,7 @@ class CPU {
     if (o.golem && Math.random() < 0.75) { const vg = vsGolemPlan(f, o, dist); if (vg) return vg; } // (against Hohen: over the golem, or through it)
     if (Math.random() < (game.watch ? (dist < 95 ? 0.1 : 0.5) : Math.min(0.6, 0.18 * dif().combo))) { const rt = pickRoute(f, 'neutral', dist); if (rt) { this.route = rt; return {}; } } // go for one of the sample combos
     if (f.meter >= 100 && dist < 520 && r < 0.3) return { btn: 'hp', sup: true };
+    if (f.key === 'gunman') { const jp = jessePlan(f, o, dist, r); if (jp) return jp; } // (Jesse: a gunslinger who keeps his distance and counts his bullets)
     if (f.key === 'salary') { const tp = tanakaPlan(f, o, dist, r); if (tp) return tp; } // (Tanaka: his own plan, for himself and for each spirit that takes him)
     if (dist < 330 && Math.random() < 0.07) { // rising versions used on their own
       const opts = N ? (dist < 110 ? [{ btn: 'lp', bb: true, down: true }, { btn: 'hk', bb: true, down: true }] : [{ btn: 'hp', bb: true, down: true }, { btn: 'lk', ff: true, down: true }, { btn: 'hp', ff: true, down: true }])
