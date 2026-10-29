@@ -132,11 +132,12 @@ function showMenu() {
     <div class="pickinfo"><span><b>${nm(CHARS[c])}</b> ${blurbs[c]}</span><button class="ghost sm" data-act="moves">${L('Move list', '技表')}</button></div>
     <div class="vsrow">${L('CPU opponent:', 'CPUの相手：')} ${CHAR_ORDER.map(k => `<button class="${game.p2Char === k ? 'on' : ''}" data-vs="${k}" aria-pressed="${game.p2Char === k}">${nm(CHARS[k])}</button>`).join('')}</div>
     <div class="vsrow">${L('Difficulty:', '難易度：')} ${DIFF_ORDER.map(k => `<button class="${game.diff === k ? 'on' : ''}" data-diff="${k}" aria-pressed="${game.diff === k}">${L(...DIFF_NAMES[k])}</button>`).join('')}</div>
-    <div class="row"><button class="go" data-act="start">${L('FIGHT', '対戦')}</button><button class="ghost" data-act="training">${L('Training', 'トレーニング')}</button><button class="ghost" data-act="watch">${L('CPU vs CPU', 'CPU対CPU')}</button><button class="ghost" data-act="online">${L('Online', 'オンライン')}</button><button class="ghost" data-act="opening">${L('Opening', 'オープニング')}</button>${COMBO_SET[c] && COMBO_SET[c].length ? `<button class="ghost" data-act="demo" data-who="${c}">${L(CHARS[c].name[0] + CHARS[c].name.slice(1).toLowerCase() + ' combos', nm(CHARS[c]) + 'のコンボ見本')}</button>` : ''}${PUNISH_SET[c] && PUNISH_SET[c].length ? `<button class="ghost" data-act="punish" data-who="${c}">${L(CHARS[c].name[0] + CHARS[c].name.slice(1).toLowerCase() + ' punishes', nm(CHARS[c]) + 'の反撃見本')}</button>` : ''}</div>
+    <div class="row"><button class="go" data-act="start">${L('FIGHT', '対戦')}</button><button class="ghost" data-act="training">${L('Training', 'トレーニング')}</button><button class="ghost" data-act="watch">${L('CPU vs CPU', 'CPU対CPU')}</button><button class="ghost" data-act="opening">${L('Opening', 'オープニング')}</button>${COMBO_SET[c] && COMBO_SET[c].length ? `<button class="ghost" data-act="demo" data-who="${c}">${L(CHARS[c].name[0] + CHARS[c].name.slice(1).toLowerCase() + ' combos', nm(CHARS[c]) + 'のコンボ見本')}</button>` : ''}${PUNISH_SET[c] && PUNISH_SET[c].length ? `<button class="ghost" data-act="punish" data-who="${c}">${L(CHARS[c].name[0] + CHARS[c].name.slice(1).toLowerCase() + ' punishes', nm(CHARS[c]) + 'の反撃見本')}</button>` : ''}</div>
+    <div class="row onrow"><button class="ghost" data-act="online">${L('Online battle', 'オンライン対戦')}</button><span class="oncount" data-oncount></span></div>
     <div class="hint">${L('A and D pick your fighter, W and S pick the opponent. Enter to fight, T for training, C to watch CPU vs CPU, V for your fighter’s sample combos, P for punish samples.', 'A・Dでキャラ選択、W・Sで相手を選択。Enterで対戦、Tでトレーニング、CでCPU対CPU、Vでコンボ見本、Pで反撃見本。')}</div>
     <div class="ver"><button class="vlink" data-act="news">v${APP_VERSION} · ${L('What’s new', '更新情報')}</button></div>
   </div>`;
-  bindOverlay();
+  bindOverlay(); netShowCount(); netCountSoon();
 }
 function showResult(w) {
   game.lastWinner = w;

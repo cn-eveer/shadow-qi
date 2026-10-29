@@ -194,6 +194,31 @@ async function netRandom() { // random match: join someone waiting, or wait in a
     netStatus(L('All match slots are busy. Try again in a moment.', '空きがありません。少し待ってからもう一度。'));
   } catch (e) { netStatus(L('Could not reach the matchmaking server.', 'マッチングサーバーに接続できませんでした。')); }
 }
+// How many players are waiting in random match: each waiting player holds one of the RAND_SLOTS names on the PeerJS server.
+// A name is checked by trying to take it — taken means someone waits there; free, it's let go at once (no one waiting is disturbed).
+// Shown next to the online buttons; nothing is shown offline or when the server can't be reached.
+const WAIT = { n: null, t: -1e9, busy: false };
+function slotTaken(id) { // true: someone is waiting there, false: free, null: couldn't tell
+  return new Promise(res => { let done = false; const p = new Peer(id, PEER_OPTS);
+    const fin = v => { if (done) return; done = true; try { p.destroy(); } catch (e) {} res(v); };
+    p.on('open', () => fin(false)); p.on('connection', () => fin(false)); p.on('error', e => fin(e.type === 'unavailable-id' ? true : null)); setTimeout(() => fin(null), 8000); });
+}
+async function netCountWaiting() {
+  if (WAIT.busy || NET.on || (NET.mode && !NET.waitMsg)) return; // (not mid-match, and not while searching: the search takes and tries these names itself)
+  if (!navigator.onLine) { WAIT.n = null; netShowCount(); return; }
+  WAIT.busy = true;
+  try { await loadPeer(); const r = []; for (let k = 0; k < RAND_SLOTS; k++) r.push(await slotTaken(NET_PREFIX + 'rand-' + k)); WAIT.n = r.every(v => v === null) ? null : r.filter(v => v === true).length; }
+  catch (e) { WAIT.n = null; }
+  WAIT.busy = false; WAIT.t = performance.now(); netShowCount();
+}
+function netShowCount() { // the count next to the online buttons
+  const t = WAIT.n == null ? '' : L(`${WAIT.n} waiting in random match`, `ランダムマッチ待ち：${WAIT.n}人`);
+  document.querySelectorAll('[data-oncount]').forEach(el => { el.textContent = t; el.hidden = !t; });
+}
+function netCountSoon() { if (performance.now() - WAIT.t > 30000) netCountWaiting(); } // (on the title or online screen: refresh if it's older than 30 s)
+setInterval(() => { if ((game.mode === 'menu' || game.mode === 'online') && document.visibilityState === 'visible') netCountWaiting(); }, 30000);
+addEventListener('offline', () => { WAIT.n = null; netShowCount(); });
+addEventListener('online', () => { WAIT.t = -1e9; if (game.mode === 'menu' || game.mode === 'online') netCountWaiting(); });
 async function netCreateRoom(code) {
   NET.mode = 'room'; NET.waitMsg = null; netStatus(L('Creating room ' + code + '…', 'ルーム ' + code + ' を作成中…'));
   try {
@@ -220,11 +245,11 @@ function showOnline(msg) { // the online lobby: username first, then random matc
     <div class="lbl">${L('Username (required)', 'ユーザー名（必須）')}</div>
     <input id="netName" class="netin" maxlength="12" autocomplete="nickname" placeholder="${L('Your name', 'あなたの名前')}" value="${saved.replace(/"/g, '')}">
     <div class="vsrow">${L('Your fighter:', '使用キャラ：')} ${CHAR_ORDER.map(k => `<button class="${k === c ? 'on' : ''}" data-netchar="${k}" aria-pressed="${k === c}">${nm(CHARS[k])}</button>`).join('')}</div>
-    <div class="row"><button class="go" data-net="random">${L('Random match', 'ランダムマッチ')}</button></div>
+    <div class="row onrow"><button class="go" data-net="random">${L('Random match', 'ランダムマッチ')}</button><span class="oncount" data-oncount></span></div>
     <div class="row"><input id="netRoom" class="netin room" inputmode="numeric" maxlength="6" placeholder="${L('Room no.', 'ルーム番号')}"><button class="ghost" data-net="create">${L('Create room', 'ルーム作成')}</button><button class="ghost" data-net="join">${L('Join room', 'ルームに参加')}</button></div>
     <div class="hint" id="netStatus" role="status">${msg || L('Enter a username, then find a random opponent or use a room number to play a friend.', 'ユーザー名を入力して、ランダムマッチか、ルーム番号で友だちと対戦。')}</div>
     <div class="row"><button class="ghost" data-net="back">${L('Back', '戻る')}</button></div>
-  </div>`;
+  </div>`; netShowCount(); netCountSoon();
   const nameOk = () => { const v = document.getElementById('netName').value.trim(); if (!v) { netStatus(L('Please enter your username first.', '先にユーザー名を入力してください。')); document.getElementById('netName').focus(); return false; }
     NET.name = v.slice(0, 12); try { localStorage.setItem('sq-name', NET.name); } catch (e) {} return true; };
   ov.querySelectorAll('[data-netchar]').forEach(b => b.addEventListener('click', () => { game.p1Char = b.dataset.netchar; const v = document.getElementById('netName').value; showOnline(NET.status); document.getElementById('netName').value = v; }));
