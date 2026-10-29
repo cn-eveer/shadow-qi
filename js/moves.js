@@ -113,7 +113,7 @@ function specialMove(id) {
 }
 function specialMoveBase(id) {
   switch (id) {
-    case 'cloneStrike': return { id, label: 'Shadow Clone', startup: 13, active: 6, recovery: 8, blockAdv: -12, noFmRec: true, /* (no recovery added by his frame tuning) */ wind: 'seal', pose: 'seal', proj: 'clone', limit: 1,
+    case 'cloneStrike': return { id, label: 'Shadow Clone', startup: 13, active: 6, recovery: 8, blockAdv: 0, noFmRec: true, /* (no recovery added by his frame tuning) */ wind: 'seal', pose: 'seal', proj: 'clone', limit: 1,
       onFrame(f, o, mf) { if (mf === 12) spawnClone(f, false, 0); } };
     case 'shadowCharge': return { id, label: 'Shadow Charge Upper', startup: 46, active: 9, recovery: 16, blockAdv: -21, wind: 'seal', pose: 'uppercut', selfMove: true, counterVanish: true, slow: true, interruptChance: 0.2,
       hitbox: [10,82,40,175], dmg: 45, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 13, type: 'mid', hitstop: 9, gdrain: 6,
