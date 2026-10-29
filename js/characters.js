@@ -5,7 +5,7 @@ const CHARS = {
     // frames: wind-up 2 shorter (light) / 4 shorter (heavy), hand signs 20% shorter (still long enough to jab him first); every attack out 3 frames longer; recovery 3 / 5 / 5 longer
     frameMod: { su: { light: 2, heavy: 4 }, tell: 0.8, act: 3, rec: { light: 3, heavy: 5, tech: 5 } },
     // his techniques' 発生 (frames until they can hit) brought to about 16–22: how many times faster their lead-up plays (see techSpeed)
-    techSpeed: { shadowCharge: 4.6, swordSlash: 2.4, cloneStrike: 1.65, teleKick: 2.25, flame: 2.1, fireballs: 10, vanishSlide: 5, vanishDrop: 5.5, ambushLeap: 5, teleSpin: 1.68, ambushBehind: 1.35, ambushSlide: 1.25, ambushKick: 1.3,
+    techSpeed: { shadowCharge: 3.1, swordSlash: 2.4, cloneStrike: 1.2, teleKick: 2.25, flame: 2.1, fireballs: 10, vanishSlide: 5, vanishDrop: 5.5, ambushLeap: 5, teleSpin: 1.68, ambushBehind: 1.35, ambushSlide: 1.25, ambushKick: 1.3,
       jFire: 1.45, jRain: 1.5, jClone: 1.55, jIai: 1.45, jVanishHeel: 1.45 },
     techDelay: { teleSlide: 5 }, // (and the other way: frames added before this one — the Drop Slide comes out a little later)
     noLowSp: true, // (no ↓ versions of his techniques on demand: they still come out by themselves on someone in the air)
@@ -170,7 +170,7 @@ CHARS.salary.lookKey = 'salary';
 // each fighter's own heavy attack in the air (I while jumping)
 const addLook = (ch, look) => { ch.normalLook = { ...(ch.normalLook || {}), ...look }; };
 addLook(CHARS.ninja, { jp1: { label: 'Air Kunai Slash', pose: 'slash', blade: true, trail: { cx: 15, cy: 100, r: 75, a0: 70, a1: -40, col: '225,235,255' } },
-  cp1: { hitbox: [12,125,50,165], startup: 9, suCut: 2 }, // ↓ + I, the Uppercut Launcher: reaches about twice as far, and comes out sooner (15F → 12F)
+  cp1: { hitbox: [12,125,50,165], startup: 9 }, // ↓ + I, the Uppercut Launcher: reaches about twice as far, and comes out a little sooner (15F → 14F)
   ck1: { hitbox: [20,150,0,30], cpLaunch: true, launchVy: 13 } }); // ↓ + K, the Sweep: reaches further, and like the Crescent Kick it launches on a counter or a punish (a juggle), knocking down otherwise
 addLook(CHARS.brawler, { jp1: { label: 'Air Hammer Fist', pose: 'tHammer', burst: [70, 70], aura: true } });
 addLook(CHARS.salary, { jp1: { label: 'Air Briefcase Drop', pose: 'sCase' }, jk1: { label: 'Air Briefcase Swing', pose: 'sCase' }, ck1: { label: 'Briefcase Trip', wind: 'crouch', pose: 'sCase', hitbox: [20,120,0,40] } });
