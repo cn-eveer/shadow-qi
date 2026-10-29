@@ -18,14 +18,14 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr class="sub"><td>Shadow Leap<small>Jumps high and crashes down about a second later, bouncing the opponent into a juggle. Walking back can dodge it.</small></td><td class="cmd">then I</td></tr>
           <tr class="sub"><td>Shadow Slide<small>Low sliding kick that pops the opponent up; he slides through, ends up behind and can juggle them.</small></td><td class="cmd">then J</td></tr>
           <tr class="sub"><td>Shadow Roundhouse<small>Turns all the way around, then swings a roundhouse that sends the opponent flying. Can be interrupted during the turn.</small></td><td class="cmd">then K</td></tr>
-          <tr><td>Iai Slash<small>Settles into a stance with his hand on the sword, then dashes straight through the opponent in one cut and stops behind them. The cut lands a moment later and they fall. If it’s guarded he’s left wide open behind them.</small></td><td class="cmd">→ → + I</td></tr>
+          <tr><td>Iai Slash<small>Settles into a stance with his hand on the sword, then dashes straight through the opponent in one cut and stops behind them. The cut lands a moment later and they fall; on a counter hit or a punish it launches them instead. Guarded, he’s open behind them (−18).</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>Shadow Clone Strike<small>A clone dashes in and kicks while Kuro holds the hand sign. Hitting the clone breaks it.</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>Sky Drop Kick<small>Teleports above the opponent and drops a kick that bounces them off the ground into a juggle, landing behind them. Juggle with any attack, or pick a follow-up:</small></td><td class="cmd">→ → + K</td></tr>
           <tr class="sub"><td>Drop Slide<small>Low slide back into the opponent.</small></td><td class="cmd">then J</td></tr>
           <tr class="sub"><td>Turnaround Kick<small>Turns around (a little quicker) into a roundhouse that sends the opponent flying. Can be interrupted during the turn.</small></td><td class="cmd">then K</td></tr>
-          <tr><td>Fire Breath<small>Under half a second of hand signs, then a long stream of fire. If it hits, they’re left burning and stunned for a moment, so you can run in and combo. Getting hit during the hand signs stops it.</small></td><td class="cmd">← ← + U</td></tr>
-          <tr><td>Lightning Volley<small>A short casting raises three lightning balls overhead, then they chase the opponent one after another. If they hit, the opponent is electrified and stunned, so you can dash in and combo. Getting hit before they launch cancels them.</small></td><td class="cmd">← ← + I</td></tr>
-          <tr><td>Vanish Slide<small>Leaves a shadow standing on guard (it blocks up to two attacks), back-dashes as a shadow, then slides in, pops the opponent up and comes out behind them for a juggle.</small></td><td class="cmd">← ← + J</td></tr>
+          <tr><td>Fire Breath<small>Under half a second of hand signs, then a long stream of fire. If it hits Kuro recovers well first (+10); guarded it’s −14. Getting hit during the hand signs stops it.</small></td><td class="cmd">← ← + U</td></tr>
+          <tr><td>Lightning Volley<small>A short casting raises three lightning balls overhead, then they chase the opponent one after another. If they hit, the opponent is electrified and stunned, so you can dash in and combo. Kuro is free as soon as the last ball flies, so it’s safe guarded. Getting hit before they launch cancels them.</small></td><td class="cmd">← ← + I</td></tr>
+          <tr><td>Vanish Slide<small>Leaves a shadow standing on guard (it blocks up to two attacks), back-dashes as a shadow, then slides in and knocks the opponent down, coming out behind them; on a counter hit or a punish it pops them up for a juggle. Guarded, he stops where he is (−16).</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>Vanish Drop Kick<small>Leaves a shadow standing on guard, back-dashes as a shadow, then leaps high over long-range attacks and brings his heel down, bouncing the opponent off the ground into a juggle. It only travels about a quarter of the stage, so it can land short of a distant opponent.</small></td><td class="cmd">← ← + K</td></tr>
           <tr class="super"><td>Super: Shadow Army<small>Six clones rush in from both sides, then a seventh dives from above. Up close, the last clone bounces them back to Kuro so he can keep juggling. Needs a full MP gauge.</small></td><td class="cmd">Punch + Kick</td></tr>
         </tbody>
@@ -78,12 +78,12 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr class="sub"><td>影跳び<small>高く跳んで約1秒後に落下、バウンドさせる。</small></td><td class="cmd">続けて I</td></tr>
           <tr class="sub"><td>影滑り<small>下段スライディングで浮かせ、背後に抜ける。</small></td><td class="cmd">続けて J</td></tr>
           <tr class="sub"><td>影回し蹴り<small>一回転してから回し蹴りで吹き飛ばす。回転中は潰される。</small></td><td class="cmd">続けて K</td></tr>
-          <tr><td>居合斬り<small>構えてから一瞬で相手を斬り抜ける。少し遅れて斬撃が入る。ガードされると背後で大きな隙。</small></td><td class="cmd">→ → + I</td></tr>
+          <tr><td>居合斬り<small>構えてから一瞬で相手を斬り抜ける。少し遅れて斬撃が入る。カウンターや確定反撃で当てると打ち上げる。ガードされると背後で隙（−18）。</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>分身の術<small>分身が突進して蹴る。分身は攻撃で壊せる。</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>天落蹴り<small>相手の上にワープして落下蹴り、バウンドさせる。追加でJ（滑り込み）かK（振り向き蹴り）。</small></td><td class="cmd">→ → + K</td></tr>
-          <tr><td>火遁<small>印を結んでから炎を吐く。当たると燃えて気絶。印の途中で攻撃されると止まる。</small></td><td class="cmd">← ← + U</td></tr>
-          <tr><td>雷球<small>雷の球を3つ浮かべ、順番に追尾させる。当たると感電して気絶。</small></td><td class="cmd">← ← + I</td></tr>
-          <tr><td>消身滑り<small>ガードする影を残して下がり、滑り込んで浮かせる。</small></td><td class="cmd">← ← + J</td></tr>
+          <tr><td>火遁<small>印を結んでから炎を吐く。当たればクロが先に動ける（+10）、ガードされると−14。印の途中で攻撃されると止まる。</small></td><td class="cmd">← ← + U</td></tr>
+          <tr><td>雷球<small>雷の球を3つ浮かべ、順番に追尾させる。当たると感電して気絶。最後の球が飛んだらクロはすぐ動けるので、ガードされても安全。</small></td><td class="cmd">← ← + I</td></tr>
+          <tr><td>消身滑り<small>ガードする影を残して下がり、滑り込んでダウンを奪う。カウンターや確定反撃なら浮かせて追撃できる。ガードされるとその場で止まる（−16）。</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>消身踵落とし<small>影を残して下がり、高く跳んで踵落とし。バウンドさせる。</small></td><td class="cmd">← ← + K</td></tr>
           <tr class="super"><td>超必殺技：影分身・軍勢<small>6体の分身が両側から突進し、7体目が上から急降下。至近距離なら相手が手前にバウンドして追撃できる。MP満タンが必要。</small></td><td class="cmd">パンチ + キック</td></tr>
         </tbody>
