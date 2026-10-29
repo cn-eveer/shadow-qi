@@ -16,10 +16,10 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Qi Blast<small>A qi projectile, out quickly and safe when guarded.</small></td><td class="cmd">← → + U</td></tr>
           <tr><td>Triple Qi Blast<small>Three qi blasts at once, each a little faster than the last: they arrive one after another. Safe when guarded.</small></td><td class="cmd">← → + I</td></tr>
           <tr><td>Qi Sweep<small>Lunges in low and scoops them up with both palms.</small></td><td class="cmd">→ → + J</td></tr>
-          <tr><td>Shoulder Charge<small>A short shoulder tackle that knocks them back. Slow, and punishable if guarded.</small></td><td class="cmd">→ → + K</td></tr>
+          <tr><td>Shoulder Charge<small>A shoulder tackle that charges in from about a third of the screen and knocks them back. Shrugs off light hits on the way in; punishable if guarded.</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>Qi Orb<small>A slow floating orb that hits three times.</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>Qi Parry<small>A stance. Anything that hits him during it is parried, and a melee attack gets a launching palm back (projectiles are just absorbed).</small></td><td class="cmd">← ← + I</td></tr>
-          <tr><td>Earth Stomp<small>A shockwave along the floor. Hits low, even someone lying down. Projectiles and rays pass through him while he stomps.</small></td><td class="cmd">← ← + J</td></tr>
+          <tr><td>Earth Stomp<small>A shockwave along the floor. Hits low, even someone lying down. Projectiles and rays pass through him while he stomps. Safe when guarded.</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>Cyclone Lariat<small>Backsteps, then spins forward with both arms out: three hits that launch. While he spins, projectiles and rays (Lyra’s shots, fireballs, lightning) pass through him; only close-range attacks can hit him.</small></td><td class="cmd">← ← + K</td></tr>
           <tr><td>Rising Fist<small>An invincible corkscrew uppercut that launches.</small></td><td class="cmd">↓ + I</td></tr>
           <tr class="super"><td>Super: Great Qi Cannon<small>A screen-long qi beam that hits 13 times. Needs a full MP gauge.</small></td><td class="cmd">Punch + Kick</td></tr>
@@ -69,10 +69,10 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>気功弾<small>出の速い気の飛び道具。ガードされても安全。</small></td><td class="cmd">← → + U</td></tr>
           <tr><td>三連気功弾<small>3発の気功弾を同時に放つ。少しずつ速さが違い、順番に届く。ガードされても安全。</small></td><td class="cmd">← → + I</td></tr>
           <tr><td>気の掬い<small>低く踏み込み、両掌で掬い上げる。</small></td><td class="cmd">→ → + J</td></tr>
-          <tr><td>肩当て<small>短い体当たりで押し返す。ガードされると反撃される。</small></td><td class="cmd">→ → + K</td></tr>
+          <tr><td>肩当て<small>画面の約3分の1から突進する体当たりで押し返す。突進中は弱い攻撃を耐える。ガードされると反撃される。</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>気の玉<small>ゆっくり進む玉が3回当たる。</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>気の受け流し<small>構え中の攻撃を受け流し、近接攻撃には打ち上げの掌底で返す。</small></td><td class="cmd">← ← + I</td></tr>
-          <tr><td>大地踏み<small>地を這う衝撃波。下段で、倒れた相手にも当たる。踏み込み中は飛び道具がすり抜ける。</small></td><td class="cmd">← ← + J</td></tr>
+          <tr><td>大地踏み<small>地を這う衝撃波。下段で、倒れた相手にも当たる。踏み込み中は飛び道具がすり抜ける。ガードされても安全。</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>旋風ラリアット<small>下がってから両腕を広げて回転、3段で打ち上げ。回転中は飛び道具や光線がすり抜ける（近接攻撃だけ当たる）。</small></td><td class="cmd">← ← + K</td></tr>
           <tr><td>昇龍拳<small>無敵の螺旋アッパーで打ち上げ。</small></td><td class="cmd">↓ + I</td></tr>
           <tr class="super"><td>超必殺技：大気功砲<small>画面を貫く気のビームで13ヒット。MP満タンが必要。</small></td><td class="cmd">パンチ + キック</td></tr>
