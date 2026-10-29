@@ -337,7 +337,7 @@ function golemPlace(f, o) { // while it holds them: they stay where the swap put
 }
 function golemSeize(f, o) { // the grab: if the golem was in front of him, it turns them round and the two trade places, so they're between it and him (not pulled in to him)
   const g = f.golem, near = Math.abs(g.x - f.x) < Math.abs(o.x - f.x) ? g.x : o.x, far = near === g.x ? o.x : g.x, away = Math.sign(near - f.x) || 1;
-  g.hold = { t: 180, c0: o.combo || 0, ox: o.x, gx: g.x }; /* (it holds them where they stand: no swapping places, no pulling) */ golemPlace(f, o); setState(o, 'stunned'); o.stunT = 184; o.stunKind = 'held'; o.stunUsed = true;
+  g.hold = { t: 180, c0: o.combo || 0, f0: game.frame, ox: o.x, gx: g.x }; /* (it holds them where they stand: no swapping places, no pulling) */ golemPlace(f, o); setState(o, 'stunned'); o.stunT = 184; o.stunKind = 'held'; o.stunUsed = true;
   popText(o.x, GROUND - 190, L('GRABBED!', '捕まえた！'), '255,215,140'); sfx('block'); game.shake = Math.max(game.shake, 3);
 }
 function golemRelease(f, o, recover) { const g = f.golem; g.hold = null; g.grabCD = GRAB_CD; if (recover && o.state === 'stunned') setState(o, 'recover'); }
@@ -410,7 +410,10 @@ function golemUpdate(f, o) {
     if (g.queue === 'heave' && !g.act) golemStart(f, 'heave'); else if (g.queue !== 'heave') g.queue = null;
     if (g.act && g.act.kind === 'heave') { if (++g.act.t >= GOLEM_ACT.heave.su) { golemRelease(f, o, false); golemHeave(f, o); return; } }
     else g.act = null;
-    if (hd.t <= 0 || o.ko || ['knock', 'down', 'getup'].includes(o.state) || (o.combo || 0) - hd.c0 >= HOLD_HITS) golemRelease(f, o, true);
+    const es = ['lp', 'hp', 'lk'].map(b => o.btnEdge && o.btnEdge[b] != null ? o.btnEdge[b] : -99); // (the one held breaks it by pressing U + I + J together)
+    const broke = Math.min(...es) >= hd.f0 - 6 && Math.max(...es) - Math.min(...es) <= 5 && !(g.act && g.act.kind === 'heave');
+    if (broke) { o.btnEdge = {}; golemRelease(f, o, true); popText(o.x, GROUND - o.y - 195, L('BREAK!', 'ブレイク！'), '255,235,140'); sfx('block'); game.freeze = Math.max(game.freeze, 8); }
+    else if (hd.t <= 0 || o.ko || ['knock', 'down', 'getup'].includes(o.state) || (o.combo || 0) - hd.c0 >= HOLD_HITS) golemRelease(f, o, true);
     else { golemPlace(f, o); if (o.state !== 'stunned') { setState(o, 'stunned'); o.stunT = hd.t + 4; } }
     g.spd = 0; return;
   }

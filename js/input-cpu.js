@@ -133,6 +133,11 @@ class CPU {
   }
   think(f, frame, o) {
     const out = { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false };
+    if (f.state === 'stunned' && f.stunKind === 'held' && o.golem && o.golem.hold) { // held by the golem: now and then the CPU breaks it with U + I + J
+      if (this.heldFor !== o.golem.hold) { this.heldFor = o.golem.hold; this.escAt = Math.random() < (game.watch ? 0.7 : 0.55) ? frame + 15 + (Math.random() * 60 | 0) : null; }
+      if (this.escAt != null && frame >= this.escAt && frame < this.escAt + 4) return { ...out, held: { lp: true, hp: true, lk: true, hk: false } };
+      return out;
+    }
     const dx = o.x - f.x, dist = Math.abs(dx), fwd = Math.sign(dx) || f.facing, N = f.key === 'ninja', gdir = golemGuardDir(f, o) || fwd; // (gdir: which way to guard — toward the golem when it is the one attacking, else toward the alchemist)
     if (f.state === 'down' && !f.ko) { // roll away or get up
       if (this.wakeFor !== f.kdSerial) { this.wakeFor = f.kdSerial; const r = Math.random(); this.wakeRoll = r < 0.3 ? -fwd : r < 0.42 ? fwd : 0; this.wakeAtk = Math.random() < 0.3; }
