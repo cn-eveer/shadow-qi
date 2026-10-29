@@ -19,7 +19,7 @@ const OP_BATTLE = [ // a highlight reel: each clip starts right at the action (f
   { key: 'ninja', name: '6. Lightning stun: two juggles', from: 2, len: 195, sup: true }, { key: 'staff', name: '6. Jump-in Falling Staff: two juggles', from: 2, upto: 4, len: 205, sup: true },
   { key: 'psychic', name: '3. Falling Star: Spirit Fist finish', len: 180 }, { key: 'brawler', name: '6. Qi Parry: two juggles', from: 3, len: 205, sup: true },
   { key: 'kappa', name: '8. Great Flood (super)', len: 290, sup: true }, { key: 'salary', name: '6. Devil Possession: Demon Uppercut', len: 255 },
-  { key: 'gunman', name: '8. High Noon (super)', len: 150, sup: true }, { key: 'paladin', name: '12. Sanctuary (super)', len: 150, sup: true },
+  { key: 'gunman', name: '8. High Noon (super)', len: 150, sup: true }, { key: 'paladin', name: '9. Sanctuary (super)', len: 150, sup: true },
   // Hohen, the newest, gets a run of his own: his spotlight first (pre), then the golem's long combo, the golem armour's Great Core Cannon, and Magnum Opus
   { key: 'alchemist', name: '2. Golem in front (long): lift, lift, bounce', len: 260, pre: OP_NEW }, { key: 'alchemist', name: '21. Armour: Great Core Cannon', len: 205, sup: true },
   { key: 'alchemist', name: '9. Magnum Opus', from: 1, len: 215, sup: true }]; // (the golem bursts into stones that encase them, then the circle erupts)

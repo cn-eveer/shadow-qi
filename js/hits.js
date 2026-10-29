@@ -17,10 +17,9 @@ function staffTipBox(f, mv, hb0) {
   if (mv.launch || mv.jug || mv.air || f.y > 0 || /rise|Rise|Up\b|up\b|Upper|Cudgel|Swing/.test((mv.pose || '') + ' ' + (mv.label || ''))) out = U(out, hb0); // (rising swings and juggle hits scoop up close to her too)
   return out;
 }
-// no blow reaches further than this in front of its user (Lyra's spells have their own range, LYRA_RANGE; Excalibur's reach is what
-// its three-second charge buys)
+// no blow reaches further than this in front of its user (Lyra's spells have their own range, LYRA_RANGE)
 const MELEE_REACH = 220;
-const meleeBox = (f, hb) => f.key === 'psychic' || hb[1] <= MELEE_REACH || (f.move && f.move.excal) ? hb : [hb[0], Math.max(hb[0] + 30, MELEE_REACH), hb[2], hb[3]];
+const meleeBox = (f, hb) => f.key === 'psychic' || hb[1] <= MELEE_REACH ? hb : [hb[0], Math.max(hb[0] + 30, MELEE_REACH), hb[2], hb[3]];
 function boxOf(f, hb) {
   const s = f.ch.scale, [x0, x1, y0, y1] = hb, b0 = f.y + y0 * (f.ch.tallBox ? 1 : s); // tallBox (Tanaka's double possession, 1.4× his size): the blow grows forward and up, but still reaches as low as at normal size
   return f.facing > 0

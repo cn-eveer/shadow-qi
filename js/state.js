@@ -161,13 +161,14 @@ function startMove(f, mv, str, keepBuffer) {
 // su: 発生 (the lead-up plays faster, or waits longer, to reach it), act: 持続, rec: 硬直, blk: 硬直差 when guarded, set: anything else about the move
 const NORMAL_KEY = { p0: 'U', p1: 'I', k0: 'J', k1: 'K' };
 function moveFrames(f, mv) {
-  const T = f.ch.frames; if (!T || mv.framesDone || mv.super || mv.air || mv.jug || mv.startup >= 900) return;
+  const T = f.ch.frames; if (!T || mv.framesDone || mv.super || mv.air || mv.jug) return;
   const e = T[mv.inString ? '$' + mv.strKey : mv.normal ? (mv.stance === 'c' ? 'd' : '') + NORMAL_KEY[mv.kind + mv.str] : mv.id]; if (!e) return; // (a string hit: $ and its key, $t2, $tF…)
+  if (mv.startup >= 900 && !e.held) return; // (held: its 発生 is however long it's held — only the rest is set)
   mv.framesDone = true;
   if (e.set) Object.assign(mv, e.set);
   if (mv.noGuardLag) f.lastMoveTech = false; // (guarded, no extra opening on top of its own recovery)
   const su = e.suFar ? e.su + (e.suFar - e.su) * clamp((Math.abs(other(f).x - f.x) - 100) / (WALL_R - WALL_L - 140), 0, 1) : e.su; // (suFar: the further away they are, the longer it takes)
-  if (su) { const now = f.pre + mv.startup, want = su - (mv.hitbox ? 2 : 1); // (frames before it can hit: a blow lands on the frame after, a shot is thrown on it)
+  if (su && mv.startup < 900) { const now = f.pre + mv.startup, want = su - (mv.hitbox ? 2 : 1); // (frames before it can hit: a blow lands on the frame after, a shot is thrown on it)
     if (want > now) f.pre += Math.round(want - now);
     else if (want < now) { const cut = Math.min(f.pre, Math.floor(now - want)); /* (whole frames off the wind-up; a fraction left over is played faster) */ f.pre -= cut; if (mv.tellPre) mv.tellPre = Math.max(0, mv.tellPre - cut); if (mv.preTotal != null) mv.preTotal = f.pre; // (a shorter wind-up first: the move itself, its dash or leap, keeps its pace…
       if (now - cut > want) mv.speedUp = (now - cut) / want; } } // …and only if that isn't enough does the move play faster)

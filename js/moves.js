@@ -505,7 +505,7 @@ function specialMoveBase(id) {
     // super: Sanctuary. He plants the sword and a dome of light swells around him: caught inside, they're held and burned
     // again and again while his guard refills and his wounds close, then the dome bursts
     case 'plJudgement': return { id, super: true, name: 'SANCTUARY', label: 'Sanctuary', startup: 16, active: 44, recovery: 20, wind: 'pCleaveW', pose: 'pPlant', aura: true, wings: true, sanctuary: true,
-      onStart(f) { f.invul = 64; },
+      supArmor: true, // not invincible: until the dome opens, light hits from up close don't stop him (taken in full); strong ones do
       onFrame(f, o, mf) {
         f.vx = 0;
         if (mf === 16) { sfx('super'); cracks(f.x + f.facing * 30); game.shake = Math.max(game.shake, 6); }

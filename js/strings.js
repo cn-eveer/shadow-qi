@@ -763,16 +763,6 @@ function updateProjs() {
       }
       continue;
     }
-    if (p.type === 'hwave') { // Heaven Splitter's wave of light along the floor
-      p.life--; p.x += p.vx;
-      if (p.life <= 0 || p.x < -40 || p.x > W + 40) { p.dead = true; continue; }
-      if (p.t % 4 === 0) parts.push({ type: 'aura', x: p.x, y: GROUND - rnd(0, 40), vx: 0, vy: -rnd(0.5, 1.5), life: 14, max: 14, r: rnd(2, 4), col: '190,225,255' });
-      const tgt = other(p.owner), hu = hurtbox(tgt, true), hb = { x0: p.x - 30, x1: p.x + 30, y0: 0, y1: 90 };
-      if (!p.hit && hu && overlap(hb, hu) && tgt.state !== 'knock') { p.hit = true; // (it rolls under someone already in the air)
-        applyHit(p.owner, tgt, { dmg: 40, stun: 24, bstun: 14, push: 3, kd: true, kdVx: 6, kdVy: 9, type: 'mid', low: true, chip: true, hitstop: 8, proj: true, str: 1, gdrain: 20, label: 'Heaven Splitter' }, p.dir, hb, hu);
-        p.dead = true; }
-      continue;
-    }
     if (p.type === 'staffBoom') { // Mei's thrown staff: out, then back to her hand
       const own = p.owner, tgt = other(own); p.life--;
       if (p.stay > 0) { p.stay--; p.vx = (tgt.x - p.x) * 0.35; } else if (p.t < p.outT) p.vx *= p.mode === 'boom' ? 0.955 : 0.96; else { /* (stay: the whirlwind stops where it catches them, for its three hits) */ const dx = own.x - p.x; p.vx = Math.sign(dx) * Math.min(16, Math.abs(dx) * 0.2 + 7); }

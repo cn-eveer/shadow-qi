@@ -135,7 +135,7 @@ function showMenu() {
       ${pick('brawler', 'Qi Brawler. Heavy fists and qi blasts.', '気の拳士。重い拳と気功弾。')}
       ${pick('staff', 'Staff Prodigy. Long staff, high jumps, air attacks.', '棍の天才。長い棍、高いジャンプ、空中からの攻撃。')}
       ${pick('psychic', 'Psychic Sage. Rune circles, crystals of light, and orbs that fight beside her.', '超能力の賢者。魔法陣、光の水晶、ともに戦うオーブ。')}
-      ${pick('paladin', 'Holy Paladin. Slow and sturdy: parries, healing, charged strikes and the Aegis.', '聖騎士。重く頑丈：受け流し、回復、溜め攻撃、イージス。')}
+      ${pick('paladin', 'Holy Paladin. Slow and sturdy: parries, healing, held techniques and the Aegis.', '聖騎士。重く頑丈：受け流し、回復、長押し技、イージス。')}
       ${pick('kappa', 'Mythic Kappa. Cute, with a dish on his head: claws, water, plate throws and sumo throws.', '幻獣カッパ。頭に皿の可愛いカッパ：爪、水、皿投げ、相撲の投げ。')}
       ${pick('gunman', 'Gunslinger. Two revolvers and a long coat: mid-range shots, jump shots, no kicks.', 'ガンマン。二丁拳銃とロングコート：中距離の射撃、ジャンプショット、足技なし。')}
       ${pick('salary', 'Salaryman. An angel and a devil ride his shoulders, and either can take him over.', 'サラリーマン。両肩の天使と悪魔、どちらかに憑依されて戦う。')}
