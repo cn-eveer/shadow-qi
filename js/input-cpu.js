@@ -83,6 +83,28 @@ const DIFFS = {
 const DIFF_ORDER = ['easy', 'medium', 'hard', 'hell'], DIFF_NAMES = { easy: ['Easy', 'かんたん'], medium: ['Medium', 'ふつう'], hard: ['Hard', 'むずかしい'], hell: ['Hell', '地獄'] };
 const dif = () => DIFFS[game.diff] || DIFFS.medium;
 const cpuP = (p, watchP) => game.watch ? watchP : Math.min(0.95, p * dif().combo); // chance of going for a combo route
+// Tanaka's plan. As himself: calls a spirit from a distance, throws pens and staplers from afar, comes in with the rush, the dogeza and the cards, and hits and runs up close.
+// The angel fights from mid range (rays, the dive, the ascension) and prefers I and K up close, since they heal him. The devil rushes in: lunges, the chain, the crawl, and the grab up close.
+function tanakaPlan(f, o, dist, r) {
+  const ps = f.ch.possess, air = o.y > 40, far = dist > 420, mid = dist > 160;
+  if (!ps) {
+    if (dist > 200 && r < 0.12 && !(f.possT > 0)) return { btn: r < 0.07 ? 'hp' : 'hk', bb: true }; // a spirit takes him: the angel (← ← + I) or the devil (← ← + K)
+    if (far) return r < 0.26 ? { btn: 'lp', down: true } : r < 0.42 ? { btn: 'lk', down: true } : r < 0.56 ? { btn: 'lp', ff: true } : (r < 0.7 && f.meter < 100) ? { chargeMP: rnd(40, 100) | 0 } : r < 0.82 ? { dash: 1 } : { walk: 1 };
+    if (dist > 200) return r < 0.14 ? { btn: 'hk', ff: true } : r < 0.27 ? { btn: 'lk', ff: true } : r < 0.37 ? { btn: 'lk', ff: true, down: true } : r < 0.45 ? { btn: 'lk', bb: true, down: true } : r < 0.55 ? { btn: 'lp', bb: true } : r < 0.64 ? { btn: 'lp', ff: true }
+      : r < 0.72 ? { btn: 'lp', down: true } : r < 0.78 ? { btn: 'lk', down: true } : r < 0.9 ? { dash: 1 } : { walk: 1 };
+    if (mid) return r < 0.18 ? { btn: 'hk', ff: true } : r < 0.34 ? { btn: 'lk', bb: true } : r < 0.46 ? { btn: 'lk', ff: true } : r < 0.56 ? { btn: 'hp', ff: true } : null;
+    return r < 0.12 ? { btn: 'lk', bb: true } : r < 0.2 ? { btn: 'hp', ff: true } : r < 0.3 ? { dash: -1 } : null; // close: hit and run
+  }
+  if (ps === 'angel') {
+    if (air && dist < 300 && r < 0.3) return { btn: 'lk', bb: true, up: true }; // Ascending Gaze at someone in the air
+    if (far) return r < 0.25 ? { btn: 'lk', bb: true } : r < 0.4 ? { btn: 'lk', bb: true, fwdHold: true } : r < 0.55 ? { btn: 'lk', ff: true } : r < 0.7 ? { dash: 1 } : { walk: 1 };
+    if (mid) return r < 0.2 ? { btn: 'lk', bb: true, fwdHold: true } : r < 0.34 ? { btn: 'hk', ff: true } : r < 0.46 ? { btn: 'lk', bb: true } : r < 0.56 ? { btn: 'lk', ff: true } : r < 0.64 ? { btn: 'hp', ff: true } : r < 0.72 ? { btn: 'lk', bb: true, down: true } : r < 0.82 ? { dash: 1 } : { walk: 1 };
+    return r < 0.3 ? { btn: 'hp' } : r < 0.5 ? { btn: 'hk' } : r < 0.6 ? { dash: -1 } : null; // close: I and K heal him
+  }
+  if (far) return r < 0.3 ? { dash: 1 } : r < 0.5 ? { btn: 'lp', ff: true } : r < 0.62 && f.meter < 100 ? { chargeMP: rnd(40, 100) | 0 } : { walk: 1 }; // the devil (and the double)
+  if (mid) return r < 0.2 ? { btn: 'lk', bb: true, fwdHold: true } : r < 0.34 ? { btn: 'lp', ff: true } : r < 0.46 ? { btn: 'hp', ff: true } : r < 0.58 ? { btn: 'lk', ff: true } : r < 0.66 ? { btn: 'hk', ff: true } : r < 0.74 ? { btn: 'lk', ff: true, down: true } : r < 0.82 ? { btn: 'lk', bb: true, up: true } : { dash: 1 };
+  return r < 0.18 ? { btn: 'hk', bb: true } : r < 0.3 ? { btn: 'hk', ff: true } : r < 0.4 ? { btn: 'lk', bb: true, down: true } : null; // close: the grab, the hook, the sweep
+}
 class CPU {
   constructor() { this.reset(); }
   reset() { this.plan = {}; this.next = 0; this.def = null; this.threatKey = null; this.reactAt = 0; this.chargeUntil = 0; this.cancelTried = false; this.punishKey = null; }
@@ -249,6 +271,8 @@ class CPU {
       out.btn = p.btn; out.sup = !!p.sup; out.fuse = !!p.fuse; // (fuse: Hohen's ← → + J + K)
       if (p.ff) out.ff = true; else if (p.bb) out.bb = true; else if (p.dir === 'd') out.down = true;
       if (p.down) out.down = true; // rising version of a special
+      if (p.up) out.up = true; // (← ← ↑ + button)
+      if (p.fwdHold) out.h = fwd; // (← ← → + button: hold toward them)
       p.btn = null;
     }
     if (p.chain) { this.chainSeq = p.chain.slice(); p.chain = null; }
@@ -261,6 +285,7 @@ class CPU {
     if (o.golem && Math.random() < 0.75) { const vg = vsGolemPlan(f, o, dist); if (vg) return vg; } // (against Hohen: over the golem, or through it)
     if (Math.random() < (game.watch ? (dist < 95 ? 0.1 : 0.5) : Math.min(0.6, 0.18 * dif().combo))) { const rt = pickRoute(f, 'neutral', dist); if (rt) { this.route = rt; return {}; } } // go for one of the sample combos
     if (f.meter >= 100 && dist < 520 && r < 0.3) return { btn: 'hp', sup: true };
+    if (f.key === 'salary') { const tp = tanakaPlan(f, o, dist, r); if (tp) return tp; } // (Tanaka: his own plan, for himself and for each spirit that takes him)
     if (dist < 330 && Math.random() < 0.07) { // rising versions used on their own
       const opts = N ? (dist < 110 ? [{ btn: 'lp', bb: true, down: true }, { btn: 'hk', bb: true, down: true }] : [{ btn: 'hp', bb: true, down: true }, { btn: 'lk', ff: true, down: true }, { btn: 'hp', ff: true, down: true }])
         : (dist < 110 ? [{ btn: 'lp', ff: true, down: true }, { btn: 'hk', ff: true, down: true }, { btn: 'hk', bb: true, down: true }] : [{ btn: 'lp', bb: true, down: true }, { btn: 'hp', ff: true, down: true }]);
