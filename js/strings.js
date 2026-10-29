@@ -340,7 +340,7 @@ Object.assign(STRINGS.ninja, {
     poseFn: (f, mf) => mf < 9 ? POSES.slashW : mf < f.move.startup ? POSES.jump : null,
     onFrame(f, o, mf) { // vanishes, reappears above them, and drops a crescent-moon heel
       const S = f.move.startup;
-      if (mf === 1) { f.cm = { x0: f.x, tx: clamp(o.x - f.facing * 36, WALL_L, WALL_R), landed: false }; sfx('vanish'); for (let i = 0; i < 8; i++) parts.push({ type: 'smoke', x: f.x + rnd(-20, 20), y: GROUND - rnd(30, 150), vx: rnd(-1, 1), vy: -0.6, r: rnd(6, 10), vr: 0.3, life: 20, max: 20, col: '120,90,190' }); }
+      if (mf === 1) { f.cm = { x0: f.x, tx: clamp(f.x + f.facing * Math.min(100, Math.max(0, f.facing * (o.x - f.x) - 36)), WALL_L, WALL_R), landed: false }; /* (a short hop: 100px at most — from further away it comes down short) */ sfx('vanish'); for (let i = 0; i < 8; i++) parts.push({ type: 'smoke', x: f.x + rnd(-20, 20), y: GROUND - rnd(30, 150), vx: rnd(-1, 1), vy: -0.6, r: rnd(6, 10), vr: 0.3, life: 20, max: 20, col: '120,90,190' }); }
       f.hidden = mf >= 3 && mf <= 8;
       if (mf <= S) { const e = mf / S; f.x = lerp(f.cm.x0, f.cm.tx, ease(e)); f.y = 140 * Math.sin(Math.PI / 2 * Math.min(1, e / 0.7)); }
       else f.y = Math.max(0, 140 - (mf - S) * 30);
