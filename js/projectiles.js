@@ -240,7 +240,9 @@ function lyraCrystals(f, o, mf) { // each juggle hit: crystals form above them a
 function lyraReach(f, o, maxD, minD) {
   const mv = f.move, s = f.ch.scale, ahead = (o.x - f.x) * f.facing / s, base = mv.psyFist ? mv.psyFist[0] : mv.floorGlyph != null ? mv.floorGlyph : mv.groundBurst;
   if (base == null) return;
-  const d = clamp(ahead, minD, maxD), shift = d - base;
+  const gol = o.golem; let at = ahead; // (Hohen out of her range, his golem in it: the spell goes for the golem)
+  if (gol && !gol.broken && !gol.hidden && ahead > maxD) { const ga = (gol.x - f.x) * f.facing / s; if (ga >= 0 && ga <= maxD) at = ga; }
+  const d = clamp(at, minD, maxD), shift = d - base;
   if (mv.psyFist) mv.psyFist = [d, ...mv.psyFist.slice(1)];
   if (mv.floorGlyph) mv.floorGlyph = d; else if (mv.groundBurst) mv.groundBurst = d;
   if (mv.hitbox) mv.hitbox = [mv.hitbox[0] + shift, mv.hitbox[1] + shift, mv.hitbox[2], mv.hitbox[3]];

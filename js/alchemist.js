@@ -329,7 +329,7 @@ function golemPlace(f, o) { // while it holds them: they stay where the swap put
 }
 function golemSeize(f, o) { // the grab: if the golem was in front of him, it turns them round and the two trade places, so they're between it and him (not pulled in to him)
   const g = f.golem, near = Math.abs(g.x - f.x) < Math.abs(o.x - f.x) ? g.x : o.x, far = near === g.x ? o.x : g.x, away = Math.sign(near - f.x) || 1;
-  g.hold = { t: 180, c0: o.combo || 0, ox: clamp(near, WALL_L + 20, WALL_R - 20), gx: clamp(Math.abs(far - near) < 70 ? near + away * 70 : far, WALL_L, WALL_R) }; golemPlace(f, o); setState(o, 'stunned'); o.stunT = 184; o.stunKind = 'held'; o.stunUsed = true;
+  g.hold = { t: 180, c0: o.combo || 0, ox: o.x, gx: g.x }; /* (it holds them where they stand: no swapping places, no pulling) */ golemPlace(f, o); setState(o, 'stunned'); o.stunT = 184; o.stunKind = 'held'; o.stunUsed = true;
   popText(o.x, GROUND - 190, L('GRABBED!', '捕まえた！'), '255,215,140'); sfx('block'); game.shake = Math.max(game.shake, 3);
 }
 function golemRelease(f, o, recover) { const g = f.golem; g.hold = null; g.grabCD = GRAB_CD; if (recover && o.state === 'stunned') setState(o, 'recover'); }
@@ -355,8 +355,10 @@ function golemTakeHits(f, o) { // the opponent's attacks can hit the golem too (
   }
 }
 function golemHit(f, o, h, hb, hu) { // resolved as if the golem were the attacker: its side decides the guard
+  h = { ...h, push: 0.001, bpush: 0.001, lastPush: 0.001, kdVx: 0.001 }; // (the golem never pushes or pulls them: its blows land where they stand — a tiny value, 0 would mean the default)
   const g = f.golem, sv = [f.x, f.facing, f.vx, f.serial, f.kb]; f.x = g.x; f.facing = g.facing; f.serial = g.act ? g.act.id : ++serial;
   let res; try { res = applyHit(f, o, h, Math.sign(o.x - g.x) || g.facing, hb, hu); } finally { [f.x, f.facing, f.vx, f.serial, f.kb] = sv; } // (the wall pushes the attacker back: not the alchemist, when it's the golem that hit)
+  if (res && o.state !== 'ko') { o.vx = 0; o.kb = 0; } // (nothing carries them sideways)
   return res;
 }
 const HIT_STATES = ['hitstun', 'knock', 'stunned', 'gbreak', 'down'];
@@ -387,8 +389,8 @@ function golemUpdate(f, o) {
   if (HIT_STATES.includes(f.state)) { // hit the conductor: the order he gave is lost (a blow already on its way still lands), and a hold lets go
     g.queue = null; const A0 = g.act && GOLEM_ACT[g.act.kind]; if (A0 && g.act.t < A0.su && !A0.leap) g.act = null;
     if (g.hold) { golemRelease(f, o, true); popText(g.x, GROUND - 200, L('LET GO!', '手を離した！'), '220,220,230'); } }
-  const inp = f.inp || EMPTY; // the golem copies the alchemist: where he walks, when he jumps or crouches
-  if (g.js !== f.jumpSerial) { g.js = f.jumpSerial; if (f.state === 'jump' && g.y <= 0 && !g.act) g.vy = (f.ch.jumpV || JUMP_V) * JUMP_HIGH; }
+  const inp = f.inp || EMPTY; // the golem copies the alchemist: where he walks, and when he crouches (it never jumps)
+  g.js = f.jumpSerial; // (the golem doesn't jump: it copies his walking and crouching only)
   if (g.y > 0 || g.vy > 0) { g.vy -= G; g.y += g.vy; if (g.y <= 0) { g.y = 0; g.vy = 0; g.mvx = 0; dustAt(g.x, false); if (g.act && g.act.kind === 'meteor') { dustAt(g.x, true); game.shake = Math.max(game.shake, 5); sfx('land'); } } }
   g.crouch = !!inp.down && g.y <= 0 && !g.act;
   if (!live) { g.act = null; g.queue = null; return; }
@@ -434,12 +436,15 @@ function golemUpdate(f, o) {
   golemBlock(f, o);
 }
 const GOLEM_GAP = 64; // how close the opponent can come to the golem's middle: it's solid — they jump over it or break it, they don't walk through
-function golemBlock(f, o) {
-  const g = f.golem; if (g.broken || g.hidden || g.hold) return;
+function golemBlock(f, o) { // the golem is solid, and nobody moves anybody: whoever walked into the other stops at its edge (no pushing the golem, no shoving them)
+  const g = f.golem, gp = g.px == null ? g.x : g.px, op = g.opx == null ? o.x : g.opx; g.px = g.x; g.opx = o.x;
+  if (g.broken || g.hidden || g.hold) return;
   const side = Math.sign(o.x - g.x) || g.oSide || 1;
-  if (Math.abs(o.x - g.x) >= GOLEM_GAP || o.y > 40 || g.y > 60 || ['knock', 'down', 'getup'].includes(o.state) || o.ko) { g.oSide = side; return; } // (clear of it, over it, or lying on the floor: no push)
-  const s = g.oSide || side, nx = g.x + s * GOLEM_GAP;
-  if (nx > WALL_L + 4 && nx < WALL_R - 4) o.x = nx; else g.x = clamp(o.x - s * GOLEM_GAP, WALL_L, WALL_R); // (pinned against a wall: the golem gives way instead)
+  if (Math.abs(o.x - g.x) >= GOLEM_GAP || o.y > 40 || g.y > 60 || ['knock', 'down', 'getup'].includes(o.state) || o.ko) { g.oSide = side; return; } // (clear of it, over it, or lying on the floor: no collision)
+  const s = g.oSide || side;
+  if (Math.abs(g.x - gp) > Math.abs(o.x - op)) g.x = clamp(o.x - s * GOLEM_GAP, WALL_L, WALL_R); // it walked into them: it stops at their edge
+  else o.x = clamp(g.x + s * GOLEM_GAP, WALL_L, WALL_R); // they walked into it: they stop at its edge
+  g.px = g.x; g.opx = o.x;
 }
 // the direction a defender guards in while the golem is the one attacking (0 when it isn't)
 function golemGuardDir(f, o) { const g = o && o.golem; return g && g.act && golemThreatening(f, o) ? (Math.sign(g.x - f.x) || 0) : 0; }
@@ -743,9 +748,9 @@ const ALCHEMIST_DEMOS = [
   { name: '3. Hohen far back (quick): jab, jab, volley', tail: 'golem jab, golem jab, stone volley', ax: 120, bx: 470, gx: 400, cpu: { min: 260, max: 460, golem: 'front' },
     note: 'Hohen stays back while the golem works. U, U: two golem jabs hold them there, K: his three stones fly the length of the stage and knock them down.',
     steps: [S('U', 'start', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
-  { name: '4. Hohen far back (long): uppercut, stone, pillar, meteor', tail: 'golem uppercut, rising jab, aimed stone, pillar, meteor, comet', ax: 150, bx: 470, gx: 400, cpu: { min: 260, max: 460, golem: 'front' },
-    note: '↓ + I: the golem uppercuts them (lift 1). U: its rising jab holds them up and J: his stone from afar meets them there. I: the stone pillar (lift 2), → → + I: Golem Meteor (bounce), K: Stone Comet.',
-    steps: [S('↓ + I', 'start', { btn: 'hp', down: true }), S('U', 'air', { btn: 'lp' }), S('J', 'chain', { btn: 'lk' }), S('I', 'chain', { btn: 'hp' }), S('→ → + I', 'air', { btn: 'hp', ff: true }), S('K', 'air', { btn: 'hk' })] },
+  { name: '4. Hohen far back (long): uppercut, stone, pillar, meteor', tail: 'golem uppercut, rising jab, pillar, meteor', ax: 150, bx: 470, gx: 400, cpu: { min: 260, max: 460, golem: 'front' },
+    note: '↓ + I: the golem uppercuts them (lift 1). U: its rising jab holds them up. I: the stone pillar (lift 2), → → + I: Golem Meteor (bounce).',
+    steps: [S('↓ + I', 'start', { btn: 'hp', down: true }), S('U', 'air', { btn: 'lp' }), S('I', 'chain', { btn: 'hp' }), S('→ → + I', 'air', { btn: 'hp', ff: true })] },
   { name: '5. Pincer (quick): knuckle, golem, volley', tail: 'stone-knuckle, golem jab from behind, stone volley', ax: 300, bx: 385, gx: 470, cpu: { min: 50, max: 115, golem: 'behind' },
     note: 'They’re caught between the two. J: his stone-knuckle from the front, U: the golem from behind (they have to turn to guard it), K: his volley from the front again.',
     steps: [S('J', 'start', { btn: 'lk' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
@@ -816,7 +821,7 @@ Object.assign(JA_DEMO, {
   '1. Golem in front (quick): jab, stone, hammer': { n: '1. ゴーレムが前（短）：ジャブ、石、ハンマー', tail: 'ゴーレムのジャブ、肩越しの石、ゴーレムハンマー', note: '博士はゴーレムのすぐ後ろ。U：ゴーレムのジャブ、J：石がゴーレムの肩越しに飛ぶ、U：ゴーレムが両拳を振り下ろす（立ってガード）。' },
   '2. Golem in front (long): lift, lift, bounce': { n: '2. ゴーレムが前（長）：浮かせ、浮かせ、バウンド', tail: '掴み、石拳、持ち上げ、ライジングジャブ、石柱、メテオ、コメット', note: 'I：ゴーレムが掴み、相手を博士の方へ向ける。J：捕まえた相手に石拳。I：持ち上げて投げ上げる（浮かせ1）。U：ライジングジャブ、I：足元から石柱（浮かせ2）、→→+I：跳んで叩きつける（バウンド）。K：ストーンコメットで締め。' },
   '3. Hohen far back (quick): jab, jab, volley': { n: '3. 博士が遠く（短）：ジャブ、ジャブ、三連投げ', tail: 'ゴーレムのジャブ、ジャブ、石の三連投げ', note: '博士は離れたまま、ゴーレムが戦う。U、U：ゴーレムのジャブで止め、K：三つの石が画面の端から飛んでダウン。' },
-  '4. Hohen far back (long): uppercut, stone, pillar, meteor': { n: '4. 博士が遠く（長）：アッパー、石、石柱、メテオ', tail: 'ゴーレムアッパー、ライジングジャブ、狙い石、石柱、メテオ、コメット', note: '↓+I：ゴーレムのアッパー（浮かせ1）。U：ライジングジャブで浮かせたところへ、J：遠くから博士の石。I：石柱（浮かせ2）、→→+I：ゴーレムメテオ（バウンド）、K：ストーンコメット。' },
+  '4. Hohen far back (long): uppercut, stone, pillar, meteor': { n: '4. 博士が遠く（長）：アッパー、石、石柱、メテオ', tail: 'ゴーレムアッパー、ライジングジャブ、石柱、メテオ', note: '↓+I：ゴーレムのアッパー（浮かせ1）。U：ライジングジャブで浮かせ続ける。I：石柱（浮かせ2）、→→+I：ゴーレムメテオ（バウンド）。' },
   '5. Pincer (quick): knuckle, golem, volley': { n: '5. 挟み撃ち（短）：石拳、ゴーレム、三連投げ', tail: '石拳、背後からゴーレムのジャブ、三連投げ', note: '相手は二人の間。J：前から博士の石拳、U：後ろからゴーレム（ガードの向きが変わる）、K：また前から三連投げ。' },
   '6. Pincer (long): grab from behind': { n: '6. 挟み撃ち（長）：背後から掴み', tail: '石拳、背後から掴み、石拳、持ち上げ、ライジングジャブ、石柱、メテオ、コメット', note: 'J：石拳、I：ゴーレムが背後から掴み、博士の方へ向けて押さえる。J：もう一度石拳、I：持ち上げ（浮かせ1）、U、I：ライジングジャブと石柱（浮かせ2）、→→+I：メテオ（バウンド）、K：コメット。' },
   '7. Golem behind them (quick): jab, stone, volley': { n: '7. ゴーレムが相手の後ろ（短）：ジャブ、石、三連投げ', tail: '背後からゴーレムのジャブ、石、三連投げ', note: '博士は遠く、ゴーレムは相手の向こう側。U：ゴーレムが博士の方へ殴り、J：石で迎え、K：三連投げでダウン。' },
