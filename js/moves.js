@@ -113,7 +113,7 @@ function specialMove(id) {
 }
 function specialMoveBase(id) {
   switch (id) {
-    case 'cloneStrike': return { id, label: 'Shadow Clone', startup: 13, active: 6, recovery: 8, blockAdv: -12, wind: 'seal', pose: 'seal', proj: 'clone', limit: 1,
+    case 'cloneStrike': return { id, label: 'Shadow Clone', startup: 13, active: 6, recovery: 8, blockAdv: -12, noFmRec: true, /* (no recovery added by his frame tuning) */ wind: 'seal', pose: 'seal', proj: 'clone', limit: 1,
       onFrame(f, o, mf) { if (mf === 12) spawnClone(f, false, 0); } };
     case 'shadowCharge': return { id, label: 'Shadow Charge Upper', startup: 46, active: 9, recovery: 16, blockAdv: -21, wind: 'seal', pose: 'uppercut', selfMove: true, counterVanish: true, slow: true, interruptChance: 0.2,
       hitbox: [10,82,40,175], dmg: 45, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 13, type: 'mid', hitstop: 9, gdrain: 6,
@@ -126,12 +126,13 @@ function specialMoveBase(id) {
         if (mf <= 51) return lerpPose(POSES.uppercutW, POSES.uppercut, Math.min(1, (mf - 46) / 4)); // a smooth rising uppercut out of the dash
         return null;
       },
+      speedHold: f => f.mf > 12 && !f.chargeStop, // (sped up — techSpeed — only for the hand signs and the turn into the uppercut: the charge itself runs at its own pace)
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; f.chargeStop = false; },
       onFrame(f, o, mf) {
         // same hand sign and timing as Shadow Clone Strike, but a decoy stays behind and the real Kuro is the shadow
         if (mf === 12) { spawnDecoy(f); puff(f.x + f.facing * 20, 60); sfx('clone'); }
         if (mf > 12 && !f.chargeStop) {
-          f.shadowRun = true; f.vx = f.facing * 10;
+          f.shadowRun = true; f.vx = f.facing * 8; // (a charge you can see coming)
           if ((mf >= 14 && Math.abs(o.x - f.x) < 80) || mf >= 42) { f.vx = 0; f.chargeStop = true; f.shadowRun = false; f.mf = Math.min(f.mf, 42); f.stopMf = f.mf; }
         } else if (mf > 12) f.vx *= 0.6;
         if (mf === 47) sfx('rise');

@@ -144,7 +144,7 @@ function startMove(f, mv, str, keepBuffer) {
     else { const cut = Math.min(FM.su[cls] + (mv.suCut || 0), Math.max(0, (mv.antiPre || 0) - 1)); f.pre -= cut; if (mv.antiPre) mv.antiPre -= cut; } // (a shorter wind-up: the move's own frames are untouched; suCut: a move's own extra)
     if (mv.preTotal != null) mv.preTotal = f.pre;
     if (mv.active < 60) mv.active += FM.act;
-    if (mv.recovery < 90) { mv.recovery += FM.rec[cls]; mv.fmRec = FM.rec[cls]; } // (normals: hit and block stun grow with it, so only a miss costs more; techniques: see checkHits)
+    if (mv.recovery < 90 && !mv.noFmRec) { mv.recovery += FM.rec[cls]; mv.fmRec = FM.rec[cls]; } // (normals: hit and block stun grow with it, so only a miss costs more; techniques: see checkHits)
   }
   if (!mv.super && mv.startup < 900 && !mv.stressDone && game.phase === 'fight') { // (the stress meter, and the kappa's slower attacks: only in neutral, never inside a combo)
     mv.stressDone = true;
@@ -239,9 +239,9 @@ function fdWatch() { // each step: once both can act again, the advantage
 // the run in, the leap — plays that many times faster (extra steps of the move, moving him as it goes); from the first active frame on,
 // 持続 and 硬直 run at their normal speed
 function techSpeed(f, o, inp) {
-  const mv = f.move; if (!mv || !mv.speedUp || f.hitConnected || (f.pre <= 0 && f.mf >= mv.startup)) return;
+  const mv = f.move; if (!mv || !mv.speedUp || f.hitConnected || (f.pre <= 0 && f.mf >= mv.startup) || (mv.speedHold && mv.speedHold(f))) return; // (speedHold: a part of the move that keeps its own pace)
   f.spdAcc = (f.spdAcc || 0) + mv.speedUp - 1;
-  while (f.spdAcc >= 1 && f.move === mv && f.state === 'attack' && !f.hitConnected && (f.pre > 0 || f.mf < mv.startup)) { f.spdAcc -= 1; runMove(f, o, inp); if (!mv.manualY) f.x = clamp(f.x + f.vx, WALL_L, WALL_R); }
+  while (f.spdAcc >= 1 && f.move === mv && f.state === 'attack' && !f.hitConnected && (f.pre > 0 || f.mf < mv.startup) && !(mv.speedHold && mv.speedHold(f))) { f.spdAcc -= 1; runMove(f, o, inp); if (!mv.manualY && !(mv.speedHold && mv.speedHold(f))) f.x = clamp(f.x + f.vx, WALL_L, WALL_R); }
 }
 // no attack carries its user further than this (dashes, rushes, lunges, step-ins, leaps out of them; supers and air attacks aside)
 const MOVE_TRAVEL = 180;
