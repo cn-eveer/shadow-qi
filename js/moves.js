@@ -126,7 +126,8 @@ function specialMoveBase(id) {
         if (mf <= 51) return lerpPose(POSES.uppercutW, POSES.uppercut, Math.min(1, (mf - 46) / 4)); // a smooth rising uppercut out of the dash
         return null;
       },
-      speedHold: f => f.mf > 12 && !f.chargeStop, // (sped up — techSpeed — only for the hand signs and the turn into the uppercut: the charge itself runs at its own pace)
+      speedHold: f => f.mf > 12 && !f.chargeStop,
+      maxTravel: W * 0.3, // (the charge covers up to 3/10 of the screen) // (sped up — techSpeed — only for the hand signs and the turn into the uppercut: the charge itself runs at its own pace)
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; f.chargeStop = false; },
       onFrame(f, o, mf) {
         // same hand sign and timing as Shadow Clone Strike, but a decoy stays behind and the real Kuro is the shadow
@@ -164,6 +165,7 @@ function specialMoveBase(id) {
       onStart(f, o) {
         let x = o.x - o.facing * 62;
         if (x < WALL_L + 5 || x > WALL_R - 5) x = o.x + o.facing * 62;
+        if (Math.abs(x - f.x) > W * 0.3) x = f.x + (Math.sign(x - f.x) || f.facing) * W * 0.3; // (he reappears 3/10 of the screen away at most: from further off he falls short)
         f.x = clamp(x, WALL_L, WALL_R); f.facing = Math.sign(o.x - f.x) || f.facing; puff(f.x, 50); sfx('vanish');
       } };
     case 'ambushLeap': return { id, label: 'Shadow Leap', startup: 42, active: 22, recovery: 20, blockAdv: -14, /* (out a long time on the way down: hit him in the air) */ wind: 'jump', pose: 'stomp', manualY: true, noPush: true, selfMove: true, walkAway: true,

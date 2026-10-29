@@ -248,7 +248,7 @@ const MOVE_TRAVEL = 180;
 function capTravel(f) {
   const mv = f.move; if (!mv || mv.super || mv.air) return; // (a ground move that leaps counts too: its flight is part of the move)
   const fw = f.vx * f.facing; if (fw <= 0) return;
-  const left = MOVE_TRAVEL - (mv.travel || 0); if (fw > left) f.vx = f.facing * Math.max(0, left);
+  const left = (mv.maxTravel || MOVE_TRAVEL) - (mv.travel || 0); if (fw > left) f.vx = f.facing * Math.max(0, left); // (maxTravel: a move's own range)
   mv.travel = (mv.travel || 0) + f.vx * f.facing;
 }
 const reeling = o => o.state === 'hitstun' || o.state === 'blockstun' || o.state === 'recover';
