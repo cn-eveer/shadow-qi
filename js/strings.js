@@ -34,7 +34,8 @@ const STRINGS = {
     nL: SL('Kunai Rise', 'uppercutW', 'kunaiRise', { blade: true, trail: { cx: 10, cy: 90, r: 95, a0: -30, a1: 95, col: '225,235,255' } }),
     nE: SF('k', 'Crescent Kick', 'kickW', 'highKick', { dmg: 50, trail: { cx: 0, cy: 62, r: 78, a0: -45, a1: 95, col: '190,150,255' } }),
     nl2: SG('k', 'Sweep Slash', 'crouch', 'lowKick', { low: true, blade: true, hitbox: [20,90,8,44] }),
-    nlE: SF('k', 'Shadow Sweep', 'crouch', 'slideKick', { low: true, step: 8, hitbox: [0,90,0,34], kdVy: 5 }),
+    nlE: SF('k', 'Shadow Snap Kick', 'kickW', 'midKick', { step: 8, hitbox: [15,100,45,130], kdVy: 5 }), // J, J, K / J, K: low, low… then a mid (guard the lows crouching and this one hits)
+    nD: SF('k', 'Shadow Reaper', 'crouch', 'sweep', { fixedFrames: true, pre: 6, startup: 10, active: 7, recovery: 22, advBlock: -6, /* (−12 with the guard stall) */ noFiveLag: true, low: true, step: 8, hitbox: [0,105,0,34], kd: true, kdVx: 6, kdVy: 6 }), // U, U, ↓ + K: the low ending (U, U, K drops from above instead)
     jPalm: SJ('p', 'Rising Kunai Slash', 'jabW', 'kunaiRise', { blade: true, trail: { cx: 10, cy: 90, r: 80, a0: -30, a1: 90, col: '225,235,255' } }),
     jElbow: SJ('p', 'Twin Kunai', 'slashW', 'slash', { blade: true, multi: 2, interval: 3, dmg: 14, lastDmg: 16 }),
     jUpper: SJ('p', 'Shadow Upper', 'uppercutW', 'uppercut', { speedFx: true, dmg: 30, jugVy: 8 }),
@@ -306,6 +307,7 @@ Object.assign(STRINGS.salaryDevil, {
   jRise: JR('Brimstone Rise', 'kClawDown', 'kClawUp', { claw: [0, 0, -1.3, 64, '255,120,90', 'tgt'], onFrame: (f, o, mf) => { if (mf === f.move.startup) { parts.push({ type: 'wcol', x: o.x, w: 36, life: 16, max: 16, col: '255,100,40' }); sfx('flame'); } } }),
 });
 wireStrings(); // chain the aerial versions as well
+STRINGS.ninja.n2.chain = { ...STRINGS.ninja.n2.chain, dhk: 'nD' }; // Kuro: U, U, ↓ + K ends low
 STRINGS.kappa.$start.k = null;
 // fists, kunai and briefcases are short: in a juggle these fighters spring up to where the opponent is, so the blow really reaches them
 // (instead of a short blade somehow hitting someone high above). The hit area is now measured from where he is in the air.
