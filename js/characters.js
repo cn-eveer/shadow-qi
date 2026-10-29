@@ -202,6 +202,14 @@ Object.assign(CHARS, {
     idle: 'gHolster', name: 'JESSE', title: 'Gunslinger', nameJa: 'ジェシー', titleJa: 'ガンマン', ammo: 15, dmgMul: 1.43, scale: 1.02, walk: 3.3, back: 2.9, jumpX: 4.4, jumpV: 17.5, jugDmg: 1.05,
     pDmg: 0.95, kDmg: 0.95, pReach: 1.0, kReach: 1.0, chargeRate: 0.6, auraCol: '255,210,140', fxCol: '255,230,160',
     sp: { fP: 'gnFan', fPH: 'gnQuick', fK: 'gnRoll', fKH: 'gnJumpShot', bP: 'gnDyna', bPH: 'gnDance', bK: 'gnBackflip', bKH: 'gnShowdown' }, sup: 'gnHighNoon',
+    frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
+      U: { su: 10, blk: -4 }, dU: { su: 10, blk: -4 }, J: { su: 10, blk: -4 }, dJ: { su: 10, blk: -4 },
+      I: { su: 16, blk: -12, held: true }, K: { su: 18, blk: -14, held: true }, dI: { su: 16, blk: -16 }, dK: { su: 16, blk: -14 }, /* (held: his charge shots; the tap's start-up is its own) */
+      $g2: { su: 12, blk: -6 }, $g3: { su: 12, blk: -6 }, $g4: { su: 12, blk: -6 }, $gF: { su: 18, blk: -18 }, $gL: { su: 16, blk: -16 }, $gE: { su: 20, blk: -12 }, // U, U … U×4 / U×4, K / U, I / U, K
+      $gl2: { su: 12, blk: -6 }, $glE: { su: 18, blk: -16 },
+      gnFan: { su: 20, blk: -16 }, gnQuick: { su: 12, blk: -8 }, gnRoll: { su: 20, blk: -16 }, gnJumpShot: { su: 22, blk: -16 }, // (Quick Draw stays his fastest)
+      gnDyna: { su: 24, blk: -16 }, gnDance: { su: 20, blk: -16 }, gnBackflip: { blk: -6 }, /* (the flip fires its shot at a fixed moment: 23F) */
+    },
     heavy: { // no kicks: both heavies are gunshots at mid range
       p: { label: 'Twin Shot', held: true, tapStartup: 9, startup: 999, active: 2, recovery: 20, hitbox: null, wind: 'gAim', pose: 'gTwin', onFrame: twinCharge },
       k: { label: 'Heavy Shot', held: true, tapStartup: 13, startup: 999, active: 2, recovery: 24, hitbox: null, wind: 'gAim', pose: 'gRecoil', onFrame: heavyCharge },
@@ -224,6 +232,14 @@ Object.assign(CHARS, {
     name: 'TANAKA', title: 'Salaryman', nameJa: '田中', titleJa: 'サラリーマン', autoBlock: true, dmgMul: 1.0, scale: 1.0, walk: 3.0, back: 2.7, jumpX: 4.2, jumpV: 17, jugDmg: 1.25,
     pDmg: 0.95, kDmg: 0.95, pReach: 1.05, kReach: 1.0, chargeRate: 0.6, auraCol: '200,205,220', fxCol: '235,235,245',
     sp: { fP: 'smCard', fPH: 'smCase', fK: 'smTackle', fKH: 'smUpper', bP: 'smCoffee', bPH: 'smAngel', bK: 'smBow', bKH: 'smDevil' }, sup: 'smDeadline',
+    frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
+      U: { su: 10, blk: -4 }, dU: { su: 10, blk: -4 }, J: { su: 10, blk: -4 }, dJ: { su: 10, blk: -4 },
+      I: { su: 16, blk: -12 }, K: { su: 18, blk: -14 }, dI: { su: 16, blk: -16 }, dK: { su: 16, blk: -14 },
+      $s2: { su: 12, blk: -6 }, $s3: { su: 12, blk: -6 }, $s4: { su: 12, blk: -6 }, $sF: { su: 18, blk: -18 }, $sL: { su: 16, blk: -13 }, $sE: { su: 20, blk: -12 }, // U, U … U×4 / U×4, K / U, I / U, K
+      $sl2: { su: 12, blk: -6 }, $slE: { su: 18, blk: -16 },
+      smCard: { su: 16, blk: -6 }, smCase: { su: 22, blk: -16 }, smTackle: { su: 20, blk: -16 }, smUpper: { su: 20, blk: -16 },
+      smCoffee: { su: 20, blk: -16 }, smBow: { su: 20, blk: -16 },
+    },
     heavy: {
       p: { label: 'Briefcase Swing', startup: 11, active: 5, recovery: 19, hitbox: [10,150,40,160], wind: 'slamW', pose: 'sCase', lunge: [3, 9, 3.5], hitstop: 10, kd: true, kdVx: 8 },
       k: { label: 'Shove and Run', startup: 9, active: 4, recovery: 20, hitbox: [10,100,50,150], wind: 'crouch', pose: 'sShove', dmg: 32, push: 8, bpush: 7, onFrame: shoveRun },
