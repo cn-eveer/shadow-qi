@@ -309,24 +309,25 @@ function specialMoveBase(id) {
       hitbox: [30,320,82,122], dmg: 62, stun: 20, bstun: 12, push: 7, type: 'mid', hitstop: 9, gdrain: 10,
       onFrame(f, o, mf) { if (mf === 11) { sfx('slash'); parts.push({ type: 'streak', x: 0, x0: f.x + f.facing * 60, x1: f.x + f.facing * 320, y: GROUND - f.y - 100 * f.ch.scale, life: 10, max: 10 }); } } };
     case 'vaultSmash': return { id, label: 'Pole Vault Smash', startup: 22, active: 10, recovery: 16, wind: 'vault', pose: 'staffSlamAir', manualY: true, noPush: true, selfMove: true, spinWind: true,
-      hitbox: [-10,160,-20,130], dmg: 62, stun: 20, bstun: 14, push: 3, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 11, gdrain: 12,
+      hitbox: [-10,230,-20,130], dmg: 62, stun: 20, bstun: 14, push: 3, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 11, gdrain: 12,
       trail: { cx: 20, cy: 90, r: 120, a0: 110, a1: -30, col: '255,205,110' },
       onStart(f, o) {
         const side = Math.sign(o.x - f.x) || f.facing; f.facing = side;
-        f.leap = { x0: f.x, tx: clamp(f.x + side * Math.min(Math.max(0, Math.abs(o.x - f.x) - 40), 210), WALL_L, WALL_R) }; sfx('rise');
+        f.leap = { x0: f.x, tx: clamp(f.x + side * Math.min(Math.max(0, Math.abs(o.x - f.x) - 130), 210), WALL_L, WALL_R) }; sfx('rise'); // (lands well short of them: the staff reaches the rest)
       },
       onFrame(f, o, mf) { // plants the staff, vaults over the gap and slams it down
+        if (f.hitConnected && f.hookFor !== f.serial && o.juggle) { f.hookFor = f.serial; o.vx = Math.sign(f.x - o.x) * clamp((Math.abs(o.x - f.x) - 70) / 30, 0, 4); } // (the staff hooks them back in: she landed short of them)
         f.vx = 0;
         if (mf <= 32) { const e = mf / 32; f.x = lerp(f.leap.x0, f.leap.tx, e); f.y = 175 * Math.sin(Math.PI * e); }
         if (mf === 32) { f.y = 0; dustAt(f.x + f.facing * 60, true); parts.push({ type: 'ering', x: f.x + f.facing * 70, y: GROUND, r: 8, vr: 7, life: 14, max: 14, col: '255,205,110' }); game.shake = Math.max(game.shake, 5); sfx('land'); }
       } };
     case 'sweepStaff': return { id, label: 'Sweeping Staff', startup: 9, active: 14, recovery: 16, wind: 'crouch', pose: 'staffSweep', selfMove: true, speedFx: true, spinStaff: true,
-      hitbox: [0,160,0,44], low: true, dmg: 46, stun: 20, bstun: 14, push: 2, launch: true, launchVy: 11, type: 'mid', hitstop: 8, gdrain: 8,
+      hitbox: [0,230,0,44], low: true, dmg: 46, stun: 20, bstun: 14, push: 2, launch: true, launchVy: 11, type: 'mid', hitstop: 8, gdrain: 8, // (a long sweep: she slides in less)
       rushTag: true, rushOpen: true, follow: { from: 8, to: 30, at: 22, opts: { lp: 'srPoke', hp: 'srVault', lk: 'srSweep2', hk: 'srSlam' } },
       trail: { cx: 40, cy: 18, r: 90, a0: -70, a1: 40, col: '255,205,110' },
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
       onFrame(f, o, mf) {
-        if (mf > 6 && mf <= 22 && !f.hitConnected && Math.abs(o.x - f.x) > 100) { f.vx = f.facing * 8; if (mf % 2 === 0) dustAt(f.x, false); } else f.vx *= 0.6;
+        if (mf > 6 && mf <= 22 && !f.hitConnected && Math.abs(o.x - f.x) > 170) { f.vx = f.facing * 5; if (mf % 2 === 0) dustAt(f.x, false); } else f.vx *= 0.6;
         if (f.hitConnected && f.hookFor !== f.serial && o.juggle) { f.hookFor = f.serial; o.vx = Math.sign(f.x - o.x) * clamp((Math.abs(o.x - f.x) - 70) / 30, 0, 4); } // the staff hooks them in toward him
       } };
     // Monkey Staff Rush: → → + K opens a string that keeps going whether it hits or is guarded; each part leads to others
@@ -334,7 +335,7 @@ function specialMoveBase(id) {
       hitbox: [10,180,40,160], multi: 2, interval: 6, dmg: 26, lastDmg: 32, stun: 22, bstun: 14, push: 2, lastPush: 3, type: 'mid', hitstop: 8, gdrain: 10,
       trail: { cx: 0, cy: 80, r: 100, a0: -60, a1: 60, col: '255,205,110' },
       rushTag: true, rushOpen: true, follow: { from: 8, to: 30, at: 23, opts: { lp: 'mrThrust', hp: 'mrCrash', lk: 'mrSweep', hk: 'mrFinish' } },
-      onFrame(f, o, mf) { if (mf > 6 && mf <= 16 && Math.abs(o.x - f.x) > 70) f.vx = f.facing * 4; else f.vx *= 0.7; if (mf === 10) sfx('swing'); } };
+      onFrame(f, o, mf) { if (mf > 6 && mf <= 16 && Math.abs(o.x - f.x) > 150) f.vx = f.facing * 2; else f.vx *= 0.7; if (mf === 10) sfx('swing'); } }; // (barely steps in: the staff reaches)
     case 'srPoke': return { id, label: 'Dance: Rising Poke', rushTag: true, startup: 5, active: 4, recovery: 16, wind: 'staffLowW', pose: 'staffRise', staffExt: 40, selfMove: true,
       hitbox: [10,195,40,235], dmg: 26, stun: 22, bstun: 14, push: 2, jugVy: 7, type: 'mid', hitstop: 7, gdrain: 12,
       trail: { cx: 20, cy: 90, r: 120, a0: -40, a1: 100, col: '255,205,110' },
@@ -386,7 +387,7 @@ function specialMoveBase(id) {
       trail: { cx: 0, cy: 95, r: 150, a0: -170, a1: 170, col: '255,205,110' },
       onFrame(f, o, mf) { if (mf <= 8 && Math.abs(o.x - f.x) > 80) f.vx = f.facing * 4; else f.vx *= 0.7; if (mf === 8) sfx('swing'); } };
     case 'windmill': return { id, label: 'Staff Windmill', startup: 8, active: 24, recovery: 14, wind: 'thrustW', pose: 'staffJab', spinStaff: true, destroysProj: true,
-      hitbox: [10,180,30,185], multi: 4, interval: 6, dmg: 14, lastDmg: 30, stun: 16, bstun: 10, push: 1.5, lastPush: 7, kd: true, kdVx: 8, kdVy: 7, type: 'mid', hitstop: 4, chip: true, gdrain: 6,
+      hitbox: [10,245,30,185], multi: 4, interval: 6, dmg: 14, lastDmg: 30, /* (a wide windmill: long reach) */ stun: 16, bstun: 10, push: 1.5, lastPush: 7, kd: true, kdVx: 8, kdVy: 7, type: 'mid', hitstop: 4, chip: true, gdrain: 6,
       onFrame(f, o, mf) { if (mf % 6 === 0 && mf > 6 && mf <= 32) sfx('swing'); } };
     case 'cloudLeap': return { id, label: 'Cloud Somersault', startup: 30, active: 14, recovery: 14, wind: 'cloudSit', pose: 'airStaffDown', manualY: true, noPush: true, selfMove: true, cloud: [6, 30], spinWind: true,
       hitbox: [0,150,-20,120], dmg: 72, stun: 20, bstun: 14, push: 4, kd: true, kdVx: 6, kdVy: 8, type: 'mid', hitstop: 11, gdrain: 14,
@@ -395,7 +396,7 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { // up onto a cloud, a moment's pause, then a staff dive at where they are
         f.vx = 0;
         if (mf <= 16) { const e = mf / 16; f.x = lerp(f.cl.x0, f.cl.tx, e); f.y = 220 * Math.sin(e * Math.PI / 2); }
-        else if (mf <= 30) { f.y = 220 + Math.sin(mf * 0.4) * 3; if (mf % 4 === 0) cloudPuff(f.x, GROUND - f.y + 8); if (mf === 30) { f.facing = Math.sign(o.x - f.x) || f.facing; f.dive = { x0: f.x, tx: clamp(o.x - f.facing * 30, WALL_L, WALL_R) }; sfx('slash'); } }
+        else if (mf <= 30) { f.y = 220 + Math.sin(mf * 0.4) * 3; if (mf % 4 === 0) cloudPuff(f.x, GROUND - f.y + 8); if (mf === 30) { f.facing = Math.sign(o.x - f.x) || f.facing; f.dive = { x0: f.x, tx: clamp(f.x + f.facing * Math.min(180, Math.max(0, f.facing * (o.x - f.x) - 30)), WALL_L, WALL_R) }; sfx('slash'); } }
         else if (mf <= 44) { const e = (mf - 30) / 14; f.x = lerp(f.dive.x0, f.dive.tx, e); f.y = Math.max(0, 220 * (1 - e)); }
         if (mf === 44) { f.y = 0; dustAt(f.x, true); game.shake = Math.max(game.shake, 4); }
       } };

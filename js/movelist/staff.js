@@ -16,8 +16,8 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Falling Staff<small>Heavy punch in the air: brings the staff down on them and bounces them off the ground.</small></td><td class="cmd">I in the air</td></tr>
           <tr><td>Extending Staff<small>The staff shoots out to a third of the stage.</small></td><td class="cmd">→ → + U</td></tr>
           <tr><td>Pole Vault Smash<small>Plants the staff, vaults over the gap and slams it down, bouncing them.</small></td><td class="cmd">→ → + I</td></tr>
-          <tr><td>Low Staff Dance<small>A low spinning sweep that pops them up on a hit. Guarded or not, it keeps going: U rising poke, I vaults over to their other side and strikes, J a second sweep, K a pole slam that knocks them down. Up to five parts, ending with the slam. On a hit every part combos; once it is guarded, the J sweep winds up slowly and they can hit her before it.</small></td><td class="cmd">→ → + J, then U / I / J / K</td></tr>
-          <tr><td>Monkey Staff Rush<small>Opens with a pole spin kick, then keeps going whether it hits or is guarded. After each part press another button: U thrusts, J sweeps low, I hops into an overhead crash (bounces them on a hit), K ends with a spinning finish that knocks them away. Up to five parts in any order, ending with the finish; it wears down their guard fast. On a hit every part combos; once it is guarded, the J sweep winds up slowly and they can hit her before it.</small></td><td class="cmd">→ → + K, then U / I / J / K</td></tr>
+          <tr><td>Low Staff Dance<small>A low spinning sweep that pops them up on a hit. Guarded or not, it keeps going: U rising poke, I vaults over to their other side and strikes, J a second sweep, K a pole slam that knocks them down. Up to five parts, ending with the slam. On a hit every part combos; once it is guarded, the J sweep winds up slowly and they can hit her before it.</small></td><td class="cmd">→ → + K, then U / I / J / K</td></tr>
+          <tr><td>Monkey Staff Rush<small>Opens with a pole spin kick, then keeps going whether it hits or is guarded. After each part press another button: U thrusts, J sweeps low, I hops into an overhead crash (bounces them on a hit), K ends with a spinning finish that knocks them away. Up to five parts in any order, ending with the finish; it wears down their guard fast. On a hit every part combos; once it is guarded, the J sweep winds up slowly and they can hit her before it.</small></td><td class="cmd">→ → + J, then U / I / J / K</td></tr>
           <tr><td>Staff Windmill<small>Spins the staff in front: four hits, and it swats projectiles out of the air.</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>Cloud Somersault<small>Somersaults up onto a cloud, hangs a moment, then dives at where they are.</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>Somersault Kick<small>A flipping kick that launches; she can’t be hit at the very start.</small></td><td class="cmd">← ← + J</td></tr>
@@ -32,7 +32,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <div class="scroll"><table>
         <tbody>
           <tr><td>1. Rising Staff<small>One juggle: ↓ + I, U, U, K. Two juggles: ↓ + I, U, U, I (Pinwheel Rise lifts them again), K.</small></td><td class="cmd">↓ + I</td></tr>
-          <tr><td>2. Sweeping Staff<small>One juggle: → → + J, U, U. Two juggles: → → + J, I (Pinwheel Rise lifts them again), K.</small></td><td class="cmd">→ → + J</td></tr>
+          <tr><td>2. Sweeping Staff<small>One juggle: → → + K, U, U. Two juggles: → → + K, I (Pinwheel Rise lifts them again), K.</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>3. Pole Vault Smash<small>One juggle: → → + I, U, U, K. Two juggles: → → + I, U, U, → → + I (Vault Spike bounces them again), U, K.</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>4. Somersault Kick<small>One juggle: ← ← + J, U, U, K. Two juggles: ← ← + J, U, ← ← + I (Cloud Chase), U, ↓ + K (Staff Meteor), K.</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>5. Counter Round Swing<small>The round swing launches when it catches an attack starting up. One juggle: K, U, U, K. Two juggles: K, U, → → + I (Vault Spike bounces them again), K.</small></td><td class="cmd">K</td></tr>
@@ -40,8 +40,8 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>7. Max combo: lift, lift, bounce<small>↓ + I, U, U, I (Pinwheel Rise), → → + I (Vault Spike), U, U, K.</small></td><td class="cmd">↓ + I</td></tr>
         </tbody>
       </table></div>
-      <p class="note">Samples 13 and 14 show both rushes against a guard. U, U, K in a juggle is staff jab, swing and whirl. While they’re launched, → → + U, → → + I, → → + K, ← ← + U and ← ← + I turn into juggle versions: Staff Lift, Vault Spike, Pole Rocket Kick, Rising Windmill and Cloud Chase. Hold ↓ with the button to use them on their own.</p>
-      <p class="note"><b>Combo strings.</b> U, U, U, U, K: twin thrust, staff twirl, pole spin kick, great sweep. I from any point: Rising Staff launches; K ends with an overhead crash. J, J, K: low staff sweep, floor sweep.</p>
+      <p class="note">Samples 13 and 14 show both rushes against a guard. U, U, K in a juggle is staff jab, swing and whirl. While they’re launched, → → + U, → → + I, → → + J, ← ← + U and ← ← + I turn into juggle versions: Staff Lift, Vault Spike, Pole Rocket Kick, Rising Windmill and Cloud Chase. Hold ↓ with the button to use them on their own.</p>
+      <p class="note"><b>Combo strings.</b> U, U, U, U, K: twin thrust, then two low sweeps (crouch to guard them), great sweep. U, U, U, U, ↓ + K ends with a low ground thrust instead; U, ↓ + K is a low tail sweep that trips them. I from any point: Rising Staff launches; K ends with an overhead crash. J, J, K: staff jab (a mid), floor sweep. She stays at the staff’s length: her attacks barely step in.</p>
     </article>
     <article class="card staff" data-tab="staff" data-lang="ja" hidden>
       <h2>メイ<span>棍の天才</span></h2>
@@ -57,8 +57,8 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>落とし棍<small>空中でI。棍を振り下ろしてバウンドさせる。</small></td><td class="cmd">空中で I</td></tr>
           <tr><td>伸縮棍<small>棍が画面の3分の1まで伸びる。</small></td><td class="cmd">→ → + U</td></tr>
           <tr><td>棒高跳び叩き<small>棍で跳び越えて叩きつけ、バウンドさせる。</small></td><td class="cmd">→ → + I</td></tr>
-          <tr><td>棍の舞<small>低い回転払いで浮かせる。当たってもガードされても続く：U突き上げ、I反対側へ跳んで一撃、J二度目の払い、K叩きつけでダウン。最大5段。当たれば全段つながるが、ガードされるとJの払いの出が遅くなり割り込まれる。</small></td><td class="cmd">→ → + J → U/I/J/K</td></tr>
-          <tr><td>猿王連棍<small>棍を軸に回し蹴りから始まり、当たってもガードされても続く：U突き、J足払い、I飛び上がって叩き（ヒットでバウンド）、K回転のとどめ。最大5段。ガードを大きく削る。当たれば全段つながるが、ガードされるとJの足払いの出が遅くなり割り込まれる。</small></td><td class="cmd">→ → + K → U/I/J/K</td></tr>
+          <tr><td>棍の舞<small>低い回転払いで浮かせる。当たってもガードされても続く：U突き上げ、I反対側へ跳んで一撃、J二度目の払い、K叩きつけでダウン。最大5段。当たれば全段つながるが、ガードされるとJの払いの出が遅くなり割り込まれる。</small></td><td class="cmd">→ → + K → U/I/J/K</td></tr>
+          <tr><td>猿王連棍<small>棍を軸に回し蹴りから始まり、当たってもガードされても続く：U突き、J足払い、I飛び上がって叩き（ヒットでバウンド）、K回転のとどめ。最大5段。ガードを大きく削る。当たれば全段つながるが、ガードされるとJの足払いの出が遅くなり割り込まれる。</small></td><td class="cmd">→ → + J → U/I/J/K</td></tr>
           <tr><td>風車棍<small>前で棍を回して4ヒット。飛び道具を叩き落とす。</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>觔斗雲<small>宙返りで雲に乗り、少し止まってから相手の位置へ急降下。</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>宙返り蹴り<small>打ち上げの宙返り蹴り。出始めは無敵。</small></td><td class="cmd">← ← + J</td></tr>
@@ -73,7 +73,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <div class="scroll"><table>
         <tbody>
           <tr><td>1. 昇り棍<small>1回：↓+I、U、U、K。2回：↓+I、U、U、I（風車昇り）、K。</small></td><td class="cmd">↓ + I</td></tr>
-          <tr><td>2. 足払い棍<small>1回：→→+J、U、U。2回：→→+J、I（風車昇り）、K。</small></td><td class="cmd">→ → + J</td></tr>
+          <tr><td>2. 足払い棍<small>1回：→→+K、U、U。2回：→→+K、I（風車昇り）、K。</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>3. 棒高跳び叩き<small>1回：→→+I、U、U、K。2回：→→+I、U、U、→→+I（もう一度バウンド）、U、K。</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>4. 宙返り蹴り<small>1回：←←+J、U、U、K。2回：←←+J、U、←←+I（雲乗り）、U、↓+K、K。</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>5. カウンター大回転<small>1回：K、U、U、K。2回：K、U、→→+I（跳び叩き）、K。</small></td><td class="cmd">K</td></tr>
@@ -81,7 +81,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>7. 最大コンボ：打ち上げ・打ち上げ・バウンド<small>↓+I、U、U、I（風車昇り）、→→+I（棒高跳び叩き）、U、U、K。</small></td><td class="cmd">↓ + I</td></tr>
         </tbody>
       </table></div>
-      <p class="note">見本の13と14は、二つの連続技をガードされたときの例。空中の相手に→→+U・→→+I・→→+K・←←+U・←←+Iを使うと追撃版になる。↓を押しながら使うと単体でも出る。</p>
-      <p class="note"><b>連続技。</b> U、U、U、U、K：二段突き・棍回し・棍回し蹴り・大払い。途中のIで昇り棍（打ち上げ）、Kで振り下ろし。J、J、K：低い払い・床払い。</p>
+      <p class="note">見本の13と14は、二つの連続技をガードされたときの例。空中の相手に→→+U・→→+I・→→+J・←←+U・←←+Iを使うと追撃版になる。↓を押しながら使うと単体でも出る。</p>
+      <p class="note"><b>連続技。</b> U、U、U、U、K：二段突きから下段の払い2回（しゃがみガード）、大払い。U、U、U、U、↓+Kは下段の突きで締める。U、↓+Kは足を払う下段。途中のIで昇り棍（打ち上げ）、Kで振り下ろし。J、J、K：棍の突き（中段）・床払い。棍の長さで戦い、攻撃でほとんど前に出ない。</p>
     </article>
 `);

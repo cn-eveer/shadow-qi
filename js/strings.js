@@ -61,14 +61,16 @@ const STRINGS = {
     aSpin: SAF('Air Qi Burst', 'blast', { burst: [80, 110] }),
   },
   staff: { // Mei: thrusts, twirls and sweeps with the staff
-    m2: SG('p', 'Twin Thrust', 'thrustW', 'thrust', { hitbox: [20,170,80,130], staffExt: 30 }),
-    m3: SG('p', 'Staff Twirl', 'staffSwingW', 'staffSwing', { hitbox: [20,160,50,150], spinStaff: true, multi: 2, interval: 4, dmg: 16, lastDmg: 16 }),
-    m4: SG('k', 'Pole Spin Kick', 'kickW', 'highKick', { spinStaff: true, hitbox: [10,100,40,140], dmg: 32, spin: [2, 8] }),
-    mF: SF('p', 'Great Sweep', 'staffSwingW', 'staffSweep', { hitbox: [10,180,0,120], spinStaff: true, trail: { cx: 30, cy: 40, r: 140, a0: -70, a1: 40, col: GOLD } }),
-    mL: SL('Rising Staff', 'staffLow', 'staffRise', { hitbox: [10,160,40,200], trail: { cx: 20, cy: 90, r: 130, a0: -40, a1: 100, col: GOLD } }),
-    mE: SF('p', 'Overhead Crash', 'slamW', 'staffSlam', { hitbox: [10,170,0,170], dmg: 56, kdVx: 6, kdVy: 10 }),
-    ml2: SG('k', 'Low Staff Sweep', 'staffLowW', 'staffLow', { low: true, hitbox: [20,160,0,44] }),
-    mlE: SF('k', 'Floor Sweep', 'crouch', 'staffSweep', { low: true, hitbox: [0,175,0,40], spinStaff: true, dmg: 50 }),
+    m2: SG('p', 'Twin Thrust', 'thrustW', 'thrust', { step: 0, hitbox: [20,170,80,130], staffExt: 30 }), // (her string stays at the staff's length: no stepping in)
+    m3: SG('p', 'Low Staff Twirl', 'staffLowW', 'staffLow', { step: 0, low: true, hitbox: [20,170,0,44], spinStaff: true, dmg: 28 }), // U, U, U: low
+    m4: SG('k', 'Low Spin Sweep', 'crouch', 'staffSweep', { step: 0, low: true, hitbox: [10,175,0,40], spinStaff: true, dmg: 30 }), // U, U, U, U: low
+    mD: SG('k', 'Ground Thrust', 'staffHighW', 'staffLowThrust', { step: 0, low: true, hitbox: [20,185,0,44], staffExt: 30, dmg: 44, counterStun: 12 }), // U, U, U, U, ↓ + K: low, and a counter leaves them stunned longer
+    mUD: SF('k', 'Dragon Tail Sweep', 'crouch', 'staffSweep', { step: 0, low: true, hitbox: [0,185,0,40], spinStaff: true, dmg: 52, kdVx: 4, kdVy: 6 }), // U, ↓ + K: a low sweep that trips them
+    mF: SF('p', 'Great Sweep', 'staffSwingW', 'staffSweep', { step: 0, hitbox: [10,180,0,120], spinStaff: true, trail: { cx: 30, cy: 40, r: 140, a0: -70, a1: 40, col: GOLD } }),
+    mL: SL('Rising Staff', 'staffLow', 'staffRise', { step: 0, hitbox: [10,160,40,200], trail: { cx: 20, cy: 90, r: 130, a0: -40, a1: 100, col: GOLD } }),
+    mE: SF('p', 'Overhead Crash', 'slamW', 'staffSlam', { step: 0, hitbox: [10,170,0,170], dmg: 56, kdVx: 6, kdVy: 10 }),
+    ml2: SG('k', 'Staff Jab', 'thrustW', 'thrust', { step: 0, hitbox: [20,170,70,125], staffExt: 30 }), // J, J: a mid
+    mlE: SF('k', 'Floor Sweep', 'crouch', 'staffSweep', { step: 0, low: true, hitbox: [0,175,0,40], spinStaff: true, dmg: 50 }),
   },
   psychic: { // Lyra: every hit comes from her staff, as runes and crystals at a distance
     y2: SG('p', 'Glyph Spark', 'lStaffBack', 'lStaffThrust', { noCrystal: true, step: 0, onStart: (f, o) => lyraReach(f, o, LYRA_RANGE, 90), onFrame: (f, o, mf) => { if (mf <= f.move.startup) lyraReach(f, o, LYRA_RANGE, 90); }, hitbox: [40,130,80,140], psyFist: [105, 115, 0.6] }),
@@ -310,6 +312,7 @@ Object.assign(STRINGS.salaryDevil, {
 });
 wireStrings(); // chain the aerial versions as well
 STRINGS.ninja.n2.chain = { ...STRINGS.ninja.n2.chain, dhk: 'nD' }; // Kuro: U, U, ↓ + K ends low
+STRINGS.staff.m4.chain = { ...STRINGS.staff.m4.chain, dhk: 'mD' }; STRINGS.staff.$start.p = { ...STRINGS.staff.$start.p, dhk: 'mUD' }; // Mei: U, U, U, U, ↓ + K and U, ↓ + K end low
 STRINGS.brawler.t4.chain = { ...STRINGS.brawler.t4.chain, dhk: 'tD' }; STRINGS.brawler.tl2.chain = { ...STRINGS.brawler.tl2.chain, dhk: 'tlD' }; // Tetsu: U, U, U, U, ↓ + K ends low; J, J, ↓ + K with a mid kick (J, J, K the high one)
 STRINGS.kappa.$start.k = null;
 // fists, kunai and briefcases are short: in a juggle these fighters spring up to where the opponent is, so the blow really reaches them

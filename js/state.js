@@ -170,6 +170,7 @@ function moveFrames(f, mv) {
       if (now - cut > want) mv.speedUp = (now - cut) / want; } } // …and only if that isn't enough does the move play faster)
   if (e.act != null) mv.active = e.act;
   if (e.rec != null) mv.recovery = e.rec;
+  if (f.ch.recPlus && mv.recovery < 90) { mv.recovery += f.ch.recPlus; mv.recPlusAmt = f.ch.recPlus; } // (a fighter who's slower to recover: a miss or a guard costs more — the guard number stays as set; a hit that launches or knocks down gives it back, see applyHit)
   if (e.blk != null) { mv.blockAdv = e.blk; mv.noGuardLag = true; f.lastMoveTech = false; } // (its own guard number: no extra off-balance on top)
 }
 function tryAttack(f, o, inp, noLight) { // (noLight: anything but a light attack — a string can't start itself over)
