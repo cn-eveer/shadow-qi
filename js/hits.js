@@ -57,7 +57,7 @@ const TECH_TIER = {
   sdLunge: 'mod', sdMaul: 'mod', sdClaw: 'mod', sdUpper: 'heavy', sdBeckon: 'fast', sdChain: 'mod', sdDrain: 'heavy',
 };
 const NO_TELL = new Set(['risingFist', 'smBow', 'saRayFly', 'saDive', 'smAngel', 'smDevil']); // (these have their own long lead-in)
-function hasArmor(f) { const mv = f.move; return !!mv && ((mv.armorDive && f.mf >= 24) || (f.key === 'kappa' && (mv.id === 'kpPounce' || (mv.dashLeft > 0))) || (f.key === 'brawler' && !mv.normal && !mv.super && techTier(mv) !== 'fast') || mv.id === 'plRampart' || mv.stoneSkin || (f.ch.fused && !mv.normal && !mv.super && techTier(mv) !== 'fast')); } // (Hohen's Bedrock Stride: stone skin; in the golem armour, his techniques have armour like Tetsu's)
+function hasArmor(f) { const mv = f.move; return !!mv && ((mv.armorDive && f.mf >= 24) || (f.key === 'kappa' && (mv.id === 'kpPounce' || (mv.dashLeft > 0))) || (f.key === 'brawler' && mv.tArmor) || mv.id === 'plRampart' || mv.stoneSkin || (f.ch.fused && !mv.normal && !mv.super && techTier(mv) !== 'fast')); } // (Hohen's Bedrock Stride: stone skin; in the golem armour, his techniques have armour like Tetsu's)
 function techTier(mv) { return TECH_TIER[mv.id] || (mv.parry ? 'fast' : mv.launch ? 'heavy' : 'mod'); }
 const TELL = { mod: 14, heavy: 20 }; // frames of the tell before the wind-up: long enough that a jab pressed after it starts still lands first
 const U_REACH = {};

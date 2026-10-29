@@ -154,11 +154,11 @@ const TETSU_DEMOS = [
   // punishes: their technique (played by a mirror) is countered during its tell, or guarded and then punished — or it's safe
   { name: "Guard U, U, U, U, K: Twin Qi Palms (safe)", vs: 'self', tail: '', note: '', ax: 440, bx: 520, dummy: { at: 4, steps: [S('U', 'start', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })], guardAfter: true }, /* (guarded, it shoves them far back: nothing of his reaches in time) */
     steps: [S('Guard ←', 'guard', {})] },
-  { name: "Punish → → + U: Meteor Fist (armor)", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"ff": true, "btn": "lp"}, "guardAfter": true}, /* (it shoves the guard far back: the Shoulder Charge closes the gap) */
+  { name: "Punish → → + U: Meteor Fist", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"ff": true, "btn": "lp"}, "guardAfter": true}, /* (it shoves the guard far back: the Shoulder Charge closes the gap) */
     steps: [S('Guard ←', 'guard', {}), S("→ → + K", "punish", {"btn": "hk", "ff": true})] },
-  { name: "Punish → → + I: Crouching Upper (armor)", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"ff": true, "btn": "hp"}, "guardAfter": true},
+  { name: "Punish → → + I: Crouching Upper", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"ff": true, "btn": "hp"}, "guardAfter": true},
     steps: [S('Guard ←', 'guard', {}), S("↓ + I", "punish", {"btn": "hp", "down": true, "reach": 100}), S("U", "air", {"btn": "lp"}), S("U", "chain", {"btn": "lp"}), S("K", "chain", {"btn": "hk"})] },
-  { name: "Punish → → + J: Qi Sweep (armor)", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"ff": true, "btn": "lk"}, "guardAfter": true},
+  { name: "Punish → → + J: Qi Sweep", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"ff": true, "btn": "lk"}, "guardAfter": true},
     steps: [S('Guard ←', 'guard', {}), S("↓ + I", "punish", {"btn": "hp", "down": true, "reach": 100}), S("U", "air", {"btn": "lp"}), S("U", "chain", {"btn": "lp"}), S("K", "chain", {"btn": "hk"})] },
   { name: "Punish → → + K: Shoulder Charge (armor)", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"ff": true, "btn": "hk"}, "guardAfter": true},
     steps: [S('Guard ←', 'guard', {}), S("U", "punish", {"btn": "lp", "reach": 100}), S("U", "chain", {"btn": "lp"})] },
@@ -417,9 +417,9 @@ const JA_DEMO = {
   "Punish ← ← + J: Vanish Slide": { n: "反撃 ←←+J：Vanish Slide", tail: '', note: '' },
   "Punish ← ← + K: Vanish Drop Kick": { n: "反撃 ←←+K：Vanish Drop Kick", tail: '', note: '' },
   "Guard U + J: Shadow Army (safe)": { n: "ガード U+J：Shadow Army（反撃不可）", tail: '', note: '' },
-  "Punish → → + U: Meteor Fist (armor)": { n: "反撃 →→+U：流星拳（アーマー）", tail: '', note: '' },
-  "Punish → → + I: Crouching Upper (armor)": { n: "反撃 →→+I：潜り昇拳（アーマー）", tail: '', note: '' },
-  "Punish → → + J: Qi Sweep (armor)": { n: "反撃 →→+J：Qi Sweep（アーマー）", tail: '', note: '' },
+  "Punish → → + U: Meteor Fist": { n: "反撃 →→+U：流星拳", tail: '', note: '' },
+  "Punish → → + I: Crouching Upper": { n: "反撃 →→+I：潜り昇拳", tail: '', note: '' },
+  "Punish → → + J: Qi Sweep": { n: "反撃 →→+J：Qi Sweep", tail: '', note: '' },
   "Punish → → + K: Shoulder Charge (armor)": { n: "反撃 →→+K：Shoulder Charge（アーマー）", tail: '', note: '' },
   "Guard ← ← + U: Qi Orb (safe)": { n: "ガード ←←+U：Qi Orb（反撃不可）", tail: '', note: '' },
   "Punish ← ← + I: Qi Parry": { n: "反撃 ←←+I：Qi Parry", tail: '', note: '' },

@@ -39,11 +39,11 @@ const CHARS = {
       duckUpper: { su: 18, act: 10, blk: -14 },
       qiBlast: { su: 14, act: 3, rec: 3, blk: 0 }, tripleQi: { su: 16, act: 3, rec: 3, blk: 0 },
       qiSweep: { su: 18, act: 18, blk: -21 },
-      shoulder: { su: 18, act: 12, blk: -21, set: { maxTravel: 300 } },
+      shoulder: { su: 18, act: 12, blk: -21, set: { maxTravel: 300, tArmor: true } }, // (armor: shrugs off up to three light hits)
       stomp: { su: 14, act: 6, rec: 3, blk: 0 },
-      tornado: { su: 18, act: 27, blk: -14, set: { maxTravel: 320, advByStun: true } },
+      tornado: { su: 18, act: 27, blk: -14, set: { maxTravel: 320, advByStun: true, tArmor: true } }, // (armor)
       $t2: { su: 10, act: 6, rec: 14, blk: -2 }, $t3: { su: 10, act: 6, rec: 14, blk: -2 }, $t4: { su: 10, act: 6, rec: 14, blk: -2 }, // U, U / U, U, U / U, U, U, U
-      $tF: { su: 16, act: 7, rec: 24, blk: -16, set: { bpush: 16, gdrain: 30 } }, // U, U, U, U, K: guarded, it shoves them far back and tears at the guard
+      $tF: { su: 18, act: 7, rec: 24, blk: -16, set: { bpush: 16, gdrain: 30 } }, // U, U, U, U, K: guarded, it shoves them far back and tears at the guard
       $tD: { su: 18, act: 8, rec: 24, blk: -21 }, // U, U, U, U, ↓ + K
       $tL: { su: 14, blk: -13 }, // U, I and U, U, I (−16 measured: the launch adds 3)
       $tl2: { su: 10 }, // J, J
