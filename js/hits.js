@@ -136,9 +136,10 @@ const SUPER_REF = { ninja: 1.08, brawler: 0.9, staff: 1.08, psychic: 1.25, gunma
 // guarding costs: every guarded hit takes a little health and a piece of the guard meter — techniques, charged attacks and supers far more
 const CHIP = 0.03, CHIP_BIG = 0.12;
 const guardBig = (a, h) => !!(h.superHit || h.spx || (!h.proj && a.state === 'attack' && a.move && (a.move.super || !a.move.normal || a.move.lvl)));
+const GUARD_METER = 1.5; // the guard meter lasts this many times as long (every guarded hit costs that much less)
 function guardCost(a, d, h, big) {
   const sup = h.superHit || (a.move && a.move.super), rush = a.move && ((a.move.rushTag && !a.move.rushOpen) || FINISHERS.has(a.move.id)), base = (h.gdrain || 0) * 0.6 + (h.dmg || 0) * 0.1;
-  return base * (big ? (sup ? 1.3 : rush ? 1.2 : 2.6) : 1) /* (a rush is one technique: only its opening costs the full price) */ * (d.ch.guardMul || 1) * (a.ch.guardDmgMul || 1) * (h.gMul || 1); // (gMul: a hit that's heavy only when it lands)
+  return base * (big ? (sup ? 1.3 : rush ? 1.2 : 2.6) : 1) /* (a rush is one technique: only its opening costs the full price) */ * (d.ch.guardMul || 1) * (a.ch.guardDmgMul || 1) * (h.gMul || 1) / GUARD_METER;// (gMul: a hit that's heavy only when it lands)
 }
 const chipOf = (h, big) => Math.max(1, Math.ceil((h.dmg || 0) * (big ? CHIP_BIG : h.chip ? 0.075 : CHIP)));
 // Kuro's launchers (U, U, I, ↓ + I, any attack that lifts them) leave a big opening when guarded
