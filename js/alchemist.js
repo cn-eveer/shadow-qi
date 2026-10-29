@@ -410,8 +410,8 @@ function golemUpdate(f, o) {
     if (g.queue === 'heave' && !g.act) golemStart(f, 'heave'); else if (g.queue !== 'heave') g.queue = null;
     if (g.act && g.act.kind === 'heave') { if (++g.act.t >= GOLEM_ACT.heave.su) { golemRelease(f, o, false); golemHeave(f, o); return; } }
     else g.act = null;
-    const es = ['lp', 'hp', 'lk'].map(b => o.btnEdge && o.btnEdge[b] != null ? o.btnEdge[b] : -99); // (the one held breaks it by pressing U + I + J together)
-    const broke = Math.min(...es) >= hd.f0 - 6 && Math.max(...es) - Math.min(...es) <= 5 && !(g.act && g.act.kind === 'heave');
+    const es = ['lp', 'hp', 'lk'].map(b => o.btnEdge && o.btnEdge[b] != null ? o.btnEdge[b] : -99); // (the one held breaks it by pressing U + I + J within 8 frames of each other)
+    const broke = Math.min(...es) >= hd.f0 - 6 && Math.max(...es) - Math.min(...es) <= 8 && !(g.act && g.act.kind === 'heave');
     if (broke) { o.btnEdge = {}; golemRelease(f, o, true); popText(o.x, GROUND - o.y - 195, L('BREAK!', 'ブレイク！'), '255,235,140'); sfx('block'); game.freeze = Math.max(game.freeze, 8); }
     else if (hd.t <= 0 || o.ko || ['knock', 'down', 'getup'].includes(o.state) || (o.combo || 0) - hd.c0 >= HOLD_HITS) golemRelease(f, o, true);
     else { golemPlace(f, o); if (o.state !== 'stunned') { setState(o, 'stunned'); o.stunT = hd.t + 4; } }
