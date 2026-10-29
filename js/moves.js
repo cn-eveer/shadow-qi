@@ -132,7 +132,7 @@ function specialMoveBase(id) {
         // same hand sign and timing as Shadow Clone Strike, but a decoy stays behind and the real Kuro is the shadow
         if (mf === 12) { spawnDecoy(f); puff(f.x + f.facing * 20, 60); sfx('clone'); }
         if (mf > 12 && !f.chargeStop) {
-          f.shadowRun = true; f.vx = f.facing * 8; // (a charge you can see coming)
+          f.shadowRun = true; f.vx = f.facing * 10; // (a charge you can see coming, at its own pace)
           if ((mf >= 14 && Math.abs(o.x - f.x) < 80) || mf >= 42) { f.vx = 0; f.chargeStop = true; f.shadowRun = false; f.mf = Math.min(f.mf, 42); f.stopMf = f.mf; }
         } else if (mf > 12) f.vx *= 0.6;
         if (mf === 47) sfx('rise');
@@ -1096,8 +1096,12 @@ function specialMoveBase(id) {
     // (no jumping it, and it hits a crouching guard: TOP), slower and out much longer. Both: 5 frames of recovery, even when guarded
     case 'moonTempest': return { id, label: 'Moon Tempest', startup: 13, active: 2, recovery: 5, fixedFrames: true, blockAdv: 0, wind: 'slashW', pose: 'slash', hitbox: null,
       onFrame(f, o, mf) { f.vx *= 0.6; if (mf === f.move.startup) { sfx('slash'); spawnPJ(f, 'crescent', { x: f.x + f.facing * 70, y: 70, vx: f.facing * 13, life: 24, r: 34, h: { dmg: 60, stun: 22, bstun: 8, push: 3, kd: true, kdVx: 12, kdVy: 7, gdrain: 10, label: 'Moon Tempest' } }); } } };
-    case 'fullMoon': return { id, label: 'Full Moon Tempest', startup: 17, active: 2, recovery: 5, fixedFrames: true, blockAdv: 0, wind: 'slashW', pose: 'slash', hitbox: null,
-      onFrame(f, o, mf) { f.vx *= 0.6; if (mf === f.move.startup) { sfx('slash'); game.shake = Math.max(game.shake, 3); spawnPJ(f, 'crescent', { x: f.x + f.facing * 70, y: 100, vx: f.facing * 8, life: 70, r: 100, h: { dmg: 90, stun: 24, bstun: 8, push: 4, kd: true, kdVx: 16, kdVy: 8, gdrain: 18, overhead: true, floor: true, label: 'Full Moon Tempest' } }); /* (from the floor up to well above a jump: nothing ducks or dives under it) */ } } };
+    case 'fullMoon': return { id, label: 'Full Moon Tempest', startup: 17, active: 2, recovery: 5, fixedFrames: true, blockAdv: 0, wind: 'slashW', pose: 'slash', hitbox: null, aura: true,
+      drawFX(f) { const S = f.move.startup, mf = f.mf; if (mf > S + 6) return; const k = Math.min(1, mf / S), a = mf <= S ? k : 1 - (mf - S) / 6; // a full moon rises behind him as he gathers it
+        fxLighter(() => { const x = f.x - f.facing * 10, y = GROUND - f.y - 150, g = ctx.createRadialGradient(x, y, 4, x, y, 70 * k + 10); g.addColorStop(0, `rgba(255,250,235,${0.9 * a})`); g.addColorStop(0.5, `rgba(210,190,255,${0.5 * a})`); g.addColorStop(1, 'rgba(150,110,255,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 70 * k + 10, 0, Math.PI * 2); ctx.fill(); }); },
+      onFrame(f, o, mf) { f.vx *= 0.6; if (mf < f.move.startup && mf % 3 === 0) parts.push({ type: 'ring', x: f.x - f.facing * 10, y: GROUND - f.y - 150, r: 70 - mf * 3, vr: -1.5, life: 8, max: 8, col: '220,200,255' });
+        if (mf === f.move.startup) { sfx('slash'); sfx('super'); game.shake = Math.max(game.shake, 8); for (let i = 0; i < 3; i++) parts.push({ type: 'ring', x: f.x + f.facing * 70, y: GROUND - 100, r: 20 + i * 18, vr: 6 + i * 2, life: 16, max: 16, col: i ? '200,170,255' : '255,250,235' }); dustAt(f.x + f.facing * 60, true);
+        spawnPJ(f, 'crescent', { big: true, x: f.x + f.facing * 70, y: 100, vx: f.facing * 8, life: 70, r: 100, h: { dmg: 90, stun: 24, bstun: 8, push: 4, kd: true, kdVx: 16, kdVy: 8, gdrain: 18, overhead: true, floor: true, label: 'Full Moon Tempest' } }); /* (from the floor up to well above a jump: nothing ducks or dives under it) */ } } };
     case 'shadowArmy': return { id, super: true, name: 'SHADOW ARMY', label: 'Shadow Army', startup: 14, active: 75, recovery: 22, blockAdv: 0, cutOnGuard: true, /* (out longer, slower to recover; even when guarded: once its clones are guarded he's done) */ wind: 'seal', pose: 'seal', aura: true,
       onStart(f) { f.invul = 20; },
       onFrame(f, o, mf) { // six clones from both sides, then one dives from above

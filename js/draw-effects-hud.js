@@ -460,7 +460,7 @@ function drawFrameData() { // training: each fighter's last attack — 発生, �
   fighters.forEach((f, i) => {
     const d = f.fd; if (!d) return;
     const left = i === 0, x = left ? 30 : W - 30, y = H - 30, w = 420;
-    const adv = d.res == null ? (f.state === 'attack' ? '' : L('miss', '空振り'))
+    const adv = d.res == null ? (f.state === 'attack' || projs.some(p => p.owner === f && !p.dead) ? '' : L('miss', '空振り')) // (a shot still flying: not a miss yet)
       : `${d.res === 'block' ? L('Guard', 'ガード') : d.res === 'armor' ? L('Armor', 'アーマー') : L('Hit', 'ヒット')} ${d.wait ? '…' : typeof d.adv === 'number' ? sign(d.adv) : { launch: L('launch', '打ち上げ'), stun: L('stun', '気絶'), kd: L('down', 'ダウン'), gb: L('guard break', 'ガードブレイク') }[d.adv] || ''}`;
     const nums = `${L('Startup', '発生')} ${d.su != null ? d.su + 'F' : '—'}   ${L('Active', '持続')} ${d.act != null ? d.act : '—'}   ${L('Recovery', '硬直')} ${d.rec != null ? d.rec : '—'}`;
     ctx.save(); ctx.fillStyle = 'rgba(8,6,26,.66)'; rr(left ? x - 8 : x - w + 8, y - 34, w, 44, 8); ctx.fill();

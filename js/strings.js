@@ -654,6 +654,7 @@ function pjUpdate(p) {
     if (Math.abs(dx) < 30) { p.dead = true; own.plateOut = false; return; }
   }
   p.vy -= p.g || 0; p.x += p.vx; p.y += p.vy;
+  if (p.big && p.t % 2 === 0) for (let i = 0; i < 3; i++) { const yy = p.y + rnd(-p.r, p.r) * 0.9; parts.push({ type: i ? 'aura' : 'star', x: p.x - Math.sign(p.vx) * rnd(10, 40), y: GROUND - yy, vx: -Math.sign(p.vx) * rnd(0.5, 2), vy: -rnd(0, 1), life: 18, max: 18, r: rnd(2, 4), vr: -0.1, rot: rnd(0, 3), col: i ? '200,170,255' : '255,250,235' }); } // (the full moon: a wake of moonlight)
   if (p.bounce && p.y <= 0 && p.vy < 0) { p.y = 0; p.vy = -p.vy * 0.75; p.bounce--; sfx('block'); parts.push({ type: 'spark', x: p.x, y: GROUND, vx: 0, vy: -3, life: 8, max: 8, col: '255,230,150' }); }
   if (p.type === 'skidcase' && p.t % 2 === 0) { parts.push({ type: 'spark', x: p.x - p.vx * 0.6, y: GROUND - 4, vx: -p.vx * 0.15 + vrnd(-1, 1), vy: -vrnd(1, 3), life: 10, max: 10, col: '255,220,150' }); } // sparks where it scrapes the floor
   if (p.type === 'brimstone' && p.t % 3 === 0) { parts.push({ type: 'aura', x: p.x + vrnd(-6, 6), y: GROUND - 6, vx: 0, vy: -vrnd(2, 4), life: 22, max: 22, r: vrnd(5, 9), col: p.t % 6 ? '255,110,40' : '255,200,80' }); parts.push({ type: 'aura', x: p.x - p.vx * 2, y: GROUND - 2, vx: 0, vy: -0.2, life: 40, max: 40, r: 6, col: '120,20,10' }); } // flames erupt along its path, scorching the floor
@@ -684,9 +685,14 @@ function pjDraw(p) {
   const x = p.x, y = GROUND - p.y;
   ctx.save(); ctx.translate(x, y);
   switch (p.type) {
-    case 'crescent': { ctx.globalCompositeOperation = 'lighter'; const d = Math.sign(p.vx) || 1; ctx.scale(d, 1); // a crescent of shadow flying along the floor
-      ctx.fillStyle = 'rgba(190,150,255,.75)'; ctx.beginPath(); ctx.arc(-10, 0, 60, -1.2, 1.2); ctx.arc(-34, 0, 52, 1.05, -1.05, true); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = 'rgba(240,235,255,.9)'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(-10, 0, 60, -1.2, 1.2); ctx.stroke(); break; }
+    case 'crescent': { ctx.globalCompositeOperation = 'lighter'; const d = Math.sign(p.vx) || 1, k = (p.r || 40) / 40; ctx.scale(d * k, k); // a crescent of shadow flying along the floor (drawn as big as it hits)
+      if (p.big) { // the full moon: a halo of moonlight round it, pulsing, and a second, brighter edge
+        const pu = 0.8 + 0.2 * Math.sin(globalT * 0.4), g = ctx.createRadialGradient(-20, 0, 8, -20, 0, 78); g.addColorStop(0, `rgba(235,225,255,${0.45 * pu})`); g.addColorStop(0.6, `rgba(170,130,255,${0.25 * pu})`); g.addColorStop(1, 'rgba(120,80,220,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(-20, 0, 78, 0, Math.PI * 2); ctx.fill(); }
+      ctx.fillStyle = p.big ? 'rgba(205,175,255,.85)' : 'rgba(190,150,255,.75)'; ctx.beginPath(); ctx.arc(-10, 0, 60, -1.2, 1.2); ctx.arc(-34, 0, 52, 1.05, -1.05, true); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(240,235,255,.9)'; ctx.lineWidth = 2.5 / k * (p.big ? 2 : 1); ctx.beginPath(); ctx.arc(-10, 0, 60, -1.2, 1.2); ctx.stroke();
+      if (p.big) { ctx.strokeStyle = 'rgba(255,255,255,.95)'; ctx.lineWidth = 1.2 / k; ctx.beginPath(); ctx.arc(-6, 0, 63, -1.25, 1.25); ctx.stroke(); }
+      break; }
     case 'plate': case 'dish': { // the kappa's dish, spinning edge-on
       ctx.scale(1, 0.45 + 0.25 * Math.abs(Math.sin(p.spin))); ctx.fillStyle = '#f4f7fb'; ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#7cc6ef'; ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#b9dff5'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.stroke(); break; }
