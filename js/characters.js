@@ -104,25 +104,25 @@ const CHARS = {
     pDmg: 0.9, kDmg: 0.9, pReach: 1.15, kReach: 1.0, chargeRate: 0.48, auraCol: '200,160,255', fxCol: '210,190,255',
     sp: { fP: 'phantomFist', fPH: 'crushFist', fK: 'psyLift', fKH: 'forceWave', bP: 'orbBurst', bPH: 'tripleRay', bK: 'orbStrong', bKH: 'orbLong' }, sup: 'thousandFists',
     frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
-      U: { su: 10, blk: -4 }, dU: { su: 10, blk: -4 }, J: { su: 10, blk: -4 }, dJ: { su: 10, blk: -4 },
-      I: { su: 16, blk: -12 }, K: { su: 18, blk: -14 }, dI: { su: 16, blk: -16 }, dK: { su: 16, blk: -14 },
+      U: { su: 14, blk: -4 }, dU: { su: 14, blk: -4 }, J: { su: 14, blk: -4 }, dJ: { su: 14, blk: -4 },
+      I: { su: 16, suFar: 28, blk: -10 }, K: { su: 16, suFar: 28, blk: -10 }, dI: { su: 16, suFar: 28, blk: -16 }, dK: { su: 16, suFar: 28, blk: -14 }, // (her heavy spells reach end to end: 16F up close, up to 28F across the stage)
       $y2: { su: 12, blk: -6 }, $y3: { su: 12, blk: -6 }, $y4: { su: 12, blk: -6 }, $yF: { su: 18, blk: -18 }, $yL: { su: 16, blk: -15 }, /* (−16 measured) */ $yE: { su: 20, blk: -15 }, /* (U, K: −16 measured) */
       $yl2: { su: 12, blk: -6 }, $ylE: { su: 18, blk: -16 },
       phantomFist: { su: 18, blk: -6 }, crushFist: { su: 19, blk: -16 }, /* (the star drops on its own time) */ psyLift: { su: 22, blk: -16 }, forceWave: { su: 18, blk: -16 },
       orbBurst: { su: 18, blk: -12 }, tripleRay: { su: 20, blk: -14 }, orbStrong: { su: 14 }, orbLong: { su: 16 },
     },
     heavy: {
-      p: { label: 'Glyph Burst', startup: 12, active: 5, recovery: 18, hitbox: [40,195,85,145], wind: 'psyW', pose: 'psyPush', lunge: [2, 8, 1], hitstop: 10, push: 8, psyFist: [150, 115, 1], onStart: (f, o) => lyraReach(f, o, LYRA_RANGE, 120) },
-      k: { label: 'Gravity Well', startup: 13, active: 4, recovery: 19, hitbox: [40,185,0,170], wind: 'psyRaise', pose: 'psyDown', lunge: [2, 8, 1], cpLaunch: true, launchVy: 13, kd: true, psyFist: [130, 55, 1.15, 1], onStart: (f, o) => lyraReach(f, o, LYRA_RANGE, 110) },
+      p: { label: 'Glyph Burst', startup: 12, active: 5, recovery: 18, hitbox: [40,195,85,145], wind: 'psyW', pose: 'psyPush', lunge: [2, 8, 1], hitstop: 10, push: 8, psyFist: [150, 115, 1], onStart: (f, o) => lyraReach(f, o, LYRA_FAR, 120) },
+      k: { label: 'Gravity Well', startup: 13, active: 4, recovery: 19, hitbox: [40,185,0,170], wind: 'psyRaise', pose: 'psyDown', lunge: [2, 8, 1], cpLaunch: true, launchVy: 13, kd: true, psyFist: [130, 55, 1.15, 1], onStart: (f, o) => lyraReach(f, o, LYRA_FAR, 110) },
     },
     normalLook: {
       sp0: { label: 'Ripple', noCrystal: true, wind: 'psyW', pose: 'psyPush', hitbox: [40,138,94,132], psyFist: [100, 112, 0.55], onStart: (f, o) => lyraReach(f, o, LYRA_RANGE, 80), onFrame: (f, o, mf) => { if (mf <= f.move.startup) lyraReach(f, o, LYRA_RANGE, 80); } },
-      cp1: { label: 'Ground Burst', wind: 'psyW', pose: 'psyUp', crouch: false, hitbox: [40,175,0,200], groundBurst: 115 },
+      cp1: { label: 'Ground Burst', wind: 'psyW', pose: 'psyUp', crouch: false, hitbox: [40,175,0,200], groundBurst: 115, onStart: (f, o) => lyraReach(f, o, LYRA_FAR, 115) }, // (bursts up under them, wherever they are)
       jp1: { label: 'Falling Glyph', pose: 'airPsyDown', hitbox: [10,115,10,100], psyFist: [85, 60, 0.8, 0.5] },
       sk0: { label: 'Floor Glyph', wind: 'psyW', pose: 'psyLowCast', hitbox: [80,195,0,42], floorGlyph: 145, onStart: (f, o) => lyraReach(f, o, LYRA_RANGE, 110), onFrame: (f, o, mf) => { if (mf <= f.move.startup) lyraReach(f, o, LYRA_RANGE, 80); } },
       sk1: null,
       ck0: { label: 'Crouch Floor Glyph', wind: 'crouch', pose: 'psyLowCast', hitbox: [70,180,0,30], floorGlyph: 130 },
-      ck1: { label: 'Glyph Trip', wind: 'crouch', pose: 'psyLowCast', hitbox: [90,215,0,30], floorGlyph: 160 },
+      ck1: { label: 'Glyph Trip', wind: 'crouch', pose: 'psyLowCast', hitbox: [90,215,0,30], floorGlyph: 160, onStart: (f, o) => lyraReach(f, o, LYRA_FAR, 160) }, // (the glyph opens under them, wherever they are)
       jk0: { label: 'Air Glyph Drop', wind: 'jump', pose: 'airPsyDown', hitbox: [10,110,0,60], psyFist: [70, 25, 0.6, 1] },
       jk1: { label: 'Air Glyph Spin', wind: 'jump', pose: 'airPsyBoth', hitbox: [-30,120,0,90], psyFist: [60, 50, 0.75, 0.5] },
     },

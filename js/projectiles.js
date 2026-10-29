@@ -177,7 +177,7 @@ function shoot(f, o) { // bullets fly 40% faster than before; o.range (in pixels
   sfx('shot'); if (lvl === 2) sfx('hitH');
 }
 // Lyra's crystals: they form above the opponent and fall on them, wherever they are (up to half the stage away); she never has to move
-const LYRA_RANGE = 400;
+const LYRA_RANGE = 400, LYRA_FAR = 900; // (her heavy spells — I, K, ↓ + I, ↓ + K — reach from one end of the stage to the other)
 function drawCrystal(x, y, r, a, rot) { // a long crystal of light, pale blue to pink
   ctx.save(); ctx.translate(x, y); ctx.rotate(rot || 0); ctx.globalAlpha = a;
   const g = ctx.createLinearGradient(0, -r * 1.6, 0, r * 1.6); g.addColorStop(0, '#f6f0ff'); g.addColorStop(0.5, '#b9dcff'); g.addColorStop(1, '#ff9be8');
@@ -239,11 +239,11 @@ function lyraCrystals(f, o, mf) { // each juggle hit: crystals form above them a
 }
 // Lyra's runes appear right where the opponent stands, out to a long range (further than Jesse's guns)
 function lyraReach(f, o, maxD, minD) {
-  const mv = f.move, s = f.ch.scale, ahead = (o.x - f.x) * f.facing / s, base = mv.psyFist ? mv.psyFist[0] : mv.floorGlyph;
+  const mv = f.move, s = f.ch.scale, ahead = (o.x - f.x) * f.facing / s, base = mv.psyFist ? mv.psyFist[0] : mv.floorGlyph != null ? mv.floorGlyph : mv.groundBurst;
   if (base == null) return;
   const d = clamp(ahead, minD, maxD), shift = d - base;
   if (mv.psyFist) mv.psyFist = [d, ...mv.psyFist.slice(1)];
-  if (mv.floorGlyph) mv.floorGlyph = d;
+  if (mv.floorGlyph) mv.floorGlyph = d; else if (mv.groundBurst) mv.groundBurst = d;
   if (mv.hitbox) mv.hitbox = [mv.hitbox[0] + shift, mv.hitbox[1] + shift, mv.hitbox[2], mv.hitbox[3]];
 }
 // Tanaka's hit and run: after the hit he backs off fast

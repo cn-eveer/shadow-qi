@@ -167,7 +167,8 @@ function moveFrames(f, mv) {
   mv.framesDone = true;
   if (e.set) Object.assign(mv, e.set);
   if (mv.noGuardLag) f.lastMoveTech = false; // (guarded, no extra opening on top of its own recovery)
-  if (e.su) { const now = f.pre + mv.startup, want = e.su - (mv.hitbox ? 2 : 1); // (frames before it can hit: a blow lands on the frame after, a shot is thrown on it)
+  const su = e.suFar ? e.su + (e.suFar - e.su) * clamp((Math.abs(other(f).x - f.x) - 100) / (WALL_R - WALL_L - 140), 0, 1) : e.su; // (suFar: the further away they are, the longer it takes)
+  if (su) { const now = f.pre + mv.startup, want = Math.round(su) - (mv.hitbox ? 2 : 1); // (frames before it can hit: a blow lands on the frame after, a shot is thrown on it)
     if (want > now) f.pre += want - now;
     else if (want < now) { const cut = Math.min(f.pre, now - want); f.pre -= cut; if (mv.tellPre) mv.tellPre = Math.max(0, mv.tellPre - cut); if (mv.preTotal != null) mv.preTotal = f.pre; // (a shorter wind-up first: the move itself, its dash or leap, keeps its pace…
       if (now - cut > want) mv.speedUp = (now - cut) / want; } } // …and only if that isn't enough does the move play faster)
@@ -329,7 +330,7 @@ function runMove(f, o, inp) {
 function threatened(f, o) {
   const d = Math.abs(o.x - f.x);
   if (o.golem && golemThreatening(f, o)) return true; // (the golem is attacking)
-  if (o.state === 'attack' && o.move && d < 280 && o.mf <= o.move.startup + o.move.active + 2 && !(o.move.walkAway && o.mf <= o.move.startup)) return true;
+  if (o.state === 'attack' && o.move && d < (o.key === 'psychic' ? LYRA_FAR : 280) && o.mf <= o.move.startup + o.move.active + 2 && !(o.move.walkAway && o.mf <= o.move.startup)) return true;
   for (const p of projs) if (p.owner === o && !p.dead && (p.type === 'beam' || p.type === 'flame' || (p.fall && Math.abs(p.x - f.x) < 150) || (Math.sign(f.x - p.x) === Math.sign(p.vx) && Math.abs(p.x - f.x) < 300))) return true; // (or one dropping on them from above)
   return false;
 }
