@@ -860,7 +860,7 @@ function updateProjs() {
         const tgt = other(own), hu = hurtbox(tgt, false);
         if (hu && overlap(hb, hu)) {
           const last = p.hits === p.max - 1;
-          applyHit(own, tgt, { dmg: last ? p.lastDmg : p.dmg, stun: p.stun, bstun: p.bstun, push: last ? 4 : p.push, kd: false, type: 'mid', chip: true, stunT: 52, stunKind: 'burn',
+          applyHit(own, tgt, { dmg: last ? p.lastDmg : p.dmg, stun: p.stun, bstun: p.bstun, push: last ? 4 : p.push, kd: false, type: 'mid', chip: true,
             hitstop: last ? 8 : 2, proj: true, str: last ? 2 : 1, gdrain: 2, label: 'Fire Breath' }, own.facing, hb, hu);
           p.hits++; p.last = p.t;
         }

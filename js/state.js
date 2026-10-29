@@ -121,7 +121,7 @@ function startMove(f, mv, str, keepBuffer) {
   const ksg = f.key === 'ninja' && (KURO_SIGNS[mv.id] || KURO_SPIRIT_LABEL[mv.label]);
   if (ksg) f.spirit = { sg: ksg, t0: game.frame, rise: mv.tellPre ? Math.min(12, mv.tellPre) : 6, hold: (mv.tellPre || 0) + 40, x: f.x - f.facing * 12, y: GROUND - f.y - 125 * f.ch.scale, dir: f.facing, hy: GROUND - f.y - 236 * f.ch.scale }; // the seal's spirit: it rises where he cast it and stays there a while, then fades slowly
   if (f.key === 'gunman' && !(f.gunOutT > 0)) for (const sd of [1, -1]) parts.push({ type: 'star', x: f.x + f.facing * sd * 14, y: GROUND - f.y - 92 * f.ch.scale, r: 8, vr: 1.4, life: 6, max: 6, col: '255,240,190', rot: 0.4 }); // the quick draw: a glint as the guns leave the holsters
-  f.lastMoveTech = !mv.normal && !mv.super; f.lastTechTier = f.lastMoveTech ? techTier(mv) : null; // (a guarded technique leaves him open: see techGuardLag)
+  f.lastMoveTech = !mv.normal && !mv.super && !mv.noGuardLag; f.lastTechTier = f.lastMoveTech ? techTier(mv) : null; // (a guarded technique leaves him open: see techGuardLag)
   // every heavy attack gets a readable wind-up: at least 6 frames of early motion before it can hit (fast heavies gain a few frames)
   // every attack gets a wind-up animation before it can hit (frames are added where the move was quicker than that):
   // heavy buttons 12 frames, techniques 10, combo finishers and heavy string hits 9, everything else (jabs, string and juggle hits, air attacks, throws) 6

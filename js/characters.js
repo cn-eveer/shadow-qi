@@ -5,7 +5,7 @@ const CHARS = {
     // frames: wind-up 2 shorter (light) / 4 shorter (heavy), hand signs 20% shorter (still long enough to jab him first); every attack out 3 frames longer; recovery 3 / 5 / 5 longer
     frameMod: { su: { light: 2, heavy: 4 }, tell: 0.8, act: 3, rec: { light: 3, heavy: 5, tech: 5 } },
     // his techniques' 発生 (frames until they can hit) brought to about 16–22: how many times faster their lead-up plays (see techSpeed)
-    techSpeed: { shadowCharge: 3.4, swordSlash: 2, cloneStrike: 1.65, teleKick: 1.95, flame: 2.1, fireballs: 10, vanishSlide: 5, vanishDrop: 3.8, ambushLeap: 2.6, teleSpin: 1.5,
+    techSpeed: { shadowCharge: 4.6, swordSlash: 2.4, cloneStrike: 1.65, teleKick: 2.25, flame: 2.1, fireballs: 10, vanishSlide: 5, vanishDrop: 5.5, ambushLeap: 2.6, teleSpin: 1.5,
       jFire: 1.45, jRain: 1.5, jClone: 1.55, jIai: 1.45, jVanishHeel: 1.45 },
     name: 'KURO', noStress: true, dmgMul: 1.08, title: 'Shadow Ninja', nameJa: 'クロ', titleJa: '影の忍者', jugDmg: 1.15, scale: 1, walk: 3.4, back: 2.8, jumpX: 4.4,
     pDmg: 0.9, kDmg: 0.92, pReach: 1, kReach: 1.08, chargeRate: 0.5, auraCol: '185,145,255',

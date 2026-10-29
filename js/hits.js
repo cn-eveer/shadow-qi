@@ -69,7 +69,7 @@ function uReach(d) { // how far the defender's U reaches (Lyra and Jesse reach m
 function techGuardLag(a, d, h) {
   const five = a.state === 'attack' && a.move && a.move.fiveEnder && !a.move.noFiveLag && a.move.startup < 900; // (noFiveLag: an ender with its own block frames)
   if (a.state === 'attack' && a.move && a.move.super && a.move.startup < 900) { const left = a.move.startup + (a.move.active || 0) + a.move.recovery - a.mf, cap = (h.bstun || 10) + 8; if (left > cap) a.move.recovery = Math.max(2, a.move.recovery - (left - cap)); return; } // (supers are safe when guarded)
-  if ((!a.lastMoveTech && !five) || a.ko) return;
+  if ((!a.lastMoveTech && !five) || a.ko || (a.move && a.move.noGuardLag)) return;
   const R = uReach(d), dist = Math.abs(a.x - d.x) + 30, travel = dist > R ? 16 + Math.ceil(Math.max(0, dist - R - 110) / 8) : 0; // (a dash in takes about 16 frames; the guard pushes them apart a little more)
   const tier = five ? 'heavy' : a.move && a.state === 'attack' && !a.move.normal ? techTier(a.move) : a.lastTechTier || 'mod'; // (the end of a five-hit string is punished hard)
   if (tier === 'fast') { // quick techniques are safe: if one would leave him open, he recovers sooner
@@ -369,7 +369,7 @@ function applyHit(a, d, h, side, hb, hu) {
   a.meter = Math.min(100, a.meter + dmg * 0.11); // MP fills by fighting: dealing damage...
   d.meter = Math.min(100, d.meter + dmg * 0.07); // ...and taking it
   if (d.hp <= 0) { d.ko = true; setState(d, 'knock'); d.vy = 9; d.vx = side * 4.5; d.y = Math.max(d.y, 1); }
-  else if (h.slash && d.y <= 0) {
+  else if (h.slash && d.y <= 0 && !cpl) { // (a slash that's a counter or a punish launches instead, if the move says so: cpLaunch)
     setState(d, 'slashed'); d.stun = h.iai ? 38 : 26; d.slashDir = side; d.vx = side * 1.5;
     parts.push({ type: 'slashmark', x: d.x, y: GROUND - 80 * d.ch.scale, dir: side, life: 34, max: 34, delay: h.iai ? 16 : 0 }); // after an iai the cut shows a moment later
   }
@@ -492,4 +492,17 @@ function checkHits(a, o) {
 }
 
 
-{ const core = applyHit; applyHit = function (a, d, h, side, hb, hu) { const r = core.apply(this, arguments); if ((r === 'hit' || r === 'block' || r === 'armor') && a.fd) fdContact(a, r); return r; }; } // training frame data: the attack's first hit or guard
+// a move that sets its own advantage — blockAdv when guarded, hitAdv on a hit (frames, + = the attacker acts first): once it connects,
+// his remaining frames (guarded) or their hit-stun (a hit) are set to match, whatever the general rules for guarded techniques say
+function fixAdv(a, d, h, r) {
+  const mv = a.state === 'attack' && a.move; if (!mv || mv.startup >= 900) return;
+  const left = mv.startup + (mv.active || 0) + mv.recovery - a.mf;
+  if (r === 'block' && mv.blockAdv != null && d.state === 'blockstun') {
+    const T = d.stun - mv.blockAdv - (!h.proj && !mv.guardStalled && !mv.super ? GUARD_STALL : 0); // (a blow — not a shot — still gets the guard stall afterwards: see checkHits)
+    if (T < left - mv.recovery && !h.proj) { mv.active = Math.max(0, a.mf - mv.startup); mv.recovery = Math.max(1, T); } // (more of the blow is still to come than the opening allows: it ends here)
+    else mv.recovery = Math.max(1, mv.recovery + T - left);
+    a.guardLagUntil = 0; a.guardLagNeed = 0; mv.lagLock = false;
+  }
+  if (r === 'hit' && mv.hitAdv != null && d.state === 'hitstun') d.stun = Math.max(1, left + mv.hitAdv - (d.ch.recoverT || 12)); // (they act once their recovery after the hit-stun is over)
+}
+{ const core = applyHit; applyHit = function (a, d, h, side, hb, hu) { const r = core.apply(this, arguments); if (r === 'hit' || r === 'block') fixAdv(a, d, h, r); if ((r === 'hit' || r === 'block' || r === 'armor') && a.fd) fdContact(a, r); return r; }; } // a move's own advantage; the training frame data
