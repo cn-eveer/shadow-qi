@@ -176,8 +176,8 @@ function comboBreak(f, o) {
 const autoGuardFor = (f, toward) => game.autoGuard && !game.online && f.ctrl instanceof Human && f.inp && f.inp.h !== toward;
 // a ground combo (not in the air, not stunned or knocked down): whoever is being hit can guard the next attack — holding back, or standing
 // or crouching with auto guard — if its 発生 (frames from its start until it reaches them) is more than GUARD_BACK; after a counter hit
-// they get back to guard 2 frames later (GUARD_BACK_CH). Fast follow-ups (U, U) stay a combo; slower ones (U, I — a medium) can be guarded
-const GUARD_BACK = 10, GUARD_BACK_CH = 12;
+// they get back to guard 4 frames later (GUARD_BACK_CH). Fast follow-ups (U, U) stay a combo; slower ones (U, I — a medium) can be guarded
+const GUARD_BACK = 10, GUARD_BACK_CH = 14;
 const COUNTER_STUN = 4; // a counter hit (caught as they started something) stuns 4 frames longer: −4 for them, +4 for whoever countered
 const GUARD_STALL = 6;
 // (applyHit, below, reports each first hit or guard to the training frame data: fdContact) // frames an attacker loses when his attack is guarded (shown as a recoil)
