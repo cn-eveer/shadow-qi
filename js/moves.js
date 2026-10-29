@@ -213,7 +213,7 @@ function specialMoveBase(id) {
           // reappear above the opponent, then drop through them and land behind
           const side = Math.sign(o.x - f.x) || f.facing;
           f.tele = { x1: clamp(o.x - side * 30, WALL_L, WALL_R), x2: clamp(o.x + side * 55, WALL_L, WALL_R) };
-          f.x = f.tele.x1; f.y = 175; f.facing = side; f.hidden = false; puff(f.x, f.y + 60);
+          f.x = f.tele.x1; f.y = 175; f.facing = side; f.hidden = false; f.invul = 0; puff(f.x, f.y + 60); // (seen again: hittable from here — an anti-air can catch the drop)
         }
         if (mf > 14 && mf <= 20) f.y = 175 + Math.sin((mf - 14) * 0.5) * 3; // brief hang so the opponent can react
         if (mf > 20 && mf <= 34) { const e = (mf - 20) / 14; f.x = lerp(f.tele.x1, f.tele.x2, e); f.y = 175 * (1 - e); }

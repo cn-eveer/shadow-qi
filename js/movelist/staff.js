@@ -41,7 +41,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
         </tbody>
       </table></div>
       <p class="note">Samples 13 and 14 show both rushes against a guard. U, U, K in a juggle is staff jab, swing and whirl. While they’re launched, → → + U, → → + I, → → + J, ← ← + U and ← ← + I turn into juggle versions: Staff Lift, Vault Spike, Pole Rocket Kick, Rising Windmill and Cloud Chase. Hold ↓ with the button to use them on their own.</p>
-      <p class="note"><b>Combo strings.</b> U, U, U, U, K: twin thrust, then two low sweeps (crouch to guard them), great sweep. U, U, U, U, ↓ + K ends with a low ground thrust instead; U, ↓ + K is a low tail sweep that trips them. I from any point: Rising Staff launches; K ends with an overhead crash. J, J, K: staff jab (a mid), floor sweep. She stays at the staff’s length: her attacks barely step in.</p>
+      <p class="note"><b>Combo strings.</b> U, U, U, U, K: twin thrust, then two low sweeps (crouch to guard them), great sweep. U, U, U, U, ↓ + K ends with a low ground thrust instead; U, ↓ + K is a low tail sweep that trips them. I from any point: Rising Staff launches; K ends with an overhead crash. J, J, K: staff jab (a mid), floor sweep. She stays at the staff’s length: her attacks barely step in. Her mid and top attacks swing up over her head too, so they catch someone jumping or dropping in from above — swing ↓ + I or I as Kuro starts his Sky Drop Kick.</p>
     </article>
     <article class="card staff" data-tab="staff" data-lang="ja" hidden>
       <h2>メイ<span>棍の天才</span></h2>
@@ -82,6 +82,6 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
         </tbody>
       </table></div>
       <p class="note">見本の13と14は、二つの連続技をガードされたときの例。空中の相手に→→+U・→→+I・→→+J・←←+U・←←+Iを使うと追撃版になる。↓を押しながら使うと単体でも出る。</p>
-      <p class="note"><b>連続技。</b> U、U、U、U、K：二段突きから下段の払い2回（しゃがみガード）、大払い。U、U、U、U、↓+Kは下段の突きで締める。U、↓+Kは足を払う下段。途中のIで昇り棍（打ち上げ）、Kで振り下ろし。J、J、K：棍の突き（中段）・床払い。棍の長さで戦い、攻撃でほとんど前に出ない。</p>
+      <p class="note"><b>連続技。</b> U、U、U、U、K：二段突きから下段の払い2回（しゃがみガード）、大払い。U、U、U、U、↓+Kは下段の突きで締める。U、↓+Kは足を払う下段。途中のIで昇り棍（打ち上げ）、Kで振り下ろし。J、J、K：棍の突き（中段）・床払い。棍の長さで戦い、攻撃でほとんど前に出ない。中段・中下段の攻撃は頭上まで届き、ジャンプや上からの攻撃を迎え撃てる（クロの天落蹴りの出始めに↓+IかIを振れば落とせる）。</p>
     </article>
 `);

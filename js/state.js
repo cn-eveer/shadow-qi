@@ -149,6 +149,7 @@ function startMove(f, mv, str, keepBuffer) {
   if (f.ch.fastAtk && mv.normal && !mv.fastDone && mv.startup < 900) { mv.fastDone = true; mv.startup = Math.max(3, mv.startup - 2); mv.recovery = Math.max(4, Math.round(mv.recovery * 0.8)); } // the devil: wild and fast
   if (mv.held && f.inp) { if (!mv.holdBtn) mv.holdBtn = f.inp.btn; if (f.inp.holdFor && mv.holdFor == null) mv.holdFor = f.inp.holdFor; }
   moveFrames(f, mv); // (before onStart: with no wind-up left it starts right away)
+  if (f.ch.antiAir && Array.isArray(mv.hitbox) && !mv.low && !mv.air && !mv.jug && !mv.antiAirDone) { mv.antiAirDone = true; const hb = mv.hitbox = mv.hitbox.slice(); hb[0] = Math.min(hb[0], -20); hb[3] = Math.max(hb[3], f.ch.antiAir); } // (her staff swings up over her head too: they catch someone coming down from above — Mei)
   if (f.pre) sfx('charge');
   else if (mv.onStart) mv.onStart(f, other(f));
   mv.t0 = game.frame; // (when it started: its 発生 decides whether someone in a combo can guard it — GUARD_BACK)

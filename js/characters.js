@@ -63,6 +63,7 @@ const CHARS = {
     pDmg: 1.35, kDmg: 1.2, pReach: 1.9, kReach: 1.0, chargeRate: 0.66, auraCol: '255,200,90', fxCol: '255,205,110',
     sp: { fP: 'extendStaff', fPH: 'vaultSmash', fK: 'poleKick', fKH: 'sweepStaff', bP: 'windmill', bPH: 'cloudLeap', bK: 'somersault', bKH: 'feint' }, sup: 'greatSage',
     recPlus: 5, // every attack recovers 5 frames slower (see moveFrames)
+    antiAir: 250, // her mid and top attacks reach up to here, over her head as well: they catch a jump or a drop from above
     frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
       U: { su: 6, act: 5, rec: 9, blk: -4 }, dU: { su: 8, act: 5, rec: 9, blk: -4 }, J: { su: 6, act: 5, rec: 9, blk: -4 }, dJ: { su: 8, act: 5, rec: 9, blk: -4 },
       I: { su: 12, act: 6, rec: 16, blk: -12 }, K: { su: 16, act: 8, rec: 18, blk: -14 },
