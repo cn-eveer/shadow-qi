@@ -467,16 +467,16 @@ function specialMoveBase(id) {
           parts.push({ type: 'lbeam', x: f.x + f.facing * 30, w: 30, life: 10, max: 10 }); dustAt(f.x, true); cracks(f.x + f.facing * 30); game.shake = Math.max(game.shake, 9); sfx('hitH'); }
       } };
     // ← ← + U: Push Parry. Parries from the 5th frame; a parried blow gets a shield shove that sends them away (no damage). Short window, long recovery
-    case 'plParryRise': return { id, label: 'Push Parry', startup: 4, active: 10, recovery: 26, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plShove', fx: 'ward' };
+    case 'plParryRise': return { id, label: 'Push Parry', startup: 4, active: 10, recovery: 26, noProjParry: true, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plShove', fx: 'ward' };
     case 'plShove': return { id, label: 'Shield Shove', startup: 2, active: 3, recovery: 14, wind: 'pBashW', pose: 'pBash', hitbox: null, burst: [80, 110],
       onStart(f, o) { const side = Math.sign(o.x - f.x) || f.facing; if (o.state !== 'ko') { setState(o, 'blockstun'); o.stun = 14; o.move = null; o.vx = side * 30; } sfx('palm'); game.shake = Math.max(game.shake, 3); } }; // (pushed far back, unhurt)
     // ← ← + I: Riposte Parry. Parries from the 5th frame and answers with a sword riposte that hurts and knocks them away
-    case 'plParryStun': return { id, label: 'Riposte Parry', startup: 4, active: 10, recovery: 32, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plRiposte', fx: 'ward' };
+    case 'plParryStun': return { id, label: 'Riposte Parry', startup: 4, active: 10, recovery: 32, noProjParry: true, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plRiposte', fx: 'ward' };
     case 'plRiposte': return { id, label: 'Riposte', startup: 4, active: 5, recovery: 18, wind: 'pThrustW', pose: 'pThrust', wrist: 0, selfMove: true, speedFx: true, noGrace: true, staffExt: 30,
       hitbox: [20,210,70,150], dmg: 64, stun: 22, bstun: 12, push: 6, kd: true, kdVx: 15, kdVy: 7, type: 'mid', hitstop: 14, gdrain: 10,
       onFrame(f, o, mf) { if (mf <= 5 && Math.abs(o.x - f.x) > 70) f.vx = f.facing * 12; else f.vx *= 0.5; if (mf === 4) sfx('slash'); } };
     // ← ← + K: Rising Parry. Parries from the 8th frame and strikes up under them: it launches, and the combo begins
-    case 'plPray': return { id, label: 'Rising Parry', startup: 7, active: 10, recovery: 34, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plRiseStrike', fx: 'ward' };
+    case 'plPray': return { id, label: 'Rising Parry', startup: 7, active: 10, recovery: 34, noProjParry: true, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plRiseStrike', fx: 'ward' };
     case 'plRiseStrike': return { id, label: 'Rising Strike', startup: 4, active: 5, recovery: 18, wind: 'pCleaveW', pose: 'pShieldUp', selfMove: true, speedFx: true, noGrace: true,
       hitbox: [10,160,30,225], dmg: 46, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 14, type: 'mid', hitstop: 12, gdrain: 10,
       onFrame(f, o, mf) { if (mf <= 4 && Math.abs(o.x - f.x) > 70) f.vx = f.facing * 10; else f.vx *= 0.5; if (mf === 4) { parts.push({ type: 'lbeam', x: f.x + f.facing * 80, w: 34, life: 16, max: 16 }); sfx('orb'); } } };
@@ -1030,9 +1030,9 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { if (mf === 14) spawnQiOrb(f); } };
     case 'qiParry': return { id, label: 'Qi Parry', startup: 7, active: 22, recovery: 20, wind: 'charge', pose: 'parryStance', parry: true, aura: true, fx: 'ward',
       onFrame(f, o, mf) { if (mf > 7 && mf <= 29 && mf % 3 === 0) auraParticle(f); } };
-    case 'pushParry': return { id, label: 'Push Parry', startup: 4, active: 10, recovery: 26, wind: 'charge', pose: 'parryStance', parry: true, parryInto: 'parryShove', aura: true, fx: 'ward', // ← ← + U: parries from the 5th frame; a parried blow gets a shove that sends them away (no damage)
+    case 'pushParry': return { id, label: 'Push Parry', startup: 4, active: 10, recovery: 26, noProjParry: true, wind: 'charge', pose: 'parryStance', parry: true, parryInto: 'parryShove', aura: true, fx: 'ward', // ← ← + U: parries from the 5th frame; a parried blow gets a shove that sends them away (no damage)
       onFrame(f, o, mf) { if (mf > 4 && mf <= 14 && mf % 3 === 0) auraParticle(f); } };
-    case 'kickParry': return { id, label: 'Kick Parry', startup: 4, active: 10, recovery: 32, wind: 'charge', pose: 'parryStance', parry: true, parryInto: 'parryKick', aura: true, fx: 'ward', // ← ← + I: the same, but he answers with a kick
+    case 'kickParry': return { id, label: 'Kick Parry', startup: 4, active: 10, recovery: 32, noProjParry: true, wind: 'charge', pose: 'parryStance', parry: true, parryInto: 'parryKick', aura: true, fx: 'ward', // ← ← + I: the same, but he answers with a kick
       onFrame(f, o, mf) { if (mf > 4 && mf <= 14 && mf % 3 === 0) auraParticle(f); } };
     case 'parryShove': return { id, label: 'Qi Shove', startup: 2, active: 3, recovery: 14, wind: 'palmW', pose: 'blast', hitbox: null, aura: true, burst: [80, 110],
       onStart(f, o) { const side = Math.sign(o.x - f.x) || f.facing; if (o.state !== 'ko') { setState(o, 'blockstun'); o.stun = 14; o.move = null; o.vx = side * 30; } sfx('qi'); game.shake = Math.max(game.shake, 3); } }; // (pushed far back, unhurt: back to neutral at a distance)

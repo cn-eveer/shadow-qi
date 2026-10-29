@@ -254,7 +254,7 @@ function applyHit(a, d, h, side, hb, hu) {
     sparks(cx, cy, 'block'); sfx('block'); if (!d.passT || game.frame - d.passT > 12) { d.passT = game.frame; popText(d.x, GROUND - d.y - 180, 'SHIELD', '255,225,140'); }
     game.freeze = Math.max(game.freeze, 3); return 'block';
   }
-  if (d.state === 'attack' && d.move && d.move.parry && d.mf > d.move.startup && d.mf <= d.move.startup + d.move.active && !(d.move.frontOnly && side !== -d.facing)) { parryCounter(d, a, h); return null; }
+  if (d.state === 'attack' && d.move && d.move.parry && d.mf > d.move.startup && d.mf <= d.move.startup + d.move.active && !(d.move.frontOnly && side !== -d.facing) && !(h.proj && d.move.noProjParry) && a.key !== 'psychic') { parryCounter(d, a, h); return null; } // (noProjParry: Tetsu's and Aldric's parries answer blows, not projectiles; Lyra's magic can't be parried at all)
   if (d.state === 'down') { // ground hit: a low attack on a downed opponent
     const dmg = Math.max(1, Math.round(h.dmg * 0.6));
     d.hp = Math.max(game.training ? 1 : 0, d.hp - dmg); d.otgUsed = true; d.flash = 7;
