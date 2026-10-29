@@ -6,7 +6,6 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <h2>MEI<span>Staff Prodigy</span></h2>
       <p class="blurb">A young kung fu prodigy: a girl in a formal red kung fu jacket and side-slit tunic, with a golden-capped staff like the Monkey King’s. Long reach, the highest jump, a second jump in mid-air, and attacks that come down from above.</p>
       <p class="note"><b>v1.3.9: longer reach.</b> She holds the staff near its back end — a short end behind her hands, a long reach in front — and her attacks hit along the staff out to its tip, not at her hands: the hit area follows where the staff actually is in each frame.</p>
-      <p class="note"><b>Charge (hold I).</b> Qi gathers into him while you hold. Half a second: Rising Cudgel, the staff swings up and lifts them — follow it with a juggle. Over a second: Typhoon Swing, a full spinning swing that sends them flying. A tap is the normal heavy attack.</p>
       <p class="note"><b>Theme.</b> Monkey king & golden cloud · gold and red. A playful prodigy who borrowed a legend’s staff. Signatures: U, U, K Golden Cudgel Crash (pole-vaults and crashes down); U, U, I Cloud Launcher (rides a little cloud up with the swing).</p>
       <div class="scroll"><table>
         <tbody>
@@ -48,7 +47,6 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <h2>メイ<span>棍の天才</span></h2>
       <p class="blurb">赤い礼装の拳法着をまとった若き天才少女。孫悟空のような金の棍を振り回す。リーチが最も長く、ジャンプが最も高く、空中で二段ジャンプができる。</p>
       <p class="note"><b>v1.3.9：リーチが長く。</b>棍の後ろの方を握るように（手の後ろは短く、前に長く伸びる）。攻撃は手元ではなく、棍に沿って先端まで当たる（当たり判定は毎フレーム、実際の棍の位置についていく）。</p>
-      <p class="note"><b>溜め技（I長押し）。</b> 押している間、気が集まる。0.5秒：昇り棍（棍を振り上げて浮かせる）、空中追撃につながる。1秒以上：台風振り（回転する大振りで吹き飛ばす）。押すだけなら通常の強攻撃。</p>
       <p class="note"><b>テーマ.</b> 猿王と金の雲・金と赤。伝説の棍を借りたお茶目な天才。決め技：U、U、K「金箍棒落とし」（棒高跳びから叩きつけ）／U、U、I「雲打ち上げ」（小さな雲に乗って振り上げる）。</p>
       <div class="scroll"><table>
         <tbody>
