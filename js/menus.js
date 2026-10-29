@@ -259,7 +259,7 @@ window.addEventListener('keydown', e => {
       else if (e.code === 'KeyC' && game.moveList) stepTab(); // (the 技表's tabs)
       else if (e.code === 'Comma' && game.moveList) stepMoveList(-1);
       else if (e.code === 'Period' && game.moveList) stepMoveList(1);
-      else if (e.code === 'Space' && game.moveList && game.listTab === 'opp') toggleRepeat(); // punish training: the dummy does it again and again…
+      else if (e.code === 'KeyB' && game.moveList && game.listTab === 'opp') toggleRepeat(); // punish training: the dummy does it again and again…
       else if ((e.code === 'Minus' || e.code === 'Equal') && game.moveList && game.listTab === 'opp') stepEvery(e.code === 'Minus' ? -1 : 1); // …this often
     }
   }
@@ -392,7 +392,7 @@ function updateTouchUI() { // shown only on a phone or tablet, during play (not 
 updateTouchUI();
 // training: the 技表 over the game (L), three tabs (C, or tap them): 技 — your moves one at a time, name and command (from the move list);
 // コンボ — your sample combos, their keys in order; 相手 — the dummy's commands, with ▶ to have it do one again and again (punish training).
-// ◀ ▶ or , . step through the tab; Space plays or stops the dummy's command, − = change how often
+// ◀ ▶ or , . step through the tab; B plays or stops the dummy's command, − = change how often
 document.querySelectorAll('.card .scroll').forEach(d => { const c = d.querySelector('tbody td'); if (c && /^\d+\./.test(c.textContent.trim())) d.classList.add('combo'); });
 const tlistUI = document.getElementById('tlist'); let tlistCh = '', tlistKey = '', tlistMoves = [], tlistIdx = 0, tcomboIdx = 0;
 const TL_TABS = ['moves', 'combos', 'opp'];
@@ -432,7 +432,7 @@ function updateMoveList() {
   if (tab === 'combos') { const list = comboListOf(ch), c = list[tcomboIdx]; body = c ? `<b>${esc(c.name)}</b> <small>${tcomboIdx + 1}/${list.length}</small>${chips(c.keys)}` : ''; }
   else if (tab === 'opp') {
     const m = opp[game.repIdx || 0], shown = c => L(c, c.replace(', then ', '、続けて ').replace(' then ', ' から ').replace(' (hold)', '（長押し）'));
-    body = m ? `<small>${esc(nm(CHARS[dch]))} ${(game.repIdx || 0) + 1}/${opp.length}${IS_MOBILE ? '' : ` · ${L('Space play / stop, − = how often', 'Space 再生・停止、− = 間隔')}`}</small>${m.name ? `<b>${esc(m.name)}</b>` : ''}`
+    body = m ? `<small>${esc(nm(CHARS[dch]))} ${(game.repIdx || 0) + 1}/${opp.length}${IS_MOBILE ? '' : ` · ${L('B play / stop, − = how often', 'B 再生・停止、− = 間隔')}`}</small>${m.name ? `<b>${esc(m.name)}</b>` : ''}`
       + `<div class="trow">${chips(shown(m.label).split(/、続けて | から |, then | then |, /))}<button class="tplay${game.repeatOn ? ' on' : ''}" data-play="1" aria-label="${game.repeatOn ? L('Stop', '停止') : L('Play: the dummy repeats it', '再生：ダミーが繰り返す')}">${game.repeatOn ? '■' : '▶'}</button>`
       + `<span class="tev"><button data-e="-1" aria-label="${L('Shorter interval', '間隔を短く')}">−</button>${L(`every ${game.repEvery || 1.5} s`, `${game.repEvery || 1.5}秒ごと`)}<button data-e="1" aria-label="${L('Longer interval', '間隔を長く')}">+</button></span></div>` : '';
   } else { tlistMoves = moveListOf(ch); const m = tlistMoves[tlistIdx]; body = m ? `<b>${esc(m.name)}</b><div class="tc">${esc(m.cmd)}</div>` : ''; }

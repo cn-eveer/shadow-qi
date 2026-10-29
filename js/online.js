@@ -7,7 +7,7 @@ const NBIT = { left: 1, right: 2, up: 4, down: 8, lp: 16, hp: 32, lk: 64, hk: 12
 const NET = { on: false, peer: null, conn: null, host: false, side: 0, delay: 4, tick: 0, cur: 0, local: {}, remote: {}, sentUpTo: -1,
   name: '', oppName: '', names: ['', ''], rtt: 0, stallT: 0, status: '', mode: null, busy: false, ck: {}, rematch: [false, false], joinTimer: null };
 function netLocalMask() { // this player's buttons right now
-  let m = 0; const k = c => keys.has(MAPS.p1[c]) || (ALT[c] && keys.has(ALT[c]));
+  let m = 0; const k = c => keys.has(MAPS.p1[c]) || (ALT[c] && keys.has(ALT[c])) || (ALT2[c] && keys.has(ALT2[c]));
   for (const c in NBIT) if (k(c)) m |= NBIT[c];
   return m;
 }

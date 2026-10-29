@@ -388,7 +388,7 @@ function golemUpdate(f, o) {
     g.queue = null; const A0 = g.act && GOLEM_ACT[g.act.kind]; if (A0 && g.act.t < A0.su && !A0.leap) g.act = null;
     if (g.hold) { golemRelease(f, o, true); popText(g.x, GROUND - 200, L('LET GO!', '手を離した！'), '220,220,230'); } }
   const inp = f.inp || EMPTY; // the golem copies the alchemist: where he walks, when he jumps or crouches
-  if (g.js !== f.jumpSerial) { g.js = f.jumpSerial; if (f.state === 'jump' && g.y <= 0 && !g.act) g.vy = f.ch.jumpV || JUMP_V; }
+  if (g.js !== f.jumpSerial) { g.js = f.jumpSerial; if (f.state === 'jump' && g.y <= 0 && !g.act) g.vy = (f.ch.jumpV || JUMP_V) * JUMP_HIGH; }
   if (g.y > 0 || g.vy > 0) { g.vy -= G; g.y += g.vy; if (g.y <= 0) { g.y = 0; g.vy = 0; g.mvx = 0; dustAt(g.x, false); if (g.act && g.act.kind === 'meteor') { dustAt(g.x, true); game.shake = Math.max(game.shake, 5); sfx('land'); } } }
   g.crouch = !!inp.down && g.y <= 0 && !g.act;
   if (!live) { g.act = null; g.queue = null; return; }

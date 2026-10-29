@@ -179,7 +179,7 @@ function tryAttack(f, o, inp, noLight) { // (noLight: anything but a light attac
   return true;
 }
 function startJump(f, inp) {
-  setState(f, 'jump'); f.vy = (f.ch.jumpV || JUMP_V) * (floodVictim(f) ? 0.8 : 1); f.vx = inp.h * f.ch.jumpX * (f.poisonT > 0 ? 0.7 : 1) * (floodVictim(f) ? 0.8 : 1); f.airAttacked = false; f.airShuri = false; f.jumpSerial = ++serial; f.dj = false;
+  setState(f, 'jump'); f.vy = (f.ch.jumpV || JUMP_V) * JUMP_HIGH * (floodVictim(f) ? 0.8 : 1); f.vx = inp.h * f.ch.jumpX * (f.poisonT > 0 ? 0.7 : 1) * (floodVictim(f) ? 0.8 : 1); f.airAttacked = false; f.airShuri = false; f.jumpSerial = ++serial; f.dj = false;
   dustAt(f.x, false);
 }
 function endMove(f) {

@@ -4,6 +4,7 @@ const MAPS = {
   p1: { left: 'KeyA', right: 'KeyD', up: 'KeyW', down: 'KeyS', lp: 'KeyU', hp: 'KeyI', lk: 'KeyJ', hk: 'KeyK', charge: 'KeyP' },
 };
 const ALT = { left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown' };
+const ALT2 = { up: 'Space' }; // Space jumps too
 const GAME_KEYS = new Set([...Object.values(MAPS.p1), ...Object.values(ALT), 'Space']);
 const BTN_ORDER = ['hp','lp','hk','lk'];
 const EMPTY = Object.freeze({ h: 0, down: false, up: false, btn: null, sup: false, ff: false, ffNow: false, bb: false, bbNow: false, dashTap: 0, charge: false });
@@ -16,7 +17,7 @@ class Human {
   consume() { this.held = null; }
   consumeIf(t) { if (this.held && this.held.t === t) this.held = null; }
   read(f, frame, o) {
-    const m = this.m, k = c => keys.has(m[c]) || keys.has(ALT[c]), toward0 = Math.sign(o.x - f.x) || f.facing;
+    const m = this.m, k = c => keys.has(m[c]) || keys.has(ALT[c]) || keys.has(ALT2[c]), toward0 = Math.sign(o.x - f.x) || f.facing;
     const h = (k('right') ? 1 : 0) - (k('left') ? 1 : 0);
     // double tap: the same direction pressed twice within 14 frames
     for (const [c, dir] of [['left', -1], ['right', 1]]) {
@@ -41,7 +42,7 @@ class Human {
     }
     // a press stays buffered for a few frames, so a punish can be entered during guard stun
     const hb = this.held && frame - this.held.t <= 5 ? this.held : null;
-    return { held: { lp: k('lp'), hp: k('hp'), lk: k('lk'), hk: k('hk') }, h, down: k('down'), up: k('up'), upPress: pressed.has(m.up) || pressed.has(ALT.up), btn: hb ? hb.btn : null, sup: hb ? hb.sup : false, fuse: hb ? !!hb.fuse : false, bf: hb ? !!hb.bf && !hb.fuse : false, ff: hb ? hb.ff : false, bb: hb ? hb.bb : false, bt: hb ? hb.t : -1,
+    return { held: { lp: k('lp'), hp: k('hp'), lk: k('lk'), hk: k('hk') }, h, down: k('down'), up: k('up'), upPress: pressed.has(m.up) || pressed.has(ALT.up) || pressed.has(ALT2.up), btn: hb ? hb.btn : null, sup: hb ? hb.sup : false, fuse: hb ? !!hb.fuse : false, bf: hb ? !!hb.bf && !hb.fuse : false, ff: hb ? hb.ff : false, bb: hb ? hb.bb : false, bt: hb ? hb.t : -1,
       ffNow: this.ffDir === toward && frame - this.ffT <= 2, bbNow: this.ffDir === -toward && frame - this.ffT <= 2, tap, charge: keys.has(m.charge),
       dashTap: this.ffT === frame ? (this.ffDir === toward ? 1 : -1) : 0 }; // the second tap itself: dash forward or roll back
   }
