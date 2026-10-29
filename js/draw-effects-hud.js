@@ -452,7 +452,7 @@ function drawFrameData() { // training: each fighter's last attack — 発生, �
     const nums = `${L('Startup', '発生')} ${d.su != null ? d.su + 'F' : '—'}   ${L('Active', '持続')} ${d.act != null ? d.act : '—'}   ${L('Recovery', '硬直')} ${d.rec != null ? d.rec : '—'}`;
     ctx.save(); ctx.fillStyle = 'rgba(8,6,26,.66)'; rr(left ? x - 8 : x - w + 8, y - 34, w, 44, 8); ctx.fill();
     ctx.textAlign = left ? 'left' : 'right'; ctx.textBaseline = 'alphabetic';
-    ctx.font = `600 13px 'Rajdhani', 'Segoe UI', system-ui, sans-serif`; ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.fillText(`${nm(f.ch)} · ${d.label}`, x, y - 18);
+    ctx.font = `600 13px 'Rajdhani', 'Segoe UI', system-ui, sans-serif`; ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.fillText(`${nm(f.ch)} · ${moveName(d.label)}`, x, y - 18);
     ctx.font = `15px ${HUD}`; ctx.fillStyle = '#ffd98a'; ctx.fillText(nums + (adv ? `   ${L('Adv.', '硬直差')} ${adv}` : ''), x, y);
     ctx.restore();
   });
