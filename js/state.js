@@ -365,6 +365,10 @@ function update(f, o, inp) {
   if (f.golem) golemUpdate(f, o);
   if (f.brands && --f.brandT <= 0) f.brands = 0; // holy brands fade
   if (f.healT > 0) f.healT--;
+  if (f.aegisT > 0) { // Aldric's Aegis: it stays up for four seconds while he moves and fights, feeding on his guard meter (about ten a second)
+    f.guard = Math.max(0, f.guard - 0.16); f.guardIdle = 0;
+    if (--f.aegisT <= 0 || f.guard <= 0 || f.ko) { f.aegisT = 0; aegisSpent(f); }
+  }
   if (f.possT > 0 && --f.possT === 0) endPossession(f);
   if (f.ch.possess === 'double' && !f.ko) { const o2 = other(f); // a field of holy light and hellfire: anyone close is burned
     if (globalT % 3 === 0) { const an = globalT * 0.12; for (const sd of [0, Math.PI]) parts.push({ type: 'aura', x: f.x + Math.cos(an + sd) * 95, y: GROUND - f.y - 90 + Math.sin(an + sd) * 40, vx: 0, vy: -0.6, life: 16, max: 16, r: 5, col: sd ? '255,90,60' : '255,240,190' }); }
@@ -521,7 +525,7 @@ function update(f, o, inp) {
   f.x = clamp(f.x, WALL_L, WALL_R);
   f.dispHp = Math.max(f.hp, f.dispHp - ((f.state === 'hitstun' || f.state === 'knock') ? 0 : 6));
   // guard meter refills slowly once you stop guarding
-  const guarding = f.state === 'guard' || f.state === 'blockstun' || f.state === 'gbreak' || (f.state === 'crouch' && f.backHeld) || (f.state === 'attack' && f.move && f.move.aegis); // (no recovery while the Aegis is up)
+  const guarding = f.state === 'guard' || f.state === 'blockstun' || f.state === 'gbreak' || (f.state === 'crouch' && f.backHeld) || (f.state === 'attack' && f.move && f.move.aegis) || f.aegisT > 0; // (no recovery while the Aegis is up)
   if (guarding) f.guardIdle = 0;
   else if (++f.guardIdle > 45) f.guard = Math.min(100, f.guard + (f.guardSlowT > 0 ? 0.02 : 0.07)); // (slowly after the Aegis)
   if (f.guardSlowT > 0) f.guardSlowT--;

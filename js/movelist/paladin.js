@@ -32,7 +32,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
         <tbody>
           <tr><td>Push Parry<small>A short, sharp shield guard that works from the 5th frame. Parry an attack from the front and he shoves them far away, unhurt. Short window, slow to recover.</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>Riposte Parry<small>The same quick parry, but he answers with a sword riposte that hurts them and knocks them away. A little slower to recover.</small></td><td class="cmd">← ← + I</td></tr>
-          <tr><td>Aegis<small>A sphere of light closes around him and stops everything, from the front, from behind and from above, where a parry only works from the front. It takes a moment to cast (hit him then for a counter hit), then it stays up for four seconds — no holding — and he can even walk with it. Hits only do a quarter of their damage but take a big bite out of his guard meter, which also drains while it’s up; if it runs out his guard breaks. When it ends, his guard meter drops to half and comes back slowly.</small></td><td class="cmd">← ← + J</td></tr>
+          <tr><td>Aegis<small>A sphere of light closes around him and stops everything, from the front, from behind and from above, where a parry only works from the front. It takes a moment to cast (hit him then for a counter hit), then it stays up for four seconds — no holding — and he moves, jumps and attacks freely inside it. Hits only do a quarter of their damage but take a big bite out of his guard meter, which also drains while it’s up; if it runs out his guard breaks. When it ends, his guard meter drops to half and comes back slowly.</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>Rising Parry<small>A slower parry that works from the 8th frame. Parry an attack from the front and he strikes up under them: it launches, and the combo begins.</small></td><td class="cmd">← ← + K</td></tr>
           <tr class="super"><td>Super: Sanctuary<small>He plants the sword, wings of light open, and a dome of light swells around him. Caught inside, they are held and burned again and again while his health and guard come back; then the dome bursts. He is invincible while it opens. Needs a full MP meter.</small></td><td class="cmd">U + J</td></tr>
         </tbody>
@@ -85,7 +85,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
         <tbody>
           <tr><td>押し返し<small>5フレ目から効く、短く鋭い盾の構え。正面の攻撃を受け流すと、盾で遠くへ突き放す（ダメージなし）。持続は短く、戻りは遅い。</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>リポスト受け流し<small>同じ素早い受け流しから、剣のリポストでダメージを与えて吹き飛ばす。戻りはやや遅い。</small></td><td class="cmd">← ← + I</td></tr>
-          <tr><td>イージス<small>光の球が体を包み、正面・背後・上からのすべての攻撃を止める（受け流しは正面のみ）。発動に少し時間がかかり（その間に攻撃されるとカウンター）、そのあと4秒間、押し続けなくても張り続けられ、張ったまま歩ける。攻撃のダメージは4分の1だけ通り、ガードゲージが削られ、尽きるとガードブレイク。終わるとガードゲージは半分になり、ゆっくり回復する。</small></td><td class="cmd">← ← + J</td></tr>
+          <tr><td>イージス<small>光の球が体を包み、正面・背後・上からのすべての攻撃を止める（受け流しは正面のみ）。発動に少し時間がかかり（その間に攻撃されるとカウンター）、そのあと4秒間、押し続けなくても張り続けられ、張ったまま自由に動き、ジャンプし、攻撃もできる。攻撃のダメージは4分の1だけ通り、ガードゲージが削られ、尽きるとガードブレイク。終わるとガードゲージは半分になり、ゆっくり回復する。</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>突き上げ受け流し<small>8フレ目から効く、やや遅い受け流し。正面の攻撃を受け流すと、下から突き上げて浮かせ、そのまま連続技へ。</small></td><td class="cmd">← ← + K</td></tr>
           <tr class="super"><td>超必殺技：聖域<small>剣を突き立てると光の翼が開き、光のドームが広がる。中に捕らわれた相手は何度も焼かれ、その間に体力とガードが回復し、最後にドームが弾ける。ドームが開くまでは無敵。MP満タンが必要。</small></td><td class="cmd">U + J</td></tr>
         </tbody>

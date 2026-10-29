@@ -480,18 +480,15 @@ function specialMoveBase(id) {
     case 'plRiseStrike': return { id, label: 'Rising Strike', startup: 4, active: 5, recovery: 18, wind: 'pCleaveW', pose: 'pShieldUp', selfMove: true, speedFx: true, noGrace: true,
       hitbox: [10,160,30,225], dmg: 46, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 14, type: 'mid', hitstop: 12, gdrain: 10,
       onFrame(f, o, mf) { if (mf <= 4 && Math.abs(o.x - f.x) > 70) f.vx = f.facing * 10; else f.vx *= 0.5; if (mf === 4) { parts.push({ type: 'lbeam', x: f.x + f.facing * 80, w: 34, life: 16, max: 16 }); sfx('orb'); } } };
-    // ← ← + J: Aegis. A dome of light closes around him and stops everything, from the front, from behind and from above; it lasts four seconds, no holding.
-    // It feeds on his guard meter (a little every moment, more for each hit); if the meter runs out, his guard breaks and the dome goes
-    case 'plAegis': return { id, label: 'Aegis', startup: 14, active: 999, recovery: 14, wind: 'pCounter', pose: 'pCounter', aegis: true, selfMove: true,
+    // ← ← + J: Aegis. A dome of light closes around him and stops everything, from the front, from behind and from above; it lasts four seconds, no holding,
+    // and he moves, jumps and attacks freely inside it. The casting is the only opening (hit him then: counter). It feeds on his guard meter
+    // (a little every moment, more for each hit); if the meter runs out, his guard breaks and the dome goes
+    case 'plAegis': return { id, label: 'Aegis', startup: 14, active: 1, recovery: 8, wind: 'pCounter', pose: 'pCounter', aegis: true,
       onFrame(f, o, mf) {
-        const mv = f.move;
-        if (mf === 3) sfx('charge'); if (mf === 14) sfx('orb');
+        f.vx = 0;
+        if (mf === 3) sfx('charge');
         if (mf < 14 && mf % 3 === 0) parts.push({ type: 'ring', x: f.x, y: GROUND - f.y - 100, r: 70 - mf * 4, vr: -1, life: 6, max: 6, col: '190,225,255' }); // casting: the light gathers (hit him now: counter)
-        if (mv.ended) { f.vx *= 0.5; return; }
-        mv.aegisOn = mf >= 14;
-        f.vx = mv.aegisOn ? (f.inp ? f.inp.h : 0) * f.ch.walk * 0.6 : 0; // he can walk while it's up
-        if (mv.aegisOn) f.guard = Math.max(0, f.guard - 0.16); // (the light feeds on his guard meter: about ten a second)
-        if (mf > 16 && (mf >= 254 || f.guard <= 0)) { mv.ended = true; mv.aegisOn = false; mv.active = Math.max(1, mf - mv.startup); aegisSpent(f); } // (four seconds at most)
+        if (mf === 14) { sfx('orb'); if (!(f.aegisT > 0)) { f.aegisT = 240; f.aegisHitT = null; } } // (not again while it's up)
       } };
     // super: Sanctuary. He plants the sword and a dome of light swells around him: caught inside, they're held and burned
     // again and again while his guard refills and his wounds close, then the dome bursts

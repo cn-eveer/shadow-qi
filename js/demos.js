@@ -421,7 +421,7 @@ const JA_DEMO = {
   "Punish ← ← + U: Shield Push Parry": { n: "反撃 ←←+U：盾の押し返し", tail: '', note: '' },
   "Punish ← ← + I: Riposte Parry": { n: "反撃 ←←+I：リポスト受け流し", tail: '', note: '' },
   "Counter ← ← + J: Aegis": { n: "カウンター ←←+J：Aegis", tail: '', note: '' },
-  "Punish ← ← + J: Aegis": { n: "反撃 ←←+J：Aegis", tail: '', note: '' },
+  "Guard ← ← + J: Aegis (safe)": { n: "ガード ←←+J：イージス（安全）", tail: '', note: '' },
   "Punish ← ← + K: Rising Parry": { n: "反撃 ←←+K：突き上げ受け流し", tail: '', note: '' },
   "Guard U + J: Sanctuary (safe)": { n: "ガード U+J：Sanctuary（反撃不可）", tail: '', note: '' },
   "Guard → → + U: Plate Throw (safe)": { n: "ガード →→+U：Plate Throw（反撃不可）", tail: '', note: '' },
@@ -549,7 +549,7 @@ const JA_DEMO = {
   '4. Rising Parry': { n: '4. 受け流しから突き上げ', tail: '突き上げ、剣上げ、盾上げ、光輪の斬り', note: '←←+K：クナイ斬りを8フレ目から受け流し、下から突き上げて浮かせる。剣上げ・盾上げ・光輪の斬り。' },
   '5. Riposte Parry': { n: '5. 受け流しからリポスト', tail: 'リポスト', note: '←←+I：5フレ目から受け流し、ダメージを与えて吹き飛ばすリポスト。' },
   '6. Rampart Charge, Crusader Leap': { n: '6. 城壁突撃から聖戦の跳躍', tail: '城壁の一撃、跳躍のダウン追い打ち', note: '→→+Uを遠くから押し続ける：怒りの盾突撃で叩き伏せ、→→+Kの跳躍で倒れた相手に落ちる。' },
-  '7. Aegis': { n: '7. イージス', tail: '', note: '←←+J：少しの詠唱（その間はカウンターを受ける）の後、光のドームが4秒間どの方向の攻撃も止め、張ったまま歩ける。ダメージは4分の1だけ通りガードが削られ、終わるとガードゲージは半分になる。' },
+  '7. Aegis': { n: '7. イージス', tail: '', note: '←←+J：少しの詠唱（その間はカウンターを受ける）の後、光のドームが4秒間どの方向の攻撃も止め、張ったまま自由に動いて攻撃もできる。ダメージは4分の1だけ通りガードが削られ、終わるとガードゲージは半分になる。' },
   '8. Sanctuary (super)': { n: '8. 聖域（超必殺技）', tail: '', note: 'MP満タンでU+J：光の翼、そしてドームが相手を捕らえて焼き、その間に体力とガードが回復。' },
   '9. Push Parry': { n: '9. 盾の押し返し', tail: '盾の押し返し', note: '←←+U：5フレ目から受け流し、盾で押して相手を突き放す（ダメージなし）。' },
   '1. Uppercut Launcher: one juggle': { n: '1. アッパー打ち上げ：1回打ち上げ', tail: '掌、肘、回し蹴り', note: '至近距離で打ち上げ、掌底・肘・回し蹴り。' },
@@ -624,7 +624,7 @@ const ALDRIC_DEMOS = [
     note: 'Hold → → + U from far away: he builds into a raging shield charge and slams them flat. → → + K: the leap crashes down on them while they lie there.',
     steps: [S('→ → + U', 'start', { btn: 'lp', ff: true, holdFor: 70 }), S('→ → + K', 'ground', { btn: 'hk', ff: true, far: true })] },
   { name: '7. Aegis', tail: '', ax: 400, bx: 500, dummy: { at: 14, inp: { btn: 'hp' } },
-    note: '← ← + J: after a short cast (it can be countered), a dome of light stops everything from any side for four seconds while he walks. Hits do a quarter of their damage and wear his guard; when it ends, his guard meter drops to half.',
+    note: '← ← + J: after a short cast (it can be countered), a dome of light stops everything from any side for four seconds, and he moves and attacks freely inside it. Hits do a quarter of their damage and wear his guard; when it ends, his guard meter drops to half.',
     steps: [S('← ← + J', 'start', { btn: 'lk', bb: true })] },
   { name: '8. Sanctuary (super)', cpu: { min: 0, max: 200, meter: true }, tail: '', ax: 380, bx: 520,
     note: 'U + J with full MP: wings of light, then a dome that holds and burns them while he heals and his guard refills.',
@@ -672,8 +672,8 @@ const ALDRIC_DEMOS = [
     steps: [S('Guard ←', 'guard', {}), S("↓ + I", "punish", {"btn": "hp", "down": true, "reach": 180}), S("U", "air", {"btn": "lp"}), S("U", "chain", {"btn": "lp"}), S("K", "chain", {"btn": "hk"})] },
   { name: "Counter ← ← + J: Aegis", vs: 'self', tail: '', note: '', ax: 440, bx: 520, dummy: {"at": 4, "inp": {"bb": true, "btn": "lk"}, "guardAfter": true},
     steps: [S("U", "counterTell", {"btn": "lp"})] },
-  { name: "Punish ← ← + J: Aegis", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"bb": true, "btn": "lk"}, "guardAfter": true},
-    steps: [S('Guard ←', 'guard', {}), S("U", "punish", {"btn": "lp", "reach": 180}), S("U", "chain", {"btn": "lp"})] },
+  { name: "Guard ← ← + J: Aegis (safe)", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"bb": true, "btn": "lk"}, "guardAfter": true},
+    steps: [S('Guard ←', 'guard', {})] }, /* (the dome stays up four seconds and he can attack from it: nothing to punish) */
   { name: "Punish ← ← + K: Rising Parry", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"bb": true, "btn": "hk"}, "guardAfter": true},
     steps: [S('Guard ←', 'guard', {}), S("↓ + I", "punish", {"btn": "hp", "down": true, "reach": 180}), S("U", "air", {"btn": "lp"}), S("U", "chain", {"btn": "lp"}), S("K", "chain", {"btn": "hk"})] },
   { name: "Guard U + J: Sanctuary (safe)", vs: 'self', bMeter: 100, tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"sup": true, "btn": "hp"}, "guardAfter": true},
@@ -987,7 +987,7 @@ function comboStep(f, o, steps, st, out) {
   else if (s.when === 'djCancel') go = !f.dj && ((f.state === 'attack' && f.move && f.move.air && f.hitConnected && !f.chainQ && f.mf > f.move.startup) || (f.state === 'jump' && f.y > 20 && f.vy < 8)); // jump again on the wings (out of a landed air attack, or right after it) // the angel: jump again out of a landed air attack
   else if (s.when === 'otg') go = free && o.state === 'down' && o.st > 4 && !o.otgUsed; // they're lying on the floor: a low hit still reaches them once
   else if (s.when === 'airAny') go = f.state === 'jump' && !f.airAttacked && f.vy < 3; // any attack in the air, near the top of the jump
-  else if (s.when === 'counterTell') go = free && o.state === 'attack' && o.move && ((o.pre > 0 && (o.move.preTotal - o.pre) >= 2) || (o.move.held && !o.move.fired && o.mf >= 2) || (o.move.aegis && !o.move.aegisOn && o.mf >= 2)); // they're doing their tell (or charging): hit them first
+  else if (s.when === 'counterTell') go = free && o.state === 'attack' && o.move && ((o.pre > 0 && (o.move.preTotal - o.pre) >= 2) || (o.move.held && !o.move.fired && o.mf >= 2) || (o.move.aegis && o.mf >= 2 && o.mf < 14)); // they're doing their tell (or charging): hit them first
   else if (s.when === 'chain') go = f.state === 'attack' && f.move && f.move.chain && !f.chainQ && f.mf >= 2;
   else if (s.when === 'follow') go = f.state === 'attack' && f.move && f.move.follow && !f.followQ && f.mf >= f.move.follow.from;
   else if (s.when === 'stun' && o.state === 'stunned') { // dash in on a stunned opponent, then launch

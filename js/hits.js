@@ -243,10 +243,10 @@ function applyHit(a, d, h, side, hb, hu) {
     sparks(cx, cy, 'block'); sfx('block'); if (!d.passT || game.frame - d.passT > 12) { d.passT = game.frame; popText(d.x, GROUND - d.y - 180, 'DEFLECT!', '255,225,140'); }
     game.freeze = Math.max(game.freeze, 3); return null;
   }
-  if (d.state === 'attack' && d.move && d.move.aegis && d.move.aegisOn) { // Aegis: from any side, at the cost of guard meter
-    d.guard -= (h.gdrain || 6) * 2.4 + (h.dmg || 0) * 0.35 + 6; d.guardIdle = 0; if (d.move) d.move.aegisHitT = game.frame; // (each hit tears a big piece out of the light: two to four hits break it)
+  if (d.aegisT > 0 && !['hitstun', 'knock', 'down', 'getup', 'gbreak', 'stunned', 'slashed'].includes(d.state)) { // Aegis: from any side, at the cost of guard meter
+    d.guard -= (h.gdrain || 6) * 2.4 + (h.dmg || 0) * 0.35 + 6; d.guardIdle = 0; d.aegisHitT = game.frame; // (each hit tears a big piece out of the light: two to four hits break it)
     d.hp = Math.max(1, d.hp - Math.ceil((h.dmg || 0) * 0.25)); // a quarter of the damage still gets through the light
-    if (d.guard <= 0) { d.guard = 0; d.guardSlowT = 600; setState(d, 'gbreak'); d.stun = 50; d.move = null; popText(d.x, GROUND - d.y - 165, 'GUARD BREAK!', '255,120,130'); sparks(cx, cy, 'big'); sfx('break'); game.freeze = Math.max(game.freeze, 10); return 'block'; }
+    if (d.guard <= 0) { d.guard = 0; d.guardSlowT = 600; d.aegisT = 0; setState(d, 'gbreak'); d.stun = 50; d.move = null; popText(d.x, GROUND - d.y - 165, 'GUARD BREAK!', '255,120,130'); sparks(cx, cy, 'big'); sfx('break'); game.freeze = Math.max(game.freeze, 10); return 'block'; }
     sparks(cx, cy, 'block'); sfx('block'); if (!d.passT || game.frame - d.passT > 12) { d.passT = game.frame; popText(d.x, GROUND - d.y - 190, 'AEGIS', '190,225,255'); }
     game.freeze = Math.max(game.freeze, 3); return 'block';
   }

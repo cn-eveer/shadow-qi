@@ -157,14 +157,14 @@ function startMatch(training, watch, demo) {
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
 }
 function startRound(n) {
-  for (const f of fighters) { f.prePoss = null; f.wholeRound = false; f.wholeKind = null; f.stuckT = 0; f.freeT = 0; f.loopGuard = 0; f.repLabel = null; f.repN = 0; f.liftT = null; f.stunUsed = false; f.pendingStun = 0; f.shieldOut = false; f.brands = 0; f.plateOut = false; f.possT = 0; f.guardSlowT = 0; f.poisonT = 0; f.venom = 0; f.venomT = 0; if (CHARS[f.key]) f.ch = CHARS[f.key]; }
+  for (const f of fighters) { f.prePoss = null; f.wholeRound = false; f.wholeKind = null; f.stuckT = 0; f.freeT = 0; f.loopGuard = 0; f.repLabel = null; f.repN = 0; f.liftT = null; f.stunUsed = false; f.pendingStun = 0; f.shieldOut = false; f.brands = 0; f.plateOut = false; f.possT = 0; f.aegisT = 0; f.guardSlowT = 0; f.poisonT = 0; f.venom = 0; f.venomT = 0; if (CHARS[f.key]) f.ch = CHARS[f.key]; }
   Object.assign(game, { flood: null, finalWin: null, round: n, phase: 'intro', phaseT: 0, timer: 99 * 60, freeze: 0, slow: 0, shake: 0, combo: null, superFlash: null, roundWinner: null, track: null, advInfo: null });
   projs.length = 0; parts.length = 0;
   fighters.forEach(resetFighter);
   fighters.forEach(updatePose);
 }
 function resetPositions() {
-  for (const f of fighters) { if (CHARS[f.key]) f.ch = CHARS[f.key]; f.possT = 0; f.plateOut = false; f.poisonT = 0; f.venom = 0; f.spirit = null; f.stuckT = 0; f.freeT = 0; f.loopGuard = 0; f.repLabel = null; f.repN = 0; f.liftT = null; f.recoilT = 0; f.settleT = 0; f.stunUsed = false; f.pendingStun = 0; f.stunT = 0; f.extendBonus = 0; f.prePoss = null; f.wholeRound = false; f.wholeKind = null; } // (a fresh start: no combo counters carried over from the last one) // (a sample combo starts the salaryman unpossessed)
+  for (const f of fighters) { if (CHARS[f.key]) f.ch = CHARS[f.key]; f.possT = 0; f.aegisT = 0; f.plateOut = false; f.poisonT = 0; f.venom = 0; f.spirit = null; f.stuckT = 0; f.freeT = 0; f.loopGuard = 0; f.repLabel = null; f.repN = 0; f.liftT = null; f.recoilT = 0; f.settleT = 0; f.stunUsed = false; f.pendingStun = 0; f.stunT = 0; f.extendBonus = 0; f.prePoss = null; f.wholeRound = false; f.wholeKind = null; } // (a fresh start: no combo counters carried over from the last one) // (a sample combo starts the salaryman unpossessed)
   projs.length = 0; game.flood = null; game.track = null; game.advInfo = null; game.combo = null; game.routeName = null; fighters.forEach(f => { f.sorbs = []; });
   for (const f of fighters) resetFighter(f);
   fighters.forEach(updatePose);
