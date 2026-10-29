@@ -382,8 +382,9 @@ function fitOverlay() {
 }
 new MutationObserver(() => requestAnimationFrame(fitOverlay)).observe(ov, { childList: true });
 addEventListener('resize', () => requestAnimationFrame(fitOverlay));
-function updateTouchUI() { // shown only on a phone or tablet, during play (not in menus, pauses or the sample viewer)
-  const show = IS_MOBILE && game.mode === 'fight' && !game.paused && !game.netMenu && !game.demo && !game.watch && drawer.hidden;
+function updateTouchUI() { // shown only on a phone or tablet, during play (not in menus or pauses); watching samples or CPU vs CPU, only the pause button (the way back to the menu)
+  const show = IS_MOBILE && game.mode === 'fight' && !game.paused && !game.netMenu && drawer.hidden, viewOnly = !!(game.demo || game.watch);
+  if (touchUI.classList.contains('viewonly') !== viewOnly) { touchUI.classList.toggle('viewonly', viewOnly); if (viewOnly) for (const k of ['left', 'right', 'up', 'down', 'lp', 'hp', 'lk', 'hk']) keys.delete(MAPS.p1[k]); }
   if (touchUI.hidden === show) { touchUI.hidden = !show; if (!show) for (const k of ['left', 'right', 'up', 'down', 'lp', 'hp', 'lk', 'hk']) keys.delete(MAPS.p1[k]); }
   const portrait = IS_MOBILE && innerHeight > innerWidth;
   if (rotUI.hidden === portrait) { rotUI.hidden = !portrait; if (portrait && game.mode === 'fight' && !game.paused && !NET.on && !game.demo) togglePause(true); } // turned upright mid-fight: pause

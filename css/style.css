@@ -197,6 +197,7 @@ kbd{display:inline-block;min-width:1.75em;text-align:center;padding:1px 6px;font
 /* touch controls for phones and tablets: see-through, out of the way of the action */
 .touch{position:absolute;inset:0;pointer-events:none;z-index:6;user-select:none;-webkit-user-select:none}
 .touch[hidden]{display:none}
+.touch.viewonly .tpad,.touch.viewonly .tbtns{display:none} /* (watching samples or CPU vs CPU: only the pause button) */
 body.mobile .touch{position:fixed;inset:0;z-index:20} /* (moved beside the game panel on phones: see layoutTouch) */
 .tpad{pointer-events:auto;position:absolute;left:2.5%;bottom:5%;width:15%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.06),rgba(255,255,255,.14));border:2px solid rgba(255,255,255,.32);touch-action:none;box-shadow:0 0 18px rgba(0,0,0,.25) inset}
 .tknob{position:absolute;left:50%;top:50%;width:38%;height:38%;margin:-19% 0 0 -19%;border-radius:50%;background:rgba(255,255,255,.32);border:2px solid rgba(255,255,255,.55);box-shadow:0 4px 12px rgba(0,0,0,.3);transition:transform .05s}
