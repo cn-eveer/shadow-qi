@@ -223,9 +223,10 @@ function fdStart(f, mv) {
   if (!game.training || game.demo) return;
   f.fd = { label: mv.label || '', su: mv.startup < 900 ? f.pre + mv.startup + 1 : null, act: mv.active < 900 ? mv.active : null, rec: mv.recovery, t0: game.frame, res: null, adv: null, wait: false, atkT: null, defT: null, held: mv.startup >= 900 };
 }
-function fdContact(a, r) { // the first hit or guard of the attack
-  const d = a.fd; if (!d || d.res) return;
-  d.res = r; d.su = game.frame - d.t0 + 1; d.wait = true; d.atkT = d.defT = null;
+function fdContact(a, r) { // each hit or guard of the attack: 発生 from the first, 硬直差 after the last
+  const d = a.fd; if (!d) return;
+  if (!d.res) d.su = game.frame - d.t0 + 1;
+  d.res = r; d.adv = null; d.wait = true; d.atkT = d.defT = null;
   if (d.held && a.move) { d.act = a.move.active; d.rec = a.move.recovery; } // (a held attack: its frames are only known once it's let go)
 }
 function fdWatch() { // each step: once both can act again, the advantage

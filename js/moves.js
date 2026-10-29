@@ -113,7 +113,7 @@ function specialMove(id) {
 }
 function specialMoveBase(id) {
   switch (id) {
-    case 'cloneStrike': return { id, label: 'Shadow Clone', startup: 13, active: 6, recovery: 8, blockAdv: 0, noFmRec: true, /* (no recovery added by his frame tuning) */ wind: 'seal', pose: 'seal', proj: 'clone', limit: 1,
+    case 'cloneStrike': return { id, label: 'Shadow Clone', startup: 13, active: 6, recovery: 8, blockAdv: 0, noFmRec: true, noGuardLag: true, /* (the clone does the work: if it's guarded after he's recovered, he isn't caught off balance) */ /* (no recovery added by his frame tuning) */ wind: 'seal', pose: 'seal', proj: 'clone', limit: 1,
       onFrame(f, o, mf) { if (mf === 12) spawnClone(f, false, 0); } };
     case 'shadowCharge': return { id, label: 'Shadow Charge Upper', startup: 46, active: 9, recovery: 16, blockAdv: -21, wind: 'seal', pose: 'uppercut', selfMove: true, counterVanish: true, slow: true, interruptChance: 0.2,
       hitbox: [10,82,40,175], dmg: 45, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 13, type: 'mid', hitstop: 9, gdrain: 6,
@@ -1104,13 +1104,14 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { f.vx *= 0.6; if (mf < f.move.startup && mf % 3 === 0) parts.push({ type: 'ring', x: f.x - f.facing * 10, y: GROUND - f.y - 150, r: 70 - mf * 3, vr: -1.5, life: 8, max: 8, col: '220,200,255' });
         if (mf === f.move.startup) { sfx('slash'); sfx('super'); game.shake = Math.max(game.shake, 8); for (let i = 0; i < 3; i++) parts.push({ type: 'ring', x: f.x + f.facing * 70, y: GROUND - 100, r: 20 + i * 18, vr: 6 + i * 2, life: 16, max: 16, col: i ? '200,170,255' : '255,250,235' }); dustAt(f.x + f.facing * 60, true);
         spawnPJ(f, 'crescent', { big: true, x: f.x + f.facing * 70, y: 100, vx: f.facing * 8, life: 70, r: 100, h: { dmg: 90, stun: 24, bstun: 8, push: 4, kd: true, kdVx: 16, kdVy: 8, gdrain: 18, overhead: true, floor: true, label: 'Full Moon Tempest' } }); /* (from the floor up to well above a jump: nothing ducks or dives under it) */ } } };
-    case 'shadowArmy': return { id, super: true, name: 'SHADOW ARMY', label: 'Shadow Army', startup: 14, active: 75, recovery: 22, blockAdv: 0, cutOnGuard: true, /* (out longer, slower to recover; even when guarded: once its clones are guarded he's done) */ wind: 'seal', pose: 'seal', aura: true,
+    case 'shadowArmy': return { id, super: true, name: 'SHADOW ARMY', label: 'Shadow Army', startup: 14, active: 100, recovery: 22, blockAdv: 0, cutOnGuard: true, /* (out longer, slower to recover; even when guarded: once its clones are guarded he's done) */ wind: 'seal', pose: 'seal', aura: true,
       onStart(f) { f.invul = 20; },
-      onFrame(f, o, mf) { // six clones from both sides, then one dives from above
-        if (f.move.dodge) { if (mf >= 12 && mf <= 17) spawnClone(f, true, mf - 12); } // (six clones in a rush from both sides: one jump clears them)
-        else if (mf >= 12 && mf <= 47 && (mf - 12) % 7 === 0) spawnClone(f, true, (mf - 12) / 7); // (in a combo, one after another: they keep the juggled opponent up until the last one drops)
-        if (mf === (f.move.dodge ? 50 : 52)) spawnDiveClone(f); // (in a combo it drops right onto them as the last clone passes)
-        if (!f.move.dodge && mf === 58) { f.move.active = 58 - f.move.startup; f.move.recovery = 8; } // (in a combo he's free right after the last clone lands: follow up as they bounce)
+      onFrame(f, o, mf) { // two waves of six clones from both sides, then one dives from above (each clone a little lighter: about the same total)
+        if (f.move.dodge) { if ((mf >= 12 && mf <= 17) || (mf >= 36 && mf <= 41)) spawnClone(f, true, mf >= 36 ? mf - 36 : mf - 12, 16); } // (a rush from both sides, twice: jump each one)
+        else if (mf >= 12 && mf <= 75 && (mf - 12) % 7 === 0) spawnClone(f, true, (mf - 12) / 7, 16); // (in a combo, one after another — ten of them: they keep the juggled opponent up until the last one drops)
+        f.move.cutOnGuard = mf >= (f.move.dodge ? 74 : 80); // (guarded: he's done only once the last clone is out — ±0 then)
+        if (mf === (f.move.dodge ? 74 : 80)) spawnDiveClone(f); // (in a combo it drops right onto them as the last clone passes)
+        if (!f.move.dodge && mf === 86) { f.move.active = 86 - f.move.startup; f.move.recovery = 8; } // (in a combo he's free right after the last clone lands: follow up as they bounce)
       } };
     case 'qiCannon': return { id, super: true, name: 'GREAT QI CANNON', label: 'Qi Cannon', startup: 26, active: 56, recovery: 20, wind: 'blastW', pose: 'blast', aura: true,
       onStart(f) { f.invul = 30; },

@@ -16,14 +16,14 @@ function spawnQi(f) {
     dmg: 75, stun: 20, bstun: 16, push: 5, hitstop: 8, life: 240, chip: true, dir: f.facing });
   sfx('qi');
 }
-function spawnClone(f, sup, idx) {
+function spawnClone(f, sup, idx, dmg) { // (dmg: a super's own damage per clone)
   // Shadow Clone Strike moves at the same speed as Shadow Charge, so the two look alike
   const o = other(f), side = Math.sign(o.x - f.x) || f.facing;
   const fromBack = sup && idx % 2 === 1; // in the super, every other clone comes from behind the opponent
   const sp = sup ? 16 : 10, range = sup ? 1100 : 520, dir = fromBack ? -side : f.facing;
   const x = fromBack ? clamp(o.x + side * (sup ? Math.max(120, Math.abs(o.x - f.x) - 20) : 430), -60, W + 60) : f.x + f.facing * 20; // (in the super the ones from behind start as far away as the ones in front: they all arrive together)
   projs.push({ id: ++serial, type: 'clone', owner: f, x, y: 0, vx: dir * sp, vy: 0, w: 28, h0: 10, h1: 120,
-    dmg: sup ? 32 : 66, stun: sup ? 24 : 26, bstun: 15, push: sup ? 1.5 : 5,
+    dmg: dmg || (sup ? 32 : 66), stun: sup ? 24 : 26, bstun: 15, push: sup ? 1.5 : 5,
     kd: false, juggle: sup, superHit: sup, hitstop: 7, life: Math.round(range / sp), chip: true, dir });
   puff(x, 60); sfx('clone');
 }
