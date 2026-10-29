@@ -704,10 +704,6 @@ function specialMoveBase(id) {
         const x = f.x + f.facing * (20 + 75 * k), y = GROUND - f.y - 120 * s0 - Math.sin(k * Math.PI) * 60 + k * 100;
         ctx.save(); ctx.translate(x, y); ctx.rotate(k * 7); ctx.fillStyle = '#f4f1ea'; ctx.fillRect(-7, -8, 14, 16); ctx.fillStyle = '#6b3e1f'; ctx.fillRect(-6, -8, 12, 3); ctx.restore();
         for (let i = 1; i < 6; i++) { const kk = Math.max(0, k - i * 0.06); ctx.fillStyle = `rgba(110,70,35,${0.8 - i * 0.12})`; ctx.beginPath(); ctx.arc(f.x + f.facing * (20 + 75 * kk), GROUND - f.y - 120 * s0 - Math.sin(kk * Math.PI) * 60 + kk * 100, 4 - i * 0.5, 0, Math.PI * 2); ctx.fill(); } } };
-    case 'smSkid': return { id, label: 'Briefcase Skid', startup: 8, active: 2, recovery: 14, wind: 'crouch', pose: 'sShove', hitbox: null, // a bowler's crouch, a long underarm swing: the briefcase goes skidding along the floor, papers spilling out
-      poseFn(f, mf) { return mf <= 5 ? POSES.sCase : null; },
-      onFrame(f, o, mf) { if (mf === 3) popText(f.x, GROUND - 190, L('SPECIAL DELIVERY!', '速達です！'), '240,220,170');
-        if (mf === 8) { sfx('throw'); spawnPJ(f, 'skidcase', { x: f.x + f.facing * 40, y: 12, vx: f.facing * 12, life: 50, r: 14, h: { dmg: 26, stun: 18, bstun: 10, push: 2, low: true, gdrain: 6, label: 'Briefcase Skid' } }); parts.push({ type: 'ring', x: f.x + f.facing * 40, y: GROUND - 8, r: 6, vr: 4, life: 10, max: 10, col: '255,230,170' }); } } };
     case 'sdCrawl': return { id, label: 'Hell Crawl', startup: 10, active: 10, recovery: 22, wind: 'sdIdle', pose: 'kLowClaw', selfMove: true, speedFx: true, // he drops onto all fours, eyes burning red, and scuttles in clawing at their legs — then rips upward
       hitbox: [0,100,0,44], low: true, dmg: 44, stun: 26, bstun: 12, push: 1, launch: true, launchVy: 11.5, type: 'mid', hitstop: 9, gdrain: 10, claw: [70, 24, 0.2, 44, '255,120,90'],
       onFrame(f, o, mf) { const mv = f.move;
@@ -735,10 +731,6 @@ function specialMoveBase(id) {
         const d = Math.atan2(tip[1] - ctl[1], tip[0] - ctl[0]); ctx.translate(tip[0], tip[1]); ctx.rotate(d);
         ctx.fillStyle = '#b01c1c'; ctx.strokeStyle = '#ffb08a'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(32, 0); ctx.lineTo(0, -16); ctx.lineTo(7, 0); ctx.lineTo(0, 16); ctx.closePath(); ctx.fill(); ctx.stroke(); // the spade at its tip
         ctx.restore(); } };
-    case 'sdTrail': return { id, label: 'Brimstone Trail', startup: 12, active: 2, recovery: 18, wind: 'sdBeckon', pose: 'stomp', hitbox: null, // he stamps the floor: it cracks open, and hellfire races along the crack toward them
-      onFrame(f, o, mf) { if (mf === 4) popText(f.x, GROUND - 190, L('BURN!', '燃えろ！'), '255,110,50');
-        if (mf === 12) { sfx('flame'); cracks(f.x + f.facing * 20); game.shake = Math.max(game.shake, 4); parts.push({ type: 'ring', x: f.x + f.facing * 20, y: GROUND - 4, r: 10, vr: 8, life: 14, max: 14, col: '255,110,50' });
-          spawnPJ(f, 'brimstone', { x: f.x + f.facing * 50, y: 14, vx: f.facing * 8, life: 70, r: 16, h: { dmg: 32, stun: 22, bstun: 12, push: 2, low: true, gdrain: 8, label: 'Brimstone Trail' } }); } } };
     case 'smTackle': return { id, label: 'Rush Hour Kick', startup: 14, active: 12, recovery: 20, wind: 'crouch', pose: 'jKickH', selfMove: true, speedFx: true, // → → + J: a sprint for the train — and a flying kick at the end of it
       hitbox: [10,120,40,150], dmg: 46, stun: 22, bstun: 16, push: 3, launch: true, launchVy: 11, type: 'mid', hitstop: 10, gdrain: 34, // (heavy on guard: it smashes through)
       poseFn(f, mf) { return mf < 3 ? POSES.crouch : mf < 11 ? (mf % 4 < 2 ? POSES.dash : POSES.shoulder) : null; }, // crouch, sprint (arms pumping)... then the kick

@@ -242,7 +242,7 @@ Object.assign(CHARS, {
       $sl2: { su: 12, blk: -6 }, $slE: { su: 18, blk: -16 },
       smCard: { su: 16, blk: -6 }, smCase: { su: 22, blk: -16 }, smTackle: { su: 20, blk: -16 }, smUpper: { su: 20, blk: -16 },
       smCoffee: { su: 20, blk: -16 }, smBow: { su: 20, blk: -16 },
-      smSlide: { su: 20, blk: -16 }, smSpill: { su: 15, blk: -16 }, smSkid: { su: 16, blk: -6 }, // (the low versions: → → ↓ + J, ← ← ↓ + J, → → ↓ + K)
+      smSlide: { su: 20, blk: -16 }, smSpill: { su: 15, blk: -16 }, // (the low versions: → → ↓ + J, ← ← ↓ + J)
     },
     heavy: {
       p: { label: 'Briefcase Swing', startup: 11, active: 5, recovery: 19, hitbox: [10,150,40,160], wind: 'slamW', pose: 'sCase', lunge: [3, 9, 3.5], hitstop: 10, kd: true, kdVx: 8 },
@@ -267,7 +267,7 @@ for (const k in CHARS) CHARS[k].key = k;
 // (Mei's I is no longer held to charge)
 // (Lyra's I is no longer held to charge)
 // (the kappa's I is no longer held to charge)
-Object.assign(CHARS.salary, { spLow: { fK: 'smSlide', bK: 'smSpill', fKH: 'smSkid' } });
+Object.assign(CHARS.salary, { spLow: { fK: 'smSlide', bK: 'smSpill', fKH: 'smUpper' } }); // (→ → ↓ + K is just → → + K: no low version of it)
 // Tanaka's forms pick the right version of ← ← + J by themselves (the ↑ / ↓ commands still work):
 // the angel's ray goes up after someone in the air and down at someone crouching; the devil's tail comes down from overhead on someone crouching
 const tCrouch = o => o.y <= 0 && (o.state === 'crouch' || (o.inp && o.inp.down && (o.state === 'guard' || o.state === 'blockstun')));
@@ -289,7 +289,7 @@ const ANGEL_CH = { ...CHARS.salary, spLow: { bK: 'saRayLow' }, spUp: { bK: 'saRa
   heavy: { p: { label: 'Holy Palm', startup: 10, active: 5, recovery: 18, hitbox: [10,150,50,150], wind: 'palmW', pose: 'palm', lunge: [3, 9, 3.5], hitstop: 10, cpLaunch: true, launchVy: 13, burst: [90, 110] },
            k: { label: 'Wing Kick', startup: 9, active: 5, recovery: 18, hitbox: [10,150,40,150], wind: 'kickW', pose: 'highKick', lunge: [3, 8, 4], cpLaunch: true, launchVy: 12 } } };
 const DOUBLE_CH_BASE = 1;
-const DEVIL_CH = { ...CHARS.salary, spLow: { fK: 'sdCrawl', bK: 'sdTail', fKH: 'sdTrail' }, spUp: { bK: 'sdTailDrop' }, spFwd: { bK: 'sdChainB' }, possess: 'devil', dmgMul: 2.0, drain: 0.45, lookKey: 'salaryDevil', idle: 'sdIdle', walk: 3.9, back: 3.4, fastAtk: true, crouchPose: 'sdIdle', pDmg: 0.95, kDmg: 0.95, auraCol: '255,90,70', fxCol: '255,120,60', hitFx: 'flame', meterCol: ['#b8322d', '#ffb08a'],
+const DEVIL_CH = { ...CHARS.salary, spLow: { fK: 'sdCrawl', bK: 'sdTail', fKH: 'sdTailUpper' }, spUp: { bK: 'sdTailDrop' }, spFwd: { bK: 'sdChainB' }, possess: 'devil', dmgMul: 2.0, drain: 0.45, lookKey: 'salaryDevil', idle: 'sdIdle', walk: 3.9, back: 3.4, fastAtk: true, crouchPose: 'sdIdle', pDmg: 0.95, kDmg: 0.95, auraCol: '255,90,70', fxCol: '255,120,60', hitFx: 'flame', meterCol: ['#b8322d', '#ffb08a'],
   sp: { fP: 'sdLunge', fPH: 'sdMaul', fK: 'sdTailLash', fKH: 'sdTailUpper', bP: 'sdBeckon', bPH: 'smAngel', bK: 'sdWhip', bKH: 'sdDrain' }, sup: 'sdInferno',
   heavy: { p: { label: 'Hellclaw', startup: 10, active: 6, recovery: 18, hitbox: [10,160,40,170], wind: 'palmW', pose: 'kClaw', lunge: [3, 9, 4], hitstop: 11, kd: true, kdVx: 9 },
            k: { label: 'Demon Kick', startup: 10, active: 5, recovery: 18, hitbox: [10,150,30,130], wind: 'kickW', pose: 'highKick', lunge: [3, 8, 4], cpLaunch: true, launchVy: 12 } } };
@@ -299,11 +299,11 @@ const ANGEL_FRAMES = { ...CHARS.salary.frames,
   saJab: { su: 12, blk: -6 }, saFist: { su: 20, blk: -16 }, saGlide: { su: 22, blk: -16 }, saAscend: { su: 22, blk: -16 }, saRay: { su: 24, blk: -16 }, saRayLow: { su: 24, blk: -16 }, saRayFly: { su: 24, blk: -15 }, saDive: { su: 24, blk: -16 } };
 const DEVIL_FRAMES = { ...CHARS.salary.frames,
   $d2: { su: 10, blk: -6 }, $d3: { su: 10, blk: -6 }, $d4: { su: 10, blk: -6 }, $dF: { su: 16, blk: -18 }, $dL: { su: 14, blk: -16 }, $dE: { su: 18, blk: -12 }, $dl2: { su: 10, blk: -6 }, $dlE: { su: 16, blk: -16 },
-  sdLunge: { su: 20, blk: -16 }, sdMaul: { su: 20, blk: -16 }, sdTailLash: { su: 20, blk: -16 }, sdTailUpper: { su: 20, blk: -16 }, sdWhip: { su: 20, blk: -16 }, sdCrawl: { su: 20, blk: -16 }, sdTail: { su: 18, blk: -14 }, sdTailDrop: { su: 22, blk: -16 }, sdChainB: { su: 20, blk: -16 }, sdTrail: { su: 20, blk: -16 }, sdDrain: { su: 24 } };
+  sdLunge: { su: 20, blk: -16 }, sdMaul: { su: 20, blk: -16 }, sdTailLash: { su: 20, blk: -16 }, sdTailUpper: { su: 20, blk: -16 }, sdWhip: { su: 20, blk: -16 }, sdCrawl: { su: 20, blk: -16 }, sdTail: { su: 18, blk: -14 }, sdTailDrop: { su: 22, blk: -16 }, sdChainB: { su: 20, blk: -16 }, sdDrain: { su: 24 } };
 Object.assign(ANGEL_CH, { frames: ANGEL_FRAMES }); Object.assign(DEVIL_CH, { frames: DEVIL_FRAMES });
 const DOUBLE_CH = { ...DEVIL_CH, possess: 'double', lookKey: 'salaryDevil', dmgMul: 2.1, drain: 2.2, scale: 1.4, tallBox: true, armorAll: true, /* (both spirits in him: far bigger, and nothing short of a super or a throw stops him) */ regen: 0, noGuard: true, doubleJump: true, auraCol: '255,170,200', fxCol: '255,190,160', meterCol: ['#d0607a', '#ffe0c0'], // angel and devil both: wings and halo, horns and tail
   sp: { fP: 'saJab', fPH: 'sdMaul', fK: 'sdTailLash', fKH: 'sdTailUpper', bP: 'sdBeckon', bPH: 'saFist', bK: 'saRay', bKH: 'sdDrain' },
-  spLow: { bK: 'saRayLow', fK: 'sdCrawl', fKH: 'sdTrail' }, spUp: { bK: 'saRayFly' }, spFwd: { bK: 'sdChainB' } };
+  spLow: { bK: 'saRayLow', fK: 'sdCrawl', fKH: 'sdTailUpper' }, spUp: { bK: 'saRayFly' }, spFwd: { bK: 'sdChainB' } };
 DOUBLE_CH.frames = { ...ANGEL_FRAMES, ...DEVIL_FRAMES }; /* (both spirits' strings and techniques) */
 Object.assign(ANGEL_CH, { spAuto: angelAuto }); Object.assign(DEVIL_CH, { spAuto: devilAuto }); Object.assign(DOUBLE_CH, { spAuto: (f, o, k) => angelAuto(f, o, k) || devilAuto(f, o, k) });
 Object.assign(DEVIL_CH, { normalLook: { // the devil's kicks are all tail now, and reach further

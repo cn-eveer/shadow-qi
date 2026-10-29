@@ -51,7 +51,7 @@ const TECH_TIER = {
   // Tanaka, and his angel and devil forms
   smCard: 'fast', smCase: 'heavy', smTackle: 'heavy', smUpper: 'heavy', smCoffee: 'mod', smAngel: 'mod', smBow: 'mod', smDevil: 'mod',
   saJab: 'fast', saFist: 'mod', saGlide: 'mod', saAscend: 'heavy', saBless: 'mod', saWard: 'fast', saStep: 'fast',
-  smSlide: 'mod', smSpill: 'mod', smSkid: 'fast', sdCrawl: 'heavy', sdTail: 'mod', sdTrail: 'mod',
+  smSlide: 'mod', smSpill: 'mod', sdCrawl: 'heavy', sdTail: 'mod',
   sdWhip: 'mod', sdTailDrop: 'mod', sdTailLash: 'mod', sdTailUpper: 'heavy', sdChainB: 'mod', saRay: 'mod', saRayLow: 'mod', saRayFly: 'mod', saDive: 'heavy',
   sdLunge: 'mod', sdMaul: 'mod', sdClaw: 'mod', sdUpper: 'heavy', sdBeckon: 'fast', sdChain: 'mod', sdDrain: 'heavy',
 };
