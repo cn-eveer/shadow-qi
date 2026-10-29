@@ -83,6 +83,14 @@
       <div class="srow"><span data-l="Language|言語">Language</span><button class="pill" id="langD">日本語</button></div>
       <div class="srow"><span data-l="Attack heights in training|トレーニングで攻撃の高さを表示">Attack heights in training</span><button class="pill" id="hgtD">On</button></div>
       <div class="srow"><span data-l="Auto guard (standing still or crouching guards, without holding back)|オートガード（後ろを押さなくても、立ち・しゃがみでガード）">Auto guard (standing still or crouching guards, without holding back)</span><button class="pill" id="agD">On</button></div>
+      <div class="srow"><span data-l="Frame data in training: what the numbers mean|トレーニングのフレーム表示の見方">Frame data in training: what the numbers mean</span><button class="pill" id="fdD" aria-expanded="false" aria-controls="fdHelp" data-l="Explain|説明">Explain</button></div>
+      <div class="fdhelp" id="fdHelp" hidden>
+        <p data-l="Shown at the bottom of the screen in training, for the last attack. Frames: 60 in one second.|トレーニングでは、最後に出した攻撃のフレームを画面下に表示します。1フレーム＝1/60秒。">Shown at the bottom of the screen in training, for the last attack. Frames: 60 in one second.</p>
+        <p data-l="発生 (startup): frames from pressing the button until the attack can hit. Smaller is faster.|発生：ボタンを押してから攻撃が当たるようになるまでのフレーム数。小さいほど速い。">発生 (startup): frames from pressing the button until the attack can hit. Smaller is faster.</p>
+        <p data-l="持続 (active): how many frames the attack can hit for.|持続：攻撃が当たる状態が続くフレーム数。">持続 (active): how many frames the attack can hit for.</p>
+        <p data-l="硬直 (recovery): frames after the attack before you can move again.|硬直：攻撃が終わってから、また動けるようになるまでのフレーム数。">硬直 (recovery): frames after the attack before you can move again.</p>
+        <p data-l="硬直差 (advantage): after it hits or is guarded, how many frames sooner you can act than the opponent. + is your turn, − is theirs: at −6, any of their attacks with 発生 6 or less hits you before you can guard.|硬直差：当たった・ガードされた後、相手より何フレーム早く動けるか。＋なら自分が有利、−なら相手が有利。たとえば−6なら、相手の発生6F以下の攻撃は確定で当たる。">硬直差 (advantage): after it hits or is guarded, how many frames sooner you can act than the opponent.</p>
+      </div>
       <div class="srow"><span data-l="CPU difficulty|CPUの強さ">CPU difficulty</span><span class="dseg"><button class="pill" data-diff="easy">Easy</button><button class="pill" data-diff="medium">Medium</button><button class="pill" data-diff="hard">Hard</button><button class="pill" data-diff="hell">Hell</button></span></div>
       <div class="srow"><span data-l="Moves and controls|技と操作">Moves and controls</span><button class="pill" id="movesD" data-l="Open the move list|技表を見る">Open the move list</button></div>
       <div class="srow"><span data-l="Version|バージョン">Version</span><span class="dseg"><span class="vtag" id="verD"></span><button class="pill" id="newsD" data-l="What’s new|更新情報">What’s new</button></span></div>

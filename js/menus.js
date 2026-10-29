@@ -309,6 +309,7 @@ langBtn.addEventListener('click', () => setLang(game.lang === 'ja' ? 'en' : 'ja'
 setBtn.addEventListener('click', () => openDrawer(drawer.hidden || drawerMode !== 'settings', 'settings'));
 document.getElementById('movesD').addEventListener('click', () => { drawerTab = fighters[0] && game.mode === 'fight' ? fighters[0].key : game.p1Char; openDrawer(true, 'moves'); });
 document.getElementById('hgtD').addEventListener('click', () => { initAudio(); toggleHeights(); sfx('select'); });
+document.getElementById('fdD').addEventListener('click', e => { const h = document.getElementById('fdHelp'); h.hidden = !h.hidden; e.currentTarget.setAttribute('aria-expanded', String(!h.hidden)); sfx('select'); }); // what 発生, 持続, 硬直 and 硬直差 mean
 document.getElementById('agD').addEventListener('click', () => { initAudio(); toggleAutoGuard(); sfx('select'); });
 document.getElementById('newsD').addEventListener('click', () => openDrawer(true, 'news'));
 document.getElementById('reloadD').addEventListener('click', freshReload);

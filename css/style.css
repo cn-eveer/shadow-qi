@@ -58,6 +58,7 @@ h1{font-family:var(--hud);font-weight:400;font-size:clamp(24px,3.6vw,36px);line-
 .setrow{display:flex;flex-direction:column;gap:2px;padding:10px 14px;font-weight:700;overflow-y:auto;min-height:0}
 .srow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
 .srow:last-child{border-bottom:0}
+.fdhelp{padding:2px 0 10px;border-bottom:1px solid var(--line);color:var(--muted);font-size:.9em;line-height:1.5}.fdhelp p{margin:6px 0}
 .dseg{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
 .dseg .pill.on{background:var(--text);color:var(--surface);border-color:var(--text)}
 /* the drawer is either the settings (sound, music, language) or the move list (fighter tabs and cards), never both */
