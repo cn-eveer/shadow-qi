@@ -648,6 +648,9 @@ function specialMoveBase(id) {
       onStart(f) { f.invul = 12; f.bfx = f.x; },
       onFrame(f, o, mf) { f.vx = 0; f.x = clamp(f.bfx - f.facing * 130 * Math.min(1, mf / 26), WALL_L, WALL_R); f.y = mf <= 26 ? 110 * Math.sin(Math.PI * mf / 26) : 0; f.flipT = mf < 18 ? 18 - mf : 0; f.flipMax = 18;
         if (mf === 16) shoot(f, { x: f.x + f.facing * 36, y: f.y + 80, vx: 18, vy: -6, life: 22, dmg: 26 }); } };
+    // ← → + K: Double Heavy Shot. Two heavy shots one after the other: slow to come out and slow to recover (one bullet for both)
+    case 'gnDouble': return { id, label: 'Double Heavy Shot', startup: 22, active: 10, recovery: 32, wind: 'gAim', pose: 'gRecoil', hitbox: null,
+      onFrame(f, o, mf) { f.vx = 0; if (mf === 22) shoot(f, { y: 122, dmg: 42, big: true, range: 330 }); if (mf === 30) shoot(f, { y: 118, dmg: 48, big: true, kd: true, range: 330 }); } };
     // ← ← + K: Showdown. Stands still, hand over the holster; attack him from the front and he draws first
     case 'gnShowdown': return { id, label: 'Showdown', startup: 4, active: 22, recovery: 22, wind: 'gIdle', pose: 'gIdle', parry: true, frontOnly: true, parryInto: 'gnDraw', parryIntoDry: 'gnShove', fx: 'ward' }; // (with bullets he draws and shoots; with none — empty or reloading — he shoves them away with the gun instead)
     case 'gnShove': return { id, label: 'Pistol Shove', startup: 2, active: 3, recovery: 14, wind: 'gIdle', pose: 'gTwin', hitbox: null, burst: [80, 110],

@@ -201,19 +201,20 @@ Object.assign(CHARS, {
   gunman: {
     idle: 'gHolster', name: 'JESSE', title: 'Gunslinger', nameJa: 'ジェシー', titleJa: 'ガンマン', ammo: 15, dmgMul: 1.43, scale: 1.02, walk: 3.3, back: 2.9, jumpX: 4.4, jumpV: 17.5, jugDmg: 1.05,
     pDmg: 0.95, kDmg: 0.95, pReach: 1.0, kReach: 1.0, chargeRate: 0.6, auraCol: '255,210,140', fxCol: '255,230,160',
+    spBF: { hk: 'gnDouble' }, // ← → + K: Double Heavy Shot
     sp: { fP: 'gnFan', fPH: 'gnQuick', fK: 'gnRoll', fKH: 'gnJumpShot', bP: 'gnDyna', bPH: 'gnDance', bK: 'gnBackflip', bKH: 'gnShowdown' }, sup: 'gnHighNoon',
     recPlus: 6, recRefund: true, // every attack recovers 6 frames slower on a miss or a guard; any hit that lands gives it back (see moveFrames)
     frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
       U: { su: 12, blk: -4 }, dU: { su: 12, blk: -4 }, J: { su: 10, blk: -4 }, dJ: { su: 10, blk: -4 },
-      I: { su: 16, blk: -12, held: true }, K: { su: 18, blk: -14, held: true }, dI: { su: 16, blk: -16 }, dK: { su: 16, blk: -14 }, /* (held: his charge shots; the tap's start-up is its own) */
+      I: { su: 16, blk: -12, held: true }, K: { su: 18, blk: -14 }, dI: { su: 16, blk: -16 }, dK: { su: 16, blk: -14 }, /* (held: his charge shots; the tap's start-up is its own) */
       $g2: { su: 12, blk: -6 }, $g3: { su: 15, blk: -6 }, $g4: { su: 18, blk: -6 }, $gF: { su: 18, blk: -18 }, $gL: { su: 16, blk: -16 }, $gE: { su: 20, blk: -12 }, // U, U … U×4 (12 / 15 / 18F) / U×4, K / U, I / U, K
       $gl2: { su: 12, blk: -6 }, $glE: { su: 18, blk: -16 },
       gnFan: { su: 20, blk: -16 }, gnQuick: { su: 12, blk: -8, held: true }, gnRoll: { su: 20, blk: -16 }, gnJumpShot: { su: 22, blk: -16 }, // (Quick Draw stays his fastest)
-      gnDyna: { su: 21, blk: -16 }, gnDance: { su: 20, blk: -16 }, gnBackflip: { blk: -6 }, /* (the flip fires its shot at a fixed moment: 23F) */
+      gnDouble: { su: 28, blk: -20 }, gnDyna: { su: 21, blk: -16 }, gnDance: { su: 20, blk: -16 }, gnBackflip: { blk: -6 }, /* (the flip fires its shot at a fixed moment: 23F) */
     },
    heavy: { // no kicks: both heavies are gunshots at mid range
       p: { label: 'Twin Shot', held: true, tapStartup: 9, startup: 999, active: 2, recovery: 20, hitbox: null, wind: 'gAim', pose: 'gTwin', onFrame: twinCharge },
-      k: { label: 'Heavy Shot', held: true, tapStartup: 13, startup: 999, active: 2, recovery: 24, hitbox: null, wind: 'gAim', pose: 'gRecoil', onFrame: heavyCharge },
+      k: { label: 'Heavy Shot', startup: 13, active: 2, recovery: 24, hitbox: null, wind: 'gAim', pose: 'gRecoil', onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 122, dmg: 50, big: true, kd: true, range: 300 }); } }, // (K is no longer held to charge: ← → + K is the double heavy shot)
     },
     normalLook: {
       sp0: { label: 'Hip Shot', startup: 4, wind: 'gIdle', pose: 'gAim', hitbox: null, chain: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 118, dmg: 22, range: 270 }); } }, // (upper body: crouch and it passes over)

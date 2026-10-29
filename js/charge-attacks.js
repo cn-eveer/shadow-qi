@@ -45,12 +45,6 @@ function twinCharge(f, o, mf) { return gunCharge(f, o, mf, (f, o, what) => { con
   const near = Math.abs(o.x - f.x) < 230; // up close the charged shots set up a combo
   if (L === 1) { shoot(f, { y: 124, dmg: 34, push: near ? 1 : 4, stun: 30, range: 380, lvl: 1 }); shoot(f, { y: 120, dmg: 34, push: near ? 1 : 4, stun: 30, range: 380, lvl: 1 }); }
   else shoot(f, { y: 128, dmg: 80, push: 6, range: 760, lvl: 2, pierce: true, stun: 26, ...(near ? { launch: true, launchVy: 12.5, jugVy: 11 } : { kd: true }) }); }); }
-function heavyCharge(f, o, mf) { return gunCharge(f, o, mf, (f, o, what) => { const L = f.move.lvl;
-  if (what === 'name') { f.move.label = ['Heavy Shot', 'Charged Heavy Shot', 'Buffalo Blast'][L]; f.move.pose = 'gRecoil'; return; }
-  if (L === 0) shoot(f, { y: 122, dmg: 50, big: true, kd: true, range: 300 });
-  else if (L === 1) shoot(f, { y: 122, dmg: 70, push: 6, range: 400, lvl: 1, ...(Math.abs(o.x - f.x) < 230 ? { launch: true, launchVy: 11.5, jugVy: 10 } : { kd: true }) });
-  else { shoot(f, { y: 128, dmg: 72, range: 300, lvl: 2, launch: true, launchVy: 12.5, jugVy: 10 }); // one huge blast of pellets: it launches
-    for (const vy of [-4, 4]) for (let i = 0; i < 4; i++) parts.push({ type: 'spark', x: f.x + f.facing * 80, y: GROUND - f.y - 118, vx: f.facing * rnd(8, 14), vy: vy * rnd(0.6, 1.2), life: 12, max: 12, col: '255,190,90' }); } }); }
 // the kappa's throws: grab, then swing them over his head to the other side
 function kappaToss(f, o, mf) {
   const mv = f.move;
