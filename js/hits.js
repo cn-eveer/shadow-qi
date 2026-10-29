@@ -230,7 +230,7 @@ function applyHit(a, d, h, side, hb, hu) {
   if (h.grab && (d.state === 'blockstun' || d.state === 'guard') && a.move && a.move.fiveEnder) { // a throw at the end of a guarded string can't take someone still guarding: it's stopped, and he's open
     sparks(cx, GROUND - (hu.y0 + hu.y1) / 2, 'block'); sfx('block'); techGuardLag(a, d, { ...h, bstun: h.bstun || 12 }); return 'block'; }
   const cy = GROUND - (Math.max(hb.y0, hu.y0) + Math.min(hb.y1, hu.y1)) / 2;
-  if (h.proj && !h.superHit && d.key === 'kappa' && d.state === 'dash') { // the kappa dives under projectiles as he darts in
+  if (h.proj && !h.superHit && !h.floor && d.key === 'kappa' && d.state === 'dash') { // the kappa dives under projectiles as he darts in (not one that reaches the floor: floor)
     if (!d.passT || game.frame - d.passT > 20) { d.passT = game.frame; popText(d.x, GROUND - d.y - 150, 'DIVE', '150,215,255'); }
     return null;
   }
