@@ -162,6 +162,7 @@ function startMove(f, mv, str, keepBuffer) {
   if (mv.held && f.inp) { if (!mv.holdBtn) mv.holdBtn = f.inp.btn; if (f.inp.holdFor && mv.holdFor == null) mv.holdFor = f.inp.holdFor; }
   if (f.pre) sfx('charge');
   else if (mv.onStart) mv.onStart(f, other(f));
+  fdStart(f, mv);
 }
 function tryAttack(f, o, inp, noLight) { // (noLight: anything but a light attack — a string can't start itself over)
   if (!inp.btn) return false;
@@ -211,6 +212,24 @@ const STRING_REST = 12, JAB_REST = 6;
 const STRESS_ADD = { light: 8, heavy: 12, tech: 12, launch: 18 }, STRESS_ON = 50, STRESS_IDLE = 40, STRESS_DRAIN = 0.35, STRESS_SLOW = 28, STRESS_REC = 0.6; // (drain per frame when empty, a quarter of it when full; up to 28 frames later and 60% more recovery)
 const stressK = f => f && !f.ch.noStress && f.stress >= STRESS_ON ? 0.5 + 0.5 * (f.stress - STRESS_ON) / (100 - STRESS_ON) : 0; // 0 calm, 0.5 – 1 stressed
 const stressMove = f => 1 - 0.3 * stressK(f);
+// training: the frame data of each fighter's last attack, always on screen (see drawFrameData) — 発生 (the frame it can first hit,
+// from the press), 持続 (active frames), 硬直 (recovery when it misses), and 硬直差 once it hits or is guarded: who can act first, by how much
+const FD_FREE = s => s === 'stand' || s === 'crouch' || s === 'guard';
+function fdStart(f, mv) {
+  if (!game.training || game.demo) return;
+  f.fd = { label: mv.label || '', su: mv.startup < 900 ? f.pre + mv.startup + 1 : null, act: mv.active < 900 ? mv.active : null, rec: mv.recovery, t0: game.frame, res: null, adv: null, wait: false, atkT: null, defT: null, held: mv.startup >= 900 };
+}
+function fdContact(a, r) { // the first hit or guard of the attack
+  const d = a.fd; if (!d || d.res) return;
+  d.res = r; d.su = game.frame - d.t0 + 1; d.wait = true; d.atkT = d.defT = null;
+  if (d.held && a.move) { d.act = a.move.active; d.rec = a.move.recovery; } // (a held attack: its frames are only known once it's let go)
+}
+function fdWatch() { // each step: once both can act again, the advantage
+  for (const f of fighters) { const d = f.fd, o = other(f); if (!d || !d.wait) continue;
+    if (['knock', 'down', 'getup', 'stunned', 'slashed', 'gbreak'].includes(o.state)) { d.adv = o.state === 'knock' ? 'launch' : o.state === 'stunned' ? 'stun' : o.state === 'gbreak' ? 'gb' : 'kd'; d.wait = false; continue; }
+    if (d.atkT == null && FD_FREE(f.state) && f.state !== 'attack') d.atkT = game.frame; if (d.defT == null && FD_FREE(o.state)) d.defT = game.frame;
+    if (d.atkT != null && d.defT != null) { d.adv = d.defT - d.atkT; d.wait = false; } }
+}
 // no attack carries its user further than this (dashes, rushes, lunges, step-ins, leaps out of them; supers and air attacks aside)
 const MOVE_TRAVEL = 180;
 function capTravel(f) {

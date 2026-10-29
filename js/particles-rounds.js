@@ -261,6 +261,7 @@ function step() {
   updateProjs(); FX_OWNER = null;
   fighters.forEach(updatePose);
   if (game.training) trainingUpkeep();
+  if (game.training && !game.demo) fdWatch();
   if (game.demo) demoUpkeep();
   if (game.combo && --game.combo.t <= 0) game.combo = null;
   if (game.routeName && --game.routeName.t <= 0) game.routeName = null;

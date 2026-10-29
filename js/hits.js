@@ -177,7 +177,8 @@ const autoGuardFor = (f, toward) => game.autoGuard && !game.online && f.ctrl ins
 // a ground combo (not in the air, not stunned) only keeps its first two attacks for sure: from the third on, whoever is being hit can
 // guard again — holding back, or standing or crouching with auto guard. Juggles, stuns and knockdowns are untouched
 const MIDCOMBO_GUARD = 2;
-const GUARD_STALL = 6; // frames an attacker loses when his attack is guarded (shown as a recoil)
+const GUARD_STALL = 6;
+// (applyHit, below, reports each first hit or guard to the training frame data: fdContact) // frames an attacker loses when his attack is guarded (shown as a recoil)
 const JUG_HOLD_MAX = 150; // frames (2.5 s) U, U... can keep them up after the last lift or bounce: then only a new lift or the finisher still lands
 const JUG_ATTACKS_MAX = 7; // attacks a juggle can take before a new lift or bounce (finishers still land)
 const JUG_HOLD = 2, JUG_FLOAT = 22; // an ordinary juggle hit doesn't raise them: it barely pushes them up, and they hang (light gravity) for a moment
@@ -490,3 +491,5 @@ function checkHits(a, o) {
   if (res === 'hit' && mv.hover && a.y > 0) a.vy = Math.max(a.vy, 2.5); // hang in the air a moment during air juggles
 }
 
+
+{ const core = applyHit; applyHit = function (a, d, h, side, hb, hu) { const r = core.apply(this, arguments); if ((r === 'hit' || r === 'block' || r === 'armor') && a.fd) fdContact(a, r); return r; }; } // training frame data: the attack's first hit or guard

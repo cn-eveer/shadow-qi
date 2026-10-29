@@ -455,6 +455,21 @@ function meterBar(f, x, y, w, h, left) { // MP: violet with stripes running alon
   ctx.fillStyle = full ? (globalT % 20 < 12 ? '#ffe066' : '#fff') : '#e6a8ff';
   ctx.fillText(full ? 'MP MAX' : 'MP', lx, y + h / 2 + 1);
 }
+function drawFrameData() { // training: each fighter's last attack — 発生, 持続, 硬直 and, once it connected, 硬直差 (+: he acts first)
+  const sign = v => v > 0 ? '+' + v : v < 0 ? '−' + (-v) : '±0';
+  fighters.forEach((f, i) => {
+    const d = f.fd; if (!d) return;
+    const left = i === 0, x = left ? 30 : W - 30, y = H - 30, w = 420;
+    const adv = d.res == null ? (f.state === 'attack' ? '' : L('miss', '空振り'))
+      : `${d.res === 'block' ? L('Guard', 'ガード') : d.res === 'armor' ? L('Armor', 'アーマー') : L('Hit', 'ヒット')} ${d.wait ? '…' : typeof d.adv === 'number' ? sign(d.adv) : { launch: L('launch', '打ち上げ'), stun: L('stun', '気絶'), kd: L('down', 'ダウン'), gb: L('guard break', 'ガードブレイク') }[d.adv] || ''}`;
+    const nums = `${L('Startup', '発生')} ${d.su != null ? d.su + 'F' : '—'}   ${L('Active', '持続')} ${d.act != null ? d.act : '—'}   ${L('Recovery', '硬直')} ${d.rec != null ? d.rec : '—'}`;
+    ctx.save(); ctx.fillStyle = 'rgba(8,6,26,.66)'; rr(left ? x - 8 : x - w + 8, y - 34, w, 44, 8); ctx.fill();
+    ctx.textAlign = left ? 'left' : 'right'; ctx.textBaseline = 'alphabetic';
+    ctx.font = `600 13px 'Rajdhani', 'Segoe UI', system-ui, sans-serif`; ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.fillText(`${nm(f.ch)} · ${d.label}`, x, y - 18);
+    ctx.font = `15px ${HUD}`; ctx.fillStyle = '#ffd98a'; ctx.fillText(nums + (adv ? `   ${L('Adv.', '硬直差')} ${adv}` : ''), x, y);
+    ctx.restore();
+  });
+}
 function drawHUD() {
   const [a, b] = fighters;
   healthBar(a, 40, true); healthBar(b, W - 420, false);
@@ -470,6 +485,7 @@ function drawHUD() {
   }
   if (game.online) { ctx.font = SMALL; ctx.textAlign = 'center'; ctx.fillStyle = NET.stallT > 30 ? '#ffb36b' : 'rgba(255,255,255,.7)'; ctx.fillText(NET.stallT > 30 ? L('Waiting for opponent…', '相手を待っています…') : `${Math.round(NET.rtt)} ms`, 480, 82); }
   if (game.demo) drawDemo();
+  if (game.training && !game.demo) drawFrameData();
   if (game.combo) {
     const c = game.combo, left = c.side === 0, x = left ? 44 : W - 44;
     ctx.textAlign = left ? 'left' : 'right'; ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round';
