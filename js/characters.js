@@ -137,7 +137,7 @@ const CHARS = {
     frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
       U: { su: 10, blk: -4 }, dU: { su: 10, blk: -4 }, J: { su: 10, blk: -4 }, dJ: { su: 10, blk: -4 },
       I: { su: 16, blk: -12 }, K: { su: 18, blk: -14 }, dI: { su: 16, blk: -16 }, dK: { su: 16, blk: -14 },
-      $p2: { su: 12, blk: -6 }, $p3: { su: 12, blk: -6 }, $p4: { su: 12, blk: -6 }, $pF: { su: 18, blk: -18 }, $pL: { su: 16, blk: -16 }, $pE: { su: 20, blk: -12 }, // U, U … U×4 / U×4, K / U, I / U, K
+      $p2: { su: 18, blk: -6 }, $p3: { su: 14, blk: -6 }, $p4: { su: 16, blk: -6 }, $pF: { su: 18, blk: -18 }, $pL: { su: 16, blk: -16 }, $pE: { su: 24, blk: -16 }, // U, U … U×4 / U×4, K / U, I / U, K
       $pl2: { su: 12, blk: -6 }, $plE: { su: 18, blk: -16 }, // J, J / J, J, K and J, K
       plRampart: { blk: -16, held: true }, plJudgeThrust: { su: 22, blk: -16 }, plWindmill: { su: 16 }, plWindmillEnd: { blk: -16 }, plLeap: { su: 26, blk: -16 },
     },
