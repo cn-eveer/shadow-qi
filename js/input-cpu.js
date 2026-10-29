@@ -359,6 +359,14 @@ const DUMMY_MODES = ['guard', 'sguard', 'cguard', 'jump', 'stand'];
 const DUMMY_LABEL_EN = { guard: 'Always guard', sguard: 'Stand guard', cguard: 'Crouch guard', jump: 'Jump', stand: 'No guard' };
 const DUMMY_LABEL_JA = { guard: '常にガード', sguard: '立ちガード', cguard: 'しゃがみガード', jump: 'ジャンプ', stand: 'ガードなし' };
 const DUMMY_LABEL = new Proxy({}, { get: (t, k) => (game.lang === 'ja' ? DUMMY_LABEL_JA : DUMMY_LABEL_EN)[k] });
+// training: Tanaka's dummy is himself, or taken by the angel, the devil or both, as the chosen command needs
+function setDummyForm(f, form) {
+  const now = f.ch.possess || null;
+  if (form === now) { if (form && f.possT < 300) f.possT = 900; return; }
+  if (now) endPossession(f);
+  if (form === 'angel') startPossession(f, 'angel'); else if (form === 'devil') startPossession(f, 'devil'); else if (form === 'double') { startPossession(f, 'devil'); startPossession(f, 'angel'); }
+  if (f.possT > 0) f.possT = 900;
+}
 class Dummy {
   constructor() { this.cpu = new CPU(); }
   reset() { this.cpu.reset(); this.rst = null; this.next = null; }
@@ -397,6 +405,7 @@ class Dummy {
     }
     if (frame < this.next || !((f.state === 'stand' || f.state === 'crouch') && f.atkCD <= 0)) return idle;
     if (R.sup) f.meter = 100; // (a super needs a full gauge)
+    if (f.key === 'salary') setDummyForm(f, R.form || null); // (Tanaka: himself, or the form the chosen command is for)
     this.rst = { i: 0 }; this.rt0 = frame;
     return comboStep(f, o, R.steps, this.rst, { ...EMPTY });
   }

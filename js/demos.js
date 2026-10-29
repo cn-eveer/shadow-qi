@@ -1005,7 +1005,7 @@ function comboStep(f, o, steps, st, out) {
     if (dist > 75 && free && !s.inp.far) { out.h = fwd; return out; } // (a leap doesn't need to walk in first)
     go = free;
   }
-  if (go) { Object.assign(out, s.inp); if (s.inp.toward) out.h = fwd * clamp((dist - 40) / 230, 0.4, 1); else if (s.when === 'jump' && dist > 50) out.h = fwd * clamp((dist - 20) / 80, 0.5, 1); /* jump toward them when they've been knocked a little away */ if (s.inp.upPress) out.up = true; st.wait = { serial: f.serial, t: 0 }; }
+  if (go) { Object.assign(out, s.inp); if (s.inp.fwdHold) out.h = fwd; /* (← ← → + button) */ if (s.inp.toward) out.h = fwd * clamp((dist - 40) / 230, 0.4, 1); else if (s.when === 'jump' && dist > 50) out.h = fwd * clamp((dist - 20) / 80, 0.5, 1); /* jump toward them when they've been knocked a little away */ if (s.inp.upPress) out.up = true; st.wait = { serial: f.serial, t: 0 }; }
   return out;
 }
 class DemoCtrl { // plays the current sample combo, one step at a time

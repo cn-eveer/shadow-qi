@@ -73,8 +73,8 @@ function stringsOf(ch) { // every ground string a fighter has, from his own stri
 }
 let repCh = '', repId = 0, repMoves = [];
 function repInput(tok) { // one command → its input (null: not one this can do)
-  const m = tok.replace(/ \/ .*$/, '').trim().match(/^(→ → \+ |← ← \+ |← → \+ |↓ \+ |→ → then ↓ \+ |← ← then ↓ \+ )?([UIJK])$/); if (!m) return null;
-  const p = m[1] || '', inp = { btn: REP_BTN[m[2]] }; if (p.startsWith('→ →')) inp.ff = true; if (p.startsWith('← ←')) inp.bb = true; if (p.startsWith('← →')) inp.bf = true; if (p.includes('↓')) inp.down = true; // (← →: Kuro's and Tetsu's ← → techniques)
+  const m = tok.replace(/ \/ .*$/, '').trim().match(/^(→ → ↓ \+ |← ← ↓ \+ |← ← ↑ \+ |← ← → \+ |→ → \+ |← ← \+ |← → \+ |↓ \+ |→ → then ↓ \+ |← ← then ↓ \+ )?([UIJK])$/); if (!m) return null;
+  const p = m[1] || '', inp = { btn: REP_BTN[m[2]] }; if (p.startsWith('→ →')) inp.ff = true; if (p.startsWith('← ←')) inp.bb = true; if (p.startsWith('← →')) inp.bf = true; if (p.includes('↓')) inp.down = true; if (p.includes('↑')) inp.up = true; if (p.startsWith('← ← →')) inp.fwdHold = true; // (the three-input commands: ← ← ↑ + J, ← ← → + J, → → ↓ + J…) // (← →: Kuro's and Tetsu's ← → techniques)
   return inp;
 }
 function repSteps(cmd) { // a command → the presses that do it (as the sample combos play them)
@@ -108,6 +108,10 @@ function repList(ch) {
     const strs = stringsOf(ch); // (a row whose command is a run of buttons but no string of his — the anti-air U, I, K — isn't a string)
     for (const c of cmds) { if (strs && /^[UIJK↓ +]+(, [UIJK↓ +]+)+$/.test(c) && !strs.some(s => s.cmd === c)) continue; const r = repSteps(c); if (!r) continue; const had = out.find(m => m.label === c); if (had) had.name = had.name || name; else out.push({ label: c, name, ...r }); }
   });
+  if (ch === 'salary') { // Tanaka: every command can also be practised as the angel, the devil and both (the dummy takes that form before it does the command)
+    const base = out.slice(), FORMS = [['angel', L('Angel', '天使憑依'), '\u200b'], ['devil', L('Devil', '悪魔憑依'), '\u200b\u200b'], ['double', L('Angel + Devil', '二重憑依'), '\u200b\u200b\u200b']];
+    for (const [form, fname, pad] of FORMS) for (const m of base) { if (/^← ← \+ [IK]$/.test(m.label) && form !== 'double') continue; out.push({ ...m, label: m.label + pad, name: fname + (m.name ? ' · ' + m.name : ''), form }); } // (the two calls themselves are only for the base form)
+  }
   return out;
 }
 function repMovesFor(ch) { // (built once per fighter and language; keeps the chosen command when it can)
@@ -116,7 +120,7 @@ function repMovesFor(ch) { // (built once per fighter and language; keeps the ch
 }
 function setRepeat() {
   const m = repMoves[game.repIdx || 0]; game.repEvery = game.repEvery || 1.5;
-  game.repeat = game.repeatOn && m ? { id: ++repId, label: m.label, steps: m.steps, sup: !!m.sup, every: Math.round(game.repEvery * 60), reach: 120 } : null;
+  game.repeat = game.repeatOn && m ? { id: ++repId, label: m.label, steps: m.steps, sup: !!m.sup, form: m.form || null, every: Math.round(game.repEvery * 60), reach: 120 } : null;
 }
 function toggleRepeat() { game.repeatOn = !game.repeatOn; setRepeat(); sfx('select'); updateMoveList(); }
 function stepEvery(d) { const i = REP_EVERY.indexOf(game.repEvery || 1.5); game.repEvery = REP_EVERY[clamp(i + d, 0, REP_EVERY.length - 1)]; setRepeat(); sfx('select'); updateMoveList(); }
