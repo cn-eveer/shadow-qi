@@ -36,7 +36,7 @@ function boxOf(f, hb) {
 // parries and stances count as fast; anything not listed: launchers are heavy, the rest moderate
 const TECH_TIER = {
   // Kuro
-  shadowCharge: 'heavy', swordSlash: 'heavy', cloneStrike: 'mod', teleKick: 'mod', flame: 'mod', fireballs: 'mod', vanishSlide: 'heavy', vanishDrop: 'mod',
+  moonTempest: 'fast', fullMoon: 'fast', shadowCharge: 'heavy', swordSlash: 'heavy', cloneStrike: 'mod', teleKick: 'mod', flame: 'mod', fireballs: 'mod', vanishSlide: 'heavy', vanishDrop: 'mod',
   // Tetsu (Rising Fist: his uppercut comes out without a tell, but it's punished hard if guarded)
   qiBlast: 'mod', meteorFist: 'heavy', qiSweep: 'heavy', shoulder: 'mod', qiOrb: 'fast', qiParry: 'fast', stomp: 'heavy', tornado: 'heavy', risingFist: 'heavy',
   // Mei
@@ -502,7 +502,7 @@ function fixAdv(a, d, h, r) {
   const left = mv.startup + (mv.active || 0) + mv.recovery - a.mf;
   if (r === 'block' && mv.blockAdv != null && d.state === 'blockstun') {
     const T = d.stun - mv.blockAdv - (!h.proj && !mv.guardStalled && !mv.super ? GUARD_STALL : 0); // (a blow — not a shot — still gets the guard stall afterwards: see checkHits)
-    if (T < left - mv.recovery && !h.proj) { mv.active = Math.max(0, a.mf - mv.startup); mv.recovery = Math.max(1, T); } // (more of the blow is still to come than the opening allows: it ends here)
+    if (T < left - mv.recovery && (!h.proj || mv.cutOnGuard)) { mv.active = Math.max(0, a.mf - mv.startup); mv.recovery = Math.max(1, T); } // (more of the blow is still to come than the opening allows: it ends here)
     else mv.recovery = Math.max(1, mv.recovery + T - left);
     a.guardLagUntil = 0; a.guardLagNeed = 0; mv.lagLock = false;
   }

@@ -87,6 +87,7 @@ const inAir = o => (o.state === 'knock' && o.juggle) || ((o.state === 'jump' || 
 function resolveSpecial(f, o, inp) {
   if (!inp.btn) return null;
   if (inp.fuse && f.ch.fuseSp && f.fuseG >= 100) return f.ch.fuseSp; // ← → + J + K with his fusion gauge full (Hohen's golem armour)
+  if (inp.bf && f.ch.spBF && f.ch.spBF[inp.btn]) return f.ch.spBF[inp.btn]; // ← → + a button (Kuro's Moon Tempests)
   if (inp.sup && f.meter >= 100 && !(f.ch.sup === 'kpFlood' && floodVictim(f))) return f.ch.sup; // (kappa against kappa: no flood while the other's is up)
   const isP = inp.btn[1] === 'p', heavy = inp.btn[0] === 'h';
   if (inp.ff || inp.bb) {
@@ -117,7 +118,7 @@ function startMove(f, mv, str, keepBuffer) {
   if (mv.rushTag) f.rushN = mv.rushOpen ? 0 : (f.rushN || 0) + 1;
   if (mv.jug) { const oj = other(f); if (oj && Math.abs(oj.x - f.x) > 6) f.facing = Math.sign(oj.x - f.x); } // (a juggle attack turns to face them: a juggle can carry them over to the other side)
   f.pre = mv.pre || 0; // frames spent gathering qi before the technique itself starts
-  if (mv.super) { const dg = SUPER_DODGE[mv.id], oc = other(f), caught = oc && ['hitstun', 'knock', 'stunned', 'down', 'getup', 'slashed', 'gbreak'].includes(oc.state); mv.dodge = caught ? null : dg; if (!caught && (dg === 'jump' || dg === 'dash')) { f.pre += SUPER_PRE; mv.superPre = SUPER_PRE; } f.invul = Math.max(f.invul || 0, f.pre + mv.startup + 6); } // (invincible all the way through the wind-up) // (in a combo it comes straight out: they can't get away anyway)
+  if (mv.super) { const dg = SUPER_DODGE[mv.id], oc = other(f), caught = oc && ['hitstun', 'knock', 'stunned', 'down', 'getup', 'slashed', 'gbreak'].includes(oc.state); mv.dodge = caught ? null : dg; if (!caught && (dg === 'jump' || dg === 'dash')) { const sp = Math.round(SUPER_PRE * (f.ch.superPreMul || 1)); f.pre += sp; mv.superPre = sp; } f.invul = Math.max(f.invul || 0, f.pre + mv.startup + 6); } // (invincible all the way through the wind-up) // (in a combo it comes straight out: they can't get away anyway)
   const ksg = f.key === 'ninja' && (KURO_SIGNS[mv.id] || KURO_SPIRIT_LABEL[mv.label]);
   if (ksg) f.spirit = { sg: ksg, t0: game.frame, rise: mv.tellPre ? Math.min(12, mv.tellPre) : 6, hold: (mv.tellPre || 0) + 40, x: f.x - f.facing * 12, y: GROUND - f.y - 125 * f.ch.scale, dir: f.facing, hy: GROUND - f.y - 236 * f.ch.scale }; // the seal's spirit: it rises where he cast it and stays there a while, then fades slowly
   if (f.key === 'gunman' && !(f.gunOutT > 0)) for (const sd of [1, -1]) parts.push({ type: 'star', x: f.x + f.facing * sd * 14, y: GROUND - f.y - 92 * f.ch.scale, r: 8, vr: 1.4, life: 6, max: 6, col: '255,240,190', rot: 0.4 }); // the quick draw: a glint as the guns leave the holsters

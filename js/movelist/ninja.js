@@ -6,12 +6,13 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <h2>KURO<span>Shadow Ninja</span></h2>
       <p class="blurb">Quick on his feet and lighter on damage, and he recovers quickly from every move. Tricks you with shadows and clones, cuts in with his sword, stuns with fire and lightning, and has many ways to launch you into a long juggle.</p>
       <p class="note"><b>Hand signs.</b> Before each of his moderate and heavy techniques Kuro forms three seals, and a spirit rises behind him with the seal’s name above his head — learn them and you know what’s coming (and can jab him before it does): Dragon 龍 = Sky Drop Kick, Tiger 虎 = Lightning Volley, Phoenix 鳳 = Fire Breath, Serpent 蛇 = Shadow Charge Upper, Crane 鶴 = Iai Slash, Fox 狐 = Shadow Clone, Rat 鼠 = Vanish Slide, Raven 烏 = Vanish Drop Kick. In combos the phoenix also rises for his juggle Fire Spout, and a Bull 牛 for the last kick of U, U, K (Crescent Moon Drop). Each spirit stays where he cast it and slowly drifts away.</p>
-      <p class="note"><b>Charge (hold I).</b> Qi gathers into him while you hold. Half a second: Shadow Rush Slash, he dashes in and slashes them into the air — follow it with a juggle. Over a second: Moon Tempest, a crescent of shadow flies along the floor and sends them flying. A tap is the normal heavy attack.</p>
       <p class="note"><b>Theme.</b> Shadow & moonlight · violet and silver. A silent assassin from a burned-down mountain village who fights from the shadows. Signatures: U, U, K Crescent Moon Drop (vanishes, drops a crescent heel from above); U, U, I Moonrise Kunai (a full moon of kunai).</p>
       <div class="scroll"><table>
         <tbody>
           <tr><td>Kunai Slash<small>Heavy punch. Lunges in with a wide blade slash.</small></td><td class="keys"><kbd>I</kbd></td></tr>
           <tr><td>Crescent Kick<small>Heavy kick. A high arcing kick that also catches jumpers.</small></td><td class="keys"><kbd>K</kbd></td></tr>
+          <tr><td>Moon Tempest<small>A crescent of shadow along the floor: a mid that can be jumped, short-lived (0.4 s). 14F, 5 frames of recovery, even when guarded; knocks down.</small></td><td class="cmd">← → + U</td></tr>
+          <tr><td>Full Moon Tempest<small>A tall, slow crescent that lasts much longer: it can’t be jumped and it hits a crouching guard (TOP). 18F, 5 frames of recovery, even when guarded; knocks down.</small></td><td class="cmd">← → + I</td></tr>
           <tr><td>Sweep<small>Low, with a long reach. Knocks down; like the Crescent Kick, on a counter hit or a punish it launches them instead: juggle with U, U, K.</small></td><td class="cmd">↓ + K</td></tr>
           <tr><td>Shadow Charge Upper<small>Looks exactly like Shadow Clone Strike, but the shadow dashing in is the real Kuro and the one doing the hand sign is a decoy. It ends in a smooth rising uppercut that launches the opponent so you can juggle them. If the uppercut is guarded or misses, pick a follow-up instead. If he’s hit before the kick, he vanishes, reappears behind the attacker and slashes, leaving them stunned so he can launch them.</small></td><td class="cmd">→ → + U</td></tr>
           <tr class="sub"><td>Shadow Strike<small>Reappears behind the opponent and slashes. Hit from behind, they’re left stunned, so you can launch them with ↓ + I.</small></td><td class="cmd">then U</td></tr>
@@ -61,12 +62,13 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <h2>クロ<span>影の忍者</span></h2>
       <p class="blurb">身軽で一撃は軽めだが、どの技も隙が少ない。影と分身で惑わせ、刀で斬り込み、炎と雷で気絶させ、長いコンボにつなぐ。</p>
       <p class="note"><b>印を結ぶ。</b> クロは中技・重い技の前に三つの印を結び、背後に霊獣が現れ、頭上に印の名が出る。覚えれば何が来るか分かる（その間にジャブで止められる）：龍＝スカイドロップキック、虎＝雷撃連弾、鳳＝火遁の息、蛇＝影走り昇拳、鶴＝居合斬り、狐＝影分身、鼠＝消影滑り、烏＝消影落とし蹴り。コンボ中も空中の火柱（ファイアスパウト）では鳳凰が、U、U、Kの最後の蹴り（三日月落とし）では牛が現れる。霊獣は印を結んだ場所に残り、ゆっくり消えていく。</p>
-      <p class="note"><b>溜め技（I長押し）。</b> 押している間、気が集まる。0.5秒：影走り斬り（駆け込んで斬り上げる）、空中追撃につながる。1秒以上：月の嵐（影の三日月が床を走り、吹き飛ばす）。押すだけなら通常の強攻撃。</p>
       <p class="note"><b>テーマ.</b> 影と月光・紫と銀。焼け落ちた山里出身、影から戦う無言の刺客。決め技：U、U、K「三日月落とし」（消えて頭上から三日月のかかと）／U、U、I「月昇りクナイ」（クナイが満月を描く）。</p>
       <div class="scroll"><table>
         <tbody>
           <tr><td>クナイ斬り<small>強パンチ。大きく踏み込んで斬りつける。</small></td><td class="keys"><kbd>I</kbd></td></tr>
           <tr><td>三日月蹴り<small>強キック。弧を描く高い蹴り。カウンターや確定反撃で当てると打ち上げる。</small></td><td class="keys"><kbd>K</kbd></td></tr>
+          <tr><td>月の嵐<small>影の三日月が床を走る。中段でジャンプでかわせ、すぐ消える（0.4秒）。発生14F、硬直5、ガードされても五分。ダウンを奪う。</small></td><td class="cmd">← → + U</td></tr>
+          <tr><td>満月の嵐<small>背の高いゆっくりした三日月で、長く残る。ジャンプでかわせず、しゃがみガードにも当たる（中下段）。発生18F、硬直5、ガードされても五分。ダウンを奪う。</small></td><td class="cmd">← → + I</td></tr>
           <tr><td>足払い<small>下段でリーチが長い。ダウンを奪う。三日月蹴りと同じく、カウンターや確定反撃で当てると打ち上げ、U、U、Kで追撃できる。</small></td><td class="cmd">↓ + K</td></tr>
           <tr><td>影突進アッパー<small>分身の術に見せかけて、本物のクロが影となって突進し、なめらかなアッパーで打ち上げる。ガードされたら追加入力（下記）。突進前に攻撃されると消えて背後に現れ、斬って気絶させる。</small></td><td class="cmd">→ → + U</td></tr>
           <tr class="sub"><td>影斬り<small>背後に現れて斬る。背後から当たると相手は気絶。</small></td><td class="cmd">続けて U</td></tr>

@@ -95,7 +95,7 @@ function heavyFX(f, mv) {
 // Kuro's techniques recover faster (kept long enough for each one's animation to finish)
 const POUNCE_MAX = 240, RIP_REACH = 380, RIP_PULL = 240; // the kappa's Pounce leaps this far at most; Riptide catches them this far away at most, and drags them this far at most
 const KURO_REC = { cloneStrike: 8, shadowCharge: 14, counterVanish: 12, swordSlash: 18, ambushBehind: 16, ambushLeap: 20, ambushSlide: 16, ambushKick: 18, // Shadow Charge and its follow-ups can be punished
-  teleKick: 7, teleSlide: 9, teleSpin: 12, flame: 10, fireballs: 1, vanishDrop: 10, vanishSlide: 6, jFire: 10, jRain: 8, jClone: 8, jIai: 15, jVanishHeel: 9, shadowArmy: 14 };
+  teleKick: 7, teleSlide: 9, teleSpin: 12, flame: 10, fireballs: 1, vanishDrop: 10, vanishSlide: 6, jFire: 10, jRain: 8, jClone: 8, jIai: 15, jVanishHeel: 9, shadowArmy: 22 };
 const SLOW_SPECIALS = { staff: new Set(['extendStaff', 'vaultSmash', 'sweepStaff', 'poleKick', 'windmill', 'cloudLeap', 'somersault', 'feint']),
   psychic: new Set(['phantomFist', 'crushFist', 'psyLift', 'forceWave', 'orbBurst', 'tripleRay', 'orbStrong', 'orbLong']) };
 // Tetsu's standing techniques drive forward while they wind up (speed per technique)
@@ -1091,7 +1091,13 @@ function specialMoveBase(id) {
         if (mf > 6 && mf <= 36) f.vx = (!f.hitConnected && Math.abs(o.x - f.x) > 58) ? f.facing * 6.5 : 0;
         else f.vx *= 0.7;
       } };
-    case 'shadowArmy': return { id, super: true, name: 'SHADOW ARMY', label: 'Shadow Army', startup: 14, active: 60, recovery: 22, wind: 'seal', pose: 'seal', aura: true,
+    // ← → + U / I: a crescent of shadow along the floor — Moon Tempest is a mid you can jump, short-lived; Full Moon Tempest is tall
+    // (no jumping it, and it hits a crouching guard: TOP), slower and out much longer. Both: 5 frames of recovery, even when guarded
+    case 'moonTempest': return { id, label: 'Moon Tempest', startup: 13, active: 2, recovery: 5, fixedFrames: true, blockAdv: 0, wind: 'slashW', pose: 'slash', hitbox: null,
+      onFrame(f, o, mf) { f.vx *= 0.6; if (mf === f.move.startup) { sfx('slash'); spawnPJ(f, 'crescent', { x: f.x + f.facing * 70, y: 70, vx: f.facing * 13, life: 24, r: 34, h: { dmg: 60, stun: 22, bstun: 8, push: 3, kd: true, kdVx: 12, kdVy: 7, gdrain: 10, label: 'Moon Tempest' } }); } } };
+    case 'fullMoon': return { id, label: 'Full Moon Tempest', startup: 17, active: 2, recovery: 5, fixedFrames: true, blockAdv: 0, wind: 'slashW', pose: 'slash', hitbox: null,
+      onFrame(f, o, mf) { f.vx *= 0.6; if (mf === f.move.startup) { sfx('slash'); game.shake = Math.max(game.shake, 3); spawnPJ(f, 'crescent', { x: f.x + f.facing * 70, y: 120, vx: f.facing * 8, life: 70, r: 100, h: { dmg: 90, stun: 24, bstun: 8, push: 4, kd: true, kdVx: 16, kdVy: 8, gdrain: 18, overhead: true, label: 'Full Moon Tempest' } }); } } };
+    case 'shadowArmy': return { id, super: true, name: 'SHADOW ARMY', label: 'Shadow Army', startup: 14, active: 75, recovery: 22, blockAdv: 0, cutOnGuard: true, /* (out longer, slower to recover; even when guarded: once its clones are guarded he's done) */ wind: 'seal', pose: 'seal', aura: true,
       onStart(f) { f.invul = 20; },
       onFrame(f, o, mf) { // six clones from both sides, then one dives from above
         if (f.move.dodge) { if (mf >= 12 && mf <= 17) spawnClone(f, true, mf - 12); } // (six clones in a rush from both sides: one jump clears them)

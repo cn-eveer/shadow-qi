@@ -8,6 +8,8 @@ const CHARS = {
     techSpeed: { shadowCharge: 3.1, swordSlash: 2.4, cloneStrike: 1.2, teleKick: 2.25, flame: 2.1, fireballs: 10, vanishSlide: 5, vanishDrop: 5.5, ambushLeap: 5, teleSpin: 1.68, ambushBehind: 1.35, ambushSlide: 1.25, ambushKick: 1.3,
       jFire: 1.45, jRain: 1.5, jClone: 1.55, jIai: 1.45, jVanishHeel: 1.45 },
     techDelay: { teleSlide: 5 }, // (and the other way: frames added before this one — the Drop Slide comes out a little later)
+    spBF: { lp: 'moonTempest', hp: 'fullMoon' }, // ← → + U / I: Moon Tempest, Full Moon Tempest (his I is no longer held to charge)
+    superPreMul: 0.2, // (Shadow Army: a shorter warning before the clones come — 発生 faster)
     noLowSp: true, // (no ↓ versions of his techniques on demand: they still come out by themselves on someone in the air)
     name: 'KURO', noStress: true, dmgMul: 1.08, title: 'Shadow Ninja', nameJa: 'クロ', titleJa: '影の忍者', jugDmg: 1.15, scale: 1, walk: 3.4, back: 2.8, jumpX: 4.4,
     pDmg: 0.9, kDmg: 0.92, pReach: 1, kReach: 1.08, chargeRate: 0.5, auraCol: '185,145,255',
@@ -177,12 +179,6 @@ addLook(CHARS.salary, { jp1: { label: 'Air Briefcase Drop', pose: 'sCase' }, jk1
 for (const k in CHARS) CHARS[k].key = k;
 
 // ---------- charge attacks (hold I) ----------
-makeCharged('ninja', [
-  { set: { label: 'Shadow Rush Slash', dmg: 52, hitbox: [10,125,40,175], launch: true, launchVy: 13, pose: 'slash', speedFx: true, recovery: 18, trail: { cx: 15, cy: 105, r: 90, a0: 80, a1: -40, col: '190,150,255' } }, rel: 14,
-    dash: true, act: (f, o, mf) => { const mv = f.move; if (mf <= mv.startup && mv.dashLeft > 0 && Math.abs(o.x - f.x) > 60) { f.vx = f.facing * mv.dashV; mv.dashLeft -= mv.dashV; if (mf % 2 === 0) parts.push({ type: 'smoke', x: f.x - f.facing * 20, y: GROUND - f.y - 90, vx: 0, vy: -0.4, r: 8, vr: 0.3, life: 14, max: 14, col: '120,90,190' }); } else f.vx *= 0.5; } },
-  { set: { label: 'Moon Tempest', hitbox: null, pose: 'slash', recovery: 22 }, rel: 6,
-    act: (f, o, mf) => { f.vx *= 0.6; if (mf === f.move.startup) { sfx('slash'); spawnPJ(f, 'crescent', { x: f.x + f.facing * 70, y: 70, vx: f.facing * 13, life: 40, r: 40, h: { dmg: 84, stun: 22, bstun: 14, push: 6, kd: true, kdVx: 17, kdVy: 8, gdrain: 14, label: 'Moon Tempest' } }); } } },
-]);
 makeCharged('brawler', [
   { set: { label: 'Charged Qi Palm', dmg: 54, hitbox: [10,125,60,170], launch: true, launchVy: 13.5, pose: 'palmUp', aura: true, burst: [80, 150], recovery: 18 }, rel: 7,
     act: (f, o, mf) => { if (mf <= f.move.startup && Math.abs(o.x - f.x) > 70) f.vx = f.facing * 6; else f.vx *= 0.6; } },

@@ -37,12 +37,12 @@ class Human {
       if (pressed.has(m.lk) || pressed.has(m.hk)) this.lastK = Math.max(pressed.has(m.lk) ? pressT[m.lk] : -999, pressed.has(m.hk) ? pressT[m.hk] : -999);
       if (pressed.has(m.lk)) this.lastJ = pressT[m.lk]; if (pressed.has(m.hk)) this.lastKk = pressT[m.hk];
       // Punch + Kick within 4 frames of each other = super; ← → then J + K together = Hohen's fusion
-      this.held = { btn, sup: Math.abs(this.lastP - this.lastK) <= 4, fuse: Math.abs(this.lastJ - this.lastKk) <= 4 && frame - this.bfT <= 20, ff, bb, t: frame };
+      this.held = { btn, sup: Math.abs(this.lastP - this.lastK) <= 4, fuse: Math.abs(this.lastJ - this.lastKk) <= 4 && frame - this.bfT <= 20, bf: frame - this.bfT <= 20, ff, bb, t: frame }; // (bf: ← then → before the button)
     }
     if (pressed.has(m.brk)) this.brkT = frame; // (P: kept a few frames, so a press during a hit pause still counts)
     // a press stays buffered for a few frames, so a punish can be entered during guard stun
     const hb = this.held && frame - this.held.t <= 5 ? this.held : null;
-    return { held: { lp: k('lp'), hp: k('hp'), lk: k('lk'), hk: k('hk') }, h, down: k('down'), up: k('up'), upPress: pressed.has(m.up) || pressed.has(ALT.up), btn: hb ? hb.btn : null, sup: hb ? hb.sup : false, fuse: hb ? !!hb.fuse : false, ff: hb ? hb.ff : false, bb: hb ? hb.bb : false, bt: hb ? hb.t : -1,
+    return { held: { lp: k('lp'), hp: k('hp'), lk: k('lk'), hk: k('hk') }, h, down: k('down'), up: k('up'), upPress: pressed.has(m.up) || pressed.has(ALT.up), btn: hb ? hb.btn : null, sup: hb ? hb.sup : false, fuse: hb ? !!hb.fuse : false, bf: hb ? !!hb.bf && !hb.fuse : false, ff: hb ? hb.ff : false, bb: hb ? hb.bb : false, bt: hb ? hb.t : -1,
       ffNow: this.ffDir === toward && frame - this.ffT <= 2, bbNow: this.ffDir === -toward && frame - this.ffT <= 2, tap, brk: frame - (this.brkT ?? -99) <= 6,
       dashTap: this.ffT === frame ? (this.ffDir === toward ? 1 : -1) : 0 }; // the second tap itself: dash forward or roll back
   }

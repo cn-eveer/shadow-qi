@@ -37,11 +37,11 @@ class NetHuman { // turns a player's button history into the same inputs the key
       if (pr(NBIT.lp) || pr(NBIT.hp)) this.lastP = frame;
       if (pr(NBIT.lk) || pr(NBIT.hk)) this.lastK = frame;
       if (pr(NBIT.lk)) this.lastJ = frame; if (pr(NBIT.hk)) this.lastKk = frame;
-      this.held = { btn, sup: Math.abs(this.lastP - this.lastK) <= 4, fuse: Math.abs(this.lastJ - this.lastKk) <= 4 && frame - this.bfT <= 20, ff, bb, t: frame };
+      this.held = { btn, sup: Math.abs(this.lastP - this.lastK) <= 4, fuse: Math.abs(this.lastJ - this.lastKk) <= 4 && frame - this.bfT <= 20, bf: frame - this.bfT <= 20, ff, bb, t: frame }; // (bf: ← then → before the button)
     }
     if (pr(NBIT.brk)) this.brkT = frame;
     const hb = this.held && frame - this.held.t <= 5 ? this.held : null;
-    return { held: { lp: has(NBIT.lp), hp: has(NBIT.hp), lk: has(NBIT.lk), hk: has(NBIT.hk) }, h, down: has(NBIT.down), up: has(NBIT.up), upPress: pr(NBIT.up), btn: hb ? hb.btn : null, sup: hb ? hb.sup : false, fuse: hb ? !!hb.fuse : false, ff: hb ? hb.ff : false, bb: hb ? hb.bb : false, bt: hb ? hb.t : -1,
+    return { held: { lp: has(NBIT.lp), hp: has(NBIT.hp), lk: has(NBIT.lk), hk: has(NBIT.hk) }, h, down: has(NBIT.down), up: has(NBIT.up), upPress: pr(NBIT.up), btn: hb ? hb.btn : null, sup: hb ? hb.sup : false, fuse: hb ? !!hb.fuse : false, bf: hb ? !!hb.bf && !hb.fuse : false, ff: hb ? hb.ff : false, bb: hb ? hb.bb : false, bt: hb ? hb.t : -1,
       ffNow: this.ffDir === toward && frame - this.ffT <= 2, bbNow: this.ffDir === -toward && frame - this.ffT <= 2, tap, brk: frame - (this.brkT ?? -99) <= 6,
       dashTap: this.ffT === frame ? (this.ffDir === toward ? 1 : -1) : 0 };
   }
