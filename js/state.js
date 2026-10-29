@@ -398,8 +398,8 @@ function update(f, o, inp) {
       if (f.st % 7 === 0) ambientFX(f);
       f.facing = toward; f.combo = 0;
       if (f.atkCD <= 0 && tryAttack(f, o, inp)) break; // (a technique with ↑ held is tried before jumping)
-      if (inp.dashTap === 1) { setState(f, 'dash'); sfx('swing'); break; }
-      if (inp.dashTap === -1) { setState(f, 'bdash'); sfx('swing'); break; }
+      if (inp.dashTap === 1 && !f.ch.noDash) { setState(f, 'dash'); sfx('swing'); break; } // (Hohen can't dash or back dash)
+      if (inp.dashTap === -1 && !f.ch.noDash) { setState(f, 'bdash'); sfx('swing'); break; }
       if (inp.up) { startJump(f, inp); break; }
       // (charging MP by holding P has been removed: MP fills only by fighting)
       if (inp.down) { if (f.state !== 'crouch') setState(f, 'crouch'); f.vx = !f.backHeld && Math.sign(inp.h) === toward ? toward * f.ch.walk * 0.45 * (f.poisonT > 0 ? 0.6 : 1) * floodWalkMul(f) : 0; break; } // (crouching, ↓ + forward edges forward; ↓ + back stays the crouching guard)

@@ -14,7 +14,7 @@
      · it has its own health (it can be beaten apart) and lasts thirty seconds before it crumbles; either way it's rebuilt.
    Its blows are resolved from the golem's own position, so a defender guards relative to whoever is attacking. */
 CHARS.alchemist = {
-  name: 'HOHEN', title: 'Golem Doctor', nameJa: 'ホーエン', titleJa: 'ゴーレム博士', dmgMul: 1.15, scale: 1, walk: 1.8, back: 1.5, jumpX: 2.8, jumpV: 17, jugDmg: 1,
+  name: 'HOHEN', title: 'Golem Doctor', nameJa: 'ホーエン', titleJa: 'ゴーレム博士', dmgMul: 1.15, scale: 1, walk: 1.8, back: 1.5, jumpX: 2.8, noDash: true, jumpV: 17, jugDmg: 1,
   pDmg: 1, kDmg: 1, pReach: 1, kReach: 1, chargeRate: 0.6, auraCol: '255,200,120', fxCol: '255,200,120',
   ammo: 10, // ten glowing stones in his pockets: every stone he throws or sets as a trap uses one, and they come back one at a time
   sp: { fK: 'alUpStone', fKH: 'alTrap', fP: 'alShield', fPH: 'alTackle', bKH: 'alBedrock' }, sup: 'alOpus', fuseSp: 'alFuse', // (← → + J + K with a full fusion gauge: the golem armour)
@@ -383,7 +383,7 @@ function golemUpdate(f, o) {
   if (!g.broken && fight && --g.life <= 0) golemBreak(f, L('WORN OUT', '崩れた')); // (it lasts thirty seconds, whatever its health)
   if (g.broken) { g.act = null; g.queue = null; g.hold = null; if (g.hidden) return; if (--g.brokenT <= 0) { g.broken = false; g.hp = g.max; g.life = GOLEM_LIFE; g.seen = {}; sfx('select'); if (!g.quiet) popText(g.x, GROUND - 190, L('GOLEM REBUILT', 'ゴーレム復活'), '255,220,140'); g.quiet = false; for (let i = 0; i < 14; i++) parts.push({ type: 'spark', x: g.x + rnd(-40, 40), y: GROUND - rnd(5, 120), vx: 0, vy: 2, life: 14, max: 14, col: golemPal(f).glow }); } return; }
   const live = game.phase === 'fight' && !f.ko && !o.ko, dx = o.x - g.x, dir = Math.sign(dx) || g.facing, dist = Math.abs(dx);
-  if (f.inp && f.inp.dashTap === 1) g.dashT = 18; // → → : the golem runs in too
+  g.dashT = 0; // (the golem doesn't dash either)
   if (g.dashT > 0) g.dashT--;
   if (g.cd > 0) g.cd--;
   if (g.grabCD > 0) g.grabCD--;
@@ -428,11 +428,11 @@ function golemUpdate(f, o) {
     if (q) { g.qT++; const Q = GOLEM_ACT[q]; if (!Q.reach || Q.rush || dist <= 100) golemStart(f, q); else if (g.qT > 45) g.queue = null; } // (the tackle starts from anywhere; punches and the grab come in first)
     if (!g.act) {
       const overhead = o.state === 'jump' && o.y > 40 && dist < GOLEM_GAP; // (someone jumping over it: it holds its ground rather than run in under them and push them back)
-      if (inp.h && !overhead) { const away = Math.sign(inp.h) === -(Math.sign(o.x - f.x) || f.facing), sp = (g.dashT > 0 || away ? 7 : g.y > 0 ? 3.5 : 2.6) * GOLEM_SLOW; g.x += dir * sp; g.spd = sp; } // it always moves toward the opponent: when he backs away it dashes in, when he walks in it walks in
-      else if (g.y <= 0 && !g.crouch && dist > (q ? 80 : GOLEM_GAP + 6)) { const sp = (g.dashT > 0 || q ? 6.5 : 2.5) * GOLEM_SLOW; g.x += dir * sp; g.spd = sp; } // otherwise it walks to the opponent itself
+      if (inp.h && !overhead) { const away = Math.sign(inp.h) === -(Math.sign(o.x - f.x) || f.facing), sp = (g.y > 0 ? 3.5 : 2.6) * GOLEM_SLOW; g.x += dir * sp; g.spd = sp; } // it always moves toward the opponent: when he backs away it dashes in, when he walks in it walks in
+      else if (g.y <= 0 && !g.crouch && dist > (q ? 80 : GOLEM_GAP + 6)) { const sp = 2.5 * GOLEM_SLOW; g.x += dir * sp; g.spd = sp; } // otherwise it walks to the opponent itself
       const between = Math.sign(g.x - o.x) === Math.sign(f.x - o.x); // (it belongs between him and them: on their far side, with nothing to do, it hops back over them)
       g.farT = !between && !q && !inp.h && g.y <= 0 ? (g.farT || 0) + 1 : 0;
-      if (g.farT > 90) { g.farT = 0; g.vy = 13; g.mvx = clamp((o.x + (Math.sign(f.x - o.x) || -dir) * (GOLEM_GAP + 10) - g.x) / (2 * 13 / G), -9, 9); sfx('rise'); dustAt(g.x, false); }
+      /* (it used to hop back over them here: the golem doesn't jump) */
     }
     if (!g.act && g.y > 0 && g.mvx) g.x += g.mvx; // (the hop)
   }
@@ -786,7 +786,7 @@ const ALCHEMIST_DEMOS = [
   { name: '14. Armour, mid range (quick): rubble wave, boulder crash', tail: 'rubble wave, boulder crash, stone arm', ax: 280, bx: 460, armored: true, cpu: { min: 140, max: 220, fused: true },
     note: '→ → + J: a low surge of rubble scoops them up. → → + I: a boulder drops out of the sky onto them (the bounce). → → + K: the stone arm bursts up under them as they come down.',
     steps: [S('→ → + J', 'start', { btn: 'lk', ff: true }), S('→ → + I', 'air', { btn: 'hp', ff: true, noChase: true }), S('→ → + K', 'air', { btn: 'hk', ff: true, noChase: true })] },
-  { name: '15. Armour, mid range (long): rubble wave, crash, geyser', tail: 'rubble wave, stone lift, boulder crash, stone lift, core geyser, overhand smash, core burst', ax: 280, bx: 460, armored: true, cpu: { min: 140, max: 220, fused: true },
+  { name: '15. Armour, mid range (long): rubble wave, crash, geyser', tail: 'rubble wave, stone lift, boulder crash, stone lift, core geyser, overhand smash, core burst', ax: 280, bx: 390, armored: true, cpu: { min: 140, max: 220, fused: true },
     note: '→ → + J scoops them up (lift 1). U, then → → + I: Boulder Crash (bounce). U, then → → + U: core light erupts under them (lift 2). U, K.',
     steps: [S('→ → + J', 'start', { btn: 'lk', ff: true }), S('U', 'air', { btn: 'lp' }), S('→ → + I', 'cancel', { btn: 'hp', ff: true }), S('U', 'air', { btn: 'lp' }), S('→ → + U', 'cancel', { btn: 'lp', ff: true }), S('U', 'air', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
   { name: '16. Armour, far (quick): boulder toss, stone spiral', tail: 'boulder toss, stone spiral', ax: 200, bx: 450, armored: true, cpu: { min: 200, max: 320, fused: true },
