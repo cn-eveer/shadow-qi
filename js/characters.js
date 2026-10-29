@@ -202,20 +202,22 @@ Object.assign(CHARS, {
     idle: 'gHolster', name: 'JESSE', title: 'Gunslinger', nameJa: 'ジェシー', titleJa: 'ガンマン', ammo: 15, dmgMul: 1.43, scale: 1.02, walk: 3.3, back: 2.9, jumpX: 4.4, jumpV: 17.5, jugDmg: 1.05,
     pDmg: 0.95, kDmg: 0.95, pReach: 1.0, kReach: 1.0, chargeRate: 0.6, auraCol: '255,210,140', fxCol: '255,230,160',
     sp: { fP: 'gnFan', fPH: 'gnQuick', fK: 'gnRoll', fKH: 'gnJumpShot', bP: 'gnDyna', bPH: 'gnDance', bK: 'gnBackflip', bKH: 'gnShowdown' }, sup: 'gnHighNoon',
+    recPlus: 6, recRefund: true, // every attack recovers 6 frames slower on a miss or a guard; any hit that lands gives it back (see moveFrames)
     frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
-      U: { su: 10, blk: -4 }, dU: { su: 10, blk: -4 }, J: { su: 10, blk: -4 }, dJ: { su: 10, blk: -4 },
+      U: { su: 12, blk: -4 }, dU: { su: 12, blk: -4 }, J: { su: 10, blk: -4 }, dJ: { su: 10, blk: -4 },
       I: { su: 16, blk: -12, held: true }, K: { su: 18, blk: -14, held: true }, dI: { su: 16, blk: -16 }, dK: { su: 16, blk: -14 }, /* (held: his charge shots; the tap's start-up is its own) */
-      $g2: { su: 12, blk: -6 }, $g3: { su: 12, blk: -6 }, $g4: { su: 12, blk: -6 }, $gF: { su: 18, blk: -18 }, $gL: { su: 16, blk: -16 }, $gE: { su: 20, blk: -12 }, // U, U … U×4 / U×4, K / U, I / U, K
+      $g2: { su: 12, blk: -6 }, $g3: { su: 15, blk: -6 }, $g4: { su: 18, blk: -6 }, $gF: { su: 18, blk: -18 }, $gL: { su: 16, blk: -16 }, $gE: { su: 20, blk: -12 }, // U, U … U×4 (12 / 15 / 18F) / U×4, K / U, I / U, K
       $gl2: { su: 12, blk: -6 }, $glE: { su: 18, blk: -16 },
-      gnFan: { su: 20, blk: -16 }, gnQuick: { su: 12, blk: -8 }, gnRoll: { su: 20, blk: -16 }, gnJumpShot: { su: 22, blk: -16 }, // (Quick Draw stays his fastest)
-      gnDyna: { su: 24, blk: -16 }, gnDance: { su: 20, blk: -16 }, gnBackflip: { blk: -6 }, /* (the flip fires its shot at a fixed moment: 23F) */
+      gnFan: { su: 20, blk: -16 }, gnQuick: { su: 12, blk: -8, held: true }, gnRoll: { su: 20, blk: -16 }, gnJumpShot: { su: 22, blk: -16 }, // (Quick Draw stays his fastest)
+      gnDyna: { su: 21, blk: -16 }, gnDance: { su: 20, blk: -16 }, gnBackflip: { blk: -6 }, /* (the flip fires its shot at a fixed moment: 23F) */
     },
-    heavy: { // no kicks: both heavies are gunshots at mid range
+   heavy: { // no kicks: both heavies are gunshots at mid range
       p: { label: 'Twin Shot', held: true, tapStartup: 9, startup: 999, active: 2, recovery: 20, hitbox: null, wind: 'gAim', pose: 'gTwin', onFrame: twinCharge },
       k: { label: 'Heavy Shot', held: true, tapStartup: 13, startup: 999, active: 2, recovery: 24, hitbox: null, wind: 'gAim', pose: 'gRecoil', onFrame: heavyCharge },
     },
     normalLook: {
       sp0: { label: 'Hip Shot', startup: 4, wind: 'gIdle', pose: 'gAim', hitbox: null, chain: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 118, dmg: 22, range: 270 }); } }, // (upper body: crouch and it passes over)
+      cp0: { label: 'Low Shot', startup: 5, wind: 'crouch', pose: 'gLow', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 44, dmg: 20, low: true, range: 280 }); } }, // (↓ + U: a low shot, at knee height)
       cp1: { label: 'Sky Shot', startup: 6, wind: 'gLow', pose: 'gUp', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { x: f.x + f.facing * 34, y: 84, vx: 16, vy: 8, life: 14, dmg: 34, launch: true, launchVy: 12, jugVy: 11 }); } },
       sk0: { label: 'Low Shot', startup: 5, wind: 'crouch', pose: 'gLow', crouch: true, hitbox: null, chain: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 44, dmg: 22, low: true, range: 260 }); } }, // (he drops into a crouch and fires at knee height)
       ck0: { label: 'Crouch Shot', startup: 5, wind: 'crouch', pose: 'gLow', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 44, dmg: 20, low: true, range: 290 }); } },
@@ -289,9 +291,18 @@ const DEVIL_CH = { ...CHARS.salary, spLow: { fK: 'sdCrawl', bK: 'sdTail', fKH: '
   sp: { fP: 'sdLunge', fPH: 'sdMaul', fK: 'sdTailLash', fKH: 'sdTailUpper', bP: 'sdBeckon', bPH: 'smAngel', bK: 'sdWhip', bKH: 'sdDrain' }, sup: 'sdInferno',
   heavy: { p: { label: 'Hellclaw', startup: 10, active: 6, recovery: 18, hitbox: [10,160,40,170], wind: 'palmW', pose: 'kClaw', lunge: [3, 9, 4], hitstop: 11, kd: true, kdVx: 9 },
            k: { label: 'Demon Kick', startup: 10, active: 5, recovery: 18, hitbox: [10,150,30,130], wind: 'kickW', pose: 'highKick', lunge: [3, 8, 4], cpLaunch: true, launchVy: 12 } } };
+// frames for the possessed forms (see moveFrames): the angel's strings and techniques, the devil's (two frames quicker: he is the faster of the two), and both for the double possession
+const ANGEL_FRAMES = { ...CHARS.salary.frames,
+  $a2: { su: 12, blk: -6 }, $a3: { su: 12, blk: -6 }, $a4: { su: 12, blk: -6 }, $aF: { su: 18, blk: -18 }, $aL: { su: 16, blk: -15 }, $aE: { su: 20, blk: -12 }, $al2: { su: 12, blk: -6 }, $alE: { su: 18, blk: -16 },
+  saJab: { su: 12, blk: -6 }, saFist: { su: 20, blk: -16 }, saGlide: { su: 22, blk: -16 }, saAscend: { su: 22, blk: -16 }, saRay: { su: 24, blk: -16 }, saRayLow: { su: 24, blk: -16 }, saRayFly: { su: 24, blk: -16 }, saDive: { su: 24, blk: -16 } };
+const DEVIL_FRAMES = { ...CHARS.salary.frames,
+  $d2: { su: 10, blk: -6 }, $d3: { su: 10, blk: -6 }, $d4: { su: 10, blk: -6 }, $dF: { su: 16, blk: -18 }, $dL: { su: 14, blk: -16 }, $dE: { su: 18, blk: -12 }, $dl2: { su: 10, blk: -6 }, $dlE: { su: 16, blk: -16 },
+  sdLunge: { su: 20, blk: -16 }, sdMaul: { su: 20, blk: -16 }, sdTailLash: { su: 20, blk: -16 }, sdTailUpper: { su: 20, blk: -16 }, sdWhip: { su: 20, blk: -16 }, sdCrawl: { su: 20, blk: -16 }, sdTail: { su: 18, blk: -14 }, sdTailDrop: { su: 22, blk: -16 }, sdChainB: { su: 20, blk: -16 }, sdTrail: { su: 20, blk: -16 }, sdDrain: { su: 24 } };
+Object.assign(ANGEL_CH, { frames: ANGEL_FRAMES }); Object.assign(DEVIL_CH, { frames: DEVIL_FRAMES });
 const DOUBLE_CH = { ...DEVIL_CH, possess: 'double', lookKey: 'salaryDevil', dmgMul: 2.1, drain: 2.2, scale: 1.4, tallBox: true, armorAll: true, /* (both spirits in him: far bigger, and nothing short of a super or a throw stops him) */ regen: 0, noGuard: true, doubleJump: true, auraCol: '255,170,200', fxCol: '255,190,160', meterCol: ['#d0607a', '#ffe0c0'], // angel and devil both: wings and halo, horns and tail
   sp: { fP: 'saJab', fPH: 'sdMaul', fK: 'sdTailLash', fKH: 'sdTailUpper', bP: 'sdBeckon', bPH: 'saFist', bK: 'saRay', bKH: 'sdDrain' },
   spLow: { bK: 'saRayLow', fK: 'sdCrawl', fKH: 'sdTrail' }, spUp: { bK: 'saRayFly' }, spFwd: { bK: 'sdChainB' } };
+DOUBLE_CH.frames = { ...ANGEL_FRAMES, ...DEVIL_FRAMES }; /* (both spirits' strings and techniques) */
 Object.assign(ANGEL_CH, { spAuto: angelAuto }); Object.assign(DEVIL_CH, { spAuto: devilAuto }); Object.assign(DOUBLE_CH, { spAuto: (f, o, k) => angelAuto(f, o, k) || devilAuto(f, o, k) });
 Object.assign(DEVIL_CH, { normalLook: { // the devil's kicks are all tail now, and reach further
   sk0: { label: 'Tail Flick', low: false, wind: 'sdIdle', pose: 'sdIdle', hitbox: [30,165,60,130], tail: { a0: 2.4, a1: 0.1, len: 150, h: 95 } },
