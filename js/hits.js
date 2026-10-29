@@ -38,7 +38,7 @@ const TECH_TIER = {
   // Kuro
   moonTempest: 'fast', fullMoon: 'fast', shadowCharge: 'heavy', swordSlash: 'heavy', cloneStrike: 'mod', teleKick: 'mod', flame: 'mod', fireballs: 'mod', vanishSlide: 'heavy', vanishDrop: 'mod',
   // Tetsu (Rising Fist: his uppercut comes out without a tell, but it's punished hard if guarded)
-  qiBlast: 'mod', tripleQi: 'mod', duckUpper: 'mod', meteorFist: 'heavy', qiSweep: 'heavy', shoulder: 'mod', qiOrb: 'fast', qiParry: 'fast', stomp: 'heavy', tornado: 'heavy', risingFist: 'heavy',
+  qiBlast: 'mod', tripleQi: 'mod', pushParry: 'fast', kickParry: 'fast', parryShove: 'fast', parryKick: 'fast', duckUpper: 'mod', meteorFist: 'heavy', qiSweep: 'heavy', shoulder: 'mod', qiOrb: 'fast', qiParry: 'fast', stomp: 'heavy', tornado: 'heavy', risingFist: 'heavy',
   // Mei
   extendStaff: 'fast', vaultSmash: 'heavy', sweepStaff: 'mod', poleKick: 'mod', windmill: 'mod', cloudLeap: 'heavy', somersault: 'heavy', feint: 'fast',
   // Lyra
@@ -494,6 +494,7 @@ function fixAdv(a, d, h, r) {
     else mv.recovery = Math.max(1, mv.recovery + T - left);
     a.guardLagUntil = 0; a.guardLagNeed = 0; mv.lagLock = false;
   }
+  if (r === 'hit' && mv.cutOnHit && a.mf > mv.startup) mv.active = Math.max(0, a.mf - mv.startup); // (a long-lasting blow that has landed: it ends there, so the follow-up isn't late)
   if (r === 'hit' && mv.hitAdv != null && d.state === 'hitstun') d.stun = Math.max(1, left + mv.hitAdv - (d.ch.recoverT || 12)) + (d.wasCounter ? counterStunOf(a) : 0); // (they act once their recovery after the hit-stun is over; a counter hit adds COUNTER_STUN)
 }
 { const core = applyHit; applyHit = function (a, d, h, side, hb, hu) { const r = core.apply(this, arguments); if (r === 'hit' || r === 'block') fixAdv(a, d, h, r); if (r === 'hit' && a.ch.hitPlus && d.state === 'hitstun') d.stun += a.ch.hitPlus; /* (a fighter whose hits all leave him further ahead: Tetsu) */ if ((r === 'hit' || r === 'block' || r === 'armor') && a.fd) fdContact(a, r); return r; }; } // a move's own advantage; the training frame data

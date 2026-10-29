@@ -26,7 +26,7 @@ const CHARS = {
   brawler: {
     name: 'TETSU', dmgMul: 0.97, title: 'Qi Brawler', nameJa: 'テツ', titleJa: '気の拳士', armor: 3, jugDmg: 1.2, scale: 1.08, walk: 3.0, back: 2.4, jumpX: 3.9,
     pDmg: 1.4, kDmg: 1.2, pReach: 1.04, kReach: 0.96, chargeRate: 0.68, auraCol: '125,235,255',
-    sp: { fP: 'meteorFist', fPH: 'duckUpper', fK: 'qiSweep', fKH: 'shoulder', bP: 'qiOrb', bPH: 'qiParry', bK: 'stomp', bKH: 'tornado', dP: 'risingFist' }, sup: 'qiCannon',
+    sp: { fP: 'meteorFist', fPH: 'duckUpper', fK: 'qiSweep', fKH: 'shoulder', bP: 'pushParry', bPH: 'kickParry', bK: 'stomp', bKH: 'tornado', dP: 'risingFist' }, sup: 'qiCannon',
     spBF: { lp: 'qiBlast', hp: 'tripleQi' }, // ← → + U: Qi Blast, ← → + I: Triple Qi Blast
     hitPlus: 4, counterStun: 8, // every hit leaves him 4 frames further ahead; a counter hit 8 (everyone else: 4)
     frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
@@ -35,8 +35,8 @@ const CHARS = {
       K: { su: 14, act: 7, rec: 22, blk: -14, set: { launchVy: 14.5 } }, // (a counter launches a little higher: the follow-up comes later after the longer recovery)
       dK: { su: 12, act: 8, blk: -12, set: { launch: false, kd: true, kdVx: 3, kdVy: 5, cpLaunch: true, launchVy: 13 } }, // (sweeps them off their feet; a counter or a punish launches)
       risingFist: { su: 14, act: 18, blk: -18 },
-      meteorFist: { su: 18, act: 14, blk: -18, set: { launch: false, bounce: false, kd: true, kdVx: 16, kdVy: 9, cpLaunch: true, launchVy: 12, guardPush: 16, gdrain: 32, chip: true, hitbox: [-10,80,28,110] } }, // (a mid: the fists come down at body height) // (guarded: shoves them far back and tears at the guard)
-      duckUpper: { su: 18, act: 10, blk: -14 },
+      meteorFist: { su: 18, act: 20, blk: -18, set: { cutOnHit: true, launch: false, bounce: false, kd: true, kdVx: 16, kdVy: 9, cpLaunch: true, launchVy: 12, guardPush: 16, gdrain: 32, chip: true, hitbox: [-10,80,28,110] } }, // (a mid: the fists come down at body height) // (guarded: shoves them far back and tears at the guard)
+      duckUpper: { su: 18, act: 16, blk: -14, set: { cutOnHit: true } },
       qiBlast: { su: 14, act: 3, rec: 3, blk: 0 }, tripleQi: { su: 16, act: 3, rec: 3, blk: 0 },
       qiSweep: { su: 18, act: 18, blk: -21 },
       shoulder: { su: 18, act: 12, blk: -21, set: { maxTravel: 300, tArmor: true } }, // (armor: shrugs off up to three light hits)

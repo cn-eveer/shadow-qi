@@ -1035,6 +1035,14 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { if (mf === 14) spawnQiOrb(f); } };
     case 'qiParry': return { id, label: 'Qi Parry', startup: 7, active: 22, recovery: 20, wind: 'charge', pose: 'parryStance', parry: true, aura: true, fx: 'ward',
       onFrame(f, o, mf) { if (mf > 7 && mf <= 29 && mf % 3 === 0) auraParticle(f); } };
+    case 'pushParry': return { id, label: 'Push Parry', startup: 4, active: 10, recovery: 26, wind: 'charge', pose: 'parryStance', parry: true, parryInto: 'parryShove', aura: true, fx: 'ward', // ← ← + U: parries from the 5th frame; a parried blow gets a shove that sends them away (no damage)
+      onFrame(f, o, mf) { if (mf > 4 && mf <= 14 && mf % 3 === 0) auraParticle(f); } };
+    case 'kickParry': return { id, label: 'Kick Parry', startup: 4, active: 10, recovery: 32, wind: 'charge', pose: 'parryStance', parry: true, parryInto: 'parryKick', aura: true, fx: 'ward', // ← ← + I: the same, but he answers with a kick
+      onFrame(f, o, mf) { if (mf > 4 && mf <= 14 && mf % 3 === 0) auraParticle(f); } };
+    case 'parryShove': return { id, label: 'Qi Shove', startup: 2, active: 3, recovery: 14, wind: 'palmW', pose: 'blast', hitbox: null, aura: true, burst: [80, 110],
+      onStart(f, o) { const side = Math.sign(o.x - f.x) || f.facing; if (o.state !== 'ko') { setState(o, 'blockstun'); o.stun = 14; o.move = null; o.vx = side * 30; } sfx('qi'); game.shake = Math.max(game.shake, 3); } }; // (pushed far back, unhurt: back to neutral at a distance)
+    case 'parryKick': return { id, label: 'Counter Kick', startup: 4, active: 4, recovery: 18, wind: 'kickW', pose: 'midKick', hitbox: [10,115,50,135],
+      dmg: 64, stun: 20, bstun: 12, push: 6, kd: true, kdVx: 15, kdVy: 7, noGrace: true, type: 'mid', hitstop: 12, gdrain: 10 }; // (a kick to the body that knocks them away)
     case 'parryStrike': return { id, label: 'Parry Palm', startup: 4, active: 4, recovery: 16, wind: 'palmW', pose: 'palm', hitbox: [10,95,40,160], burst: [80, 108],
       dmg: 50, stun: 20, bstun: 12, push: 3, launch: true, launchVy: 13, noGrace: true, type: 'mid', hitstop: 12, gdrain: 10 };
     case 'stomp': return { id, label: 'Earth Stomp', low: true, projInvul: [0, 32], pre: 7, startup: 12, active: 2, recovery: 18, wind: 'stompW', pose: 'stompDown', proj: 'wave', limit: 1, // (low: its shockwave runs along the floor)

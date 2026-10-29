@@ -42,7 +42,7 @@ function spawnDiveClone(f, overhead) { // the Shadow Army finisher drops from ab
 const JUGGLE_SP = { flame: 'jFire', fireballs: 'jRain', cloneStrike: 'jClone', swordSlash: 'jIai', vanishDrop: 'jVanishHeel',
   qiBlast: 'jGeyser', meteorFist: 'jHammer', shoulder: 'jShoulder', qiOrb: 'jSpiral', tornado: 'jTornado' };
 Object.assign(JUGGLE_SP, { extendStaff: 'jExtend', vaultSmash: 'jVault', cloudLeap: 'jCloud', windmill: 'jWindmill', poleKick: 'jPoleKick' });
-JUGGLE_SP.duckUpper = 'jGeyser'; // (Tetsu's → → + I in a juggle: the Qi Geyser; → → + U, the Meteor Fist, gives the Hammer Spike)
+JUGGLE_SP.duckUpper = 'jGeyser'; JUGGLE_SP.pushParry = 'jSpiral'; // (Tetsu in a juggle: → → + I the Qi Geyser, ← ← + U the Qi Spiral; → → + U, the Meteor Fist, gives the Hammer Spike)
 Object.assign(JUGGLE_SP, { phantomFist: 'jPhantom', crushFist: 'jCrush', psyLift: 'jLift', forceWave: 'jWave' });
 const RISING_IDS = new Set(Object.values(JUGGLE_SP));
 const NO_CLASH = new Set(['pillar', 'lift', 'crush', 'dish', 'crescent', 'plate', 'water', 'bubble', 'bullet', 'dyna', 'card', 'feather', 'haloP', 'hellfire']);

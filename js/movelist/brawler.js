@@ -17,8 +17,8 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Triple Qi Blast<small>Three qi blasts at once, each a little faster than the last: they arrive one after another. Safe when guarded.</small></td><td class="cmd">← → + I</td></tr>
           <tr><td>Qi Sweep<small>Lunges in low and scoops them up with both palms.</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>Shoulder Charge<small>A shoulder tackle that charges in from about a third of the screen and knocks them back. Shrugs off light hits on the way in; punishable if guarded.</small></td><td class="cmd">→ → + K</td></tr>
-          <tr><td>Qi Orb<small>A slow floating orb that hits three times.</small></td><td class="cmd">← ← + U</td></tr>
-          <tr><td>Qi Parry<small>A stance. Anything that hits him during it is parried, and a melee attack gets a launching palm back (projectiles are just absorbed).</small></td><td class="cmd">← ← + I</td></tr>
+          <tr><td>Push Parry<small>A quick parry (from the 5th frame, briefly). A blow that hits him during it is parried and he shoves them far away, without damage. Projectiles are just absorbed. Slow to recover if it catches nothing.</small></td><td class="cmd">← ← + U</td></tr>
+          <tr><td>Kick Parry<small>The same quick parry, but a parried blow gets a counter kick that knocks them away. Projectiles are just absorbed. Slower still to recover if it catches nothing.</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>Earth Stomp<small>A shockwave along the floor. Hits low, even someone lying down. Projectiles and rays pass through him while he stomps. Safe when guarded.</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>Cyclone Lariat<small>Backsteps, then spins forward with both arms out: three hits that launch. While he spins, projectiles and rays (Lyra’s shots, fireballs, lightning) pass through him; only close-range attacks can hit him.</small></td><td class="cmd">← ← + K</td></tr>
           <tr><td>Rising Fist<small>An invincible corkscrew uppercut that launches.</small></td><td class="cmd">↓ + I</td></tr>
@@ -35,7 +35,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>3. Cyclone Lariat<small>One juggle: ← ← + K, U, U, K. Two juggles: ← ← + K, U, → → + I (Qi Geyser lifts them again), K.</small></td><td class="cmd">← ← + K</td></tr>
           <tr><td>4. Meteor Fist<small>A counter hit launches. One juggle: → → + U, U, ← ← + K (Air Cyclone), U, U, K. Two juggles: → → + U, U, ← ← + K, U, ↓ + K (Meteor Knee bounces them again), K.</small></td><td class="cmd">→ → + U</td></tr>
           <tr><td>5. Counter Axe<small>The heavy kick launches when it catches an attack starting up. One juggle: K, U, U, K. Two juggles: K, U, ← ← + U (Qi Spiral), W, U, ↓ + K (Meteor Knee), K.</small></td><td class="cmd">K</td></tr>
-          <tr><td>6. Qi Parry<small>Parry an attack; the palm launches them. One juggle: U, U, K. Two juggles: U, U, I (Rising Dragon Fist), Punch + Kick (Great Qi Cannon, needs a full MP gauge).</small></td><td class="cmd">← ← + I</td></tr>
+          <tr><td>6. Kick Parry<small>Parry an attack: the counter kick knocks them away. (← ← + U parries too, and shoves them away without damage.)</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>7. Max combo: lift, lift, bounce<small>↓ + I, U, I (Qi Geyser Palm), → → + U (Hammer Spike), U, U, K.</small></td><td class="cmd">↓ + I</td></tr>
           <tr><td>8. Max combo: lift, bounce, lift<small>↓ + I, U, → → + U (Hammer Spike), U, I (Qi Geyser Palm), → → + K (Shoulder Rocket).</small></td><td class="cmd">↓ + I</td></tr>
         </tbody>
@@ -70,8 +70,8 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>三連気功弾<small>3発の気功弾を同時に放つ。少しずつ速さが違い、順番に届く。ガードされても安全。</small></td><td class="cmd">← → + I</td></tr>
           <tr><td>気の掬い<small>低く踏み込み、両掌で掬い上げる。</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>肩当て<small>画面の約3分の1から突進する体当たりで押し返す。突進中は弱い攻撃を耐える。ガードされると反撃される。</small></td><td class="cmd">→ → + K</td></tr>
-          <tr><td>気の玉<small>ゆっくり進む玉が3回当たる。</small></td><td class="cmd">← ← + U</td></tr>
-          <tr><td>気の受け流し<small>構え中の攻撃を受け流し、近接攻撃には打ち上げの掌底で返す。</small></td><td class="cmd">← ← + I</td></tr>
+          <tr><td>気の押し返し<small>出の速い受け流し（5フレーム目から短い間）。受け流した相手をダメージなしで大きく押し返す。飛び道具は吸収するだけ。空振りすると硬直が長い。</small></td><td class="cmd">← ← + U</td></tr>
+          <tr><td>蹴り返し<small>同じく出の速い受け流しで、受け流した相手に反撃の蹴りを当てて吹き飛ばす。飛び道具は吸収するだけ。空振りするとさらに硬直が長い。</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>大地踏み<small>地を這う衝撃波。下段で、倒れた相手にも当たる。踏み込み中は飛び道具がすり抜ける。ガードされても安全。</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>旋風ラリアット<small>下がってから両腕を広げて回転、3段で打ち上げ。回転中は飛び道具や光線がすり抜ける（近接攻撃だけ当たる）。</small></td><td class="cmd">← ← + K</td></tr>
           <tr><td>昇龍拳<small>無敵の螺旋アッパーで打ち上げ。</small></td><td class="cmd">↓ + I</td></tr>
@@ -88,7 +88,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>3. 旋風ラリアット<small>1回：←←+K、U、U、K。2回：←←+K、U、→→+I（気柱）、K。</small></td><td class="cmd">← ← + K</td></tr>
           <tr><td>4. 流星拳<small>カウンターで打ち上げ。1回：→→+U、U、←←+K（空中旋風）、U、U、K。2回：→→+U、U、←←+K、U、↓+K（流星膝）、K。</small></td><td class="cmd">→ → + U</td></tr>
           <tr><td>5. カウンター踵落とし<small>1回：K、U、U、K。2回：K、U、←←+U（気の螺旋）、W、U、↓+K、K。</small></td><td class="cmd">K</td></tr>
-          <tr><td>6. 気の受け流し<small>1回：U、U、K。2回：U、U、I、P+K（大気功砲、MP満タン）。</small></td><td class="cmd">← ← + I</td></tr>
+          <tr><td>6. 蹴り返し<small>攻撃を受け流し、反撃の蹴りで吹き飛ばす（←←+Uでも受け流せる。こちらはダメージなしで押し返す）。</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>7. 最大コンボ：打ち上げ・打ち上げ・バウンド<small>↓+I、U、I（気柱掌）、→→+U（鉄槌落とし）、U、U、K。</small></td><td class="cmd">↓ + I</td></tr>
           <tr><td>8. 最大コンボ：打ち上げ・バウンド・打ち上げ<small>↓+I、U、→→+U（鉄槌落とし）、U、I（気柱掌）、→→+K（肩ロケット）。</small></td><td class="cmd">↓ + I</td></tr>
         </tbody>
