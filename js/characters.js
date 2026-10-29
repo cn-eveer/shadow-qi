@@ -134,10 +134,19 @@ const CHARS = {
     name: 'ALDRIC', title: 'Holy Paladin', nameJa: 'アルドリック', titleJa: '聖騎士', autoBlock: true, dmgMul: 1.08, guardDmgMul: 0.55, guardMul: 0.42, sturdy: true, jugDmg: 1.2, scale: 1.08, walk: 2.5, back: 1.9, jumpX: 3.0, jumpV: 14,
     pDmg: 1.05, kDmg: 1.0, pReach: 1.5, kReach: 1.3, chargeRate: 0.55, auraCol: '190,225,255', fxCol: '205,232,255',
     sp: { fP: 'plRampart', fPH: 'plJudgeThrust', fK: 'plWindmill', fKH: 'plLeap', bP: 'plParryRise', bPH: 'plParryStun', bK: 'plAegis', bKH: 'plPray' }, sup: 'plJudgement',
-    heavy: { // both heavies can be held to charge them up (three levels)
-      p: { label: 'Heavy Cleave', held: true, dmgFixed: 66, startup: 999, active: 6, recovery: 24, hitbox: [10,180,0,195], wind: 'pCleaveW', pose: 'pCleave', hitstop: 12, kd: true, kdVx: 7, gdrain: 16, onFrame: chargeCleave },
-      k: { label: 'Heavy Thrust', held: true, dmgFixed: 58, startup: 999, active: 5, recovery: 24, hitbox: [20,170,80,135], wind: 'pThrustW', pose: 'pThrust', wrist: 0, hitstop: 10, gdrain: 14, onFrame: chargeThrust, drawFX: excaliburFX,
-        poseFn: (f, mf) => !f.move.fired ? (f.move.lvl >= 1 ? POSES.pCleaveW : null) : (f.move.excal && mf < f.move.startup - 3 ? POSES.pCleaveW : null) },
+    frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
+      U: { su: 10, blk: -4 }, dU: { su: 10, blk: -4 }, J: { su: 10, blk: -4 }, dJ: { su: 10, blk: -4 },
+      I: { su: 16, blk: -12 }, K: { su: 18, blk: -14 }, dI: { su: 16, blk: -16 }, dK: { su: 16, blk: -14 },
+      $p2: { su: 18, blk: -6 }, $p3: { su: 14, blk: -6 }, $p4: { su: 16, blk: -6 }, $pF: { su: 18, blk: -18 }, $pL: { su: 16, blk: -16 }, $pE: { su: 24, blk: -16 }, // U, U … U×4 / U×4, K / U, I / U, K
+      $pUI: { su: 18, blk: -16 }, $pUK: { su: 18, blk: -16 }, // U, ↓ + I / U, ↓ + K (both low)
+      $pl2: { su: 12, blk: -6 }, $plE: { su: 18, blk: -16 }, // J, J / J, J, K and J, K
+      plRampart: { blk: -16, held: true }, plJudgeThrust: { su: 22, blk: -16 }, plWindmill: { su: 16, blk: -16 }, plLeap: { su: 30, blk: -16 },
+    },
+    heavy: {
+      p: { label: 'Heavy Cleave', dmg: 66, startup: 9, active: 6, recovery: 24, hitbox: [10,180,0,195], wind: 'pCleaveW', pose: 'pCleave', hitstop: 12, kd: true, kdVx: 7, gdrain: 16,
+        onFrame: (f, o, mf) => { if (mf === f.move.startup + 1) { dustAt(f.x + f.facing * 120, true); game.shake = Math.max(game.shake, 2); sfx('land'); } } },
+      k: { label: 'Heavy Thrust', dmg: 58, startup: 9, active: 5, recovery: 16, hitbox: [20,170,80,135], wind: 'pThrustW', pose: 'pThrust', wrist: 0, hitstop: 10, push: 7, bpush: 6, gdrain: 8,
+        onFrame: (f, o, mf) => { if (mf <= f.move.startup) f.vx = f.facing * 4; else f.vx *= 0.6; } }, // (a pushing thrust: he steps in with it)
     },
     normalLook: {
       sp0: { label: 'Pommel Strike', wind: 'pBashW', pose: 'pSlash', hitbox: [20,150,85,140] },

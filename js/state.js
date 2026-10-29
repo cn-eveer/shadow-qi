@@ -161,13 +161,14 @@ function startMove(f, mv, str, keepBuffer) {
 // su: 発生 (the lead-up plays faster, or waits longer, to reach it), act: 持続, rec: 硬直, blk: 硬直差 when guarded, set: anything else about the move
 const NORMAL_KEY = { p0: 'U', p1: 'I', k0: 'J', k1: 'K' };
 function moveFrames(f, mv) {
-  const T = f.ch.frames; if (!T || mv.framesDone || mv.super || mv.air || mv.jug || mv.startup >= 900) return;
+  const T = f.ch.frames; if (!T || mv.framesDone || mv.super || mv.air || mv.jug) return;
   const e = T[mv.inString ? '$' + mv.strKey : mv.normal ? (mv.stance === 'c' ? 'd' : '') + NORMAL_KEY[mv.kind + mv.str] : mv.id]; if (!e) return; // (a string hit: $ and its key, $t2, $tF…)
+  if (mv.startup >= 900 && !e.held) return; // (held: its 発生 is however long it's held — only the rest is set)
   mv.framesDone = true;
   if (e.set) Object.assign(mv, e.set);
   if (mv.noGuardLag) f.lastMoveTech = false; // (guarded, no extra opening on top of its own recovery)
   const su = e.suFar ? e.su + (e.suFar - e.su) * clamp((Math.abs(other(f).x - f.x) - 100) / (WALL_R - WALL_L - 140), 0, 1) : e.su; // (suFar: the further away they are, the longer it takes)
-  if (su) { const now = f.pre + mv.startup, want = su - (mv.hitbox ? 2 : 1); // (frames before it can hit: a blow lands on the frame after, a shot is thrown on it)
+  if (su && mv.startup < 900) { const now = f.pre + mv.startup, want = su - (mv.hitbox ? 2 : 1); // (frames before it can hit: a blow lands on the frame after, a shot is thrown on it)
     if (want > now) f.pre += Math.round(want - now);
     else if (want < now) { const cut = Math.min(f.pre, Math.floor(now - want)); /* (whole frames off the wind-up; a fraction left over is played faster) */ f.pre -= cut; if (mv.tellPre) mv.tellPre = Math.max(0, mv.tellPre - cut); if (mv.preTotal != null) mv.preTotal = f.pre; // (a shorter wind-up first: the move itself, its dash or leap, keeps its pace…
       if (now - cut > want) mv.speedUp = (now - cut) / want; } } // …and only if that isn't enough does the move play faster)
@@ -364,6 +365,10 @@ function update(f, o, inp) {
   if (f.golem) golemUpdate(f, o);
   if (f.brands && --f.brandT <= 0) f.brands = 0; // holy brands fade
   if (f.healT > 0) f.healT--;
+  if (f.aegisT > 0) { // Aldric's Aegis: it stays up for four seconds while he moves and fights, feeding on his guard meter (about ten a second)
+    f.guard = Math.max(0, f.guard - 0.16); f.guardIdle = 0;
+    if (--f.aegisT <= 0 || f.guard <= 0 || f.ko) { f.aegisT = 0; aegisSpent(f); }
+  }
   if (f.possT > 0 && --f.possT === 0) endPossession(f);
   if (f.ch.possess === 'double' && !f.ko) { const o2 = other(f); // a field of holy light and hellfire: anyone close is burned
     if (globalT % 3 === 0) { const an = globalT * 0.12; for (const sd of [0, Math.PI]) parts.push({ type: 'aura', x: f.x + Math.cos(an + sd) * 95, y: GROUND - f.y - 90 + Math.sin(an + sd) * 40, vx: 0, vy: -0.6, life: 16, max: 16, r: 5, col: sd ? '255,90,60' : '255,240,190' }); }
@@ -520,7 +525,7 @@ function update(f, o, inp) {
   f.x = clamp(f.x, WALL_L, WALL_R);
   f.dispHp = Math.max(f.hp, f.dispHp - ((f.state === 'hitstun' || f.state === 'knock') ? 0 : 6));
   // guard meter refills slowly once you stop guarding
-  const guarding = f.state === 'guard' || f.state === 'blockstun' || f.state === 'gbreak' || (f.state === 'crouch' && f.backHeld) || (f.state === 'attack' && f.move && f.move.aegis); // (no recovery while the Aegis is up)
+  const guarding = f.state === 'guard' || f.state === 'blockstun' || f.state === 'gbreak' || (f.state === 'crouch' && f.backHeld) || (f.state === 'attack' && f.move && f.move.aegis) || f.aegisT > 0; // (no recovery while the Aegis is up)
   if (guarding) f.guardIdle = 0;
   else if (++f.guardIdle > 45) f.guard = Math.min(100, f.guard + (f.guardSlowT > 0 ? 0.02 : 0.07)); // (slowly after the Aegis)
   if (f.guardSlowT > 0) f.guardSlowT--;

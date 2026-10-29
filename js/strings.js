@@ -313,6 +313,9 @@ Object.assign(STRINGS.salaryDevil, {
 wireStrings(); // chain the aerial versions as well
 STRINGS.ninja.n2.chain = { ...STRINGS.ninja.n2.chain, dhk: 'nD' }; // Kuro: U, U, ↓ + K ends low
 STRINGS.staff.m4.chain = { ...STRINGS.staff.m4.chain, dhk: 'mD' }; STRINGS.staff.$start.p = { ...STRINGS.staff.$start.p, dhk: 'mUD' }; // Mei: U, U, U, U, ↓ + K and U, ↓ + K end low
+STRINGS.paladin.pUI = SF('p', 'Low Cleave', 'pThrustW', 'pLowCut', { step: 0, low: true, hitbox: [20,180,0,50], dmg: 46, kd: false, launch: true, launchVy: 13.5, recovery: 16 }); // Aldric: U, ↓ + I (a low that lifts them, as high as his other launchers)
+STRINGS.paladin.pUK = SF('k', 'Shield Trip', 'crouch', 'pQuake', { step: 0, low: true, hitbox: [0,165,0,45], dmg: 50 }); // Aldric: U, ↓ + K (a low that trips them)
+STRINGS.paladin.$start.p = { ...STRINGS.paladin.$start.p, dhp: 'pUI', dhk: 'pUK' };
 STRINGS.brawler.t4.chain = { ...STRINGS.brawler.t4.chain, dhk: 'tD' }; STRINGS.brawler.tl2.chain = { ...STRINGS.brawler.tl2.chain, dhk: 'tlD' }; // Tetsu: U, U, U, U, ↓ + K ends low; J, J, ↓ + K with a mid kick (J, J, K the high one)
 STRINGS.kappa.$start.k = null;
 // fists, kunai and briefcases are short: in a juggle these fighters spring up to where the opponent is, so the blow really reaches them
@@ -761,16 +764,6 @@ function updateProjs() {
           p.hits++; p.last = p.t;
         }
       }
-      continue;
-    }
-    if (p.type === 'hwave') { // Heaven Splitter's wave of light along the floor
-      p.life--; p.x += p.vx;
-      if (p.life <= 0 || p.x < -40 || p.x > W + 40) { p.dead = true; continue; }
-      if (p.t % 4 === 0) parts.push({ type: 'aura', x: p.x, y: GROUND - rnd(0, 40), vx: 0, vy: -rnd(0.5, 1.5), life: 14, max: 14, r: rnd(2, 4), col: '190,225,255' });
-      const tgt = other(p.owner), hu = hurtbox(tgt, true), hb = { x0: p.x - 30, x1: p.x + 30, y0: 0, y1: 90 };
-      if (!p.hit && hu && overlap(hb, hu) && tgt.state !== 'knock') { p.hit = true; // (it rolls under someone already in the air)
-        applyHit(p.owner, tgt, { dmg: 40, stun: 24, bstun: 14, push: 3, kd: true, kdVx: 6, kdVy: 9, type: 'mid', low: true, chip: true, hitstop: 8, proj: true, str: 1, gdrain: 20, label: 'Heaven Splitter' }, p.dir, hb, hu);
-        p.dead = true; }
       continue;
     }
     if (p.type === 'staffBoom') { // Mei's thrown staff: out, then back to her hand

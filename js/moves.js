@@ -421,7 +421,7 @@ function specialMoveBase(id) {
     // ---------- Aldric, the paladin: parry, heal, charge, protect ----------
     // → → + U: Rampart Charge. Hold U: he lowers the shield and builds into a raging charge (front attacks and projectiles bounce off);
     // let go, or crash into them, for the Rampart Slam that sends them flying
-    case 'plRampart': return { id, label: 'Rampart Charge', startup: 999, active: 6, recovery: 22, wind: 'pBashW', pose: 'pBash', selfMove: true, held: true, rage: true, // (armor: hits hurt him but don't stop the charge)
+    case 'plRampart': return { id, label: 'Rampart Charge', startup: 999, active: 6, recovery: 22, wind: 'pBashW', pose: 'pBash', selfMove: true, maxTravel: W * 0.4, held: true, rage: true, // (armor: hits hurt him but don't stop the charge)
       hitbox: [10,130,20,175], dmg: 80, fullDmg: true, stun: 26, bstun: 18, push: 4, bpush: 10, kd: true, kdVx: 6, kdVy: 9, type: 'mid', hitstop: 14, gdrain: 30,
       poseFn: (f, mf) => (!f.move.fired && mf > 10) ? POSES.pDash : null,
       onFrame(f, o, mf) {
@@ -430,8 +430,8 @@ function specialMoveBase(id) {
           if (mf <= 10) { f.vx = 0; if (mf === 2) sfx('charge'); return; } // digs in and lowers the shield
           f.vx = f.facing * Math.min(8, (mf - 10) * 0.55); mv.speedFx = f.vx * f.facing > 5;
           if (mf % 5 === 0) { dustAt(f.x, false); sfx('land'); parts.push({ type: 'spark', x: f.x + f.facing * 40, y: GROUND - 120 + rnd(-20, 20), vx: -f.facing * rnd(2, 5), vy: rnd(-2, 2), life: 10, max: 10, col: '255,170,120' }); }
-          if (mv.x0 == null) mv.x0 = f.x; const run = Math.abs(f.x - mv.x0); // (a quarter to half of the stage)
-          if ((!holding(f) && mf > 14 && run >= W / 4 - 18) || run >= W / 2 - 18 || mf >= 140 || Math.abs(o.x - f.x) < 80) { mv.fired = true; mv.startup = mf + 3; mv.label = 'Rampart Slam'; }
+          if (mv.x0 == null) mv.x0 = f.x; const run = Math.abs(f.x - mv.x0); // (a quarter to four tenths of the stage)
+          if ((!holding(f) && mf > 14 && run >= W / 4 - 18) || run >= W * 0.4 - 18 || mf >= 140 || Math.abs(o.x - f.x) < 80) { mv.fired = true; mv.startup = mf + 3; mv.label = 'Rampart Slam'; }
           return;
         }
         if (mf === mv.startup) { sfx('hitH'); game.shake = Math.max(game.shake, 5); }
@@ -446,61 +446,49 @@ function specialMoveBase(id) {
         hitRecover(f, 8);
         if (mf === 19) { sfx('slash'); parts.push({ type: 'slashx', x: f.x + f.facing * 180, y: GROUND - 110, r: 30, life: 10, max: 10, col: '190,225,255', rot: Math.PI / 4 }); }
       } };
-    // → → + J: Windmill. The greatsword whirls like a millstone in front of him; hold J to keep it turning as he grinds forward,
-    // let go for the Windmill Crash that bounces them up
-    case 'plWindmill': return { id, label: 'Windmill', startup: 14, active: 999, recovery: 10, wind: 'pSlashW', pose: 'pThrust', spinStaff: true, held: true, selfMove: true,
-      hitbox: [20,195,20,195], multi: 12, interval: 7, dmg: 9, stun: 20, bstun: 10, push: 0.6, type: 'mid', hitstop: 3, chip: true, gdrain: 5,
+    // → → + J: Crouching Slash. He drops low and rushes at them — four tenths of the stage at most — with a downward slash at their legs that bounces them
+    case 'plWindmill': return { id, label: 'Crouching Slash', startup: 16, active: 6, recovery: 26, wind: 'crouch', pose: 'pLowCut', selfMove: true, maxTravel: W * 0.4, speedFx: true,
+      hitbox: [10,200,0,205], dmg: 42, stun: 22, bstun: 16, push: 2, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 13, gdrain: 22,
+      onStart(f) { f.cs = { x0: f.x }; },
       onFrame(f, o, mf) {
-        f.vx = mf > 14 && Math.abs(o.x - f.x) > 85 ? f.facing * 1.6 : 0;
-        if (mf % 7 === 0 && mf > 10) sfx('swing');
-        if (mf > 15 && (!holding(f) || mf >= 76)) startMove(f, specialMove('plWindmillEnd'), 1, true);
+        const mv = f.move, run = Math.abs(f.x - f.cs.x0), room = W * 0.4 - run;
+        if (mf >= 1 && mf <= mv.startup + mv.active && room > 0 && Math.abs(o.x - f.x) > 90 && !f.hitConnected) { f.vx = f.facing * Math.min(18, room); if (mf % 3 === 0) dustAt(f.x - f.facing * 20, false); } else f.vx *= 0.5;
+        hitRecover(f, 8);
+        if (mf === mv.startup) { sfx('slash'); parts.push({ type: 'slashx', x: f.x + f.facing * 120, y: GROUND - 26, r: 40, life: 12, max: 12, col: '190,225,255', rot: Math.PI / 4 }); }
       } };
-    case 'plWindmillEnd': return { id, label: 'Windmill Crash', startup: 7, active: 5, recovery: 26, wind: 'pCleaveW', pose: 'pCleave', selfMove: true,
-      hitbox: [10,195,0,205], dmg: 42, stun: 22, bstun: 16, push: 2, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 13, gdrain: 22,
-      onFrame(f, o, mf) { f.vx *= 0.5; hitRecover(f, 8); if (mf === 8) { parts.push({ type: 'slashx', x: f.x + f.facing * 130, y: GROUND - 20, r: 40, life: 12, max: 12, col: '190,225,255', rot: Math.PI / 4 }); dustAt(f.x + f.facing * 130, true); game.shake = Math.max(game.shake, 6); sfx('hitH'); } } };
-    // → → + K: Crusader Leap. A heavy, slow leap; he crashes down sword-first and the impact rolls out to both sides (it even hits them lying down)
+    // → → + K: Crusader Leap. A heavy, slow leap (four tenths of the stage at most); he crashes down sword-first and the impact rolls out to both sides (it even hits them lying down)
     case 'plLeap': return { id, label: 'Crusader Leap', startup: 30, active: 5, recovery: 28, wind: 'pCleaveW', pose: 'pPlant', manualY: true, noPush: true, selfMove: true,
       hitbox: [-120,175,0,80], low: true, dmg: 70, fullDmg: true, stun: 24, bstun: 16, push: 3, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 13, gdrain: 24,
-      onStart(f, o) { f.lp = { x0: f.x, tx: clamp(o.x - (Math.sign(o.x - f.x) || f.facing) * 30, WALL_L, WALL_R) }; sfx('rise'); },
+      onStart(f, o) { const sg = Math.sign(o.x - f.x) || f.facing; f.lp = { x0: f.x, tx: clamp(f.x + sg * Math.min(Math.abs(o.x - f.x - sg * 30), W * 0.4), WALL_L, WALL_R) }; sfx('rise'); }, // (a leap of four tenths of the stage at most: from further away it falls short)
       onFrame(f, o, mf) {
         f.vx = 0;
         if (mf <= 30) { const e = mf / 30; f.x = lerp(f.lp.x0, f.lp.tx, e); f.y = 150 * Math.sin(Math.PI * e); }
         if (mf === 30) { f.y = 0; for (const dx of [-90, -40, 40, 90]) parts.push({ type: 'ring', x: f.x + dx, y: GROUND - 10, r: 6, vr: 6, life: 14, max: 14, col: '190,225,255' });
           parts.push({ type: 'lbeam', x: f.x + f.facing * 30, w: 30, life: 10, max: 10 }); dustAt(f.x, true); cracks(f.x + f.facing * 30); game.shake = Math.max(game.shake, 9); sfx('hitH'); }
       } };
-    // ← ← + U: Parry. A short, sharp guard with the shield; parry a front attack and he answers with a lightning Riposte that lifts them
-    case 'plParryRise': return { id, label: 'Parry', startup: 3, active: 16, recovery: 24, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plRiposte', fx: 'ward' };
+    // ← ← + U: Push Parry. Parries from the 5th frame; a parried blow gets a shield shove that sends them away (no damage). Short window, long recovery
+    case 'plParryRise': return { id, label: 'Push Parry', startup: 4, active: 10, recovery: 26, noProjParry: true, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plShove', fx: 'ward' };
+    case 'plShove': return { id, label: 'Shield Shove', startup: 2, active: 3, recovery: 14, wind: 'pBashW', pose: 'pBash', hitbox: null, burst: [80, 110],
+      onStart(f, o) { const side = Math.sign(o.x - f.x) || f.facing; if (o.state !== 'ko') { setState(o, 'blockstun'); o.stun = 14; o.move = null; o.vx = side * 30; } sfx('palm'); game.shake = Math.max(game.shake, 3); } }; // (pushed far back, unhurt)
+    // ← ← + I: Riposte Parry. Parries from the 5th frame and answers with a sword riposte that hurts and knocks them away
+    case 'plParryStun': return { id, label: 'Riposte Parry', startup: 4, active: 10, recovery: 32, noProjParry: true, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plRiposte', fx: 'ward' };
     case 'plRiposte': return { id, label: 'Riposte', startup: 4, active: 5, recovery: 18, wind: 'pThrustW', pose: 'pThrust', wrist: 0, selfMove: true, speedFx: true, noGrace: true, staffExt: 30,
-      hitbox: [20,210,70,150], dmg: 52, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 12.5, type: 'mid', hitstop: 14, gdrain: 10,
+      hitbox: [20,210,70,150], dmg: 64, stun: 22, bstun: 12, push: 6, kd: true, kdVx: 15, kdVy: 7, type: 'mid', hitstop: 14, gdrain: 10,
       onFrame(f, o, mf) { if (mf <= 5 && Math.abs(o.x - f.x) > 70) f.vx = f.facing * 12; else f.vx *= 0.5; if (mf === 4) sfx('slash'); } };
-    // ← ← + I: Shield Parry. Parry with the shield and bash them senseless (stunned)
-    case 'plParryStun': return { id, label: 'Shield Parry', startup: 3, active: 16, recovery: 24, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plShieldStun', fx: 'ward' };
-    case 'plShieldStun': return { id, label: 'Stunning Bash', startup: 7, active: 5, recovery: 18, wind: 'pDash', pose: 'pBash', selfMove: true, speedFx: true, noGrace: true,
-      hitbox: [10,125,40,170], dmg: 40, stun: 24, bstun: 12, push: 1, stunT: 72, stunKind: 'holy', type: 'mid', hitstop: 12, gdrain: 10,
-      onFrame(f, o, mf) { if (mf <= 7 && Math.abs(o.x - f.x) > 60) f.vx = f.facing * 12; else f.vx *= 0.5; if (mf === 7) sfx('palm'); } };
-    // ← ← + J: Aegis. Hold J: a dome of light closes around him and stops everything, from the front, from behind and from above.
-    // It feeds on his guard meter (a little every moment, more for each hit); if the meter runs out, his guard breaks
-    case 'plAegis': return { id, label: 'Aegis', startup: 14, active: 999, recovery: 14, wind: 'pCounter', pose: 'pCounter', aegis: true, held: true, selfMove: true,
+    // ← ← + K: Rising Parry. Parries from the 8th frame and strikes up under them: it launches, and the combo begins
+    case 'plPray': return { id, label: 'Rising Parry', startup: 7, active: 10, recovery: 34, noProjParry: true, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plRiseStrike', fx: 'ward' };
+    case 'plRiseStrike': return { id, label: 'Rising Strike', startup: 4, active: 5, recovery: 18, wind: 'pCleaveW', pose: 'pShieldUp', selfMove: true, speedFx: true, noGrace: true,
+      hitbox: [10,160,30,225], dmg: 46, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 14, type: 'mid', hitstop: 12, gdrain: 10,
+      onFrame(f, o, mf) { if (mf <= 4 && Math.abs(o.x - f.x) > 70) f.vx = f.facing * 10; else f.vx *= 0.5; if (mf === 4) { parts.push({ type: 'lbeam', x: f.x + f.facing * 80, w: 34, life: 16, max: 16 }); sfx('orb'); } } };
+    // ← ← + J: Aegis. A dome of light closes around him and stops everything, from the front, from behind and from above; it lasts four seconds, no holding,
+    // and he moves, jumps and attacks freely inside it. The casting is the only opening (hit him then: counter). It feeds on his guard meter
+    // (a little every moment, more for each hit); if the meter runs out, his guard breaks and the dome goes
+    case 'plAegis': return { id, label: 'Aegis', startup: 14, active: 1, recovery: 8, wind: 'pCounter', pose: 'pCounter', aegis: true,
       onFrame(f, o, mf) {
-        const mv = f.move;
-        if (mf === 3) sfx('charge'); if (mf === 14) sfx('orb');
+        f.vx = 0;
+        if (mf === 3) sfx('charge');
         if (mf < 14 && mf % 3 === 0) parts.push({ type: 'ring', x: f.x, y: GROUND - f.y - 100, r: 70 - mf * 4, vr: -1, life: 6, max: 6, col: '190,225,255' }); // casting: the light gathers (hit him now: counter)
-        if (mv.ended) { f.vx *= 0.5; return; }
-        mv.aegisOn = mf >= 14;
-        f.vx = mv.aegisOn ? (f.inp ? f.inp.h : 0) * f.ch.walk * 0.6 : 0; // he can walk while he holds it
-        if (mv.aegisOn) f.guard = Math.max(0, f.guard - 0.16); // (the light feeds on his guard meter: about ten a second)
-        if (mf > 16 && (!holding(f) || mf >= 254 || f.guard <= 0)) { mv.ended = true; mv.aegisOn = false; mv.active = Math.max(1, mf - mv.startup); aegisSpent(f); } // (four seconds at most)
-      } };
-    // ← ← + K: Lay on Hands. Hold K: he kneels and prays, turning MP into health. Hit him while he prays and it's a counter hit
-    case 'plPray': return { id, label: 'Lay on Hands', startup: 10, active: 999, recovery: 18, wind: 'chargeP', pose: 'chargeP', held: true, heal: true,
-      onFrame(f, o, mf) {
-        const mv = f.move; f.vx = 0;
-        if (mv.ended || mf <= 10) return;
-        if (f.meter <= 0) popText(f.x, GROUND - 190, 'NO MP', '190,225,255');
-        if (!holding(f) || f.meter <= 0 || f.hp >= 1000 || mf >= 300) { mv.ended = true; mv.active = Math.max(1, mf - mv.startup); return; }
-        f.meter = Math.max(0, f.meter - 0.55); f.hp = Math.min(1000, f.hp + 1.5); f.healT = 90;
-        if (mf % 4 === 0) parts.push({ type: 'aura', x: f.x + rnd(-36, 36), y: GROUND - rnd(10, 150), vx: 0, vy: -rnd(0.8, 1.6), life: 22, max: 22, r: rnd(2, 3.5), col: '210,255,225' });
-        if (mf % 14 === 0) { parts.push({ type: 'lbeam', x: f.x, w: 34, life: 14, max: 14 }); sfx('orb'); }
+        if (mf === 14) { sfx('orb'); if (!(f.aegisT > 0)) { f.aegisT = 240; f.aegisHitT = null; } } // (not again while it's up)
       } };
     // super: Sanctuary. He plants the sword and a dome of light swells around him: caught inside, they're held and burned
     // again and again while his guard refills and his wounds close, then the dome bursts
@@ -1042,9 +1030,9 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { if (mf === 14) spawnQiOrb(f); } };
     case 'qiParry': return { id, label: 'Qi Parry', startup: 7, active: 22, recovery: 20, wind: 'charge', pose: 'parryStance', parry: true, aura: true, fx: 'ward',
       onFrame(f, o, mf) { if (mf > 7 && mf <= 29 && mf % 3 === 0) auraParticle(f); } };
-    case 'pushParry': return { id, label: 'Push Parry', startup: 4, active: 10, recovery: 26, wind: 'charge', pose: 'parryStance', parry: true, parryInto: 'parryShove', aura: true, fx: 'ward', // ← ← + U: parries from the 5th frame; a parried blow gets a shove that sends them away (no damage)
+    case 'pushParry': return { id, label: 'Push Parry', startup: 4, active: 10, recovery: 26, noProjParry: true, wind: 'charge', pose: 'parryStance', parry: true, parryInto: 'parryShove', aura: true, fx: 'ward', // ← ← + U: parries from the 5th frame; a parried blow gets a shove that sends them away (no damage)
       onFrame(f, o, mf) { if (mf > 4 && mf <= 14 && mf % 3 === 0) auraParticle(f); } };
-    case 'kickParry': return { id, label: 'Kick Parry', startup: 4, active: 10, recovery: 32, wind: 'charge', pose: 'parryStance', parry: true, parryInto: 'parryKick', aura: true, fx: 'ward', // ← ← + I: the same, but he answers with a kick
+    case 'kickParry': return { id, label: 'Kick Parry', startup: 4, active: 10, recovery: 32, noProjParry: true, wind: 'charge', pose: 'parryStance', parry: true, parryInto: 'parryKick', aura: true, fx: 'ward', // ← ← + I: the same, but he answers with a kick
       onFrame(f, o, mf) { if (mf > 4 && mf <= 14 && mf % 3 === 0) auraParticle(f); } };
     case 'parryShove': return { id, label: 'Qi Shove', startup: 2, active: 3, recovery: 14, wind: 'palmW', pose: 'blast', hitbox: null, aura: true, burst: [80, 110],
       onStart(f, o) { const side = Math.sign(o.x - f.x) || f.facing; if (o.state !== 'ko') { setState(o, 'blockstun'); o.stun = 14; o.move = null; o.vx = side * 30; } sfx('qi'); game.shake = Math.max(game.shake, 3); } }; // (pushed far back, unhurt: back to neutral at a distance)

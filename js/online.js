@@ -2,7 +2,7 @@
 /* ================= online play (WebRTC through PeerJS; lockstep with input delay) ================= */
 // Both players run the same deterministic game. Each frame, every player sends their buttons for a frame a few
 // frames ahead (the input delay); a frame is simulated only once both players' buttons for it have arrived.
-const NETV = 5, NET_PREFIX = 'shadowqi-v' + NETV + '-', RAND_SLOTS = 6;
+const NETV = 6, NET_PREFIX = 'shadowqi-v' + NETV + '-', RAND_SLOTS = 6;
 const NBIT = { left: 1, right: 2, up: 4, down: 8, lp: 16, hp: 32, lk: 64, hk: 128, charge: 256 };
 const NET = { on: false, peer: null, conn: null, host: false, side: 0, delay: 4, tick: 0, cur: 0, local: {}, remote: {}, sentUpTo: -1,
   name: '', oppName: '', names: ['', ''], rtt: 0, stallT: 0, status: '', mode: null, busy: false, ck: {}, rematch: [false, false], joinTimer: null };

@@ -17,10 +17,9 @@ function staffTipBox(f, mv, hb0) {
   if (mv.launch || mv.jug || mv.air || f.y > 0 || /rise|Rise|Up\b|up\b|Upper|Cudgel|Swing/.test((mv.pose || '') + ' ' + (mv.label || ''))) out = U(out, hb0); // (rising swings and juggle hits scoop up close to her too)
   return out;
 }
-// no blow reaches further than this in front of its user (Lyra's spells have their own range, LYRA_RANGE; Excalibur's reach is what
-// its three-second charge buys)
+// no blow reaches further than this in front of its user (Lyra's spells have their own range, LYRA_RANGE)
 const MELEE_REACH = 220;
-const meleeBox = (f, hb) => f.key === 'psychic' || hb[1] <= MELEE_REACH || (f.move && f.move.excal) ? hb : [hb[0], Math.max(hb[0] + 30, MELEE_REACH), hb[2], hb[3]];
+const meleeBox = (f, hb) => f.key === 'psychic' || hb[1] <= MELEE_REACH ? hb : [hb[0], Math.max(hb[0] + 30, MELEE_REACH), hb[2], hb[3]];
 function boxOf(f, hb) {
   const s = f.ch.scale, [x0, x1, y0, y1] = hb, b0 = f.y + y0 * (f.ch.tallBox ? 1 : s); // tallBox (Tanaka's double possession, 1.4× his size): the blow grows forward and up, but still reaches as low as at normal size
   return f.facing > 0
@@ -44,7 +43,7 @@ const TECH_TIER = {
   // Lyra
   phantomFist: 'fast', crushFist: 'heavy', psyLift: 'heavy', forceWave: 'mod', orbBurst: 'mod', tripleRay: 'mod', orbStrong: 'mod', orbLong: 'mod',
   // Aldric
-  plRampart: 'mod', plJudgeThrust: 'heavy', plWindmill: 'mod', plLeap: 'heavy', plParryRise: 'fast', plParryStun: 'fast', plAegis: 'mod', plPray: 'heavy',
+  plRampart: 'mod', plJudgeThrust: 'heavy', plWindmill: 'mod', plLeap: 'heavy', plParryRise: 'fast', plParryStun: 'fast', plAegis: 'mod', plPray: 'fast', plShove: 'fast', plRiposte: 'fast', plRiseStrike: 'fast', /* (the answers to a parry come out at once) */
   // Kappa
   kpPlate: 'fast', kpCannon: 'mod', kpPounce: 'heavy', kpFrenzy: 'mod', kpBubble: 'mod', kpGeyser: 'heavy', kpShell: 'fast', kpRiptide: 'mod',
   // Jesse
@@ -244,10 +243,10 @@ function applyHit(a, d, h, side, hb, hu) {
     sparks(cx, cy, 'block'); sfx('block'); if (!d.passT || game.frame - d.passT > 12) { d.passT = game.frame; popText(d.x, GROUND - d.y - 180, 'DEFLECT!', '255,225,140'); }
     game.freeze = Math.max(game.freeze, 3); return null;
   }
-  if (d.state === 'attack' && d.move && d.move.aegis && d.move.aegisOn) { // Aegis: from any side, at the cost of guard meter
-    d.guard -= (h.gdrain || 6) * 2.4 + (h.dmg || 0) * 0.35 + 6; d.guardIdle = 0; if (d.move) d.move.aegisHitT = game.frame; // (each hit tears a big piece out of the light: two to four hits break it)
+  if (d.aegisT > 0 && !['hitstun', 'knock', 'down', 'getup', 'gbreak', 'stunned', 'slashed'].includes(d.state)) { // Aegis: from any side, at the cost of guard meter
+    d.guard -= (h.gdrain || 6) * 2.4 + (h.dmg || 0) * 0.35 + 6; d.guardIdle = 0; d.aegisHitT = game.frame; // (each hit tears a big piece out of the light: two to four hits break it)
     d.hp = Math.max(1, d.hp - Math.ceil((h.dmg || 0) * 0.25)); // a quarter of the damage still gets through the light
-    if (d.guard <= 0) { d.guard = 0; d.guardSlowT = 600; setState(d, 'gbreak'); d.stun = 50; d.move = null; popText(d.x, GROUND - d.y - 165, 'GUARD BREAK!', '255,120,130'); sparks(cx, cy, 'big'); sfx('break'); game.freeze = Math.max(game.freeze, 10); return 'block'; }
+    if (d.guard <= 0) { d.guard = 0; d.guardSlowT = 600; d.aegisT = 0; setState(d, 'gbreak'); d.stun = 50; d.move = null; popText(d.x, GROUND - d.y - 165, 'GUARD BREAK!', '255,120,130'); sparks(cx, cy, 'big'); sfx('break'); game.freeze = Math.max(game.freeze, 10); return 'block'; }
     sparks(cx, cy, 'block'); sfx('block'); if (!d.passT || game.frame - d.passT > 12) { d.passT = game.frame; popText(d.x, GROUND - d.y - 190, 'AEGIS', '190,225,255'); }
     game.freeze = Math.max(game.freeze, 3); return 'block';
   }
@@ -255,7 +254,7 @@ function applyHit(a, d, h, side, hb, hu) {
     sparks(cx, cy, 'block'); sfx('block'); if (!d.passT || game.frame - d.passT > 12) { d.passT = game.frame; popText(d.x, GROUND - d.y - 180, 'SHIELD', '255,225,140'); }
     game.freeze = Math.max(game.freeze, 3); return 'block';
   }
-  if (d.state === 'attack' && d.move && d.move.parry && d.mf > d.move.startup && d.mf <= d.move.startup + d.move.active && !(d.move.frontOnly && side !== -d.facing)) { parryCounter(d, a, h); return null; }
+  if (d.state === 'attack' && d.move && d.move.parry && d.mf > d.move.startup && d.mf <= d.move.startup + d.move.active && !(d.move.frontOnly && side !== -d.facing) && !(h.proj && d.move.noProjParry) && a.key !== 'psychic') { parryCounter(d, a, h); return null; } // (noProjParry: Tetsu's and Aldric's parries answer blows, not projectiles; Lyra's magic can't be parried at all)
   if (d.state === 'down') { // ground hit: a low attack on a downed opponent
     const dmg = Math.max(1, Math.round(h.dmg * 0.6));
     d.hp = Math.max(game.training ? 1 : 0, d.hp - dmg); d.otgUsed = true; d.flash = 7;

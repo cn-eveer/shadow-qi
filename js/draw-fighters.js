@@ -795,8 +795,8 @@ function drawSanctuary(f) { // a dome of light over the planted sword
 }
 function drawAegis(f) { // a sphere of light around him: it fades as it runs out (time or guard meter, whichever is closer), flickers and cracks near the end, flashes when hit
   const mv = f.move, s = f.ch.scale, cx = f.x, cy = GROUND - f.y - 95 * s, R = 108 * s, t = globalT;
-  const left = Math.min(f.guard / 100, mv ? Math.max(0, 1 - (f.mf - 14) / 240) : 1); // how much is left
-  const low = left < 0.3, flick = low ? (Math.floor(t / (left < 0.15 ? 2 : 4)) % 2 ? 0.35 : 1) : 1, hitF = mv && mv.aegisHitT != null ? Math.max(0, 1 - (game.frame - mv.aegisHitT) / 10) : 0;
+  const left = Math.min(f.guard / 100, f.aegisT / 240); // how much is left
+  const low = left < 0.3, flick = low ? (Math.floor(t / (left < 0.15 ? 2 : 4)) % 2 ? 0.35 : 1) : 1, hitF = f.aegisHitT != null ? Math.max(0, 1 - (game.frame - f.aegisHitT) / 10) : 0;
   const k = (0.12 + 0.88 * left) * flick + hitF * 0.8;
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
   if (hitF > 0) { ctx.strokeStyle = `rgba(255,255,255,${hitF})`; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(cx, cy, R * (1 + 0.08 * (1 - hitF)), 0, Math.PI * 2); ctx.stroke(); } // the flash of a hit tearing into it
@@ -868,7 +868,7 @@ function drawFighter(f) {
   if (turn !== null) drawSpinFX(f, turn);
   if (mv && mv.wings) drawWings(f);
   if (mv && mv.sanctuary && f.mf > 16) drawSanctuary(f);
-  if (mv && mv.aegis && mv.aegisOn) drawAegis(f);
+  if (f.aegisT > 0) drawAegis(f);
   if (mv && mv.rage && !mv.fired && f.mf > 10) drawRage(f);
   // Mei's staff: it can stretch out (Extending Staff) or spin like a windmill
   let staffExt = 0, staffSpin = null;

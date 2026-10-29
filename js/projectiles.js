@@ -353,9 +353,6 @@ function drawPossessBar(f) { // the time left in the possession, over his head
   ctx.fillStyle = angel ? '#ffd86b' : '#ff4a3a'; ctx.fillRect(x, y, 60 * k, 5);
 }
 function aegisSpent(f) { f.guard = Math.min(f.guard, 50); f.guardSlowT = 600; } // after the Aegis: half a guard meter, recovering slowly
-function spawnHolyWave(f) { // a crescent of light that rolls along the floor
-  projs.push({ id: ++serial, type: 'hwave', owner: f, x: f.x + f.facing * 150, y: 0, vx: f.facing * 10, dir: f.facing, life: 46, t: 0, hit: false });
-}
 // heavy techniques are slow to recover when they miss or are guarded, but quick to follow up when they land
 function hitRecover(f, n) { const mv = f.move; if (!mv.cut && f.hitConnected && f.lastResult !== 'block') { mv.cut = true; mv.recovery = Math.min(mv.recovery, n); } }
 const holding = f => { const mv = f.move; return mv.holdFor != null ? f.mf < mv.holdFor : !!(f.inp && f.inp.held && f.inp.held[mv.holdBtn]); };

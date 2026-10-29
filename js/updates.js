@@ -4,6 +4,25 @@
 // version.json on the server says which version is live. When the two differ, the player is asked to reload without the
 // browser's cache, or to erase the site's saved data and reload.
 const RELEASES = [ // notes: a string, or { g: 'group', items: [...] } (groups nest)
+  { v: '1.4.7', date: '2026-10-29', notes: [
+    { g: 'アルドリック', items: [
+      'すべての技のフレームを調整（U・Jは10F、Iは16F、必殺技は16〜30Fなど）',
+      'U、U／U×3／U×4を18F／14F／16Fに。U、K（U、U、K）は24F',
+      'U、↓+I（下段の斬り上げ）とU、↓+K（下段の盾払い）を追加',
+      '→→+Uは画面の4/10まで突進。→→+Kも4/10までの跳躍で、空中でゆっくりに',
+      '→→+Jは風車からしゃがみ斬りに変更（下段、4/10まで突進してバウンド）',
+      '←←+U 押し返し（5F）、←←+I リポスト受け流し（5F、ダメージ）、←←+K 突き上げ受け流し（8F、打ち上げ）。癒しの手は削除',
+      'イージスは押し続け不要で4秒間。張ったまま動いて攻撃もできる',
+      'I・Kの溜め技（天裂き・エクスカリバー）を削除',
+    ] },
+    { g: '受け流し（テツ・アルドリック）', items: [
+      '飛び道具は受け流せず、そのまま当たる（以前は吸収）',
+    ] },
+    { g: 'ライラ', items: [
+      'ライラの攻撃はすべての受け流しに止められない',
+      '技表のコンボ表記を現在の技に合わせて修正',
+    ] },
+  ] },
   { v: '1.4.6', date: '2026-10-29', notes: [
     { g: 'ライラ', items: [
       'すべての技のフレームを調整（U・Jは14F、必殺技は14〜24Fなど）',
