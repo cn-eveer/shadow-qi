@@ -43,7 +43,7 @@ const TECH_TIER = {
   // Lyra
   phantomFist: 'fast', crushFist: 'heavy', psyLift: 'heavy', forceWave: 'mod', orbBurst: 'mod', tripleRay: 'mod', orbStrong: 'mod', orbLong: 'mod',
   // Aldric
-  plRampart: 'mod', plJudgeThrust: 'heavy', plWindmill: 'mod', plLeap: 'heavy', plParryRise: 'fast', plParryStun: 'fast', plAegis: 'mod', plPray: 'heavy',
+  plRampart: 'mod', plJudgeThrust: 'heavy', plWindmill: 'mod', plLeap: 'heavy', plParryRise: 'fast', plParryStun: 'fast', plAegis: 'mod', plPray: 'fast', plShove: 'fast', plRiposte: 'fast', plRiseStrike: 'fast', /* (the answers to a parry come out at once) */
   // Kappa
   kpPlate: 'fast', kpCannon: 'mod', kpPounce: 'heavy', kpFrenzy: 'mod', kpBubble: 'mod', kpGeyser: 'heavy', kpShell: 'fast', kpRiptide: 'mod',
   // Jesse

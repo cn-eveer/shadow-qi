@@ -313,6 +313,9 @@ Object.assign(STRINGS.salaryDevil, {
 wireStrings(); // chain the aerial versions as well
 STRINGS.ninja.n2.chain = { ...STRINGS.ninja.n2.chain, dhk: 'nD' }; // Kuro: U, U, ↓ + K ends low
 STRINGS.staff.m4.chain = { ...STRINGS.staff.m4.chain, dhk: 'mD' }; STRINGS.staff.$start.p = { ...STRINGS.staff.$start.p, dhk: 'mUD' }; // Mei: U, U, U, U, ↓ + K and U, ↓ + K end low
+STRINGS.paladin.pUI = SF('p', 'Low Cleave', 'pThrustW', 'pLowCut', { step: 0, low: true, hitbox: [20,180,0,50], dmg: 46, kd: false, launch: true, launchVy: 11 }); // Aldric: U, ↓ + I (a low that lifts them)
+STRINGS.paladin.pUK = SF('k', 'Shield Trip', 'crouch', 'pQuake', { step: 0, low: true, hitbox: [0,165,0,45], dmg: 50 }); // Aldric: U, ↓ + K (a low that trips them)
+STRINGS.paladin.$start.p = { ...STRINGS.paladin.$start.p, dhp: 'pUI', dhk: 'pUK' };
 STRINGS.brawler.t4.chain = { ...STRINGS.brawler.t4.chain, dhk: 'tD' }; STRINGS.brawler.tl2.chain = { ...STRINGS.brawler.tl2.chain, dhk: 'tlD' }; // Tetsu: U, U, U, U, ↓ + K ends low; J, J, ↓ + K with a mid kick (J, J, K the high one)
 STRINGS.kappa.$start.k = null;
 // fists, kunai and briefcases are short: in a juggle these fighters spring up to where the opponent is, so the blow really reaches them
