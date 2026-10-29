@@ -314,7 +314,7 @@ const caughtIn = o => o.state === 'knock' && o.juggle; // already juggled in a c
 const jumpedOver = (o, h = 60) => o.y > h && !caughtIn(o); // a free opponent this high has jumped over a ranged attack aimed along the ground
 function columnHit(f, o, h) { // a hit that lands wherever they are (supers, floods, pillars)
   const hu = hurtbox(o, true); if (!hu) return;
-  const hb = { x0: o.x - 20, x1: o.x + 20, y0: 0, y1: 400 };
+  const hb = { x0: o.x - 20, x1: o.x + 20, y0: 0, y1: h.colH || 400 }; /* (colH: a low column, like Riptide's) */
   applyHit(f, o, { type: 'mid', chip: true, proj: true, str: h.launch || h.kd ? 2 : 1, hitstop: 4, gdrain: 6, ...h }, Math.sign(o.x - f.x) || f.facing, hb, hu);
 }
 // the salaryman's possession: the angel or the devil takes him over for ten seconds

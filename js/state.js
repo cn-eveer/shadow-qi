@@ -362,6 +362,8 @@ function land(f) {
 
 function update(f, o, inp) {
   f.inp = inp; f.st++;
+  { const H = (inp && inp.held) || {}, pv = f.prevHeld || {}; f.btnEdge = f.btnEdge || {}; for (const b of ['lp', 'hp', 'lk', 'hk']) if (H[b] && !pv[b]) f.btnEdge[b] = game.frame; f.prevHeld = { lp: !!H.lp, hp: !!H.hp, lk: !!H.lk, hk: !!H.hk }; } // (when each button went down: for breaking Kappa's throws)
+  if (f.grabLock > 0) { f.grabLock--; inp = { ...EMPTY, held: inp && inp.held }; f.inp = inp; f.vx = 0; } // (caught in a throw: no moving, only pressing)
   if (f.golem) golemUpdate(f, o);
   if (f.brands && --f.brandT <= 0) f.brands = 0; // holy brands fade
   if (f.healT > 0) f.healT--;

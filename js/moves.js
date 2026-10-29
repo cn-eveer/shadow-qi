@@ -93,7 +93,7 @@ function heavyFX(f, mv) {
   if (mv.trail) sfx('slash');
 }
 // Kuro's techniques recover faster (kept long enough for each one's animation to finish)
-const POUNCE_MAX = 240, RIP_REACH = 380, RIP_PULL = 240; // the kappa's Pounce leaps this far at most; Riptide catches them this far away at most, and drags them this far at most
+const POUNCE_MAX = 384, RIP_REACH = 380, RIP_PULL = 440; // the kappa's Pounce leaps this far at most; Riptide drags them this far at most (half the stage), and drags them this far at most
 const KURO_REC = { cloneStrike: 8, shadowCharge: 14, counterVanish: 12, swordSlash: 18, ambushBehind: 16, ambushLeap: 20, ambushSlide: 16, ambushKick: 18, // Shadow Charge and its follow-ups can be punished
   teleKick: 7, teleSlide: 9, teleSpin: 12, flame: 10, fireballs: 1, vanishDrop: 10, vanishSlide: 6, jFire: 10, jRain: 8, jClone: 8, jIai: 15, jVanishHeel: 9, shadowArmy: 22 };
 const SLOW_SPECIALS = { staff: new Set(['extendStaff', 'vaultSmash', 'sweepStaff', 'poleKick', 'windmill', 'cloudLeap', 'somersault', 'feint']),
@@ -509,10 +509,10 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { if (mf === 12) { f.plateOut = true; sfx('throw'); spawnPJ(f, 'plate', { x: f.x + f.facing * 30, y: 150 * f.ch.scale, vx: f.facing * 12, life: 110, r: 20, hits: 2, interval: 14, boomerang: 26,
         h: { dmg: 30, stun: 20, bstun: 10, push: 2, gdrain: 8, juggle: true, jugVy: 6, label: 'Plate Throw' } }); } } };
     // → → + I: Water Cannon. A jet of water from the beak, five quick hits that push them away
-    case 'kpCannon': return { id, label: 'Water Cannon', startup: 14, active: 24, recovery: 18, wind: 'kGrab', pose: 'kBlast',
-      hitbox: [40,300,70,130], multi: 6, interval: 4, dmg: 9, lastDmg: 22, stun: 16, bstun: 10, push: 1.2, lastPush: 7, kd: true, kdVx: 9, kdVy: 6, type: 'mid', hitstop: 3, chip: true, gdrain: 6,
+    case 'kpCannon': return { id, label: 'Water Cannon', startup: 14, active: 44, recovery: 18, wind: 'kGrab', pose: 'kBlast', longRange: true,
+      hitbox: [40,680,70,130], multi: 11, interval: 4, dmg: 6, lastDmg: 22, stun: 16, bstun: 10, push: 1.2, lastPush: 7, kd: true, kdVx: 9, kdVy: 6, type: 'mid', hitstop: 3, chip: true, gdrain: 6,
       onFrame(f, o, mf) { f.vx = 0; if (mf === 14) sfx('flame'); },
-      drawFX(f) { if (f.mf <= 13 || f.mf > 38) return; const s = f.ch.scale, x0 = f.x + f.facing * 38 * s, y0 = GROUND - f.y - 128 * s, L = Math.min(300, (f.mf - 13) * 40);
+      drawFX(f) { if (f.mf <= 13 || f.mf > 62) return; const s = f.ch.scale, x0 = f.x + f.facing * 38 * s, y0 = GROUND - f.y - 128 * s, L = Math.min(680, (f.mf - 13) * 70);
         ctx.save(); ctx.globalCompositeOperation = 'lighter';
         for (let i = 0; i < 3; i++) { ctx.strokeStyle = `rgba(${i ? '170,225,255' : '230,248,255'},${0.55 - i * 0.12})`; ctx.lineWidth = 22 - i * 7; ctx.beginPath(); ctx.moveTo(x0, y0);
           for (let k = 1; k <= 8; k++) ctx.lineTo(x0 + f.facing * L * k / 8, y0 + Math.sin(globalT * 0.6 + k + i) * 4); ctx.stroke(); }
@@ -534,15 +534,15 @@ function specialMoveBase(id) {
           return;
         }
         const k = mf - mv.latch; f.x = clamp(o.x - f.facing * 34, WALL_L, WALL_R); f.y = Math.max(0, o.y + 30); o.stun = Math.max(o.stun, 8);
-        if (k === 6 || k === 12 || k === 18) { clawSwipe(f, [40, 110, k === 12 ? -0.9 : 0.9, 56]); columnHit(f, o, { dmg: 14, stun: 30, bstun: 10, push: 0, label: 'Pounce' }); }
-        if (k === 24) { columnHit(f, o, { dmg: 26, stun: 22, bstun: 10, push: 2, launch: true, launchVy: 12, hitstop: 10, label: 'Pounce' }); mv.active = mf - mv.startup; mv.recovery = 10; f.vx = -f.facing * 5; }
+        if (k >= 6 && k <= 30 && k % 6 === 0) { clawSwipe(f, [40, 110, k % 12 === 0 ? -0.9 : 0.9, 56]); columnHit(f, o, { dmg: 14, stun: 30, bstun: 10, push: 0, label: 'Pounce' }); }
+        if (k === 36) { columnHit(f, o, { dmg: 26, stun: 22, bstun: 10, push: 2, launch: true, launchVy: 12, hitstop: 10, label: 'Pounce' }); mv.active = mf - mv.startup; mv.recovery = 10; f.vx = -f.facing * 5; }
       } };
     // → → + K: Claw Frenzy. A wild, screeching flurry of claws, every swipe leaving its marks
-    case 'kpFrenzy': return { id, label: 'Claw Frenzy', startup: 8, active: 28, recovery: 18, wind: 'kIdle', pose: 'kClawUp', selfMove: true,
-      hitbox: [10,135,40,160], multi: 7, interval: 4, dmg: 8, lastDmg: 28, stun: 18, bstun: 10, push: 1, lastPush: 8, kd: true, kdVx: 9, kdVy: 8, type: 'mid', hitstop: 3, gdrain: 6,
-      poseFn: (f, mf) => mf > 8 && mf <= 36 ? [POSES.kClawUp, POSES.kClawDown, POSES.kClawX][Math.floor(mf / 2) % 3] : null,
-      onFrame(f, o, mf) { if (mf > 8 && mf <= 36 && Math.abs(o.x - f.x) > 70) f.vx = f.facing * 3; else f.vx *= 0.7;
-        if (mf > 8 && mf <= 36 && mf % 4 === 1) clawSwipe(f, [90, 100 + (mf % 8 === 1 ? 20 : -10), (mf % 8 === 1 ? 1 : -1) * 0.9, 52]); if (mf === 9) sfx('vanish'); } };
+    case 'kpFrenzy': return { id, label: 'Claw Frenzy', startup: 8, active: 52, recovery: 18, wind: 'kIdle', pose: 'kClawUp', selfMove: true,
+      hitbox: [10,170,40,160], multi: 12, interval: 4, dmg: 7, lastDmg: 28, stun: 18, bstun: 10, push: 1, lastPush: 8, kd: true, kdVx: 9, kdVy: 8, type: 'mid', hitstop: 3, gdrain: 6, maxTravel: 300,
+      poseFn: (f, mf) => mf > 8 && mf <= 60 ? [POSES.kClawUp, POSES.kClawDown, POSES.kClawX][Math.floor(mf / 2) % 3] : null,
+      onFrame(f, o, mf) { if (mf > 8 && mf <= 60 && Math.abs(o.x - f.x) > 70) f.vx = f.facing * 4; else f.vx *= 0.7;
+        if (mf > 8 && mf <= 60 && mf % 4 === 1) clawSwipe(f, [110, 100 + (mf % 8 === 1 ? 20 : -10), (mf % 8 === 1 ? 1 : -1) * 0.9, 52]); if (mf === 9) sfx('vanish'); } };
     // → → + K (old): Tsuppari Rush. A flurry of sumo palm-claws
     case 'kpTsuppari': return { id, label: 'Tsuppari Rush', startup: 8, active: 24, recovery: 18, wind: 'kGrab', pose: 'kClaw', selfMove: true,
       hitbox: [10,125,50,140], multi: 6, interval: 4, dmg: 8, lastDmg: 26, stun: 18, bstun: 10, push: 1.2, lastPush: 8, kd: true, kdVx: 9, kdVy: 7, type: 'mid', hitstop: 3, gdrain: 6,
@@ -561,13 +561,13 @@ function specialMoveBase(id) {
     // On a hit they arrive stunned in front of him, so his ground string follows. The answer to anyone who keeps their distance. Jump the wave and it passes under them
     case 'kpRiptide': return { id, label: 'Riptide', startup: 5, active: 40, recovery: 18, wind: 'kToss', pose: 'kBlast', hitbox: null,
       onFrame(f, o, mf) { const mv = f.move; f.vx = 0;
-        if (mf === 4) { const side = Math.sign(o.x - f.x) || f.facing; mv.dir = -side; mv.wx = clamp(Math.abs(o.x - f.x) <= RIP_REACH ? o.x + side * 150 : f.x + side * RIP_REACH, WALL_L - 20, WALL_R + 20); sfx('flame'); } // (the water rises behind them — if they're within RIP_REACH; further away it rises short of them and misses)
+        if (mf === 4) { const side = Math.sign(o.x - f.x) || f.facing; mv.dir = -side; mv.wx = clamp(o.x + side * 150, WALL_L - 20, WALL_R + 20); sfx('flame'); } // (the water always rises behind them, wherever they are; it drags them half the stage at most: from end to end they stop at half range)
         if (mf < 5 || mv.wx == null) return;
         if (mf === 5) { sfx('splash'); game.shake = Math.max(game.shake, 3); }
         mv.wx += mv.dir * 13;
         if (mv.dir * (f.x - mv.wx) < 50) { mv.done = true; if (mv.carry === 'hit' && o.state === 'hitstun') { o.stun = Math.max(o.stun, 26); o.x = clamp(f.x + f.facing * 72, WALL_L, WALL_R); popText(o.x, GROUND - 190, L('DRAGGED IN!', '引き寄せ！'), '150,215,255'); } else if (mv.carry) o.x = clamp(f.x + f.facing * 80, WALL_L, WALL_R); hitRecover(f, 6); return; } // (it breaks at his feet, leaving them right in front of him: on a hit, still stunned — start the string)
         const near = Math.abs(o.x - mv.wx) < 60 && o.y < 80;
-        if (near && !mv.hit) { mv.hit = true; const r = columnHit(f, o, { dmg: 34, stun: 40, bstun: 16, push: 0, gdrain: 10, label: 'Riptide' }); mv.carry = o.state === 'hitstun' ? 'hit' : 'guard'; mv.cx = o.x; }
+        if (near && !mv.hit) { mv.hit = true; const r = columnHit(f, o, { dmg: 34, stun: 40, bstun: 16, push: 0, gdrain: 10, label: 'Riptide', low: true, colH: 40 }); mv.carry = o.state === 'hitstun' ? 'hit' : 'guard'; mv.cx = o.x; }
         if (mv.carry && !mv.done && Math.abs(o.x - mv.cx) >= RIP_PULL) { mv.done = true; hitRecover(f, 6); return; } // (it carries them RIP_PULL at most, then lets go where they are)
         if (mv.carry && !mv.done) { // caught in it — hit or guarding — they're carried along to him
           o.x = clamp(lerp(o.x, mv.wx + mv.dir * 10, 0.6), WALL_L, WALL_R); o.vx = 0;

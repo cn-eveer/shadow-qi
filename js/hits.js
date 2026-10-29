@@ -19,7 +19,7 @@ function staffTipBox(f, mv, hb0) {
 }
 // no blow reaches further than this in front of its user (Lyra's spells have their own range, LYRA_RANGE)
 const MELEE_REACH = 220;
-const meleeBox = (f, hb) => f.key === 'psychic' || hb[1] <= MELEE_REACH ? hb : [hb[0], Math.max(hb[0] + 30, MELEE_REACH), hb[2], hb[3]];
+const meleeBox = (f, hb) => f.key === 'psychic' || (f.move && f.move.longRange) || hb[1] <= MELEE_REACH ? hb : [hb[0], Math.max(hb[0] + 30, MELEE_REACH), hb[2], hb[3]];
 function boxOf(f, hb) {
   const s = f.ch.scale, [x0, x1, y0, y1] = hb, b0 = f.y + y0 * (f.ch.tallBox ? 1 : s); // tallBox (Tanaka's double possession, 1.4× his size): the blow grows forward and up, but still reaches as low as at normal size
   return f.facing > 0
@@ -56,7 +56,26 @@ const TECH_TIER = {
   sdLunge: 'mod', sdMaul: 'mod', sdClaw: 'mod', sdUpper: 'heavy', sdBeckon: 'fast', sdChain: 'mod', sdDrain: 'heavy',
 };
 const NO_TELL = new Set(['risingFist', 'smBow', 'saRayFly', 'saDive', 'smAngel', 'smDevil']); // (these have their own long lead-in)
-function hasArmor(f) { const mv = f.move; return !!mv && ((mv.armorDive && f.mf >= 24) || (f.key === 'kappa' && (mv.id === 'kpPounce' || (mv.dashLeft > 0))) || (f.key === 'brawler' && mv.tArmor) || mv.id === 'plRampart' || mv.stoneSkin || (f.ch.fused && !mv.normal && !mv.super && techTier(mv) !== 'fast')); } // (Hohen's Bedrock Stride: stone skin; in the golem armour, his techniques have armour like Tetsu's)
+// Kappa's throws and U-string hits can be broken by the one they catch: I + U for the J throw, J + K for the K throw (and the string's), U + I + J for the U string.
+// The buttons are pressed together. A throw holds them for ten frames first (they can't move, only press): break it in time and nothing lands, the two are
+// pushed apart; if not, the throw lands. A string hit is broken by buttons pressed in the ten frames before it.
+const BREAK_BTN = { J: ['lp', 'hp'], K: ['lk', 'hk'], S: ['lp', 'hp', 'lk'] }, BREAK_WINDOW = 10;
+function throwBreak(a, d, h) {
+  const mv = a.move; if (a.key !== 'kappa' || !mv) return false;
+  if (mv.broken) return true; // (this one was already broken)
+  const need = h.grab ? (mv.normal && mv.kind === 'k' && mv.str === 0 ? BREAK_BTN.J : BREAK_BTN.K) : mv.inString && ['c2', 'c3', 'c4'].includes(mv.strKey) ? BREAK_BTN.S : null;
+  if (!need || ['knock', 'down', 'getup', 'gbreak', 'stunned', 'slashed', 'attack', 'jump'].includes(d.state)) return false;
+  const now = game.frame; if (h.grab && mv.grabT == null) { mv.grabT = now; d.grabLock = BREAK_WINDOW; popText(d.x, GROUND - d.y - 185, L('GRABBED!', '掴まれた！'), '255,200,120'); }
+  const from = h.grab ? mv.grabT - BREAK_WINDOW : now - BREAK_WINDOW, ts = need.map(b => d.btnEdge && d.btnEdge[b] != null ? d.btnEdge[b] : -99);
+  if (Math.min(...ts) >= from && Math.max(...ts) - Math.min(...ts) <= 5) {
+    const side = Math.sign(d.x - a.x) || a.facing; mv.broken = true; d.grabLock = 0;
+    sparks(d.x - side * 24, GROUND - d.y - 100, 'block'); sfx('block'); popText(d.x, GROUND - d.y - 185, L('BREAK!', 'ブレイク！'), '255,235,140'); game.freeze = Math.max(game.freeze, 8);
+    a.kb = -side * 6; d.kb = side * 6; d.btnEdge = {};
+    return true;
+  }
+  return !!(h.grab && now - mv.grabT < BREAK_WINDOW); // (still inside the window: not thrown yet)
+}
+function hasArmor(f) { const mv = f.move; return !!mv && ((mv.armorDive && f.mf >= 24) || (f.key === 'kappa' && (mv.id === 'kpPounce' || mv.id === 'kpFrenzy' || (mv.dashLeft > 0))) || (f.key === 'brawler' && mv.tArmor) || mv.id === 'plRampart' || mv.stoneSkin || (f.ch.fused && !mv.normal && !mv.super && techTier(mv) !== 'fast')); } // (Hohen's Bedrock Stride: stone skin; in the golem armour, his techniques have armour like Tetsu's)
 function techTier(mv) { return TECH_TIER[mv.id] || (mv.parry ? 'fast' : mv.launch ? 'heavy' : 'mod'); }
 const TELL = { mod: 14, heavy: 20 }; // frames of the tell before the wind-up: long enough that a jab pressed after it starts still lands first
 const U_REACH = {};
@@ -220,6 +239,7 @@ function applyHit(a, d, h, side, hb, hu) {
     if (!d.passT || game.frame - d.passT > 20) { d.passT = game.frame; popText(d.x, GROUND - d.y - 180, 'PASS', '125,235,255'); }
     return null;
   }
+  if (throwBreak(a, d, h)) return null;
   // armor: Tetsu during his moderate and heavy techniques (tell included), and Aldric's Rampart Charge — the hits land and hurt,
   // but they don't stop him: the technique keeps going (no counter). They can only be punished afterwards.
   const dblArmor = d.ch.possess === 'double' && !h.grab && !h.superHit && !['knock', 'down', 'getup'].includes(d.state); // double possession: light hits can't stop him
