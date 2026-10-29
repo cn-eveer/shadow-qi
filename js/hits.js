@@ -226,7 +226,7 @@ function applyHit(a, d, h, side, hb, hu) {
   const dblArmor = d.ch.possess === 'double' && !h.grab && !h.superHit && !['knock', 'down', 'getup'].includes(d.state); // double possession: light hits can't stop him
   const kDash = d.key === 'kappa' && d.state === 'dash' && !h.grab && !h.superHit; // the kappa's dash has armor: hits land, but don't stop him
   const strong = !!(h.heavy || h.tech || h.launch || h.kd || (h.str || 0) >= 1); // (a heavy blow, a technique, a launcher, a knockdown)
-  const supArmor = d.state === 'attack' && d.move && d.move.supArmor && d.key === 'brawler' && d.mf <= d.move.startup && !h.grab && !h.superHit && !strong && Math.abs(a.x - d.x) < 220; // Tetsu's super, before the beam: light hits from up close don't stop it (strong ones and anything from further away do)
+  const supArmor = d.state === 'attack' && d.move && d.move.supArmor && d.mf <= d.move.startup && !h.grab && !h.superHit && !strong && Math.abs(a.x - d.x) < 220; // Tetsu's and Kuro's supers, before they come out: light hits from up close don't stop it (strong ones and anything from further away do)
   if (supArmor || dblArmor || kDash || (d.state === 'attack' && d.move && !h.grab && !h.superHit && hasArmor(d) && !(d.key === 'brawler' && strong) && (d.pre > 0 || d.move.startup >= 900 || d.mf <= d.move.startup + (d.move.active || 0)))) {
     const dmg = Math.max(1, Math.round(h.dmg * (supArmor ? 1 : 0.85))); // (the super's armor takes them in full: one that would finish him still does)
     if (d.hp - dmg > 0) {

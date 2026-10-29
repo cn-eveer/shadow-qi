@@ -1121,7 +1121,8 @@ function specialMoveBase(id) {
         if (mf === f.move.startup) { sfx('slash'); sfx('super'); game.shake = Math.max(game.shake, 8); for (let i = 0; i < 3; i++) parts.push({ type: 'ring', x: f.x + f.facing * 70, y: GROUND - 100, r: 20 + i * 18, vr: 6 + i * 2, life: 16, max: 16, col: i ? '200,170,255' : '255,250,235' }); dustAt(f.x + f.facing * 60, true);
         spawnPJ(f, 'crescent', { big: true, x: f.x + f.facing * 70, y: 100, vx: f.facing * 8, life: 70, r: 100, h: { dmg: 90, stun: 24, bstun: 8, push: 4, kd: true, kdVx: 16, kdVy: 8, gdrain: 18, overhead: true, floor: true, label: 'Full Moon Tempest' } }); /* (from the floor up to well above a jump: nothing ducks or dives under it) */ } } };
     case 'shadowArmy': return { id, super: true, name: 'SHADOW ARMY', label: 'Shadow Army', startup: 14, active: 125, recovery: 22, blockAdv: 0, cutOnGuard: true, /* (out longer, slower to recover; even when guarded: once its clones are guarded he's done) */ wind: 'seal', pose: 'seal', aura: true,
-      onStart(f) { f.invul = 20; },
+      supArmor: true, // not invincible: until the clones come out, light hits from up close don't stop him (taken in full); strong ones do
+      onStart(f) {},
       onFrame(f, o, mf) { // three tides: mid clones from both sides, low clones from both sides, then one dives from above (TOP) and one last clone from behind
         const mv = f.move;
         if (mf === 1) { const back = Math.sign(o.x - f.x) || f.facing; mv.wall = back > 0 ? WALL_R - o.x < 150 : o.x - WALL_L < 150; // (they're in the corner: nothing can come from behind them)
@@ -1142,7 +1143,7 @@ function specialMoveBase(id) {
         if (!f.move.dodge && mf === 86) { f.move.active = 86 - f.move.startup; f.move.recovery = 8; } // (in a combo he's free right after the last clone lands: follow up as they bounce)
       } };
     case 'qiCannon': return { id, super: true, name: 'GREAT QI CANNON', label: 'Qi Cannon', startup: 26, active: 56, recovery: 20, wind: 'blastW', pose: 'blast', aura: true,
-      supArmor: true, // Tetsu: not invincible — until the beam fires, light hits from up close don't stop him (he still takes them in full); strong ones do
+      supArmor: true, // Tetsu (and Kuro's Shadow Army): not invincible — until the beam fires, light hits from up close don't stop him (he still takes them in full); strong ones do
       onStart(f) { if (f.key !== 'brawler') f.invul = 30; }, // (Hohen's Core Cannon, built on this one, keeps its invincibility)
       onFrame(f, o, mf) { if (mf === 27) spawnBeam(f); if (mf < 27 && mf % 2 === 0) auraParticle(f); } };
   }

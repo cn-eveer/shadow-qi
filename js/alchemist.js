@@ -227,7 +227,7 @@ function bedrockBurst(f, o) { // the end of the Bedrock Stride: his stone skin b
   if (id === 'afjSpiral') return fused('jSpiral', { label: 'Stone Spiral', wind: 'alOpus', pose: 'alThrowLow', // stones burst up out of the floor through them, one after another
     onFrame: (f, o, mf) => { if (mf >= 6 && mf <= 21 && (mf - 6) % 5 === 0) { const i = (mf - 6) / 5; spawnPJ(f, 'stone', { dir: f.facing, x: o.x + (i % 2 ? 14 : -14), y: 4, vx: 0, vy: 13, life: 26, r: 13, glow: ['110,255,220', '255,190,80', '150,170,255', '255,230,120'][i],
       h: { dmg: i === 3 ? 26 : 15, stun: 18, bstun: 10, push: 0.3, hitstop: 4, juggle: true, jugVy: i === 3 ? 9 : 6.5, fixedLift: true, chip: true, label: 'Stone Spiral' } }); sfx('throw'); } } });
-  if (id === 'afCannon') return { ...smb('qiCannon'), id, name: 'GREAT CORE CANNON', label: 'Core Cannon', wind: 'alOpus', pose: 'alBrace', aura: true, // U + J in the armour: the golem's core in his belly fires a great beam
+  if (id === 'afCannon') return { ...smb('qiCannon'), supArmor: false, /* (invincible in the wind-up, like the other supers) */ id, name: 'GREAT CORE CANNON', label: 'Core Cannon', wind: 'alOpus', pose: 'alBrace', aura: true, // U + J in the armour: the golem's core in his belly fires a great beam
     onStart(f, o) { f.invul = 30; if (['hitstun', 'stunned', 'knock'].includes(o.state)) f.move.startup = 9; }, // (in a combo the core is already lit: it fires at once)
     onFrame: (f, o, mf) => { const S = f.move.startup; if (mf < S && mf % 2 === 0) rocks(f, 3, 60, 85, '255,210,130'); if (mf === S + 1) { spawnBeam(f); const b = projs[projs.length - 1]; if (b && b.type === 'beam') b.coreBeam = true; } } };
   return smb(id); }; }
