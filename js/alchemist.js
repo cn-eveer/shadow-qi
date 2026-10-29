@@ -103,7 +103,7 @@ function stoneCharged(f, o, mf) { // K: hold to charge (three gauges), let go: t
   }
   const k = mf - mv.startup; if (k >= 0 && k <= 14 && k % 7 === 0) alchemistVolley(f, o, mv.lvl, k / 7);
 }
-const GOLEM_LIFE = 1800, GOLEM_REBUILD = 300, GOLEM_HP = 175; // frames the golem lasts before it crumbles (thirty seconds) and takes to rebuild (five); its own health (a third of a fighter's)
+const GOLEM_LIFE = 1800, GOLEM_REBUILD = 300, GOLEM_HP = 250; // frames the golem lasts before it crumbles (thirty seconds) and takes to rebuild (five); its own health (a third of a fighter's)
 const STONE_REGEN = 90; // frames for a stone to come back (a second and a half)
 const GRAB_CD = 150; // frames after a hold lets go before the golem can grab again (no grab loops)
 const HOLD_HITS = 4; // hits a held opponent takes before the golem's grip gives (no endless stones on someone held)
@@ -690,7 +690,7 @@ STRINGS.alchemist = { // the duet strings (any mix of U and J, three presses, th
 // in the golem armour: he fights in its stone himself
 const FUSED_LOOK = {}; for (const k of ['sk0', 'ck0', 'ck1', 'jk0', 'jk1', 'sk1']) FUSED_LOOK[k] = CHARS.alchemist.normalLook[k];
 Object.assign(FUSED_LOOK, { sp0: { label: 'Stone Jab', advHit: 11, push: 2 }, cp0: { label: 'Low Stone Jab' }, sp1: { label: 'Stone Smash' }, cp1: { label: 'Stone Uppercut' }, jp0: { label: 'Air Stone Jab' }, jp1: { label: 'Air Stone Smash' } }); // (his own stone fists)
-const FUSED_CH = { ...CHARS.alchemist, fused: true, lookKey: 'alchemistFused', normalLook: FUSED_LOOK, dmgMul: 1.15 * 1.3, takeMul: 0.7, scale: 1.12, idle: 'alArmorIdle', walk: 2.0, back: 1.7, pDmg: 1.1,
+const FUSED_CH = { ...CHARS.alchemist, fused: true, lookKey: 'alchemistFused', normalLook: FUSED_LOOK, dmgMul: 1.15 * 1.3, takeMul: 0.7, scale: 1.12, idle: 'alArmorIdle', walk: 2.0, back: 1.7, noDash: false, /* (in the golem armour he can dash and back dash) */ pDmg: 1.1,
   sp: { fP: 'afBeam', fPH: 'afBoulder', fK: 'afSlide', fKH: 'afShoulder', bP: 'afBoulderRoll', bPH: 'afWall', bK: 'afQuake', bKH: 'afCyclone', dP: 'afPillar' }, sup: 'afCannon', fuseSp: null }; // (Tetsu's commands, his own techniques)
 STRINGS.alchemistFused = { // stone fists: overhand smashes, a core-light burst from his belly, pillars of rock
   n2: SG('p', 'Stone Straight', 'jabW', 'straight'), n3: SG('p', 'Stone Hook', 'alKnuckleW', 'alKnuckle', { dmg: 30 }), n4: SG('p', 'Overhand Smash', 'alOpus', 'alThrowLow', { hitbox: [20, 90, 40, 130], push: 2 }),
@@ -710,8 +710,12 @@ STRINGS.alchemistFused = { // stone fists: overhand smashes, a core-light burst 
 function hohenPlan(f, o, dist, r) {
   const g = f.golem, between = g && !g.broken && !g.hidden && Math.sign(g.x - o.x) === Math.sign(f.x - o.x), reeling = o.state === 'stunned' || o.state === 'hitstun';
   if (f.ch.fuseSp && f.fuseG >= 100 && dist > 80) return { btn: 'hk', fuse: true };
-  if (f.meter >= 100 && f.ch.sup && (reeling || (dist < 320 && r < 0.4))) return { btn: 'hp', sup: true };
+  if (f.meter >= 100 && f.ch.sup && (reeling || (dist < 320 && r < 0.4) || (o.key === 'psychic' && r < 0.5))) return { btn: 'hp', sup: true }; // (against Lyra, who stays far away, the super from anywhere)
   if (f.ch.fused) return null; // (in the armour he fights up close: the usual plans and his armour routes)
+  if (o.key === 'psychic') { // Lyra casts from where she stands and never backs away, and he is slow: he walks up to her under his stones instead of backing off
+    if (dist > 230) return r < 0.5 ? { walk: 1 } : r < 0.65 ? { btn: 'hk' } : r < 0.78 ? { btn: 'lk', ff: true } : r < 0.88 ? { btn: 'lk' } : { btn: 'hp', ff: true };
+    if (dist > 110) return r < 0.4 ? { walk: 1 } : r < 0.55 ? { btn: 'hk' } : r < 0.7 ? { btn: 'lk', ff: true } : r < 0.85 ? { btn: 'lp', ff: true } : { btn: 'hp', ff: true };
+  }
   if (dist < 95 && !between && r < 0.45) return r < 0.25 ? { dash: -1 } : { jump: -1 }; // someone got inside, past the golem: make room
   if (dist < 95 && r < 0.75) return r < 0.2 ? { btn: 'lk' } : r < 0.35 ? { btn: 'lp' } : r < 0.45 ? { btn: 'hk', bb: true } : r < 0.6 ? { btn: 'hp' } : { btn: 'hp', down: true }; // close: knuckle, golem jab, Bedrock Stride, grab, uppercut
   if (dist > 300) return r < 0.25 ? { btn: 'hk' } : r < 0.4 ? { btn: 'lk', ff: true } : r < 0.52 ? { btn: 'hk', ff: true } : r < 0.66 ? { btn: 'lk' } : r < 0.75 ? { btn: 'hp', ff: true } : { walk: -0.5 }; // far: volleys, lobs, traps, the tackle
