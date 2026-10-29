@@ -97,7 +97,7 @@ function resolveSpecial(f, o, inp) {
     if (f.ch.spAuto) { const aid = f.ch.spAuto(f, o, k, heavy, inp); if (aid) return aid; } // (Tanaka's forms: the right version comes out by itself)
     if (inp.down && f.y <= 0 && !inAir(o) && f.ch.spLow) { const lid = (heavy && f.ch.spLow[k + 'H']) || f.ch.spLow[k]; if (lid) return lid; } // (a low version: hold ↓ with the technique)
     // rising version: automatic against an opponent in the air, or on demand by holding ↓ with the button
-    return (sid && JUGGLE_SP[sid] && f.y <= 0 && (inp.down || inAir(o))) ? JUGGLE_SP[sid] : sid;
+    return (sid && JUGGLE_SP[sid] && f.y <= 0 && ((inp.down && !f.ch.noLowSp) || inAir(o))) ? JUGGLE_SP[sid] : sid;
   }
   if (inp.down && isP && heavy) return f.ch.sp.dP || null; // ↓ + I
   return null;
@@ -163,6 +163,7 @@ function startMove(f, mv, str, keepBuffer) {
   if (f.pre) sfx('charge');
   else if (mv.onStart) mv.onStart(f, other(f));
   mv.speedUp = (!mv.super && f.ch.techSpeed && f.ch.techSpeed[mv.id]) || 0; f.spdAcc = 0; // (a fighter's techniques sped up to their own 発生: techSpeed)
+  if (f.ch.techDelay && f.ch.techDelay[mv.id] && !mv.delayed) { mv.delayed = true; f.pre += f.ch.techDelay[mv.id]; } // (…or slowed down: techDelay)
   fdStart(f, mv);
 }
 function tryAttack(f, o, inp, noLight) { // (noLight: anything but a light attack — a string can't start itself over)

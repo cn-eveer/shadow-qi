@@ -157,7 +157,7 @@ function specialMoveBase(id) {
         } else if (mf > 24) f.vx = 0;
         if (mf === 45) sfx('sheath');
       } };
-    case 'ambushBehind': return { id, label: 'Shadow Strike', startup: 14, active: 3, recovery: 14, wind: 'crouch', pose: 'slash', blade: true, noGrace: true,
+    case 'ambushBehind': return { id, label: 'Shadow Strike', startup: 14, active: 3, recovery: 14, blockAdv: -10, wind: 'crouch', pose: 'slash', blade: true, noGrace: true,
       hitbox: [10,82,60,130], dmg: 58, stun: 18, bstun: 12, push: 2, stunT: 44, stunKind: 'shadow', type: 'mid', hitstop: 8, gdrain: 8, // a slash from behind leaves them stunned (slow enough to see coming)
       trail: { cx: 15, cy: 105, r: 70, a0: 70, a1: -30, col: '200,170,255' },
       onStart(f, o) {
@@ -165,8 +165,8 @@ function specialMoveBase(id) {
         if (x < WALL_L + 5 || x > WALL_R - 5) x = o.x + o.facing * 62;
         f.x = clamp(x, WALL_L, WALL_R); f.facing = Math.sign(o.x - f.x) || f.facing; puff(f.x, 50); sfx('vanish');
       } };
-    case 'ambushLeap': return { id, label: 'Shadow Leap', startup: 42, active: 14, recovery: 20, wind: 'jump', pose: 'stomp', manualY: true, noPush: true, selfMove: true, walkAway: true,
-      hitbox: [-36,36,-10,58], dmg: 80, stun: 20, bstun: 16, push: 4, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 11, gdrain: 14,
+    case 'ambushLeap': return { id, label: 'Shadow Leap', startup: 42, active: 22, recovery: 20, blockAdv: -14, /* (out a long time on the way down: hit him in the air) */ wind: 'jump', pose: 'stomp', manualY: true, noPush: true, selfMove: true, walkAway: true,
+      hitbox: [-36,36,-10,58], dmg: 80, stun: 20, bstun: 16, push: 4, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 11, gdrain: 24, // (crashes onto a guard: a big piece of the guard meter)
       poseFn(f, mf) { return mf <= 42 ? POSES.jump : null; },
       onStart(f, o) { f.leap = { x0: f.x, tx: clamp(o.x, WALL_L, WALL_R) }; f.facing = Math.sign(o.x - f.x) || f.facing; puff(f.x, 30); sfx('rise'); },
       onFrame(f, o, mf) {
@@ -180,21 +180,21 @@ function specialMoveBase(id) {
           parts.push({ type: 'ering', x: f.x, y: GROUND, r: 10, vr: 7, life: 16, max: 16, col: '190,150,255' });
         }
       } };
-    case 'ambushSlide': return { id, label: 'Shadow Slide', startup: 4, active: 22, recovery: 14, wind: 'crouch', pose: 'slideKick', selfMove: true, noPush: true,
-      hitbox: [0,64,0,34], dmg: 50, stun: 30, bstun: 10, push: 0, launch: true, launchVy: 10, low: true, type: 'mid', hitstop: 6, gdrain: 6,
+    case 'ambushSlide': return { id, label: 'Shadow Slide', startup: 4, active: 22, recovery: 14, blockAdv: -18, hitAdv: 4, cpLaunch: true, /* (a hit leaves him ahead; a counter or a punish pops them up) */ wind: 'crouch', pose: 'slideKick', selfMove: true, noPush: true,
+      hitbox: [0,64,0,34], dmg: 50, stun: 30, bstun: 10, push: 0, launchVy: 10, low: true, type: 'mid', hitstop: 6, gdrain: 6,
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; f.slideDir = f.facing; puff(f.x, 20); },
       onFrame(f, o, mf) {
         if (mf > 4 && mf <= 26) {
-          if (f.hitConnected && f.lastResult === 'block') { f.vx = 0; f.mf = 26; return; }
+          if (f.hitConnected && f.lastResult === 'block') { f.vx = 0; return; } // (guarded: he stops where he is — the frames left are his opening: blockAdv)
           f.vx = f.slideDir * 9;
           // after a hit, keep sliding until he is past the opponent
           if (f.hitConnected && Math.sign(f.x - o.x) === f.slideDir && Math.abs(f.x - o.x) > 60) { f.vx = 0; f.mf = 26; }
           if (mf % 2 === 0) dustAt(f.x, false);
         } else f.vx *= 0.7;
       } };
-    case 'ambushKick': return { id, label: 'Shadow Roundhouse', startup: 20, active: 5, recovery: 18, wind: 'spinW', pose: 'roundhouse', spin: [5, 20], slow: true,
+    case 'ambushKick': return { id, label: 'Shadow Roundhouse', startup: 20, active: 5, recovery: 18, blockAdv: -16, wind: 'spinW', pose: 'roundhouse', spin: [5, 20], slow: true,
       poseFn: spinKickPose(20),
-      hitbox: [10,98,40,118], dmg: 85, stun: 20, bstun: 14, push: 5, kd: true, kdVx: 15, kdVy: 10, type: 'mid', hitstop: 12, gdrain: 14,
+      hitbox: [10,98,40,118], dmg: 110, stun: 20, bstun: 14, push: 7, kd: true, kdVx: 22, kdVy: 12, type: 'mid', hitstop: 14, gdrain: 18, // (a heavier blow: more damage, sends them further)
       trail: { cx: 0, cy: 70, r: 86, a0: -60, a1: 40, col: '190,150,255' },
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; puff(f.x, 40); },
       onFrame(f, o, mf) { if (mf === 5) { dustAt(f.x, false); sfx('swing'); } if (mf === 18) sfx('slash'); } };
@@ -216,14 +216,14 @@ function specialMoveBase(id) {
         if (mf > 20 && mf <= 34) { const e = (mf - 20) / 14; f.x = lerp(f.tele.x1, f.tele.x2, e); f.y = 175 * (1 - e); }
         if (mf === 34) { f.y = 0; dustAt(f.x, false); }
       } };
-    case 'teleSlide': return { id, label: 'Drop Slide', startup: 3, active: 16, recovery: 14, wind: 'crouch', pose: 'slideKick', selfMove: true,
+    case 'teleSlide': return { id, label: 'Drop Slide', startup: 3, active: 16, recovery: 14, blockAdv: -16, wind: 'crouch', pose: 'slideKick', selfMove: true,
       hitbox: [0,64,0,34], dmg: 48, stun: 18, bstun: 10, push: 2, kd: true, kdVx: 1.5, kdVy: 4, low: true, type: 'mid', hitstop: 7, gdrain: 6,
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
       onFrame(f, o, mf) {
         if (mf > 3 && mf <= 19 && !f.hitConnected && Math.abs(o.x - f.x) > 50) { f.vx = f.facing * 8; if (mf % 2 === 0) dustAt(f.x, false); }
         else f.vx *= 0.6;
       } };
-    case 'teleSpin': return { id, label: 'Turnaround Kick', startup: 14, active: 4, recovery: 18, wind: 'spinW', pose: 'roundhouse', spin: [5, 14], slow: true,
+    case 'teleSpin': return { id, label: 'Turnaround Kick', startup: 14, active: 4, recovery: 18, blockAdv: -16, wind: 'spinW', pose: 'roundhouse', spin: [5, 14], slow: true,
       poseFn: spinKickPose(14),
       hitbox: [10,98,40,118], dmg: 85, stun: 20, bstun: 14, push: 5, kd: true, kdVx: 15, kdVy: 10, type: 'mid', hitstop: 11, gdrain: 14,
       trail: { cx: 0, cy: 70, r: 86, a0: -60, a1: 40, col: '190,150,255' },

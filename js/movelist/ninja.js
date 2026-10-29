@@ -51,11 +51,6 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <h3>Combo techniques on their own</h3>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>Fire Spout<small>A fire column right in front. Pops them up, so it starts a combo too.</small></td><td class="cmd">← ← then ↓ + U</td></tr>
-          <tr><td>Lightning Rain<small>Three lightning balls drop on them from above.</small></td><td class="cmd">← ← then ↓ + I</td></tr>
-          <tr><td>Clone Relay<small>A clone appears behind them and kicks them toward you.</small></td><td class="cmd">→ → then ↓ + J</td></tr>
-          <tr><td>Air Iai<small>A leaping slash through them, landing on the far side.</small></td><td class="cmd">→ → then ↓ + I</td></tr>
-          <tr><td>Vanish Heel<small>Vanishes and drops a heel on them from above. Knocks down.</small></td><td class="cmd">← ← then ↓ + K</td></tr>
           <tr><td>Shadow Meteor<small>A dive kick from any jump. Knocks down.</small></td><td class="cmd">↓ + K in the air</td></tr>
           <tr><td>Anti-air<small>Near a jumping opponent, U, I and K become the rising palm, Rising Kunai and spin kick, and the specials above come out on their own. In the air, U, I and K start the air string against them.</small></td><td class="cmd">U, I, K</td></tr>
         </tbody>
