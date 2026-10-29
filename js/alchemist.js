@@ -74,7 +74,7 @@ const KNUCKLE = { wind: 'alKnuckleW', pose: 'alKnuckle', startup: 6, recovery: 9
 const volleyBeat = lvl => (f, o, k) => { if (k <= 14 && k % 7 === 0) alchemistVolley(f, o, lvl, k / 7); }; // three stones, seven frames apart
 // the duet strings: up to three presses of U and J in any order, then a finisher
 const DUET1 = { lp: 'aU2', lk: 'aJ2', hp: 'aGrab', dhp: 'aUp', hk: 'aVol' }, DUET2 = { lp: 'aHam', lk: 'aJF', hp: 'aGrab', dhp: 'aUp', hk: 'aVol' };
-const hStone = (label, chain) => beat(label, 'alThrow', null, { noSmear: true, wind: 'alThrowW', startup: 7, recovery: 13, near: KNUCKLE, also: (f, o) => hohenStone(f, o), chain }); // (the next press can come a little late and still string)
+const hStone = (label, chain) => beat(label, 'alThrow', null, { noSmear: true, wind: 'alThrowW', startup: 7, recovery: 13, near: KNUCKLE, also: (f, o) => hohenStone(f, o), chain, midHit: true }); // (the next press can come a little late and still string; midHit: on J, but a stone or a knuckle at body height — guard it standing)
 {
   const throwing = (label, fn, ex = {}) => beat(label, 'alThrow', null, { noSmear: true, wind: 'alThrowW', startup: 9, recovery: 14, also: fn, ...ex });
   const L = CHARS.alchemist.normalLook;

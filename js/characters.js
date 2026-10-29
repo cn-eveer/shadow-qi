@@ -217,7 +217,7 @@ const devilAuto = (f, o, k) => k === 'bK' && tCrouch(o) ? 'sdTailDrop' : null;
 Object.assign(CHARS.salary, { normalLook: { ...(CHARS.salary.normalLook || {}),
   cp0: { label: 'Pen Throw', startup: 6, active: 2, recovery: 14, wind: 'crouch', pose: 'sShove', hitbox: null, crouch: true,
     onFrame: (f, o, mf) => { if (mf === f.move.startup) { sfx('throw'); spawnPJ(f, 'pen', { x: f.x + f.facing * 40, y: 62, vx: f.facing * 15, life: 40, r: 9, h: { dmg: 24, stun: 16, bstun: 8, push: 1.5, gdrain: 4, low: false, label: 'Pen Throw' } }); } } },
-  ck0: { label: 'Stapler Toss', startup: 9, active: 2, recovery: 16, wind: 'crouch', pose: 'sCase', hitbox: null, crouch: true,
+  ck0: { label: 'Stapler Toss', startup: 9, active: 2, recovery: 16, wind: 'crouch', pose: 'sCase', hitbox: null, crouch: true, midHit: true, /* (↓ + J, but the stapler flies at body height) */
     onFrame: (f, o, mf) => { if (mf === f.move.startup) { sfx('throw'); spawnPJ(f, 'stapler', { x: f.x + f.facing * 36, y: 80, vx: f.facing * 8.5, vy: 6.5, g: 0.42, life: 70, r: 12, h: { dmg: 34, stun: 18, bstun: 10, push: 2, gdrain: 6, label: 'Stapler Toss' } }); } } },
   jp1: { label: 'Mug Drop', startup: 8, active: 2, recovery: 14, wind: 'jump', pose: 'sCase', hitbox: null,
     onFrame: (f, o, mf) => { if (mf === f.move.startup) { sfx('throw'); spawnPJ(f, 'mug', { x: f.x + f.facing * 30, y: f.y + 100, vx: f.facing * 7, vy: -7, life: 50, r: 14, h: { dmg: 64, stun: 24, bstun: 12, push: 2, gdrain: 10, overhead: true, label: 'Mug Drop' } }); } } }, // (a heavy mug: an overhead)

@@ -50,8 +50,8 @@ class Human {
 /* ================= CPU ================= */
 function threatOfLowDummy() {}
 // a low is coming (guard crouching)? judged like the hit itself (heightClass): anything else is guarded standing
-const isLowAtk = o => golemLowAtk(o) || !!(o && o.state === 'attack' && o.move && (o.move.hitbox ? heightClass(o.move, boxOf(o, o.move.hitbox)) === 'low' : (!fromAbove(o.move) && (o.move.low || (!rising(o.move) && /low|Low|slide|Sweep|sweep|Belly/.test(o.move.pose || '')))))) ||
-  nearestProjLow(o); // (a shockwave along the floor, a shot at the feet...; a ring that rises into a column isn't)
+const isLowAtk = o => golemLowAtk(o) || !!(o && o.state === 'attack' && o.move && (o.move.hitbox ? heightClass(o.move, boxOf(o, o.move.hitbox)) === 'low' : (!o.move.midHit && !fromAbove(o.move) && (o.move.low || (!rising(o.move) && /low|Low|slide|Sweep|sweep|Belly/.test(o.move.pose || '')))))) ||
+  nearestProjLow(o); // (a shockwave along the floor, a shot at the feet...; a ring that rises into a column isn't) (midHit: a kick button that throws or punches at body height — not a low)
 function nearestProjLow(o) { // guard at the height of whichever of their projectiles reaches you first (a low one further back can wait: stand for the mid in front of it)
   const t = o && other(o); let best = null, bd = Infinity;
   for (const p of projs) { if (p.owner !== o || p.type === 'decoy' || p.type === 'guardShadow') continue;

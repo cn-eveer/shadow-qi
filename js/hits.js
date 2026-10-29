@@ -141,11 +141,11 @@ function guardCost(a, d, h, big) {
   return base * (big ? (sup ? 1.3 : rush ? 1.2 : 2.6) : 1) /* (a rush is one technique: only its opening costs the full price) */ * (d.ch.guardMul || 1) * (a.ch.guardDmgMul || 1) * (h.gMul || 1); // (gMul: a hit that's heavy only when it lands)
 }
 const chipOf = (h, big) => Math.max(1, Math.ceil((h.dmg || 0) * (big ? CHIP_BIG : h.chip ? 0.075 : CHIP)));
-// a launcher (U, U, I, ↓ + I, any attack that lifts them) that's guarded leaves a big opening
+// Kuro's launchers (U, U, I, ↓ + I, any attack that lifts them) leave a big opening when guarded
 const LAUNCH_LAG = 36;
 function launcherGuardLag(a, d, h) {
   const mv = a.move;
-  if (a.state !== 'attack' || !mv || !(mv.launch || h.launch) || mv.trip || h.proj || mv.super || mv.startup >= 900 || a.y > 0 || a.ko) return; // (a trip — a low that makes them fall — isn't a launcher)
+  if (a.key !== 'ninja' || a.state !== 'attack' || !mv || !(mv.launch || h.launch) || mv.trip || h.proj || mv.super || mv.startup >= 900 || a.y > 0 || a.ko) return; // (Kuro only: the others' launchers keep their own frames) // (a trip — a low that makes them fall — isn't a launcher)
   const need = (h.bstun || 10) + LAUNCH_LAG, left = mv.startup + (mv.active || 0) + mv.recovery - a.mf;
   if (left < need) mv.recovery += need - left;
   mv.lagLock = true; a.guardLagT = need; a.guardLagUntil = Math.max(a.guardLagUntil || 0, game.frame + need);
