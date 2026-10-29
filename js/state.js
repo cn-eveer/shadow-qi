@@ -38,7 +38,7 @@ function resetFighter(f) {
     airAttacked: false, airShuri: false, invul: 0, stun: 0, combo: 0, flash: 0, inp: EMPTY, hidden: false, landT: 0,
     ko: false, cguard: false, crouchHit: false, backHeld: false, walkPh: 0, pose: { ...POSES.idle }, prevPose: { ...POSES.idle },
     hipUp: null, serial: 0, jumpSerial: 0, guard: 100, guardIdle: 0, lastToward: 0, sideT: -99, calm: 0,
-    shadow: false, followQ: null, lastResult: null, shadowRun: false, atkCD: 0, resting: 0, ammo: f.ch.ammo || 0, reloadT: 0, stress: 0, stressIdle: 0, stressShown: false,
+    shadow: false, followQ: null, lastResult: null, shadowRun: false, atkCD: 0, resting: 0, ammo: f.ch.ammo || 0, reloadT: 0,
   });
   f.golem = f.key === 'alchemist' ? newGolem(f) : null; // (the alchemist's stone golem, standing behind him)
   if (f.ctrl.reset) f.ctrl.reset();
@@ -88,7 +88,7 @@ function resolveSpecial(f, o, inp) {
   if (!inp.btn) return null;
   if (inp.fuse && f.ch.fuseSp && f.fuseG >= 100) return f.ch.fuseSp; // ← → + J + K with his fusion gauge full (Hohen's golem armour)
   if (inp.bf && f.ch.spBF && f.ch.spBF[inp.btn]) return f.ch.spBF[inp.btn]; // ← → + a button (Kuro's Moon Tempests)
-  if (inp.sup && f.meter >= 100 && !(f.ch.sup === 'kpFlood' && floodVictim(f))) return f.ch.sup; // (kappa against kappa: no flood while the other's is up)
+  if (inp.sup && f.meter >= 100) return f.ch.sup;
   const isP = inp.btn[1] === 'p', heavy = inp.btn[0] === 'h';
   if (inp.ff || inp.bb) {
     const k = (inp.ff ? 'f' : 'b') + (isP ? 'P' : 'K'), sid = (heavy && f.ch.sp[k + 'H']) || f.ch.sp[k] || null;
@@ -146,19 +146,6 @@ function startMove(f, mv, str, keepBuffer) {
     if (mv.active < 60) mv.active += FM.act;
     if (mv.recovery < 90 && !mv.noFmRec) { mv.recovery += FM.rec[cls]; mv.fmRec = FM.rec[cls]; } // (normals: hit and block stun grow with it, so only a miss costs more; techniques: see checkHits)
   }
-  if (!mv.super && mv.startup < 900 && !mv.stressDone && game.phase === 'fight') { // (the stress meter, and the kappa's slower attacks: only in neutral, never inside a combo)
-    mv.stressDone = true;
-    const oc = other(f), caught = oc && ['hitstun', 'knock', 'stunned', 'down', 'getup', 'slashed', 'gbreak'].includes(oc.state);
-    if (!caught) {
-      if (f.ch.slowAtk && !(oc.state === 'attack' && oc.move && oc.mf > oc.move.startup + (oc.move.active || 0))) { f.pre += f.ch.slowAtk; mv.slowPre = f.ch.slowAtk; } // (not a punish)
-      if (!f.ch.noStress && !(f.ctrl instanceof Dummy)) { // (not the training dummy: a move it repeats keeps its frames)
-        const k = stressK(f);
-        if (k && !mv.air) { const x = Math.round(STRESS_SLOW * k); f.pre += x; mv.stressPre = x; if (mv.recovery < 90) mv.recovery = Math.round(mv.recovery * (1 + STRESS_REC * k)); } // stressed: every attack comes out much later (time to guard, or to jab first) and recovers slower
-        f.stress = Math.min(100, (f.stress || 0) + (mv.launch ? STRESS_ADD.launch : !mv.normal ? STRESS_ADD.tech : mv.str ? STRESS_ADD.heavy : STRESS_ADD.light)); f.stressIdle = 0;
-        if (f.stress >= STRESS_ON && !f.stressShown) { f.stressShown = true; popText(f.x, GROUND - f.y - 205, L('STRESSED!', 'ストレス！'), '255,120,90'); }
-      }
-    }
-  }
   if (f.ch.fastAtk && mv.normal && !mv.fastDone && mv.startup < 900) { mv.fastDone = true; mv.startup = Math.max(3, mv.startup - 2); mv.recovery = Math.max(4, Math.round(mv.recovery * 0.8)); } // the devil: wild and fast
   if (mv.held && f.inp) { if (!mv.holdBtn) mv.holdBtn = f.inp.btn; if (f.inp.holdFor && mv.holdFor == null) mv.holdFor = f.inp.holdFor; }
   if (f.pre) sfx('charge');
@@ -209,13 +196,6 @@ function endMove(f) {
 // single U or J that hit or was guarded they wait a moment too. Either way they can't attack again until the opponent has been out of
 // hit-stun or guard for that long (shots still in the air included), so the opponent always gets a moment to act.
 const STRING_REST = 12, JAB_REST = 6;
-// The stress meter (everyone but Kuro, Lyra and Hohen — noStress): every attack started while the opponent isn't caught in a combo — whiffed or guarded —
-// fills it, and it drains once they stop — slower the fuller it is. From half full they're stressed: every attack comes out much later
-// (time to guard, or to jab them first) and recovers slower, they move slower, their guard wears out faster and doesn't come back, and a guarded launcher leaves an even
-// bigger opening. Mashing U, U, I is punished; a real combo never counts.
-const STRESS_ADD = { light: 8, heavy: 12, tech: 12, launch: 18 }, STRESS_ON = 50, STRESS_IDLE = 40, STRESS_DRAIN = 0.35, STRESS_SLOW = 28, STRESS_REC = 0.6; // (drain per frame when empty, a quarter of it when full; up to 28 frames later and 60% more recovery)
-const stressK = f => f && !f.ch.noStress && f.stress >= STRESS_ON ? 0.5 + 0.5 * (f.stress - STRESS_ON) / (100 - STRESS_ON) : 0; // 0 calm, 0.5 – 1 stressed
-const stressMove = f => 1 - 0.3 * stressK(f);
 // training: the frame data of each fighter's last attack, always on screen (see drawFrameData) — 発生 (the frame it can first hit,
 // from the press), 持続 (active frames), 硬直 (recovery when it misses), and 硬直差 once it hits or is guarded: who can act first, by how much
 const FD_FREE = s => s === 'stand' || s === 'crouch' || s === 'guard';
@@ -361,7 +341,6 @@ function land(f) {
 function update(f, o, inp) {
   f.inp = inp; f.st++;
   if (f.golem) golemUpdate(f, o);
-  if (inp.brk && BREAK_STATES.includes(f.state) && !f.ko && !f.ch.noGuard && game.phase === 'fight' && !game.superFlash && !(o.move && o.move.super) && !o.opus) comboBreak(f, o); // P while being hit
   if (f.brands && --f.brandT <= 0) f.brands = 0; // holy brands fade
   if (f.healT > 0) f.healT--;
   if (f.possT > 0 && --f.possT === 0) endPossession(f);
@@ -398,7 +377,7 @@ function update(f, o, inp) {
       if (inp.down) { if (f.state !== 'crouch') setState(f, 'crouch'); f.vx = !f.backHeld && Math.sign(inp.h) === toward ? toward * f.ch.walk * 0.45 * (f.poisonT > 0 ? 0.6 : 1) * floodWalkMul(f) : 0; break; } // (crouching, ↓ + forward edges forward; ↓ + back stays the crouching guard)
       if ((f.backHeld || autoGuardFor(f, toward)) && threatened(f, o)) { if (f.state !== 'guard') setState(f, 'guard'); f.vx = 0; break; } // (auto guard: standing still is enough)
       if (f.state !== 'stand') setState(f, 'stand');
-      f.vx = inp.h * (f.backHeld ? f.ch.back : f.ch.walk) * (f.ctrl instanceof CPU && !game.watch ? 0.75 : 1) * (f.poisonT > 0 ? 0.6 : 1) * floodWalkMul(f) * stressMove(f); // the CPU walks slower against a player; poison slows anyone; in the flood the kappa swims fast and the other wades
+      f.vx = inp.h * (f.backHeld ? f.ch.back : f.ch.walk) * (f.ctrl instanceof CPU && !game.watch ? 0.75 : 1) * (f.poisonT > 0 ? 0.6 : 1) * floodWalkMul(f); // the CPU walks slower against a player; poison slows anyone; in the flood the kappa swims fast and the other wades
       if (f.vx) f.walkPh += Math.abs(f.vx) * 0.085 * (f.backHeld ? -1 : 1);
       break;
     }
@@ -461,7 +440,7 @@ function update(f, o, inp) {
     case 'dash': // forward dash: a quick burst toward the opponent; attacks (and → → specials) come straight out of it
       f.facing = toward;
       if (f.atkCD <= 0 && tryAttack(f, o, inp)) break;
-      f.vx = f.facing * (f.st < 9 ? 8 : 4) * (f.poisonT > 0 ? 0.6 : 1) * (f.key === 'kappa' ? 1.35 : 1) * stressMove(f); // (the kappa darts in fast and low, under projectiles)
+      f.vx = f.facing * (f.st < 9 ? 8 : 4) * (f.poisonT > 0 ? 0.6 : 1) * (f.key === 'kappa' ? 1.35 : 1); // (the kappa darts in fast and low, under projectiles)
       if (f.st % 3 === 0) dustAt(f.x, false);
       if (f.st >= 14) setState(f, 'stand');
       break;
@@ -522,8 +501,7 @@ function update(f, o, inp) {
   // guard meter refills slowly once you stop guarding
   const guarding = f.state === 'guard' || f.state === 'blockstun' || f.state === 'gbreak' || (f.state === 'crouch' && f.backHeld) || (f.state === 'attack' && f.move && f.move.aegis); // (no recovery while the Aegis is up)
   if (guarding) f.guardIdle = 0;
-  else if (++f.guardIdle > 45 && !stressK(f)) f.guard = Math.min(100, f.guard + (f.guardSlowT > 0 ? 0.02 : 0.07)); // (slowly after the Aegis; not at all while stressed)
-  if (!f.ch.noStress && ++f.stressIdle > STRESS_IDLE) { f.stress = Math.max(0, (f.stress || 0) - STRESS_DRAIN * (1 - 0.75 * (f.stress || 0) / 100)); if (f.stress < STRESS_ON - 15) f.stressShown = false; }
+  else if (++f.guardIdle > 45) f.guard = Math.min(100, f.guard + (f.guardSlowT > 0 ? 0.02 : 0.07)); // (slowly after the Aegis)
   if (f.guardSlowT > 0) f.guardSlowT--;
   if (f.meter >= 100 && globalT % 9 === 0) auraParticle(f);
 }

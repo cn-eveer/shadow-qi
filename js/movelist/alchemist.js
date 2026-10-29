@@ -5,7 +5,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <h2>HOHEN<span>Golem Doctor</span></h2>
       <p class="blurb">An alchemist and doctor in a white coat, glowing stones on his chest and in his pockets, and Mortar, his stone golem. <b>U and I are the golem’s blows; J and K are Hohen’s own</b> — a stone-knuckle up close, glowing stones from further off. The golem walks out to stand between him and the opponent, and never attacks by itself.</p>
       <p class="note"><b>Duet strings.</b> Any mix of U and J, up to three presses, then a finisher: U the golem’s hammer, J his stone barrage, K his volley, I the golem’s grab, ↓ + I its uppercut. Where they stand changes the combo — golem in front of him or behind the opponent, Hohen close in or far back (see the sample combos). In a juggle: U the golem’s rising jab, J his aimed stone, I the stone pillar, → → + I the meteor, K the Stone Comet. At most lift, lift, bounce.</p>
-      <p class="note"><b>The golem is solid.</b> The opponent can’t walk through it: they have to jump over it or break it (it has its own health, about a quarter of a fighter’s; blows and shots that hit it don’t reach him). It lasts thirty seconds before it crumbles; beaten apart or worn out, it’s rebuilt five seconds later. Left on the opponent’s far side, it hops back over them. He has <b>ten stones</b>; one comes back every second and a half.</p>
+      <p class="note"><b>The golem is solid.</b> The opponent can’t walk through it: they have to jump over it or break it (it has its own health, a third of a fighter’s; blows and shots that hit it don’t reach him). It lasts thirty seconds before it crumbles; beaten apart or worn out, it’s rebuilt five seconds later. Left on the opponent’s far side, it hops back over them. He has <b>ten stones</b>; one comes back every second and a half.</p>
       <p class="note"><b>How to fight him.</b> Hit the conductor: when Hohen is hit, the golem’s order is lost and its grab lets go. Guard away from whoever is attacking — the golem or him. The golem’s heavy blows (hammer, uppercut, tackle) leave Hohen committed when they’re guarded or miss: punish him. Jump the grab and the Bedrock burst; throw him out of his stone skin. See the punish samples.</p>
       <div class="scroll"><table>
         <tbody>
@@ -49,7 +49,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <h2>ホーエン<span>ゴーレム博士</span></h2>
       <p class="blurb">白衣の錬金術師で医師。胸とポケットに光る石を持ち、石のゴーレム「モルタル」を連れる。<b>U・Iはゴーレムの攻撃、J・Kはホーエン自身の攻撃</b>——近くでは石を握った拳、離れると光る石を投げる。ゴーレムは博士と相手の間に立ちに行き、自分からは攻撃しない。</p>
       <p class="note"><b>二重奏の連続技。</b>UとJを好きな順で3回まで、そして締め：Uでゴーレムハンマー、Jで石の連打、Kで三連投げ、Iでゴーレムの掴み、↓+Iでアッパー。立ち位置でコンボが変わる——ゴーレムが博士の前か、相手の後ろか、博士が近いか遠いか（コンボ見本を参照）。空中コンボ：Uでゴーレムのライジングジャブ、Jで狙い石、Iで石柱、→→+Iでメテオ、Kでストーンコメット。浮かせは「浮かせ・浮かせ・バウンド」まで。</p>
-      <p class="note"><b>ゴーレムは通り抜けられない。</b>相手はジャンプで越えるか、壊すしかない（自分の体力はキャラの約4分の1。ゴーレムに当たった攻撃や飛び道具は博士に届かない）。30秒で崩れ、壊されても崩れても5秒後に復活する。相手の向こう側に残ると、飛び越えて間に戻る。<b>石は10個</b>、1.5秒ごとに1個戻る。</p>
+      <p class="note"><b>ゴーレムは通り抜けられない。</b>相手はジャンプで越えるか、壊すしかない（自分の体力はキャラの約3分の1。ゴーレムに当たった攻撃や飛び道具は博士に届かない）。30秒で崩れ、壊されても崩れても5秒後に復活する。相手の向こう側に残ると、飛び越えて間に戻る。<b>石は10個</b>、1.5秒ごとに1個戻る。</p>
       <p class="note"><b>ホーエン対策。</b>指揮者を狙え：博士が攻撃を受けると、ゴーレムへの命令は取り消され、掴みも離れる。攻撃している側（ゴーレムか博士）の反対へガード。ゴーレムの重い攻撃（ハンマー・アッパー・タックル）は、ガードされたり外れたりすると博士が動けない——反撃を。掴みと岩肌の炸裂はジャンプでかわし、石の肌は投げで崩す。反撃見本を参照。</p>
       <div class="scroll"><table>
         <tbody>

@@ -483,8 +483,8 @@ function specialMoveBase(id) {
         if (mv.ended) { f.vx *= 0.5; return; }
         mv.aegisOn = mf >= 14;
         f.vx = mv.aegisOn ? (f.inp ? f.inp.h : 0) * f.ch.walk * 0.6 : 0; // he can walk while he holds it
-        if (mv.aegisOn) f.guard = Math.max(0, f.guard - 0.1); // (the light feeds on his guard meter: about six a second)
-        if (mf > 16 && (!holding(f) || mf >= 434 || f.guard <= 0)) { mv.ended = true; mv.aegisOn = false; mv.active = Math.max(1, mf - mv.startup); aegisSpent(f); } // (seven seconds at most)
+        if (mv.aegisOn) f.guard = Math.max(0, f.guard - 0.16); // (the light feeds on his guard meter: about ten a second)
+        if (mf > 16 && (!holding(f) || mf >= 254 || f.guard <= 0)) { mv.ended = true; mv.aegisOn = false; mv.active = Math.max(1, mf - mv.startup); aegisSpent(f); } // (four seconds at most)
       } };
     // ← ← + K: Lay on Hands. Hold K: he kneels and prays, turning MP into health. Hit him while he prays and it's a counter hit
     case 'plPray': return { id, label: 'Lay on Hands', startup: 10, active: 999, recovery: 18, wind: 'chargeP', pose: 'chargeP', held: true, heal: true,
@@ -605,7 +605,6 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { // no direct hit: a great wave rolls across and the whole stage floods for eight seconds — the kappa swims, they wade
         f.vx = 0; if (mf < 18) return;
         if (mf === 18) { sfx('flame'); game.shake = Math.max(game.shake, 6); }
-        if (mf === 40 && floodVictim(f)) { popText(f.x, GROUND - 200, L('ALREADY FLOODED', 'すでに水没中'), '150,215,255'); return; } // (kappa against kappa: one flood at a time)
         if (mf === 40) { game.flood = { owner: f, t: FLOOD_T }; popText(W / 2, GROUND - 230, L('THE STAGE FLOODS!', '水没！'), '150,215,255'); sfx('charge'); }
       },
       drawFX(f) { if (f.mf < 18 || f.mf > 72) return; const front = f.x + f.facing * ((f.mf - 18) * 40 - 60), back = front - f.facing * 520, a = f.mf > 64 ? Math.max(0, 1 - (f.mf - 64) / 8) : 1;

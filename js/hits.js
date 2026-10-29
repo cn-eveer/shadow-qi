@@ -134,41 +134,22 @@ const TECH_DMG = 0.8, AIR_TECH = 0.6; // strong techniques do a little less, and
 const SUPER_EQ = { shadowArmy: 0.756, qiCannon: 1.142, greatSage: 1.154, thousandFists: 0.923, gnHighNoon: 0.841, smDeadline: 1.115, saHeavenangel: 0.969, sdInfernodevil: 0.55, sdInfernodouble: 0.559 };
 const SUPER_REF = { ninja: 1.08, brawler: 0.9, staff: 1.08, psychic: 1.25, gunman: 1.42, salary: 1.15 }; // each fighter's overall damage when the supers were evened out
 // guarding costs: every guarded hit takes a little health and a piece of the guard meter — techniques, charged attacks and supers far more
-// (and a stressed fighter's guard wears out faster)
 const CHIP = 0.03, CHIP_BIG = 0.12;
 const guardBig = (a, h) => !!(h.superHit || h.spx || (!h.proj && a.state === 'attack' && a.move && (a.move.super || !a.move.normal || a.move.lvl)));
 function guardCost(a, d, h, big) {
   const sup = h.superHit || (a.move && a.move.super), rush = a.move && ((a.move.rushTag && !a.move.rushOpen) || FINISHERS.has(a.move.id)), base = (h.gdrain || 0) * 0.6 + (h.dmg || 0) * 0.1;
-  return base * (big ? (sup ? 1.3 : rush ? 1.2 : 2.6) : 1) /* (a rush is one technique: only its opening costs the full price) */ * (d.ch.guardMul || 1) * (a.ch.guardDmgMul || 1) * (h.gMul || 1) * (1 + 0.6 * stressK(d)); // (gMul: a hit that's heavy only when it lands)
+  return base * (big ? (sup ? 1.3 : rush ? 1.2 : 2.6) : 1) /* (a rush is one technique: only its opening costs the full price) */ * (d.ch.guardMul || 1) * (a.ch.guardDmgMul || 1) * (h.gMul || 1); // (gMul: a hit that's heavy only when it lands)
 }
 const chipOf = (h, big) => Math.max(1, Math.ceil((h.dmg || 0) * (big ? CHIP_BIG : h.chip ? 0.075 : CHIP)));
-// a launcher (U, U, I, ↓ + I, any attack that lifts them) that's guarded leaves a big opening — bigger still when its user is stressed
-const LAUNCH_LAG = 36, LAUNCH_LAG_STRESS = 30;
+// a launcher (U, U, I, ↓ + I, any attack that lifts them) that's guarded leaves a big opening
+const LAUNCH_LAG = 36;
 function launcherGuardLag(a, d, h) {
   const mv = a.move;
   if (a.state !== 'attack' || !mv || !(mv.launch || h.launch) || mv.trip || h.proj || mv.super || mv.startup >= 900 || a.y > 0 || a.ko) return; // (a trip — a low that makes them fall — isn't a launcher)
-  const need = (h.bstun || 10) + LAUNCH_LAG + Math.round(LAUNCH_LAG_STRESS * stressK(a)), left = mv.startup + (mv.active || 0) + mv.recovery - a.mf;
+  const need = (h.bstun || 10) + LAUNCH_LAG, left = mv.startup + (mv.active || 0) + mv.recovery - a.mf;
   if (left < need) mv.recovery += need - left;
   mv.lagLock = true; a.guardLagT = need; a.guardLagUntil = Math.max(a.guardLagUntil || 0, game.frame + need);
   if (!a.lagShown || game.frame - a.lagShown > 30) { a.lagShown = game.frame; popText(a.x, GROUND - a.y - 175, L('OPEN!', '隙あり！'), '255,170,120'); }
-}
-// the combo breaker: P while being hit. A burst throws the attacker off and stops whatever he was doing, for a third of the guard meter.
-// The one breaking out is untouchable for a moment but can't attack straight away: it's a reset, not a free punish.
-const BREAK_STATES = ['hitstun', 'knock', 'stunned', 'slashed'], BREAK_COST = 100 / 3;
-function comboBreak(f, o) {
-  if (f.guard < BREAK_COST) { if (!f.brkNoT || game.frame - f.brkNoT > 30) { f.brkNoT = game.frame; popText(f.x, GROUND - f.y - 170, L('NOT ENOUGH GUARD', 'ガード不足'), '255,150,150'); } return; }
-  f.guard -= BREAK_COST; f.guardIdle = 0;
-  const away = Math.sign(o.x - f.x) || -f.facing;
-  f.combo = 0; f.juggle = false; f.stun = 0; f.stunT = 0; f.pendingStun = 0; f.invul = Math.max(f.invul || 0, 24); f.atkCD = Math.max(f.atkCD || 0, 16); f.airAttacked = true;
-  if (f.y > 0) { setState(f, 'jump'); f.vx = -away * 3; f.vy = Math.min(f.vy, 4); } else { setState(f, 'stand'); f.vx = -away * 2; }
-  if (o.golem) { const g = o.golem; if (g.hold) golemRelease(o, f, true); g.act = null; g.queue = null; }
-  o.move = null; o.chainQ = null; o.followQ = null; o.pre = 0; o.shadow = false; o.hidden = false; o.shadowRun = false;
-  setState(o, o.y > 0 ? 'jump' : 'hitstun'); o.stun = 18; o.vx = away * 11; if (o.y > 0) { o.vy = Math.min(o.vy, 2); o.airAttacked = true; }
-  for (const p of projs) if (p.owner === o && !p.dead && p.type !== 'trap' && Math.abs(p.x - f.x) < 200) p.dead = true; // (his shots close by are blown away too)
-  const cy = GROUND - f.y - 90 * f.ch.scale;
-  parts.push({ type: 'ring', x: f.x, y: cy, r: 20, vr: 9, life: 16, max: 16, col: '255,140,150' }, { type: 'ring', x: f.x, y: cy, r: 8, vr: 5, life: 12, max: 12, col: '255,255,255' });
-  sparks(f.x + away * 40, cy, 'big'); sfx('break'); popText(f.x, GROUND - f.y - 190, L('COMBO BREAK!', 'コンボブレイク！'), '255,140,150');
-  game.freeze = Math.max(game.freeze, 6); game.shake = Math.max(game.shake, 6);
 }
 // auto guard (Settings, on by default): the player — on this machine, not online, not the CPU — guards without holding back whenever
 // he isn't attacking and isn't moving toward the opponent (toward: the way to them): standing still guards standing (not lows),

@@ -1,12 +1,12 @@
 'use strict';
 /* ================= input ================= */
 const MAPS = {
-  p1: { left: 'KeyA', right: 'KeyD', up: 'KeyW', down: 'KeyS', lp: 'KeyU', hp: 'KeyI', lk: 'KeyJ', hk: 'KeyK', brk: 'KeyP' }, // P: the combo breaker
+  p1: { left: 'KeyA', right: 'KeyD', up: 'KeyW', down: 'KeyS', lp: 'KeyU', hp: 'KeyI', lk: 'KeyJ', hk: 'KeyK', charge: 'KeyP' },
 };
 const ALT = { left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown' };
 const GAME_KEYS = new Set([...Object.values(MAPS.p1), ...Object.values(ALT), 'Space']);
 const BTN_ORDER = ['hp','lp','hk','lk'];
-const EMPTY = Object.freeze({ h: 0, down: false, up: false, btn: null, sup: false, ff: false, ffNow: false, bb: false, bbNow: false, dashTap: 0, brk: false });
+const EMPTY = Object.freeze({ h: 0, down: false, up: false, btn: null, sup: false, ff: false, ffNow: false, bb: false, bbNow: false, dashTap: 0, charge: false });
 // a phone or tablet (touch controls, landscape) rather than a computer with a keyboard
 const IS_MOBILE = (() => { try { return /Android|iPhone|iPad|iPod|Mobile|Silk/i.test(navigator.userAgent) || (matchMedia('(pointer: coarse)').matches && navigator.maxTouchPoints > 0); } catch (e) { return false; } })();
 const keys = new Set(), pressed = new Set(), pressT = {}; // pressT: real tick of each key press (keeps counting through hit pauses)
@@ -39,11 +39,10 @@ class Human {
       // Punch + Kick within 4 frames of each other = super; ← → then J + K together = Hohen's fusion
       this.held = { btn, sup: Math.abs(this.lastP - this.lastK) <= 4, fuse: Math.abs(this.lastJ - this.lastKk) <= 4 && frame - this.bfT <= 20, bf: frame - this.bfT <= 20, ff, bb, t: frame }; // (bf: ← then → before the button)
     }
-    if (pressed.has(m.brk)) this.brkT = frame; // (P: kept a few frames, so a press during a hit pause still counts)
     // a press stays buffered for a few frames, so a punish can be entered during guard stun
     const hb = this.held && frame - this.held.t <= 5 ? this.held : null;
     return { held: { lp: k('lp'), hp: k('hp'), lk: k('lk'), hk: k('hk') }, h, down: k('down'), up: k('up'), upPress: pressed.has(m.up) || pressed.has(ALT.up), btn: hb ? hb.btn : null, sup: hb ? hb.sup : false, fuse: hb ? !!hb.fuse : false, bf: hb ? !!hb.bf && !hb.fuse : false, ff: hb ? hb.ff : false, bb: hb ? hb.bb : false, bt: hb ? hb.t : -1,
-      ffNow: this.ffDir === toward && frame - this.ffT <= 2, bbNow: this.ffDir === -toward && frame - this.ffT <= 2, tap, brk: frame - (this.brkT ?? -99) <= 6,
+      ffNow: this.ffDir === toward && frame - this.ffT <= 2, bbNow: this.ffDir === -toward && frame - this.ffT <= 2, tap, charge: keys.has(m.charge),
       dashTap: this.ffT === frame ? (this.ffDir === toward ? 1 : -1) : 0 }; // the second tap itself: dash forward or roll back
   }
 }
@@ -88,7 +87,6 @@ class CPU {
   reset() { this.plan = {}; this.next = 0; this.def = null; this.threatKey = null; this.reactAt = 0; this.chargeUntil = 0; this.cancelTried = false; this.punishKey = null; }
   read(f, frame, o) { // (Jesse reloading doesn't shoot: he backs off and guards, and only throws Dynamite, counters with Showdown or goes for High Noon)
     if (f.reloadT > 0) { this.route = null; this.chainSeq = null; }
-    if (BREAK_STATES.includes(f.state) && (f.combo || 0) >= 3 && f.guard > 45 && Math.random() < 0.015 * (game.watch ? 0.5 : dif().punish)) return { ...EMPTY, brk: true }; // (a long combo: now and then it breaks out, more often on harder levels)
     if (f.state === 'hitstun' && f.y <= 0) { // in a ground combo it may hold its guard, to stop a slow next attack (GUARD_BACK; decided once per combo)
       if (this.mcFor !== f.comboSerial) { this.mcFor = f.comboSerial; this.mcGuard = Math.random() < (game.watch ? 0.6 : dif().block); }
       if (this.mcGuard) return { ...EMPTY, h: -(golemGuardDir(f, o) || Math.sign(o.x - f.x) || f.facing), down: isLowAtk(o) };

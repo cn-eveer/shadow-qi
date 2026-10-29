@@ -206,8 +206,6 @@ body.mobile .touch{position:fixed;inset:0;z-index:20} /* (moved beside the game 
 .tbtns button{border-radius:50%;background:rgba(255,255,255,.13);border:2px solid rgba(255,255,255,.4);color:rgba(255,255,255,.92);font:400 clamp(11px,2.5cqw,22px) var(--hud);text-shadow:0 2px 4px rgba(0,0,0,.5);touch-action:none;padding:0;cursor:pointer}
 .tbtns button.on{background:rgba(255,255,255,.42);transform:scale(.94)}
 .tbtns button[data-k="lp"],.tbtns button[data-k="hp"]{border-color:rgba(255,190,120,.6)} .tbtns button[data-k="lk"],.tbtns button[data-k="hk"]{border-color:rgba(140,200,255,.6)}
-.tbrk{pointer-events:auto;position:absolute;right:17.5%;bottom:22%;width:5.5%;aspect-ratio:1;border-radius:50%;background:rgba(255,90,110,.16);border:2px solid rgba(255,140,150,.6);color:#fff;font:400 clamp(10px,2cqw,18px) var(--hud);padding:0;touch-action:none;cursor:pointer}
-.tbrk.on{background:rgba(255,120,140,.45);transform:scale(.94)}
 .tpause{pointer-events:auto;position:absolute;right:1.5%;top:22%;width:4%;aspect-ratio:1;border-radius:50%;background:rgba(0,0,0,.28);border:2px solid rgba(255,255,255,.35);color:#fff;font:700 clamp(9px,1.6cqw,15px) var(--body);padding:0;touch-action:none}
 .rotate{position:fixed;inset:0;z-index:100;background:linear-gradient(160deg,#1a1036,#07050f);display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;padding:24px}
 .rotate[hidden]{display:none}

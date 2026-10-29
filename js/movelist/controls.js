@@ -12,7 +12,6 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Punch: light, heavy<small>Punches hit high, so a crouching opponent ducks under them.</small></td><td class="keys"><kbd>U</kbd> <kbd>I</kbd></td></tr>
           <tr><td>Kick: light, heavy<small>J is always a low kick. K hits the middle.</small></td><td class="keys"><kbd>J</kbd> <kbd>K</kbd></td></tr>
           <tr><td>Guard<small>Hold away from your opponent. Standing, it guards everything except lows. Crouching (away + down), it guards lows only and high attacks pass over you — mids and mid + low attacks (launchers rising off the floor, bounces, drops and swings that reach your legs) hit you crouching, as a counter hit. A back dash still guards. Slides and sweeps are lows, even the ones that launch. Every guarded hit still takes a little health and some of your guard meter; techniques, charged attacks and supers take far more. If the meter runs out, your guard breaks. In a ground combo (not launched, not stunned) you can guard the next attack if it takes more than 10 frames to reach you (14 after a counter hit): fast follow-ups (U, U) are a true combo, slower ones — a medium like U, I or U, K — can be guarded. With Auto guard on (⚙ Settings, on at first) you don’t need to hold away: standing still guards standing and just crouching (↓) guards crouching, whenever you aren’t attacking or moving toward the opponent. (Not online.)</small></td><td class="keys">hold ←</td></tr>
-          <tr><td>Combo breaker<small>While you’re being hit (even mid-combo or in the air): a burst throws the attacker off and stops what he was doing, and you’re untouchable for a moment. It costs a third of your guard meter, and you can’t attack straight away.</small></td><td class="cmd">P</td></tr>
           <tr><td>Dash<small>Tap toward the opponent twice. Attacks come straight out of the dash.</small></td><td class="keys">→ →</td></tr>
           <tr><td>Back dash<small>Tap away twice: a quick hop back. You can still be hit during it. Tap twice again to keep backing off.</small></td><td class="keys">← ←</td></tr>
           <tr><td>Pause</td><td class="keys"><kbd>Esc</kbd> or <kbd>Enter</kbd></td></tr>
@@ -44,8 +43,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
         </tbody>
       </table></div>
       <p class="note">Press the next button while the previous hit is still going. Pressed later, it’s just a single attack. On top of these strings, any light attack (U or J) that hits or is guarded can go straight into another attack, so you can build your own combos, for example J then I. Crouching ducks the jabs, and kicking low between hits interrupts a combo.</p>
-      <p class="note"><b>Stress.</b> Every attack you throw while the opponent isn’t caught in a combo — whiffed or guarded — fills the stress meter under your MP gauge; it drains once you stop, and the fuller it is the slower it drains. Past the mark at half you’re stressed: every attack comes out much later and recovers slower (time for them to guard, or to jab you first), you move slower, and your guard wears out faster and doesn’t come back. A real combo never adds stress. Kuro, Lyra and Hohen have no stress meter.</p>
-      <p class="note"><b>Guarded launchers.</b> A launcher that’s guarded (U, U, I, ↓ + I, anything that lifts them) leaves a big opening, and a bigger one when you’re stressed.</p>
+      <p class="note"><b>Guarded launchers.</b> A launcher that’s guarded (U, U, I, ↓ + I, anything that lifts them) leaves a big opening.</p>
       <h3>Launchers and juggles</h3>
       <div class="scroll"><table>
         <tbody>
@@ -94,7 +92,6 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>パンチ（弱・強）<small>パンチは上段。しゃがんだ相手には当たらない。</small></td><td class="keys"><kbd>U</kbd> <kbd>I</kbd></td></tr>
           <tr><td>キック（弱・強）<small>Jは下段蹴り、Kは中段。</small></td><td class="keys"><kbd>J</kbd> <kbd>K</kbd></td></tr>
           <tr><td>ガード<small>相手と反対方向を押し続ける。立ちガードは下段以外をすべて防ぐ。しゃがみガード（後ろ＋下）は下段だけを防ぎ、上段はかわせるが、中段と中下段（床から伸び上がる打ち上げ・バウンド・落下技・足元まで届く大振り）はしゃがみにカウンターで当たる。バックダッシュ中もガードできる。スライディングや足払いは打ち上げるものも下段。ガードしても少しダメージを受け、ガードゲージが減る（必殺技・溜め攻撃・超必殺技は大きく減る）。ゲージが尽きるとガードブレイク。地上のコンボ（打ち上げ・気絶中以外）では、次の攻撃の発生が10Fより遅ければ（カウンターを受けた後は14F）ガードできる。速いつなぎ（U、U）は確定、中くらいの攻撃（U、I・U、Kなど）はガードできる。オートガード（⚙設定、最初はオン）なら後ろを押さなくてよい：攻撃中や前進中でなければ、立っているだけで立ちガード、しゃがむ（↓）だけでしゃがみガード（オンライン対戦では無効）。</small></td><td class="cmd">← 押しっぱなし</td></tr>
-          <tr><td>コンボブレイク<small>攻撃を受けている間（コンボ中・空中でも）：衝撃波で相手を弾き飛ばして攻撃を止め、少しの間無敵になる。ガードゲージを3分の1使い、すぐには攻撃できない。</small></td><td class="cmd">P</td></tr>
           <tr><td>ダッシュ<small>相手の方向に2回。ダッシュからそのまま攻撃できる。</small></td><td class="cmd">→ →</td></tr>
           <tr><td>バックダッシュ<small>反対方向に2回。素早く後ろへ下がる。攻撃は当たる。続けて2回押すとさらに下がる。</small></td><td class="cmd">← ←</td></tr>
           <tr><td>一時停止<small></small></td><td class="cmd">Esc / Enter</td></tr>
@@ -109,8 +106,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>必殺技キャンセル<small>通常技が当たった直後に必殺技を入力するとつながる。</small></td><td class="cmd">ヒット → 必殺技</td></tr>
         </tbody>
       </table></div>
-      <p class="note"><b>ストレス。</b>相手がコンボ中でない時に出した攻撃（空振り・ガードされた攻撃）はMPゲージの下のストレスゲージをためる。攻撃をやめると減っていくが、たまっているほどゆっくりになる。半分の印を超えるとストレス状態：すべての攻撃の出が大きく遅れ、硬直も長くなり（相手はガードや割り込みができる）、動きも遅くなり、ガードゲージが減りやすく回復しなくなる。コンボがつながっている間の攻撃はストレスにならない。クロ、ライラ、ホーエンにはストレスゲージがない。</p>
-      <p class="note"><b>ガードされた打ち上げ技。</b>打ち上げ技（U、U、I・↓＋Iなど相手を浮かせる技）はガードされると大きな隙ができる。ストレス状態ではさらに大きくなる。</p>
+      <p class="note"><b>ガードされた打ち上げ技。</b>打ち上げ技（U、U、I・↓＋Iなど相手を浮かせる技）はガードされると大きな隙ができる。</p>
       <h3>打ち上げと追撃</h3>
       <p class="note">打ち上げた相手が空中にいる間、U・I・Kは追撃技になる。近くでジャンプすると空中連続技。1回のコンボで打ち上げ（L）とバウンド（B）ができる順番は、L・L、L・L・B、L・B、L・B・L、B・B、B・L のみ（そのあと締めの一撃）。空中追撃のU、U、Iも打ち上げに数える。それを超えると相手はコンボから外れ（「打ち上げ上限」／「バウンド上限」）、着地するまで当たらない。気絶は数えない。</p>
       <h3>ダウンと起き上がり</h3>

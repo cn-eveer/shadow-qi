@@ -3,7 +3,7 @@
 // Both players run the same deterministic game. Each frame, every player sends their buttons for a frame a few
 // frames ahead (the input delay); a frame is simulated only once both players' buttons for it have arrived.
 const NETV = 2, NET_PREFIX = 'shadowqi-v' + NETV + '-', RAND_SLOTS = 6;
-const NBIT = { left: 1, right: 2, up: 4, down: 8, lp: 16, hp: 32, lk: 64, hk: 128, brk: 256 };
+const NBIT = { left: 1, right: 2, up: 4, down: 8, lp: 16, hp: 32, lk: 64, hk: 128, charge: 256 };
 const NET = { on: false, peer: null, conn: null, host: false, side: 0, delay: 4, tick: 0, cur: 0, local: {}, remote: {}, sentUpTo: -1,
   name: '', oppName: '', names: ['', ''], rtt: 0, stallT: 0, status: '', mode: null, busy: false, ck: {}, rematch: [false, false], joinTimer: null };
 function netLocalMask() { // this player's buttons right now
@@ -39,10 +39,9 @@ class NetHuman { // turns a player's button history into the same inputs the key
       if (pr(NBIT.lk)) this.lastJ = frame; if (pr(NBIT.hk)) this.lastKk = frame;
       this.held = { btn, sup: Math.abs(this.lastP - this.lastK) <= 4, fuse: Math.abs(this.lastJ - this.lastKk) <= 4 && frame - this.bfT <= 20, bf: frame - this.bfT <= 20, ff, bb, t: frame }; // (bf: ← then → before the button)
     }
-    if (pr(NBIT.brk)) this.brkT = frame;
     const hb = this.held && frame - this.held.t <= 5 ? this.held : null;
     return { held: { lp: has(NBIT.lp), hp: has(NBIT.hp), lk: has(NBIT.lk), hk: has(NBIT.hk) }, h, down: has(NBIT.down), up: has(NBIT.up), upPress: pr(NBIT.up), btn: hb ? hb.btn : null, sup: hb ? hb.sup : false, fuse: hb ? !!hb.fuse : false, bf: hb ? !!hb.bf && !hb.fuse : false, ff: hb ? hb.ff : false, bb: hb ? hb.bb : false, bt: hb ? hb.t : -1,
-      ffNow: this.ffDir === toward && frame - this.ffT <= 2, bbNow: this.ffDir === -toward && frame - this.ffT <= 2, tap, brk: frame - (this.brkT ?? -99) <= 6,
+      ffNow: this.ffDir === toward && frame - this.ffT <= 2, bbNow: this.ffDir === -toward && frame - this.ffT <= 2, tap, charge: has(NBIT.charge),
       dashTap: this.ffT === frame ? (this.ffDir === toward ? 1 : -1) : 0 };
   }
 }
