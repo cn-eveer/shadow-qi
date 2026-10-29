@@ -67,7 +67,7 @@ const CHARS = {
       U: { su: 6, act: 5, rec: 9, blk: -4 }, dU: { su: 8, act: 5, rec: 9, blk: -4 }, J: { su: 6, act: 5, rec: 9, blk: -4 }, dJ: { su: 8, act: 5, rec: 9, blk: -4 },
       I: { su: 12, act: 6, rec: 16, blk: -12 }, K: { su: 16, act: 8, rec: 18, blk: -14 },
       dI: { su: 13.5, act: 6, rec: 18, blk: -16 }, /* (14F measured: its wind-up speeds up unevenly) */ dK: { su: 14, act: 6, rec: 20, blk: -14 },
-      $m2: { su: 12, act: 5, rec: 12, blk: -4 }, $m3: { su: 14, act: 5, rec: 12, blk: -4 }, $m4: { su: 16, act: 5, rec: 12, blk: -4 }, // U, U / U, U, U (low) / U, U, U, U (low)
+      $m2: { su: 12, act: 5, rec: 12, blk: -6 }, $m3: { su: 14, act: 5, rec: 12, blk: -6 }, $m4: { su: 16, act: 5, rec: 12, blk: -6 }, // U, U / U, U, U (low) / U, U, U, U (low)
       $mD: { su: 16, act: 6, rec: 16, blk: -14 }, $mUD: { su: 21, act: 6, rec: 20, blk: -16 }, // U×4, ↓ + K (low) / U, ↓ + K (low)
       $mF: { su: 14, act: 6, rec: 20, blk: -12 }, $mL: { su: 14, blk: -13 }, /* (−16 measured: the launch adds 3) */ $mE: { su: 18, act: 6, rec: 20, blk: -16 }, // U×4, K / U, I / U, K
       $ml2: { su: 10, act: 5, rec: 12, blk: -6 }, $mlE: { su: 15, act: 6, rec: 20, blk: -16 }, // J, J (mid) / J, J, K and J, K
