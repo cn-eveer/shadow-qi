@@ -11,7 +11,8 @@ const JA_SUPER = { 'ANGEL POSSESSION!': '天使憑依！', 'DEVIL POSSESSION!': 
 const game = { mode: 'menu', paused: false, vsCPU: true, p1Char: 'ninja', p2Char: 'brawler', lang: (() => { try { return localStorage.getItem('sq-lang') || 'ja'; } catch (e) { return 'ja'; } })(), diff: (() => { try { return localStorage.getItem('sq-diff') || 'medium'; } catch (e) { return 'medium'; } })(), round: 1, phase: 'intro', phaseT: 0, timer: 99 * 60,
   frame: 0, freeze: 0, slow: 0, shake: 0, combo: null, superFlash: null, roundWinner: null,
   training: false, watch: false, dummyMode: 'stand', mpFull: true, track: null, advInfo: null,
-  heights: (() => { try { return localStorage.getItem('sq-heights') !== '0'; } catch (e) { return true; } })() }; // training: show each attack's height
+  heights: (() => { try { return localStorage.getItem('sq-heights') !== '0'; } catch (e) { return true; } })(), // training: show each attack's height
+  autoGuard: (() => { try { return localStorage.getItem('sq-autoguard') !== '0'; } catch (e) { return true; } })() }; // the player guards by himself (Settings)
 let fighters = [];
 const projs = [], parts = [];
 // mirror matches: the second fighter (the one in the second palette) has its effects — sparks, auras, projectiles, spells — drawn in another hue,
@@ -86,6 +87,7 @@ const inAir = o => (o.state === 'knock' && o.juggle) || ((o.state === 'jump' || 
 function resolveSpecial(f, o, inp) {
   if (!inp.btn) return null;
   if (inp.fuse && f.ch.fuseSp && f.fuseG >= 100) return f.ch.fuseSp; // ← → + J + K with his fusion gauge full (Hohen's golem armour)
+  if (inp.bf && f.ch.spBF && f.ch.spBF[inp.btn]) return f.ch.spBF[inp.btn]; // ← → + a button (Kuro's Moon Tempests)
   if (inp.sup && f.meter >= 100) return f.ch.sup;
   const isP = inp.btn[1] === 'p', heavy = inp.btn[0] === 'h';
   if (inp.ff || inp.bb) {
@@ -96,7 +98,7 @@ function resolveSpecial(f, o, inp) {
     if (f.ch.spAuto) { const aid = f.ch.spAuto(f, o, k, heavy, inp); if (aid) return aid; } // (Tanaka's forms: the right version comes out by itself)
     if (inp.down && f.y <= 0 && !inAir(o) && f.ch.spLow) { const lid = (heavy && f.ch.spLow[k + 'H']) || f.ch.spLow[k]; if (lid) return lid; } // (a low version: hold ↓ with the technique)
     // rising version: automatic against an opponent in the air, or on demand by holding ↓ with the button
-    return (sid && JUGGLE_SP[sid] && f.y <= 0 && (inp.down || inAir(o))) ? JUGGLE_SP[sid] : sid;
+    return (sid && JUGGLE_SP[sid] && f.y <= 0 && ((inp.down && !f.ch.noLowSp) || inAir(o))) ? JUGGLE_SP[sid] : sid;
   }
   if (inp.down && isP && heavy) return f.ch.sp.dP || null; // ↓ + I
   return null;
@@ -116,11 +118,11 @@ function startMove(f, mv, str, keepBuffer) {
   if (mv.rushTag) f.rushN = mv.rushOpen ? 0 : (f.rushN || 0) + 1;
   if (mv.jug) { const oj = other(f); if (oj && Math.abs(oj.x - f.x) > 6) f.facing = Math.sign(oj.x - f.x); } // (a juggle attack turns to face them: a juggle can carry them over to the other side)
   f.pre = mv.pre || 0; // frames spent gathering qi before the technique itself starts
-  if (mv.super) { const dg = SUPER_DODGE[mv.id], oc = other(f), caught = oc && ['hitstun', 'knock', 'stunned', 'down', 'getup', 'slashed', 'gbreak'].includes(oc.state); mv.dodge = caught ? null : dg; if (!caught && (dg === 'jump' || dg === 'dash')) { f.pre += SUPER_PRE; mv.superPre = SUPER_PRE; } f.invul = Math.max(f.invul || 0, f.pre + mv.startup + 6); } // (invincible all the way through the wind-up) // (in a combo it comes straight out: they can't get away anyway)
+  if (mv.super) { const dg = SUPER_DODGE[mv.id], oc = other(f), caught = oc && ['hitstun', 'knock', 'stunned', 'down', 'getup', 'slashed', 'gbreak'].includes(oc.state); mv.dodge = caught ? null : dg; if (!caught && (dg === 'jump' || dg === 'dash')) { const sp = Math.round(SUPER_PRE * (f.ch.superPreMul || 1)); f.pre += sp; mv.superPre = sp; } f.invul = Math.max(f.invul || 0, f.pre + mv.startup + 6); } // (invincible all the way through the wind-up) // (in a combo it comes straight out: they can't get away anyway)
   const ksg = f.key === 'ninja' && (KURO_SIGNS[mv.id] || KURO_SPIRIT_LABEL[mv.label]);
   if (ksg) f.spirit = { sg: ksg, t0: game.frame, rise: mv.tellPre ? Math.min(12, mv.tellPre) : 6, hold: (mv.tellPre || 0) + 40, x: f.x - f.facing * 12, y: GROUND - f.y - 125 * f.ch.scale, dir: f.facing, hy: GROUND - f.y - 236 * f.ch.scale }; // the seal's spirit: it rises where he cast it and stays there a while, then fades slowly
   if (f.key === 'gunman' && !(f.gunOutT > 0)) for (const sd of [1, -1]) parts.push({ type: 'star', x: f.x + f.facing * sd * 14, y: GROUND - f.y - 92 * f.ch.scale, r: 8, vr: 1.4, life: 6, max: 6, col: '255,240,190', rot: 0.4 }); // the quick draw: a glint as the guns leave the holsters
-  f.lastMoveTech = !mv.normal && !mv.super; f.lastTechTier = f.lastMoveTech ? techTier(mv) : null; // (a guarded technique leaves him open: see techGuardLag)
+  f.lastMoveTech = !mv.normal && !mv.super && !mv.noGuardLag; f.lastTechTier = f.lastMoveTech ? techTier(mv) : null; // (a guarded technique leaves him open: see techGuardLag)
   // every heavy attack gets a readable wind-up: at least 6 frames of early motion before it can hit (fast heavies gain a few frames)
   // every attack gets a wind-up animation before it can hit (frames are added where the move was quicker than that):
   // heavy buttons 12 frames, techniques 10, combo finishers and heavy string hits 9, everything else (jabs, string and juggle hits, air attacks, throws) 6
@@ -135,10 +137,23 @@ function startMove(f, mv, str, keepBuffer) {
     mv.preTotal = f.pre;
     mv.windW = heavy || !mv.normal ? 1 : 0.55; // a jab winds up smaller than a heavy blow
   }
+  const FM = f.ch.frameMod; // a fighter's own frame tuning: how much quicker his attacks come out, how much longer they stay out and how much longer he recovers
+  if (FM && !mv.super && !mv.air && !mv.jug && !mv.fixedFrames && mv.startup < 900 && !mv.fmDone) { // (fixedFrames: a string hit with its own hand-set frames) // (not supers, air attacks or juggle hits: combos keep their timing)
+    mv.fmDone = true; const cls = !mv.normal ? 'tech' : (mv.str === 1 || mv.launch) ? 'heavy' : 'light';
+    if (cls === 'tech') { if (mv.tellPre) { const cut = Math.round(mv.tellPre * (1 - FM.tell)); f.pre -= cut; mv.tellPre -= cut; } } // (shorter hand signs)
+    else { const cut = Math.min(FM.su[cls] + (mv.suCut || 0), Math.max(0, (mv.antiPre || 0) - 1)); f.pre -= cut; if (mv.antiPre) mv.antiPre -= cut; } // (a shorter wind-up: the move's own frames are untouched; suCut: a move's own extra)
+    if (mv.preTotal != null) mv.preTotal = f.pre;
+    if (mv.active < 60) mv.active += FM.act;
+    if (mv.recovery < 90 && !mv.noFmRec) { mv.recovery += FM.rec[cls]; mv.fmRec = FM.rec[cls]; } // (normals: hit and block stun grow with it, so only a miss costs more; techniques: see checkHits)
+  }
   if (f.ch.fastAtk && mv.normal && !mv.fastDone && mv.startup < 900) { mv.fastDone = true; mv.startup = Math.max(3, mv.startup - 2); mv.recovery = Math.max(4, Math.round(mv.recovery * 0.8)); } // the devil: wild and fast
   if (mv.held && f.inp) { if (!mv.holdBtn) mv.holdBtn = f.inp.btn; if (f.inp.holdFor && mv.holdFor == null) mv.holdFor = f.inp.holdFor; }
   if (f.pre) sfx('charge');
   else if (mv.onStart) mv.onStart(f, other(f));
+  mv.t0 = game.frame; // (when it started: its 発生 decides whether someone in a combo can guard it — GUARD_BACK)
+  mv.speedUp = (!mv.super && f.ch.techSpeed && f.ch.techSpeed[mv.id]) || 0; f.spdAcc = 0; // (a fighter's techniques sped up to their own 発生: techSpeed)
+  if (f.ch.techDelay && f.ch.techDelay[mv.id] && !mv.delayed) { mv.delayed = true; f.pre += f.ch.techDelay[mv.id]; } // (…or slowed down: techDelay)
+  fdStart(f, mv);
 }
 function tryAttack(f, o, inp, noLight) { // (noLight: anything but a light attack — a string can't start itself over)
   if (!inp.btn) return false;
@@ -164,7 +179,7 @@ function tryAttack(f, o, inp, noLight) { // (noLight: anything but a light attac
   return true;
 }
 function startJump(f, inp) {
-  setState(f, 'jump'); f.vy = (f.ch.jumpV || JUMP_V) * (floodVictim(f) ? 0.8 : 1); f.vx = inp.h * f.ch.jumpX * (f.poisonT > 0 ? 0.7 : 1) * (floodVictim(f) ? 0.8 : 1); f.airAttacked = false; f.airShuri = false; f.jumpSerial = ++serial; f.dj = false;
+  setState(f, 'jump'); f.vy = (f.ch.jumpV || JUMP_V) * JUMP_HIGH * (floodVictim(f) ? 0.8 : 1); f.vx = inp.h * f.ch.jumpX * (f.poisonT > 0 ? 0.7 : 1) * (floodVictim(f) ? 0.8 : 1); f.airAttacked = false; f.airShuri = false; f.jumpSerial = ++serial; f.dj = false;
   dustAt(f.x, false);
 }
 function endMove(f) {
@@ -181,6 +196,42 @@ function endMove(f) {
 // single U or J that hit or was guarded they wait a moment too. Either way they can't attack again until the opponent has been out of
 // hit-stun or guard for that long (shots still in the air included), so the opponent always gets a moment to act.
 const STRING_REST = 12, JAB_REST = 6;
+// training: the frame data of each fighter's last attack, always on screen (see drawFrameData) — 発生 (the frame it can first hit,
+// from the press), 持続 (active frames), 硬直 (recovery when it misses), and 硬直差 once it hits or is guarded: who can act first, by how much
+const FD_FREE = s => s === 'stand' || s === 'crouch' || s === 'guard';
+function fdStart(f, mv) {
+  if (!game.training || game.demo) return;
+  f.fd = { label: mv.label || '', su: mv.startup < 900 ? f.pre + mv.startup + 1 : null, act: mv.active < 900 ? mv.active : null, rec: mv.recovery, t0: game.frame, res: null, adv: null, wait: false, atkT: null, defT: null, held: mv.startup >= 900 };
+}
+function fdContact(a, r) { // each hit or guard of the attack: 発生 from the first, 硬直差 after the last
+  const d = a.fd; if (!d) return;
+  if (!d.res) d.su = game.frame - d.t0 + 1;
+  d.res = r; d.adv = null; d.wait = true; d.atkT = d.defT = null;
+  if (d.held && a.move) { d.act = a.move.active; d.rec = a.move.recovery; } // (a held attack: its frames are only known once it's let go)
+}
+function fdWatch() { // each step: once both can act again, the advantage
+  for (const f of fighters) { const d = f.fd, o = other(f); if (d && !d.res && !d.live && f.state === 'attack' && f.move && f.move.startup < 900 && f.mf > f.move.startup) { d.live = true; d.su = game.frame - d.t0 + 1; } // (its first active frame, as it really came: a technique may have been sped up)
+    if (!d || !d.wait) continue;
+    if (['knock', 'down', 'getup', 'stunned', 'slashed', 'gbreak'].includes(o.state)) { d.adv = o.state === 'knock' ? 'launch' : o.state === 'stunned' ? 'stun' : o.state === 'gbreak' ? 'gb' : 'kd'; d.wait = false; continue; }
+    if (d.atkT == null && FD_FREE(f.state) && f.state !== 'attack') d.atkT = game.frame; if (d.defT == null && FD_FREE(o.state)) d.defT = game.frame;
+    if (d.atkT != null && d.defT != null) { d.adv = d.defT - d.atkT; d.wait = false; } }
+}
+// a technique sped up to the 発生 its fighter's techSpeed gives it (Kuro): everything before it can first hit — hand signs, wind-up,
+// the run in, the leap — plays that many times faster (extra steps of the move, moving him as it goes); from the first active frame on,
+// 持続 and 硬直 run at their normal speed
+function techSpeed(f, o, inp) {
+  const mv = f.move; if (!mv || !mv.speedUp || f.hitConnected || (f.pre <= 0 && f.mf >= mv.startup) || (mv.speedHold && mv.speedHold(f))) return; // (speedHold: a part of the move that keeps its own pace)
+  f.spdAcc = (f.spdAcc || 0) + mv.speedUp - 1;
+  while (f.spdAcc >= 1 && f.move === mv && f.state === 'attack' && !f.hitConnected && (f.pre > 0 || f.mf < mv.startup) && !(mv.speedHold && mv.speedHold(f))) { f.spdAcc -= 1; runMove(f, o, inp); if (!mv.manualY && !(mv.speedHold && mv.speedHold(f))) f.x = clamp(f.x + f.vx, WALL_L, WALL_R); }
+}
+// no attack carries its user further than this (dashes, rushes, lunges, step-ins, leaps out of them; supers and air attacks aside)
+const MOVE_TRAVEL = 180;
+function capTravel(f) {
+  const mv = f.move; if (!mv || mv.super || mv.air) return; // (a ground move that leaps counts too: its flight is part of the move)
+  const fw = f.vx * f.facing; if (fw <= 0) return;
+  const left = (mv.maxTravel || MOVE_TRAVEL) - (mv.travel || 0); if (fw > left) f.vx = f.facing * Math.max(0, left); // (maxTravel: a move's own range)
+  mv.travel = (mv.travel || 0) + f.vx * f.facing;
+}
 const reeling = o => o.state === 'hitstun' || o.state === 'blockstun' || o.state === 'recover';
 function restAfter(f, n, breath) {
   const o = other(f), s = f.ch.scale;
@@ -206,21 +257,22 @@ function runMove(f, o, inp) {
   if (mv.fx && FX_TICK[mv.fx]) FX_TICK[mv.fx](f, mv);
   // combos: the next button pressed while this hit is still going queues the next hit of the chain
   const ckey = inp.btn && mv.chain ? ((inp.down && mv.chain['d' + inp.btn]) ? 'd' + inp.btn : inp.btn) : null; // ↓ + button can pick a different next hit
-  if (ckey && !f.chainQ && mv.chain[ckey] && !inp.ff && !inp.bb && !inp.sup && !inp.fuse) { f.chainQ = mv.chain[ckey]; f.chainBt = inp.bt; }
+  if (ckey && !f.chainQ && !mv.lagLock && mv.chain[ckey] && !inp.ff && !inp.bb && !inp.sup && !inp.fuse) { f.chainQ = mv.chain[ckey]; f.chainBt = inp.bt; }
   if (f.chainQ && f.mf >= mv.startup + mv.active) {
     const id = f.chainQ; f.chainQ = null;
     const nm = chainMove(id, f);
     // only the press that queued this hit is used up, so a quick next press still counts for the following hit
-    if (nm) { nm.chainDepth = (mv.chainDepth || 0) + 1; nm.fiveEnder = nm.chainDepth >= 4 && !nm.air && !nm.jug; startMove(f, nm, nm.str, true); if (f.ctrl.consumeIf) f.ctrl.consumeIf(f.chainBt); return; } // (the fifth hit of a string: punishable when guarded)
+    if (nm) { const gap = nm.guardGap && f.lastResult === 'block' ? nm.guardGap : 0; nm.chainDepth = (mv.chainDepth || 0) + 1; nm.fiveEnder = nm.chainDepth >= 4 && !nm.air && !nm.jug; startMove(f, nm, nm.str, true); if (gap) { f.pre += gap; nm.preTotal = f.pre; } // (guardGap: when the last hit was guarded, this one comes later — a hole to hit into; on a hit the string stays a combo)
+      if (f.ctrl.consumeIf) f.ctrl.consumeIf(f.chainBt); return; } // (the fifth hit of a string: punishable when guarded)
   }
   // natural combos (Tekken style): a light attack that hit or was guarded can go straight into any other attack —
   // into another light one only from the first hit, so U and J strings can't run into each other over and over
-  if (mv.normal && mv.str === 0 && !mv.air && f.y <= 0 && f.hitConnected && inp.btn && !f.chainQ && !(mv.chain && mv.chain[inp.btn])
+  if (mv.normal && mv.str === 0 && !mv.air && !mv.lagLock && f.y <= 0 && f.hitConnected && inp.btn && !f.chainQ && !(mv.chain && mv.chain[inp.btn])
       && !inp.ff && !inp.bb && !inp.sup && !inp.fuse && f.mf >= mv.startup + mv.active) {
     if (tryAttack(f, o, inp, !!mv.chainDepth)) { f.move.chainDepth = (mv.chainDepth || 0) + 1; return; }
   }
   // follow-ups (Shadow Ambush, Sky Drop Kick): a button inside the window queues the next move
-  if (mv.follow && inp.btn && !f.followQ && f.mf >= mv.follow.from && f.mf <= mv.follow.to && mv.follow.opts[inp.btn] && !(mv.follow.notOnHit && f.lastResult === 'hit')
+  if (mv.follow && inp.btn && !f.followQ && !mv.lagLock && f.mf >= mv.follow.from && f.mf <= mv.follow.to && mv.follow.opts[inp.btn] && !(mv.follow.notOnHit && f.lastResult === 'hit')
       && (!mv.rushTag || (f.rushN || 0) < 4 || FINISHERS.has(mv.follow.opts[inp.btn]))) f.followQ = mv.follow.opts[inp.btn]; // a rush allows four parts, then only its finisher
   if (f.followQ && mv.follow && mv.follow.notOnHit && f.lastResult === 'hit') f.followQ = null; // it connected: juggle instead
   if (f.followQ && f.mf >= (mv.follow.at || 0)) {
@@ -240,7 +292,7 @@ function runMove(f, o, inp) {
   if (mv.normal && f.y <= 0 && inp.btn) {
     // cancel into a special after a hit, or into the super if Punch + Kick were pressed a frame or two apart
     const early = f.mf <= 4 && ((inp.sup && f.meter >= 100) || (inp.fuse && f.fuseG >= 100)); // (← → + J + K: the same grace for Hohen's fusion)
-    if (early || (f.hitConnected && f.mf > mv.startup)) {
+    if (early || (f.hitConnected && f.mf > mv.startup && !mv.lagLock)) { // (not out of a guarded launcher)
       const sid = resolveSpecial(f, o, inp);
       if (sid && (!early || sid === f.ch.sup || sid === f.ch.fuseSp)) {
         const s2 = specialMove(sid);
@@ -257,7 +309,7 @@ function threatened(f, o) {
   const d = Math.abs(o.x - f.x);
   if (o.golem && golemThreatening(f, o)) return true; // (the golem is attacking)
   if (o.state === 'attack' && o.move && d < 280 && o.mf <= o.move.startup + o.move.active + 2 && !(o.move.walkAway && o.mf <= o.move.startup)) return true;
-  for (const p of projs) if (p.owner === o && !p.dead && (p.type === 'beam' || p.type === 'flame' || (Math.sign(f.x - p.x) === Math.sign(p.vx) && Math.abs(p.x - f.x) < 300))) return true;
+  for (const p of projs) if (p.owner === o && !p.dead && (p.type === 'beam' || p.type === 'flame' || (p.fall && Math.abs(p.x - f.x) < 150) || (Math.sign(f.x - p.x) === Math.sign(p.vx) && Math.abs(p.x - f.x) < 300))) return true; // (or one dropping on them from above)
   return false;
 }
 function teleport(f, o) {
@@ -323,7 +375,7 @@ function update(f, o, inp) {
       if (inp.up) { startJump(f, inp); break; }
       // (charging MP by holding P has been removed: MP fills only by fighting)
       if (inp.down) { if (f.state !== 'crouch') setState(f, 'crouch'); f.vx = !f.backHeld && Math.sign(inp.h) === toward ? toward * f.ch.walk * 0.45 * (f.poisonT > 0 ? 0.6 : 1) * floodWalkMul(f) : 0; break; } // (crouching, ↓ + forward edges forward; ↓ + back stays the crouching guard)
-      if (f.backHeld && threatened(f, o)) { if (f.state !== 'guard') setState(f, 'guard'); f.vx = 0; break; }
+      if ((f.backHeld || autoGuardFor(f, toward)) && threatened(f, o)) { if (f.state !== 'guard') setState(f, 'guard'); f.vx = 0; break; } // (auto guard: standing still is enough)
       if (f.state !== 'stand') setState(f, 'stand');
       f.vx = inp.h * (f.backHeld ? f.ch.back : f.ch.walk) * (f.ctrl instanceof CPU && !game.watch ? 0.75 : 1) * (f.poisonT > 0 ? 0.6 : 1) * floodWalkMul(f); // the CPU walks slower against a player; poison slows anyone; in the flood the kappa swims fast and the other wades
       if (f.vx) f.walkPh += Math.abs(f.vx) * 0.085 * (f.backHeld ? -1 : 1);
@@ -352,7 +404,7 @@ function update(f, o, inp) {
         else startMove(f, normalMove(f.ch, isP ? 'p' : 'k', str, 'j'), str);
       }
       break;
-    case 'attack': if (floodVictim(f) && game.frame % 5 === 0 && f.move && f.mf <= f.move.startup) break; runMove(f, o, inp); if (floodOwner(f) && f.state === 'attack' && game.frame % 5 === 0 && f.move && f.mf <= f.move.startup + (f.move.active || 0)) runMove(f, o, inp); if (f.move && f.move.lvl != null && !f.move.fired && f.state === 'attack') qiGather(f, f.mf, Math.min(1, f.mf / 120), f.key === 'gunman' ? '255,200,110' : null); break; // held charge attacks gather qi too // (flooded: the kappa's attacks come out a fifth faster, the other's a fifth slower — but recovery isn't touched, so the kappa can still be punished and the other can still get away)
+    case 'attack': if (floodVictim(f) && game.frame % 5 === 0 && f.move && f.mf <= f.move.startup) break; runMove(f, o, inp); if (f.state === 'attack') techSpeed(f, o, inp); if (floodOwner(f) && f.state === 'attack' && game.frame % 5 === 0 && f.move && f.mf <= f.move.startup + (f.move.active || 0)) runMove(f, o, inp); if (f.move && f.move.lvl != null && !f.move.fired && f.state === 'attack') qiGather(f, f.mf, Math.min(1, f.mf / 120), f.key === 'gunman' ? '255,200,110' : null); break; // held charge attacks gather qi too // (flooded: the kappa's attacks come out a fifth faster, the other's a fifth slower — but recovery isn't touched, so the kappa can still be punished and the other can still get away)
     case 'land': if (f.st >= f.landT) setState(f, 'stand'); break;
     case 'hitstun':
       if (f.st >= f.stun) {
@@ -437,6 +489,7 @@ function update(f, o, inp) {
     if (f.state === 'knock' && f.juggle && !f.jugSpent && (f.airT = (f.airT || 0) + 1) > AIR_MAX) { f.jugSpent = true; f.juggle = false; popText(f.x, GROUND - f.y - 200, 'LIFT LIMIT', '205,205,220'); } // no juggle lasts longer than this, whatever is used
     if (f.y <= 0) { f.y = 0; f.vy = 0; land(f); }
   }
+  if (f.state === 'attack') capTravel(f);
   f.x += f.vx;
   if (f.kb) { f.x += f.kb; f.kb *= 0.8; if (Math.abs(f.kb) < 0.1) f.kb = 0; } // pushback from hitting someone against the wall
   if (f.y <= 0) {

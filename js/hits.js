@@ -17,6 +17,10 @@ function staffTipBox(f, mv, hb0) {
   if (mv.launch || mv.jug || mv.air || f.y > 0 || /rise|Rise|Up\b|up\b|Upper|Cudgel|Swing/.test((mv.pose || '') + ' ' + (mv.label || ''))) out = U(out, hb0); // (rising swings and juggle hits scoop up close to her too)
   return out;
 }
+// no blow reaches further than this in front of its user (Lyra's spells have their own range, LYRA_RANGE; Excalibur's reach is what
+// its three-second charge buys)
+const MELEE_REACH = 220;
+const meleeBox = (f, hb) => f.key === 'psychic' || hb[1] <= MELEE_REACH || (f.move && f.move.excal) ? hb : [hb[0], Math.max(hb[0] + 30, MELEE_REACH), hb[2], hb[3]];
 function boxOf(f, hb) {
   const s = f.ch.scale, [x0, x1, y0, y1] = hb, b0 = f.y + y0 * (f.ch.tallBox ? 1 : s); // tallBox (Tanaka's double possession, 1.4× his size): the blow grows forward and up, but still reaches as low as at normal size
   return f.facing > 0
@@ -32,7 +36,7 @@ function boxOf(f, hb) {
 // parries and stances count as fast; anything not listed: launchers are heavy, the rest moderate
 const TECH_TIER = {
   // Kuro
-  shadowCharge: 'heavy', swordSlash: 'heavy', cloneStrike: 'mod', teleKick: 'mod', flame: 'mod', fireballs: 'mod', vanishSlide: 'heavy', vanishDrop: 'mod',
+  moonTempest: 'fast', fullMoon: 'fast', shadowCharge: 'heavy', swordSlash: 'heavy', cloneStrike: 'mod', teleKick: 'mod', flame: 'mod', fireballs: 'mod', vanishSlide: 'heavy', vanishDrop: 'mod',
   // Tetsu (Rising Fist: his uppercut comes out without a tell, but it's punished hard if guarded)
   qiBlast: 'mod', meteorFist: 'heavy', qiSweep: 'heavy', shoulder: 'mod', qiOrb: 'fast', qiParry: 'fast', stomp: 'heavy', tornado: 'heavy', risingFist: 'heavy',
   // Mei
@@ -63,9 +67,9 @@ function uReach(d) { // how far the defender's U reaches (Lyra and Jesse reach m
   return U_REACH[d.key];
 }
 function techGuardLag(a, d, h) {
-  const five = a.state === 'attack' && a.move && a.move.fiveEnder && a.move.startup < 900;
+  const five = a.state === 'attack' && a.move && a.move.fiveEnder && !a.move.noFiveLag && a.move.startup < 900; // (noFiveLag: an ender with its own block frames)
   if (a.state === 'attack' && a.move && a.move.super && a.move.startup < 900) { const left = a.move.startup + (a.move.active || 0) + a.move.recovery - a.mf, cap = (h.bstun || 10) + 8; if (left > cap) a.move.recovery = Math.max(2, a.move.recovery - (left - cap)); return; } // (supers are safe when guarded)
-  if ((!a.lastMoveTech && !five) || a.ko) return;
+  if ((!a.lastMoveTech && !five) || a.ko || (a.move && a.move.noGuardLag)) return;
   const R = uReach(d), dist = Math.abs(a.x - d.x) + 30, travel = dist > R ? 16 + Math.ceil(Math.max(0, dist - R - 110) / 8) : 0; // (a dash in takes about 16 frames; the guard pushes them apart a little more)
   const tier = five ? 'heavy' : a.move && a.state === 'attack' && !a.move.normal ? techTier(a.move) : a.lastTechTier || 'mod'; // (the end of a five-hit string is punished hard)
   if (tier === 'fast') { // quick techniques are safe: if one would leave him open, he recovers sooner
@@ -129,7 +133,36 @@ const TECH_DMG = 0.8, AIR_TECH = 0.6; // strong techniques do a little less, and
 // every super's full damage evened out to about 220 (measured landing in full on a standing opponent); the kappa's Great Flood and Aldric's Sanctuary keep their own
 const SUPER_EQ = { shadowArmy: 0.756, qiCannon: 1.142, greatSage: 1.154, thousandFists: 0.923, gnHighNoon: 0.841, smDeadline: 1.115, saHeavenangel: 0.969, sdInfernodevil: 0.55, sdInfernodouble: 0.559 };
 const SUPER_REF = { ninja: 1.08, brawler: 0.9, staff: 1.08, psychic: 1.25, gunman: 1.42, salary: 1.15 }; // each fighter's overall damage when the supers were evened out
-const GUARD_STALL = 6; // frames an attacker loses when his attack is guarded (shown as a recoil)
+// guarding costs: every guarded hit takes a little health and a piece of the guard meter — techniques, charged attacks and supers far more
+const CHIP = 0.03, CHIP_BIG = 0.12;
+const guardBig = (a, h) => !!(h.superHit || h.spx || (!h.proj && a.state === 'attack' && a.move && (a.move.super || !a.move.normal || a.move.lvl)));
+const GUARD_METER = 1.5; // the guard meter lasts this many times as long (every guarded hit costs that much less)
+function guardCost(a, d, h, big) {
+  const sup = h.superHit || (a.move && a.move.super), rush = a.move && ((a.move.rushTag && !a.move.rushOpen) || FINISHERS.has(a.move.id)), base = (h.gdrain || 0) * 0.6 + (h.dmg || 0) * 0.1;
+  return base * (big ? (sup ? 1.3 : rush ? 1.2 : 2.6) : 1) /* (a rush is one technique: only its opening costs the full price) */ * (d.ch.guardMul || 1) * (a.ch.guardDmgMul || 1) * (h.gMul || 1) / GUARD_METER;// (gMul: a hit that's heavy only when it lands)
+}
+const chipOf = (h, big) => Math.max(1, Math.ceil((h.dmg || 0) * (big ? CHIP_BIG : h.chip ? 0.075 : CHIP)));
+// Kuro's launchers (U, U, I, ↓ + I, any attack that lifts them) leave a big opening when guarded
+const LAUNCH_LAG = 36;
+function launcherGuardLag(a, d, h) {
+  const mv = a.move;
+  if (a.key !== 'ninja' || a.state !== 'attack' || !mv || !(mv.launch || h.launch) || mv.trip || h.proj || mv.super || mv.startup >= 900 || a.y > 0 || a.ko) return; // (Kuro only: the others' launchers keep their own frames) // (a trip — a low that makes them fall — isn't a launcher)
+  const need = (h.bstun || 10) + LAUNCH_LAG, left = mv.startup + (mv.active || 0) + mv.recovery - a.mf;
+  if (left < need) mv.recovery += need - left;
+  mv.lagLock = true; a.guardLagT = need; a.guardLagUntil = Math.max(a.guardLagUntil || 0, game.frame + need);
+  if (!a.lagShown || game.frame - a.lagShown > 30) { a.lagShown = game.frame; popText(a.x, GROUND - a.y - 175, L('OPEN!', '隙あり！'), '255,170,120'); }
+}
+// auto guard (Settings, on by default): the player — on this machine, not online, not the CPU — guards without holding back whenever
+// he isn't attacking and isn't moving toward the opponent (toward: the way to them): standing still guards standing (not lows),
+// crouching guards crouching (lows only); a back dash guards too
+const autoGuardFor = (f, toward) => game.autoGuard && !game.online && f.ctrl instanceof Human && f.inp && f.inp.h !== toward;
+// a ground combo (not in the air, not stunned or knocked down): whoever is being hit can guard the next attack — holding back, or standing
+// or crouching with auto guard — if its 発生 (frames from its start until it reaches them) is more than GUARD_BACK; after a counter hit
+// they get back to guard 4 frames later (GUARD_BACK_CH). Fast follow-ups (U, U) stay a combo; slower ones (U, I — a medium) can be guarded
+const GUARD_BACK = 10, GUARD_BACK_CH = 14;
+const COUNTER_STUN = 4; // a counter hit (caught as they started something) stuns 4 frames longer: −4 for them, +4 for whoever countered
+const GUARD_STALL = 6;
+// (applyHit, below, reports each first hit or guard to the training frame data: fdContact) // frames an attacker loses when his attack is guarded (shown as a recoil)
 const JUG_HOLD_MAX = 150; // frames (2.5 s) U, U... can keep them up after the last lift or bounce: then only a new lift or the finisher still lands
 const JUG_ATTACKS_MAX = 7; // attacks a juggle can take before a new lift or bounce (finishers still land)
 const JUG_HOLD = 2, JUG_FLOAT = 22; // an ordinary juggle hit doesn't raise them: it barely pushes them up, and they hang (light gravity) for a moment
@@ -142,7 +175,8 @@ const BOUNCE_DMG = 1.3; // a bounce (slammed into the floor and back up) hits 30
 //   'low'     legs only (sweeps, slides, floor shockwaves): a crouching guard stops it, a standing one doesn't; jump over it
 //   'midlow'  reaches the legs and the body (launchers rising off the floor, bounces and drops crashing down to it,
 //             big low swings, supers that fill the screen): it hits a crouching guard; a standing guard stops it; jump over it
-//   'mid'     the body, or the body and the head: both guards stop it (punches and anything higher pass over a crouching fighter)
+//   'mid'     the body, or the body and the head: a standing guard stops it; it hits a crouching fighter, as a counter hit
+//             (punches and anything higher pass over a crouching fighter)
 const LOW_TOP = 45, SHIN = 24; // (in game units from the floor)
 const fromAbove = m => !!(m && (m.bounce || m.meteor || m.overhead)), rising = m => !!(m && (m.launch || m.relaunch || m.neutralLaunch));
 function heightClass(h, hb) {
@@ -178,7 +212,7 @@ function applyHit(a, d, h, side, hb, hu) {
   if (h.grab && (d.state === 'blockstun' || d.state === 'guard') && a.move && a.move.fiveEnder) { // a throw at the end of a guarded string can't take someone still guarding: it's stopped, and he's open
     sparks(cx, GROUND - (hu.y0 + hu.y1) / 2, 'block'); sfx('block'); techGuardLag(a, d, { ...h, bstun: h.bstun || 12 }); return 'block'; }
   const cy = GROUND - (Math.max(hb.y0, hu.y0) + Math.min(hb.y1, hu.y1)) / 2;
-  if (h.proj && !h.superHit && d.key === 'kappa' && d.state === 'dash') { // the kappa dives under projectiles as he darts in
+  if (h.proj && !h.superHit && !h.floor && d.key === 'kappa' && d.state === 'dash') { // the kappa dives under projectiles as he darts in (not one that reaches the floor: floor)
     if (!d.passT || game.frame - d.passT > 20) { d.passT = game.frame; popText(d.x, GROUND - d.y - 150, 'DIVE', '150,215,255'); }
     return null;
   }
@@ -236,8 +270,10 @@ function applyHit(a, d, h, side, hb, hu) {
     return 'block';
   }
   const airGuard = (d.state === 'jump' || (d.state === 'land' && d.y > 0)) && !h.grab; // jumping (not launched): they can guard in the air
-  const canGuard = !d.ch.noGuard && ((d.state === 'stand' || d.state === 'crouch' || d.state === 'guard' || d.state === 'blockstun' || d.state === 'recover') && d.y <= 0 && !h.grab) || airGuard; // a throw can't be guarded
-  const low = !!d.inp.down;
+  const midCombo = d.state === 'hitstun' && d.y <= 0 && a.state === 'attack' && a.move && a.move.t0 != null && a.serial !== d.comboMoveSerial && game.frame - a.move.t0 + 1 > (d.wasCounter ? GUARD_BACK_CH : GUARD_BACK); // a slow next attack in a ground combo can be guarded
+  const canGuard = !d.ch.noGuard && ((d.state === 'stand' || d.state === 'crouch' || d.state === 'guard' || d.state === 'blockstun' || d.state === 'recover' || d.state === 'bdash' || midCombo) && d.y <= 0 && !h.grab) || airGuard; // a throw can't be guarded; a back dash still guards
+  const autoAll = !airGuard && autoGuardFor(d, -side), hc = heightClass(h, hb);
+  const low = !!d.inp.down || d.state === 'crouch'; // (crouching: the guard is a crouching one — lows only)
   // holding away guards every attack, standing or crouching;
   // for a moment after the sides swap (a cross-up), holding either direction still guards
   const holding = d.inp.h === side || (!h.noGrace && d.inp.h !== 0 && game.frame - d.sideT <= 10)
@@ -246,13 +282,14 @@ function applyHit(a, d, h, side, hb, hu) {
   const autoBlock = d.ch.autoBlock && !d.ch.noGuard && d.state === 'stand' && d.y <= 0 && d.st >= 10 && Math.abs(d.vx) < 0.5 && !(d.inp && (d.inp.h || d.inp.btn || d.inp.down)) && !h.grab
     && !(d.ctrl instanceof Dummy && game.dummyMode !== 'guard'); // (a training dummy set to stand still stays hittable, for practising combos)
   if (autoBlock && !holding) popTextOnce(d, L('AUTO GUARD', 'オートガード'));
-  // a crouching guard stops lows and mids but not a mid + low attack; a standing guard stops mids and mid + lows but not lows
-  const hc = heightClass(h, hb), lowHit = !airGuard && ((hc === 'low' && !low) || (hc === 'midlow' && low));
+  // a crouching guard stops lows only — a mid or a mid + low hits someone crouching, as a counter hit (highs pass over them);
+  // a standing guard stops highs, mids and mid + lows but not lows
+  const lowHit = !airGuard && ((hc === 'low' && !low) || ((hc === 'midlow' || hc === 'mid') && low));
   showHeight(d, side, hb, h);
-  if (hc === 'midlow' && low && !airGuard && canGuard && holding) popText(d.x, GROUND - d.y - 175, L('MID + LOW!', '中下段！'), '255,200,120'); // (crouch-guarding a mid + low: it hits)
-  if (canGuard && (holding || autoBlock) && !lowHit) {
+  if (hc !== 'low' && low && !airGuard && canGuard && (holding || autoAll)) popText(d.x, GROUND - d.y - 175, hc === 'midlow' ? L('MID + LOW!', '中下段！') : L('MID!', '中段！'), '255,200,120'); // (crouch-guarding a mid or a mid + low: it hits)
+  if (canGuard && (holding || autoBlock || autoAll) && !lowHit) {
     const pushB = (h.bpush != null ? h.bpush : (h.push || 1) * 0.9) * (h.rushTag ? 1 : a.ch.pushMul || 1); // (rush strings keep their own spacing)
-    d.guard -= (h.gdrain || 0) * 0.6 * (d.ch.guardMul || 1) * (a.ch.guardDmgMul || 1); d.guardIdle = 0; // the guard meter lasts twice as long as it used to
+    const big = guardBig(a, h); d.guard -= guardCost(a, d, h, big); d.guardIdle = 0;
     if (d.guard <= 0) {
       d.guard = 0; setState(d, 'gbreak'); d.stun = h.gbstun || 45; d.vx = side * 3; d.move = null;
       popText(d.x, GROUND - d.y - 165, 'GUARD BREAK!', '255,120,130');
@@ -263,14 +300,14 @@ function applyHit(a, d, h, side, hb, hu) {
     }
     if (airGuard) { // guarded in the air: pushed back a little, still falling, can't attack until the block wears off
       d.vx = side * Math.max(2, pushB * 0.7); d.vy = Math.min(d.vy, 3); d.atkCD = Math.max(d.atkCD || 0, h.bstun || 10); d.airAttacked = true;
-      if (h.chip) d.hp = Math.max(1, d.hp - Math.ceil(h.dmg * 0.075));
+      d.hp = Math.max(1, d.hp - chipOf(h, big));
       d.meter = Math.min(100, d.meter + 2); sparks(cx, cy, 'block'); sfx('block'); popTextOnce(d, L('AIR GUARD', '空中ガード'));
-      trackAdv(a, d, 'block', h.label); game.freeze = Math.max(game.freeze, 3); techGuardLag(a, d, h);
+      trackAdv(a, d, 'block', h.label); game.freeze = Math.max(game.freeze, 3); techGuardLag(a, d, h); launcherGuardLag(a, d, h);
       return 'block';
     }
     setState(d, 'blockstun'); d.stun = h.bstun || 10; d.cguard = low; d.vx = side * pushB;
-    techGuardLag(a, d, h); // a technique that's guarded leaves its user open
-    if (h.chip) d.hp = Math.max(1, d.hp - Math.ceil(h.dmg * 0.075)); // chip damage through the guard: half what it was
+    techGuardLag(a, d, h); launcherGuardLag(a, d, h); // a technique or a launcher that's guarded leaves its user open
+    d.hp = Math.max(1, d.hp - chipOf(h, big)); // chip damage through the guard: a little for anything, more for techniques and supers
     if (!h.proj) wallPush(a, d, side); // guarded against the wall: the attacker slides back instead
     d.meter = Math.min(100, d.meter + 3); // ...and guarding
     sparks(cx, cy, 'block'); sfx('block');
@@ -282,7 +319,8 @@ function applyHit(a, d, h, side, hb, hu) {
   const juggling = d.state === 'knock' && d.juggle;
   const punish = (d.state === 'attack' && d.move && d.mf > d.move.startup + d.move.active) || d.state === 'land';
   if (d.spirit && !d.spirit.broken && d.state === 'attack' && d.move && (d.pre > 0 || d.mf <= d.move.startup)) d.spirit.broken = game.frame; // (his technique was stopped: the seal breaks)
-  const counter = d.state === 'attack' && d.move && (d.mf <= d.move.startup || d.move.heal); // (praying leaves Aldric wide open)
+  const crouchCaught = !airGuard && d.y <= 0 && low && hc !== 'low' && ['stand', 'crouch', 'guard', 'blockstun', 'recover'].includes(d.state); // a mid caught them crouching
+  const counter = (d.state === 'attack' && d.move && (d.mf <= d.move.startup || d.move.heal)) || crouchCaught; // (praying leaves Aldric wide open)
   if (d.state === 'attack' && d.move && (d.pre > 0 || ((d.move.pre || d.move.slow) && d.mf <= d.move.startup))) { popText(d.x, GROUND - 200, 'INTERRUPTED!', '255,220,120'); d.pre = 0; } // a technique hit while gathering or casting is lost
   const cpl = h.cpLaunch && (punish || counter) && d.y <= 0; // Kuro's Crescent Kick launches on a counter or punish
   const meteorBounce = h.meteor && !d.mBounced && (d.y > 0 || d.juggle); // the meteor bounces someone in the air once per combo; otherwise it knocks down
@@ -315,7 +353,7 @@ function applyHit(a, d, h, side, hb, hu) {
   a.meter = Math.min(100, a.meter + dmg * 0.11); // MP fills by fighting: dealing damage...
   d.meter = Math.min(100, d.meter + dmg * 0.07); // ...and taking it
   if (d.hp <= 0) { d.ko = true; setState(d, 'knock'); d.vy = 9; d.vx = side * 4.5; d.y = Math.max(d.y, 1); }
-  else if (h.slash && d.y <= 0) {
+  else if (h.slash && d.y <= 0 && !cpl) { // (a slash that's a counter or a punish launches instead, if the move says so: cpLaunch)
     setState(d, 'slashed'); d.stun = h.iai ? 38 : 26; d.slashDir = side; d.vx = side * 1.5;
     parts.push({ type: 'slashmark', x: d.x, y: GROUND - 80 * d.ch.scale, dir: side, life: 34, max: 34, delay: h.iai ? 16 : 0 }); // after an iai the cut shows a moment later
   }
@@ -357,13 +395,14 @@ function applyHit(a, d, h, side, hb, hu) {
     setState(d, 'knock'); d.juggle = air; d.jug = air ? (wasKnock ? Math.max(d.jug || 0, 2) : 2) : 0; // (still flying from this combo: the juggle count carries on, it doesn't start over)
     d.vy = h.kd ? (h.kdVy || 8.5) : 6.5; d.vx = side * (h.kd ? (h.kdVx || 4) : 1.4); d.y = Math.max(d.y, 1); // (hit out of the air: a smaller push unless it knocks them away)
   }
-  else { if (d.repLabel === h.label && d.stuckT > 0 && !(h.superHit && a.key === 'alchemist')) d.repN = (d.repN || 0) + 1; else { d.repLabel = h.label; d.repN = 0; } setState(d, 'hitstun'); d.stun = Math.max(5, Math.round(((h.stun || 16) - Math.max(0, d.combo - STUN_DECAY_AFTER) * 3) * Math.pow(0.6, d.repN))); /* (the same attack again and again in one combo — against a wall, say — stuns less each time: no repeat loops) */ d.crouchHit = low; /* (hit-stun decay: past the first few hits each one stuns less, so a string can't loop forever) */ d.vx = side * (h.push || 1) * 3 * (h.rushTag ? 1 : a.ch.pushMul || 1) * (d.ch.sturdy ? 0.5 : 1); } // knocked back by the hit (further by Mei and Lyra, except in Mei's rush strings)
+  else { if (d.repLabel === h.label && d.stuckT > 0 && !(h.superHit && a.key === 'alchemist')) d.repN = (d.repN || 0) + 1; else { d.repLabel = h.label; d.repN = 0; } setState(d, 'hitstun'); d.stun = Math.max(5, Math.round(((h.stun || 16) - Math.max(0, d.combo - STUN_DECAY_AFTER) * 3) * Math.pow(0.6, d.repN))) + (counter ? COUNTER_STUN : 0); /* (a counter hit: longer — COUNTER_STUN) (the same attack again and again in one combo — against a wall, say — stuns less each time: no repeat loops) */ d.crouchHit = low; /* (hit-stun decay: past the first few hits each one stuns less, so a string can't loop forever) */ d.vx = side * (h.push || 1) * 3 * (h.rushTag ? 1 : a.ch.pushMul || 1) * (d.ch.sturdy ? 0.5 : 1); } // knocked back by the hit (further by Mei and Lyra, except in Mei's rush strings)
   if (!h.proj) wallPush(a, d, side); // pinned at the wall: the attacker is pushed back the same way instead
   // Lightning Ball / Fire Breath: once the hit wears off they're left stunned (once until they're back on their feet)
   if (d.state === 'hitstun' && h.stunT && !d.stunUsed && d.hp > 0) { d.pendingStun = Math.max(d.pendingStun || 0, h.stunT); d.stunKind = h.stunKind; }
   else if (d.state !== 'hitstun') d.pendingStun = 0;
   if (h.slashMark) parts.push({ type: 'slashmark', x: d.x, y: GROUND - d.y - 70, dir: side, life: 34, max: 34, delay: 8 });
   if (d.combo >= 2) game.combo = { side: a.side, n: d.combo, t: 70 };
+  d.wasCounter = !!counter; // (caught as they started something: they get back to guard later — GUARD_BACK_CH)
   if (punish) popText(cx, cy - 46, 'PUNISH!', '255,210,90');
   else if (counter) popText(cx, cy - 46, 'COUNTER!', '255,160,90');
   const big = h.kd || h.str >= 2 || h.heavy;
@@ -373,6 +412,7 @@ function applyHit(a, d, h, side, hb, hu) {
   game.freeze = Math.max(game.freeze, h.hitstop || 6);
   if (big) game.shake = Math.max(game.shake, 6);
   trackAdv(a, d, 'hit', h.label);
+  if (a.state === 'attack' && a.move && a.move.fmRec && !(a.move.normal && !a.move.air)) { a.move.recovery -= a.move.fmRec; a.move.fmRec = 0; } // (a technique's longer recovery (frameMod) is for misses and guards: a hit, by blade, shot or clone, keeps the combo's timing — a normal's hit-stun already grows with it)
   return 'hit';
 }
 // an attack that touches the opponent's clone or decoy breaks it; one that touches a guarding shadow is blocked
@@ -399,7 +439,7 @@ function checkHits(a, o) {
   const multi = mv.multi || 1;
   if (a.hitCount >= multi) return;
   if (a.hitCount > 0 && a.mf - a.lastHitMf < (mv.interval || 99)) return;
-  let hb = boxOf(a, mv.hitbox);
+  let hb = boxOf(a, meleeBox(a, mv.hitbox));
   if (a.key === 'staff') hb = staffTipBox(a, mv, hb);
   if (floodOwner(a)) hb = { ...hb, x0: -200, x1: W + 200 }; // the flood carries the kappa's every blow: it reaches them anywhere on the stage // Mei: the staff hits along its front half, out to the tip — not at her fists
   if (hitDecoys(a, hb)) { // a guarding shadow soaked up this attack
@@ -436,3 +476,18 @@ function checkHits(a, o) {
   if (res === 'hit' && mv.hover && a.y > 0) a.vy = Math.max(a.vy, 2.5); // hang in the air a moment during air juggles
 }
 
+
+// a move that sets its own advantage — blockAdv when guarded, hitAdv on a hit (frames, + = the attacker acts first): once it connects,
+// his remaining frames (guarded) or their hit-stun (a hit) are set to match, whatever the general rules for guarded techniques say
+function fixAdv(a, d, h, r) {
+  const mv = a.state === 'attack' && a.move; if (!mv || mv.startup >= 900) return;
+  const left = mv.startup + (mv.active || 0) + mv.recovery - a.mf;
+  if (r === 'block' && mv.blockAdv != null && d.state === 'blockstun') {
+    const T = d.stun - mv.blockAdv - (!h.proj && !mv.guardStalled && !mv.super ? GUARD_STALL : 0); // (a blow — not a shot — still gets the guard stall afterwards: see checkHits)
+    if (T < left - mv.recovery && (!h.proj || mv.cutOnGuard)) { mv.active = Math.max(0, a.mf - mv.startup); mv.recovery = Math.max(1, T); } // (more of the blow is still to come than the opening allows: it ends here)
+    else mv.recovery = Math.max(1, mv.recovery + T - left);
+    a.guardLagUntil = 0; a.guardLagNeed = 0; mv.lagLock = false;
+  }
+  if (r === 'hit' && mv.hitAdv != null && d.state === 'hitstun') d.stun = Math.max(1, left + mv.hitAdv - (d.ch.recoverT || 12)) + (d.wasCounter ? COUNTER_STUN : 0); // (they act once their recovery after the hit-stun is over; a counter hit adds COUNTER_STUN)
+}
+{ const core = applyHit; applyHit = function (a, d, h, side, hb, hu) { const r = core.apply(this, arguments); if (r === 'hit' || r === 'block') fixAdv(a, d, h, r); if ((r === 'hit' || r === 'block' || r === 'armor') && a.fd) fdContact(a, r); return r; }; } // a move's own advantage; the training frame data

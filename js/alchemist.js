@@ -74,7 +74,7 @@ const KNUCKLE = { wind: 'alKnuckleW', pose: 'alKnuckle', startup: 6, recovery: 9
 const volleyBeat = lvl => (f, o, k) => { if (k <= 14 && k % 7 === 0) alchemistVolley(f, o, lvl, k / 7); }; // three stones, seven frames apart
 // the duet strings: up to three presses of U and J in any order, then a finisher
 const DUET1 = { lp: 'aU2', lk: 'aJ2', hp: 'aGrab', dhp: 'aUp', hk: 'aVol' }, DUET2 = { lp: 'aHam', lk: 'aJF', hp: 'aGrab', dhp: 'aUp', hk: 'aVol' };
-const hStone = (label, chain) => beat(label, 'alThrow', null, { noSmear: true, wind: 'alThrowW', startup: 7, recovery: 13, near: KNUCKLE, also: (f, o) => hohenStone(f, o), chain }); // (the next press can come a little late and still string)
+const hStone = (label, chain) => beat(label, 'alThrow', null, { noSmear: true, wind: 'alThrowW', startup: 7, recovery: 13, near: KNUCKLE, also: (f, o) => hohenStone(f, o), chain, midHit: true }); // (the next press can come a little late and still string; midHit: on J, but a stone or a knuckle at body height — guard it standing)
 {
   const throwing = (label, fn, ex = {}) => beat(label, 'alThrow', null, { noSmear: true, wind: 'alThrowW', startup: 9, recovery: 14, also: fn, ...ex });
   const L = CHARS.alchemist.normalLook;
@@ -346,7 +346,7 @@ function golemDamage(f, n, x, y) { // the golem takes a hit; at zero health it c
 function golemTakeHits(f, o) { // the opponent's attacks can hit the golem too (it stands in the way of blows meant for him)
   const g = f.golem, gb = golemBox(g);
   if (o.state === 'attack' && o.move && o.move.hitbox && o.mf > o.move.startup && o.mf <= o.move.startup + (o.move.active || 1) && !g.seen['m' + o.serial]) {
-    const hb = boxOf(o, o.move.hitbox); if (overlap(hb, gb)) { g.seen['m' + o.serial] = 1; golemDamage(f, Math.round((o.move.dmg || 20) * (o.ch.dmgMul || 1)), g.x, GROUND - 90 - g.y); }
+    const hb = boxOf(o, meleeBox(o, o.move.hitbox)); if (overlap(hb, gb)) { g.seen['m' + o.serial] = 1; golemDamage(f, Math.round((o.move.dmg || 20) * (o.ch.dmgMul || 1)), g.x, GROUND - 90 - g.y); }
   }
   for (const p of projs) {
     if (p.owner !== o || p.dead || g.seen['p' + p.id] || !(p.h || p.dmg) || p.type === 'decoy' || p.type === 'guardShadow') continue;
@@ -388,7 +388,7 @@ function golemUpdate(f, o) {
     g.queue = null; const A0 = g.act && GOLEM_ACT[g.act.kind]; if (A0 && g.act.t < A0.su && !A0.leap) g.act = null;
     if (g.hold) { golemRelease(f, o, true); popText(g.x, GROUND - 200, L('LET GO!', '手を離した！'), '220,220,230'); } }
   const inp = f.inp || EMPTY; // the golem copies the alchemist: where he walks, when he jumps or crouches
-  if (g.js !== f.jumpSerial) { g.js = f.jumpSerial; if (f.state === 'jump' && g.y <= 0 && !g.act) g.vy = f.ch.jumpV || JUMP_V; }
+  if (g.js !== f.jumpSerial) { g.js = f.jumpSerial; if (f.state === 'jump' && g.y <= 0 && !g.act) g.vy = (f.ch.jumpV || JUMP_V) * JUMP_HIGH; }
   if (g.y > 0 || g.vy > 0) { g.vy -= G; g.y += g.vy; if (g.y <= 0) { g.y = 0; g.vy = 0; g.mvx = 0; dustAt(g.x, false); if (g.act && g.act.kind === 'meteor') { dustAt(g.x, true); game.shake = Math.max(game.shake, 5); sfx('land'); } } }
   g.crouch = !!inp.down && g.y <= 0 && !g.act;
   if (!live) { g.act = null; g.queue = null; return; }

@@ -45,21 +45,69 @@ function updateTbar() {
   tbar.querySelector('[data-t="mp"]').textContent = L(`MP refill: ${game.mpFull ? 'on' : 'off'} (M)`, `MP回復：${game.mpFull ? 'オン' : 'オフ'} (M)`);
   tbar.querySelector('[data-t="reset"]').textContent = L('Reset to start position (R)', '初期位置に戻す (R)');
   const lb = tbar.querySelector('[data-t="list"]'); lb.textContent = L(`Moves: ${game.moveList ? 'on' : 'off'} (L)`, `技表：${game.moveList ? 'オン' : 'オフ'} (L)`); lb.setAttribute('aria-pressed', String(!!game.moveList));
-  const cb = tbar.querySelector('[data-t="combos"]'); cb.textContent = L(`Combos: ${game.comboList ? 'on' : 'off'} (C)`, `コンボ：${game.comboList ? 'オン' : 'オフ'} (C)`); cb.setAttribute('aria-pressed', String(!!game.comboList));
   const dl = game.demoSet === 'punish' ? { prev: ['Previous punish (A)', '前の反撃 (A)'], replay: ['Replay (R)', 'もう一度 (R)'], next: ['Next punish (D)', '次の反撃 (D)'], switch: ['Switch fighter (F)', 'キャラ切替 (F)'] }
     : { prev: ['Previous combo (A)', '前のコンボ (A)'], replay: ['Replay (R)', 'もう一度 (R)'], next: ['Next combo (D)', '次のコンボ (D)'], switch: ['Switch fighter (F)', 'キャラ切替 (F)'] };
   dbar.querySelectorAll('button').forEach(b => { const t = dl[b.dataset.d]; if (t) b.textContent = L(t[0], t[1]); });
-  if (IS_MOBILE) [...tbar.children, ...dbar.children].forEach(b => { b.textContent = b.textContent.replace(/ \([A-Z]\)$/, ''); }); // no keyboard on a phone
+  if (IS_MOBILE) [...tbar.children, ...dbar.children].forEach(b => { if (b.tagName === 'BUTTON') b.textContent = b.textContent.replace(/ \([A-Z]\)$/, ''); }); // no keyboard on a phone
 }
 function trainingAction(t) {
   if (t === 'dummy') game.dummyMode = DUMMY_MODES[(DUMMY_MODES.indexOf(game.dummyMode) + 1) % DUMMY_MODES.length];
   else if (t === 'mp') game.mpFull = !game.mpFull;
   else if (t === 'reset') resetPositions();
-  else if (t === 'list') { game.moveList = !game.moveList; if (game.moveList) game.comboList = false; }
-  else if (t === 'combos') { game.comboList = !game.comboList; if (game.comboList) game.moveList = false; } // (the moves and the combos share one place over the game)
+  else if (t === 'list') game.moveList = !game.moveList;
   sfx('select'); updateTbar();
 }
 tbar.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { initAudio(); trainingAction(b.dataset.t); b.blur(); }));
+// punish training, in the 技表's 相手 tab: ▶ beside one of the dummy's own commands and it does it again and again, every 1–4 s (■ stops it)
+// (the list: the basic attacks and strings, then every command in its move list that can be done on the ground)
+const REP_EVERY = [1, 1.5, 2, 3, 4], REP_BTN = { U: 'lp', I: 'hp', J: 'lk', K: 'hk' };
+const REP_BASICS = ['U', 'I', 'J', 'K', '↓ + U', '↓ + I', '↓ + J', '↓ + K', 'U, U', 'U, U, I', 'U, U, K', 'U, U, U, U, K', 'J, J, K', 'J, K'];
+let repCh = '', repId = 0, repMoves = [];
+function repInput(tok) { // one command → its input (null: not one this can do)
+  const m = tok.replace(/ \/ .*$/, '').trim().match(/^(→ → \+ |← ← \+ |↓ \+ |→ → then ↓ \+ |← ← then ↓ \+ )?([UIJK])$/); if (!m) return null;
+  const p = m[1] || '', inp = { btn: REP_BTN[m[2]] }; if (p.startsWith('→ →')) inp.ff = true; if (p.startsWith('← ←')) inp.bb = true; if (p.includes('↓')) inp.down = true;
+  return inp;
+}
+function repSteps(cmd) { // a command → the presses that do it (as the sample combos play them)
+  cmd = cmd.replace(/（長押し）/, ' (hold)').replace(/\s+/g, ' ').trim();
+  if (/^(U \+ J|Punch \+ Kick)$/.test(cmd)) return { steps: [S(cmd, 'start', { btn: 'lp', sup: true })], sup: true };
+  const hold = /\(hold\)/.test(cmd); cmd = cmd.replace(/ ?\(hold\)/, '');
+  const [first, then] = cmd.split(/, then /);
+  if (then) { const a = repInput(first), b = repInput(then); return a && b ? { steps: [S(first, 'start', a), S(then, 'follow', b)] } : null; }
+  const one = repInput(cmd); if (one) { if (hold) one.holdFor = 60; return { steps: [S(cmd, 'start', one)] }; }
+  const keys = cmd.split(/,? /); if (keys.length > 1 && keys.every(k => REP_BTN[k])) return { steps: keys.map((k, i) => S(k, i ? 'chain' : 'start', { btn: REP_BTN[k] })) };
+  return null;
+}
+function repList(ch) {
+  const rows = lang => [...document.querySelectorAll(`article.card[data-tab="${ch}"][data-lang="${lang}"] .scroll:not(.combo) tbody tr`)];
+  const en = rows('en'), loc = rows(game.lang), same = en.length === loc.length, out = [];
+  const nameOf = td => [...td.childNodes].filter(n => !(n.nodeType === 1 && n.tagName === 'SMALL')).map(n => n.textContent).join('').trim();
+  for (const c of REP_BASICS) { const r = repSteps(c); if (r) out.push({ label: c, ...r }); }
+  let parent = null, juggle = false;
+  en.forEach((tr, i) => {
+    const td = tr.querySelectorAll('td'); if (td.length < 2) { juggle = /juggle/i.test(tr.textContent); return; } // (a heading row: Hohen's juggle-only moves follow)
+    if (td[0].querySelector('b')) juggle = false;
+    const last = td[td.length - 1], kb = [...last.querySelectorAll('kbd')].map(k => k.textContent.trim()), name = nameOf((same ? loc[i] : tr).querySelector('td'));
+    let cmd = last.textContent.replace(/\s+/g, ' ').trim();
+    if (kb.length > 1 && kb.every(k => k === kb[0])) cmd = kb.join(', '); else if (kb.length === 2 && cmd.includes('+')) cmd = 'U + J';
+    if (/^then /.test(cmd) && parent) cmd = parent + ', ' + cmd; else parent = cmd; // (a follow-up: the move it comes out of, then its button)
+    if (juggle || name.startsWith('·')) return; // (juggle-only, or only in Hohen's armour)
+    const alt = cmd.match(/^(.*, then )([UIJK](?: \/ [UIJK])+)$/); // (a choice of follow-ups: one entry each)
+    const cmds = alt ? alt[2].split(' / ').map(k => alt[1] + k) : kb.length > 1 && !kb.every(k => k === kb[0]) && !cmd.includes('+') ? kb : [cmd]; // (one row, two buttons: two moves)
+    for (const c of cmds) { const r = repSteps(c); if (!r) continue; const had = out.find(m => m.label === c); if (had) had.name = had.name || name; else out.push({ label: c, name, ...r }); }
+  });
+  return out;
+}
+function repMovesFor(ch) { // (built once per fighter and language; keeps the chosen command when it can)
+  if (ch + game.lang !== repCh) { repCh = ch + game.lang; const was = game.repeat && game.repeat.label; repMoves = repList(ch); game.repIdx = Math.max(0, repMoves.findIndex(m => m.label === was)); if (game.repeatOn) setRepeat(); }
+  return repMoves;
+}
+function setRepeat() {
+  const m = repMoves[game.repIdx || 0]; game.repEvery = game.repEvery || 1.5;
+  game.repeat = game.repeatOn && m ? { id: ++repId, label: m.label, steps: m.steps, sup: !!m.sup, every: Math.round(game.repEvery * 60), reach: 120 } : null;
+}
+function toggleRepeat() { game.repeatOn = !game.repeatOn; setRepeat(); sfx('select'); updateMoveList(); }
+function stepEvery(d) { const i = REP_EVERY.indexOf(game.repEvery || 1.5); game.repEvery = REP_EVERY[clamp(i + d, 0, REP_EVERY.length - 1)]; setRepeat(); sfx('select'); updateMoveList(); }
 function showMenu() {
   game.mode = 'menu'; game.paused = false; game.netMenu = false; tbar.hidden = true; dbar.hidden = true;
   const c = game.p1Char;
@@ -84,11 +132,12 @@ function showMenu() {
     <div class="pickinfo"><span><b>${nm(CHARS[c])}</b> ${blurbs[c]}</span><button class="ghost sm" data-act="moves">${L('Move list', '技表')}</button></div>
     <div class="vsrow">${L('CPU opponent:', 'CPUの相手：')} ${CHAR_ORDER.map(k => `<button class="${game.p2Char === k ? 'on' : ''}" data-vs="${k}" aria-pressed="${game.p2Char === k}">${nm(CHARS[k])}</button>`).join('')}</div>
     <div class="vsrow">${L('Difficulty:', '難易度：')} ${DIFF_ORDER.map(k => `<button class="${game.diff === k ? 'on' : ''}" data-diff="${k}" aria-pressed="${game.diff === k}">${L(...DIFF_NAMES[k])}</button>`).join('')}</div>
-    <div class="row"><button class="go" data-act="start">${L('FIGHT', '対戦')}</button><button class="ghost" data-act="training">${L('Training', 'トレーニング')}</button><button class="ghost" data-act="watch">${L('CPU vs CPU', 'CPU対CPU')}</button><button class="ghost" data-act="online">${L('Online', 'オンライン')}</button><button class="ghost" data-act="opening">${L('Opening', 'オープニング')}</button>${COMBO_SET[c] && COMBO_SET[c].length ? `<button class="ghost" data-act="demo" data-who="${c}">${L(CHARS[c].name[0] + CHARS[c].name.slice(1).toLowerCase() + ' combos', nm(CHARS[c]) + 'のコンボ見本')}</button>` : ''}${PUNISH_SET[c] && PUNISH_SET[c].length ? `<button class="ghost" data-act="punish" data-who="${c}">${L(CHARS[c].name[0] + CHARS[c].name.slice(1).toLowerCase() + ' punishes', nm(CHARS[c]) + 'の反撃見本')}</button>` : ''}</div>
+    <div class="row"><button class="go" data-act="start">${L('FIGHT', '対戦')}</button><button class="ghost" data-act="training">${L('Training', 'トレーニング')}</button><button class="ghost" data-act="watch">${L('CPU vs CPU', 'CPU対CPU')}</button><button class="ghost" data-act="opening">${L('Opening', 'オープニング')}</button>${COMBO_SET[c] && COMBO_SET[c].length ? `<button class="ghost" data-act="demo" data-who="${c}">${L(CHARS[c].name[0] + CHARS[c].name.slice(1).toLowerCase() + ' combos', nm(CHARS[c]) + 'のコンボ見本')}</button>` : ''}${PUNISH_SET[c] && PUNISH_SET[c].length ? `<button class="ghost" data-act="punish" data-who="${c}">${L(CHARS[c].name[0] + CHARS[c].name.slice(1).toLowerCase() + ' punishes', nm(CHARS[c]) + 'の反撃見本')}</button>` : ''}</div>
+    <div class="row onrow"><button class="ghost" data-act="online">${L('Online battle', 'オンライン対戦')}</button><span class="oncount" data-oncount></span></div>
     <div class="hint">${L('A and D pick your fighter, W and S pick the opponent. Enter to fight, T for training, C to watch CPU vs CPU, V for your fighter’s sample combos, P for punish samples.', 'A・Dでキャラ選択、W・Sで相手を選択。Enterで対戦、Tでトレーニング、CでCPU対CPU、Vでコンボ見本、Pで反撃見本。')}</div>
     <div class="ver"><button class="vlink" data-act="news">v${APP_VERSION} · ${L('What’s new', '更新情報')}</button></div>
   </div>`;
-  bindOverlay();
+  bindOverlay(); netShowCount(); netCountSoon();
 }
 function showResult(w) {
   game.lastWinner = w;
@@ -208,9 +257,11 @@ window.addEventListener('keydown', e => {
       else if (e.code === 'KeyM') trainingAction('mp');
       else if (e.code === 'KeyR') trainingAction('reset');
       else if (e.code === 'KeyL') trainingAction('list');
-      else if (e.code === 'KeyC') trainingAction('combos');
-      else if (e.code === 'Comma' && (game.moveList || game.comboList)) stepMoveList(-1);
-      else if (e.code === 'Period' && (game.moveList || game.comboList)) stepMoveList(1);
+      else if (e.code === 'KeyC' && game.moveList) stepTab(); // (the 技表's tabs)
+      else if (e.code === 'Comma' && game.moveList) stepMoveList(-1);
+      else if (e.code === 'Period' && game.moveList) stepMoveList(1);
+      else if (e.code === 'KeyB' && game.moveList && game.listTab === 'opp') toggleRepeat(); // punish training: the dummy does it again and again…
+      else if ((e.code === 'Minus' || e.code === 'Equal') && game.moveList && game.listTab === 'opp') stepEvery(e.code === 'Minus' ? -1 : 1); // …this often
     }
   }
 });
@@ -223,6 +274,7 @@ function toggleSound() { sound = !sound; initAudio(); if (!sound) musicStop(); e
 function toggleMusic() { music = !music; initAudio(); if (music && sound) musicStart(); else musicStop(); applyLang(); }
 function setLang(l) { game.lang = l; try { localStorage.setItem('sq-lang', l); } catch (e) {} applyLang(); if (game.mode === 'menu') showMenu(); else if (game.mode === 'result') showResult(game.lastWinner); else if (game.paused) refreshPause(); else if (game.netMenu) netMenu(true); updateTbar(); }
 function toggleHeights() { game.heights = !game.heights; try { localStorage.setItem('sq-heights', game.heights ? '1' : '0'); } catch (e) {} if (!game.heights) parts.forEach(q => { if (q.type === 'htag') q.life = 0; }); applyLang(); }
+function toggleAutoGuard() { game.autoGuard = !game.autoGuard; try { localStorage.setItem('sq-autoguard', game.autoGuard ? '1' : '0'); } catch (e) {} applyLang(); }
 function setDiff(k) { game.diff = k; try { localStorage.setItem('sq-diff', k); } catch (e) {} applyLang(); if (game.mode === 'menu') showMenu(); }
 function applyLang() { // header, drawer, tabs and which language of the command lists shows
   if (document.documentElement) document.documentElement.lang = game.lang;
@@ -231,6 +283,7 @@ function applyLang() { // header, drawer, tabs and which language of the command
   [bgmBtn, document.getElementById('bgmD')].forEach(b => { b.textContent = on(music, 'Music', 'BGM'); b.setAttribute('aria-pressed', String(music)); });
   [langBtn, document.getElementById('langD')].forEach(b => { b.textContent = game.lang === 'ja' ? 'English' : '日本語'; b.lang = game.lang === 'ja' ? 'en' : 'ja'; });
   const hgt = document.getElementById('hgtD'); hgt.textContent = L(game.heights ? 'On' : 'Off', game.heights ? 'オン' : 'オフ'); hgt.setAttribute('aria-pressed', String(game.heights));
+  const ag = document.getElementById('agD'); ag.textContent = L(game.autoGuard ? 'On' : 'Off', game.autoGuard ? 'オン' : 'オフ'); ag.setAttribute('aria-pressed', String(game.autoGuard));
   setBtn.textContent = L('⚙ Settings', '⚙ 設定');
   document.getElementById('dTitle').textContent = drawerMode === 'settings' ? L('Settings', '設定') : drawerMode === 'news' ? L('What’s new', '更新情報') : L('Move list', '技表');
   if (drawerMode === 'news' && !drawer.hidden) renderNews();
@@ -257,6 +310,8 @@ langBtn.addEventListener('click', () => setLang(game.lang === 'ja' ? 'en' : 'ja'
 setBtn.addEventListener('click', () => openDrawer(drawer.hidden || drawerMode !== 'settings', 'settings'));
 document.getElementById('movesD').addEventListener('click', () => { drawerTab = fighters[0] && game.mode === 'fight' ? fighters[0].key : game.p1Char; openDrawer(true, 'moves'); });
 document.getElementById('hgtD').addEventListener('click', () => { initAudio(); toggleHeights(); sfx('select'); });
+document.getElementById('fdD').addEventListener('click', e => { const h = document.getElementById('fdHelp'); h.hidden = !h.hidden; e.currentTarget.setAttribute('aria-expanded', String(!h.hidden)); sfx('select'); }); // what 発生, 持続, 硬直 and 硬直差 mean
+document.getElementById('agD').addEventListener('click', () => { initAudio(); toggleAutoGuard(); sfx('select'); });
 document.getElementById('newsD').addEventListener('click', () => openDrawer(true, 'news'));
 document.getElementById('reloadD').addEventListener('click', freshReload);
 document.getElementById('eraseD').addEventListener('click', () => { if (confirm(L('Erase everything this site has saved (settings included) and reload?', 'このサイトに保存されたデータ（設定を含む）をすべて消去して、再読み込みしますか？'))) eraseSiteData(); });
@@ -329,18 +384,21 @@ function fitOverlay() {
 }
 new MutationObserver(() => requestAnimationFrame(fitOverlay)).observe(ov, { childList: true });
 addEventListener('resize', () => requestAnimationFrame(fitOverlay));
-function updateTouchUI() { // shown only on a phone or tablet, during play (not in menus, pauses or the sample viewer)
-  const show = IS_MOBILE && game.mode === 'fight' && !game.paused && !game.netMenu && !game.demo && !game.watch && drawer.hidden;
+function updateTouchUI() { // shown only on a phone or tablet, during play (not in menus or pauses); watching samples or CPU vs CPU, only the pause button (the way back to the menu)
+  const show = IS_MOBILE && game.mode === 'fight' && !game.paused && !game.netMenu && drawer.hidden, viewOnly = !!(game.demo || game.watch);
+  if (touchUI.classList.contains('viewonly') !== viewOnly) { touchUI.classList.toggle('viewonly', viewOnly); if (viewOnly) for (const k of ['left', 'right', 'up', 'down', 'lp', 'hp', 'lk', 'hk']) keys.delete(MAPS.p1[k]); }
   if (touchUI.hidden === show) { touchUI.hidden = !show; if (!show) for (const k of ['left', 'right', 'up', 'down', 'lp', 'hp', 'lk', 'hk']) keys.delete(MAPS.p1[k]); }
   const portrait = IS_MOBILE && innerHeight > innerWidth;
   if (rotUI.hidden === portrait) { rotUI.hidden = !portrait; if (portrait && game.mode === 'fight' && !game.paused && !NET.on && !game.demo) togglePause(true); } // turned upright mid-fight: pause
   if (portrait) { const ja = game.lang === 'ja'; document.getElementById('rotTxt').textContent = ja ? 'スマホを横向きにしてください' : 'Turn your phone sideways to play'; document.getElementById('rotSub').textContent = ja ? 'Shadow ✕ Qi は横画面でプレイします' : 'Shadow ✕ Qi plays in landscape'; }
 }
 updateTouchUI();
-// training: one move at a time, just its name and command, shown over the game (taken from the move list),
-// or one sample combo at a time, its keys in order; ◀ ▶ or , . step through them
+// training: the 技表 over the game (L), three tabs (C, or tap them): 技 — your moves one at a time, name and command (from the move list);
+// コンボ — your sample combos, their keys in order; 相手 — the dummy's commands, with ▶ to have it do one again and again (punish training).
+// ◀ ▶ or , . step through the tab; B plays or stops the dummy's command, − = change how often
 document.querySelectorAll('.card .scroll').forEach(d => { const c = d.querySelector('tbody td'); if (c && /^\d+\./.test(c.textContent.trim())) d.classList.add('combo'); });
-const tlistUI = document.getElementById('tlist'); let tlistCh = '', tlistKey = '', tlistMoves = [], tlistIdx = 0;
+const tlistUI = document.getElementById('tlist'); let tlistCh = '', tlistKey = '', tlistMoves = [], tlistIdx = 0, tcomboIdx = 0;
+const TL_TABS = ['moves', 'combos', 'opp'];
 function moveListOf(ch) {
   const card = document.querySelector(`article.card[data-tab="${ch}"][data-lang="${game.lang}"]`); if (!card) return [];
   const out = []; let parent = null;
@@ -354,27 +412,33 @@ function moveListOf(ch) {
   return out;
 }
 const comboListOf = ch => (COMBO_SET[ch] || []).map(d => ({ name: L(d.name, (JA_DEMO[d.name] || {}).n || d.name), keys: d.steps.map(s => s.key) })); // (the same combos as the sample combos)
-let tcomboIdx = 0;
 function stepMoveList(d) {
-  const n = game.comboList ? comboListOf(tlistCh).length : tlistMoves.length; if (!n) return;
-  if (game.comboList) tcomboIdx = (tcomboIdx + d + n) % n; else tlistIdx = (tlistIdx + d + n) % n;
+  const tab = game.listTab || 'moves', n = tab === 'combos' ? comboListOf(fighters[0].key).length : tab === 'opp' ? repMoves.length : tlistMoves.length; if (!n) return;
+  if (tab === 'combos') tcomboIdx = (tcomboIdx + d + n) % n; else if (tab === 'opp') { game.repIdx = ((game.repIdx || 0) + d + n) % n; setRepeat(); } else tlistIdx = (tlistIdx + d + n) % n;
   sfx('select'); updateMoveList();
 }
-tlistUI.addEventListener('pointerdown', e => { const b = e.target.closest('button'); if (!b) return; e.preventDefault(); e.stopPropagation(); stepMoveList(+b.dataset.m); });
+function stepTab(t) { game.listTab = t || TL_TABS[(TL_TABS.indexOf(game.listTab || 'moves') + 1) % TL_TABS.length]; sfx('select'); updateMoveList(); }
+tlistUI.addEventListener('pointerdown', e => { const b = e.target.closest('button'); if (!b) return; e.preventDefault(); e.stopPropagation();
+  if (b.dataset.tab) stepTab(b.dataset.tab); else if (b.dataset.play) toggleRepeat(); else if (b.dataset.e) stepEvery(+b.dataset.e); else stepMoveList(+b.dataset.m); });
 function updateMoveList() {
-  const show = !!(game.moveList || game.comboList) && game.mode === 'fight' && game.training && !game.demo && !game.paused && drawer.hidden;
+  const show = !!game.moveList && game.mode === 'fight' && game.training && !game.demo && !game.paused && drawer.hidden;
   if (tlistUI.hidden === show) tlistUI.hidden = !show;
   if (!show) return;
-  const ch = fighters[0] ? fighters[0].key : game.p1Char;
-  if (ch !== tlistCh) { tlistCh = ch; tlistIdx = 0; tcomboIdx = 0; tlistKey = ''; }
-  const key = ch + game.lang + (game.comboList ? 'c' + tcomboIdx : tlistIdx); if (key === tlistKey) return; tlistKey = key;
-  const esc = t => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
-  if (game.comboList) {
-    const list = comboListOf(ch), c = list[tcomboIdx]; if (!c) { tlistUI.innerHTML = ''; return; }
-    tlistUI.innerHTML = `<button data-m="-1" aria-label="${L('Previous combo', '前のコンボ')}">◀</button><div class="tm"><b>${esc(c.name)}</b> <small>${tcomboIdx + 1}/${list.length}</small><div class="tk">${c.keys.map(k => `<span>${esc(k)}</span>`).join('<i>›</i>')}</div></div><button data-m="1" aria-label="${L('Next combo', '次のコンボ')}">▶</button>`;
-    return;
-  }
-  tlistMoves = moveListOf(ch); const m = tlistMoves[tlistIdx]; if (!m) { tlistUI.innerHTML = ''; return; }
-  tlistUI.innerHTML = `<button data-m="-1" aria-label="${L('Previous move', '前の技')}">◀</button><div class="tm"><b>${esc(m.name)}</b><div class="tc">${esc(m.cmd)}</div></div><button data-m="1" aria-label="${L('Next move', '次の技')}">▶</button>`;
+  const ch = fighters[0] ? fighters[0].key : game.p1Char, dch = fighters[1] ? fighters[1].key : game.p2Char, tab = game.listTab || 'moves';
+  if (ch + '/' + dch !== tlistCh) { tlistCh = ch + '/' + dch; tlistIdx = 0; tcomboIdx = 0; tlistKey = ''; }
+  const opp = repMovesFor(dch);
+  const key = [ch, dch, game.lang, tab, tlistIdx, tcomboIdx, game.repIdx, game.repeatOn, game.repEvery].join('|'); if (key === tlistKey) return; tlistKey = key;
+  const esc = t => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]), chips = ks => `<div class="tk">${ks.map(k => `<span>${esc(k)}</span>`).join('<i>›</i>')}</div>`;
+  const TAB = { moves: L('Moves', '技'), combos: L('Combos', 'コンボ'), opp: L('Opponent', '相手') };
+  const tabs = `<div class="ttabs">${TL_TABS.map(t => `<button data-tab="${t}"${t === tab ? ' class="on"' : ''}>${TAB[t]}</button>`).join('')}${IS_MOBILE ? '' : '<small>C</small>'}</div>`;
+  let body = '';
+  if (tab === 'combos') { const list = comboListOf(ch), c = list[tcomboIdx]; body = c ? `<b>${esc(c.name)}</b> <small>${tcomboIdx + 1}/${list.length}</small>${chips(c.keys)}` : ''; }
+  else if (tab === 'opp') {
+    const m = opp[game.repIdx || 0], shown = c => L(c, c.replace(', then ', '、続けて ').replace(' then ', ' から ').replace(' (hold)', '（長押し）'));
+    body = m ? `<small>${esc(nm(CHARS[dch]))} ${(game.repIdx || 0) + 1}/${opp.length}${IS_MOBILE ? '' : ` · ${L('B play / stop, − = how often', 'B 再生・停止、− = 間隔')}`}</small>${m.name ? `<b>${esc(m.name)}</b>` : ''}`
+      + `<div class="trow">${chips(shown(m.label).split(/、続けて | から |, then | then |, /))}<button class="tplay${game.repeatOn ? ' on' : ''}" data-play="1" aria-label="${game.repeatOn ? L('Stop', '停止') : L('Play: the dummy repeats it', '再生：ダミーが繰り返す')}">${game.repeatOn ? '■' : '▶'}</button>`
+      + `<span class="tev"><button data-e="-1" aria-label="${L('Shorter interval', '間隔を短く')}">−</button>${L(`every ${game.repEvery || 1.5} s`, `${game.repEvery || 1.5}秒ごと`)}<button data-e="1" aria-label="${L('Longer interval', '間隔を長く')}">+</button></span></div>` : '';
+  } else { tlistMoves = moveListOf(ch); const m = tlistMoves[tlistIdx]; body = m ? `<b>${esc(m.name)}</b><div class="tc">${esc(m.cmd)}</div>` : ''; }
+  tlistUI.innerHTML = `<button data-m="-1" aria-label="${L('Previous', '前へ')}">◀</button><div class="tm">${tabs}${body}</div><button data-m="1" aria-label="${L('Next', '次へ')}">▶</button>`;
 }
 requestAnimationFrame(loop);

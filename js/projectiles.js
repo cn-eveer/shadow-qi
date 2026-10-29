@@ -16,23 +16,28 @@ function spawnQi(f) {
     dmg: 75, stun: 20, bstun: 16, push: 5, hitstop: 8, life: 240, chip: true, dir: f.facing });
   sfx('qi');
 }
-function spawnClone(f, sup, idx) {
+function spawnClone(f, sup, idx, dmg, lvl, near) { // (dmg: a super's own damage per clone; lvl: 'mid' — above the shins — or 'low' — along the floor; near: it appears close to them)
   // Shadow Clone Strike moves at the same speed as Shadow Charge, so the two look alike
   const o = other(f), side = Math.sign(o.x - f.x) || f.facing;
   const fromBack = sup && idx % 2 === 1; // in the super, every other clone comes from behind the opponent
   const sp = sup ? 16 : 10, range = sup ? 1100 : 520, dir = fromBack ? -side : f.facing;
-  const x = fromBack ? clamp(o.x + side * (sup ? Math.max(120, Math.abs(o.x - f.x) - 20) : 430), -60, W + 60) : f.x + f.facing * 20; // (in the super the ones from behind start as far away as the ones in front: they all arrive together)
-  projs.push({ id: ++serial, type: 'clone', owner: f, x, y: 0, vx: dir * sp, vy: 0, w: 28, h0: 10, h1: 120,
-    dmg: sup ? 32 : 66, stun: sup ? 24 : 26, bstun: 15, push: sup ? 1.5 : 5,
+  let x = fromBack ? clamp(o.x + side * (sup ? Math.max(120, Math.abs(o.x - f.x) - 20) : 430), -60, W + 60) : f.x + f.facing * 20; // (in the super the ones from behind start as far away as the ones in front: they all arrive together)
+  if (near) x = fromBack ? clamp(o.x + side * 120, -60, W + 60) : side * (o.x - side * 140 - x) > 0 ? o.x - side * 140 : x; // (to catch someone bouncing off the floor)
+  projs.push({ id: ++serial, type: 'clone', owner: f, x, y: 0, vx: dir * sp, vy: 0, w: 28, h0: lvl === 'mid' ? 30 : lvl === 'low' ? 0 : 10, h1: lvl === 'low' ? 40 : 120, low: lvl === 'low', lowHit: lvl === 'low',
+    dmg: dmg || (sup ? 32 : 66), stun: sup ? 24 : 26, bstun: 15, push: sup ? 1.5 : 5,
     kd: false, juggle: sup, superHit: sup, hitstop: 7, life: Math.round(range / sp), chip: true, dir });
   puff(x, 60); sfx('clone');
+  return projs[projs.length - 1];
 }
-function spawnDiveClone(f) { // the Shadow Army finisher drops from above
+const ARMY_LAST = { dmg: 160, kd: true, kdVx: 10, kdVy: 9, hitstop: 14, w: 34, gMul: 0.3 }; // Shadow Army's last clone: a heavy kick that knocks them away — from behind, back toward Kuro
+const ARMY_SWEEP = { ...ARMY_LAST, kdVx: 3, kdVy: 5 }; // (low: it sweeps their feet out — they drop where they stand)
+function spawnDiveClone(f, overhead) { // the Shadow Army finisher drops from above (overhead: guard it standing)
   const o = other(f), close = Math.abs(o.x - f.x) < 240; // up close, it bounces them back toward Kuro so he can keep the combo going
-  projs.push({ id: ++serial, type: 'clone', owner: f, x: o.x, y: 0, yOff: f.move && f.move.dodge ? 420 : Math.max(200, o.y + 120), fall: true, vx: 0, vy: 0, w: 34, h0: 0, h1: 120, // (it starts high: its shadow on the floor gives time to dash away)
-    dmg: 85, stun: 24, bstun: 16, push: 3, kd: !close, kdVx: 9, kdVy: 10, launch: close, launchVy: 12, bounce: close, endOwner: close,
-    juggle: true, superHit: true, hitstop: 12, life: 60, chip: true, dir: f.facing });
+  projs.push({ id: ++serial, type: 'clone', owner: f, x: o.x, y: 0, yOff: f.move && f.move.dodge ? 420 : Math.max(200, o.y + 120), fall: true, fallSp: f.move && f.move.dodge ? 10 : 18, /* (on its own it comes down slowly: time to see it) */ vx: 0, vy: 0, w: 34, h0: 0, h1: 120, // (it starts high: its shadow on the floor gives time to dash away)
+    dmg: overhead ? 110 : 85, stun: 24, bstun: 16, push: 3, kd: !close, kdVx: 9, kdVy: 10, launch: close, launchVy: 12, bounce: close, endOwner: close,
+    juggle: true, superHit: true, hitstop: 12, life: 60, chip: true, dir: f.facing, overhead: !!overhead });
   puff(o.x, 260); sfx('clone');
+  return projs[projs.length - 1];
 }
 const JUGGLE_SP = { flame: 'jFire', fireballs: 'jRain', cloneStrike: 'jClone', swordSlash: 'jIai', vanishDrop: 'jVanishHeel',
   qiBlast: 'jGeyser', meteorFist: 'jHammer', shoulder: 'jShoulder', qiOrb: 'jSpiral', tornado: 'jTornado' };
@@ -171,7 +176,7 @@ function shoot(f, o) { // bullets fly 40% faster than before; o.range (in pixels
   sfx('shot'); if (lvl === 2) sfx('hitH');
 }
 // Lyra's crystals: they form above the opponent and fall on them, wherever they are (up to half the stage away); she never has to move
-const LYRA_RANGE = 480;
+const LYRA_RANGE = 400;
 function drawCrystal(x, y, r, a, rot) { // a long crystal of light, pale blue to pink
   ctx.save(); ctx.translate(x, y); ctx.rotate(rot || 0); ctx.globalAlpha = a;
   const g = ctx.createLinearGradient(0, -r * 1.6, 0, r * 1.6); g.addColorStop(0, '#f6f0ff'); g.addColorStop(0.5, '#b9dcff'); g.addColorStop(1, '#ff9be8');

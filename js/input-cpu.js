@@ -4,6 +4,7 @@ const MAPS = {
   p1: { left: 'KeyA', right: 'KeyD', up: 'KeyW', down: 'KeyS', lp: 'KeyU', hp: 'KeyI', lk: 'KeyJ', hk: 'KeyK', charge: 'KeyP' },
 };
 const ALT = { left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown' };
+const ALT2 = { up: 'Space' }; // Space jumps too
 const GAME_KEYS = new Set([...Object.values(MAPS.p1), ...Object.values(ALT), 'Space']);
 const BTN_ORDER = ['hp','lp','hk','lk'];
 const EMPTY = Object.freeze({ h: 0, down: false, up: false, btn: null, sup: false, ff: false, ffNow: false, bb: false, bbNow: false, dashTap: 0, charge: false });
@@ -16,7 +17,7 @@ class Human {
   consume() { this.held = null; }
   consumeIf(t) { if (this.held && this.held.t === t) this.held = null; }
   read(f, frame, o) {
-    const m = this.m, k = c => keys.has(m[c]) || keys.has(ALT[c]), toward0 = Math.sign(o.x - f.x) || f.facing;
+    const m = this.m, k = c => keys.has(m[c]) || keys.has(ALT[c]) || keys.has(ALT2[c]), toward0 = Math.sign(o.x - f.x) || f.facing;
     const h = (k('right') ? 1 : 0) - (k('left') ? 1 : 0);
     // double tap: the same direction pressed twice within 14 frames
     for (const [c, dir] of [['left', -1], ['right', 1]]) {
@@ -37,11 +38,11 @@ class Human {
       if (pressed.has(m.lk) || pressed.has(m.hk)) this.lastK = Math.max(pressed.has(m.lk) ? pressT[m.lk] : -999, pressed.has(m.hk) ? pressT[m.hk] : -999);
       if (pressed.has(m.lk)) this.lastJ = pressT[m.lk]; if (pressed.has(m.hk)) this.lastKk = pressT[m.hk];
       // Punch + Kick within 4 frames of each other = super; ← → then J + K together = Hohen's fusion
-      this.held = { btn, sup: Math.abs(this.lastP - this.lastK) <= 4, fuse: Math.abs(this.lastJ - this.lastKk) <= 4 && frame - this.bfT <= 20, ff, bb, t: frame };
+      this.held = { btn, sup: Math.abs(this.lastP - this.lastK) <= 4, fuse: Math.abs(this.lastJ - this.lastKk) <= 4 && frame - this.bfT <= 20, bf: frame - this.bfT <= 20, ff, bb, t: frame }; // (bf: ← then → before the button)
     }
     // a press stays buffered for a few frames, so a punish can be entered during guard stun
     const hb = this.held && frame - this.held.t <= 5 ? this.held : null;
-    return { held: { lp: k('lp'), hp: k('hp'), lk: k('lk'), hk: k('hk') }, h, down: k('down'), up: k('up'), upPress: pressed.has(m.up) || pressed.has(ALT.up), btn: hb ? hb.btn : null, sup: hb ? hb.sup : false, fuse: hb ? !!hb.fuse : false, ff: hb ? hb.ff : false, bb: hb ? hb.bb : false, bt: hb ? hb.t : -1,
+    return { held: { lp: k('lp'), hp: k('hp'), lk: k('lk'), hk: k('hk') }, h, down: k('down'), up: k('up'), upPress: pressed.has(m.up) || pressed.has(ALT.up) || pressed.has(ALT2.up), btn: hb ? hb.btn : null, sup: hb ? hb.sup : false, fuse: hb ? !!hb.fuse : false, bf: hb ? !!hb.bf && !hb.fuse : false, ff: hb ? hb.ff : false, bb: hb ? hb.bb : false, bt: hb ? hb.t : -1,
       ffNow: this.ffDir === toward && frame - this.ffT <= 2, bbNow: this.ffDir === -toward && frame - this.ffT <= 2, tap, charge: keys.has(m.charge),
       dashTap: this.ffT === frame ? (this.ffDir === toward ? 1 : -1) : 0 }; // the second tap itself: dash forward or roll back
   }
@@ -50,8 +51,14 @@ class Human {
 /* ================= CPU ================= */
 function threatOfLowDummy() {}
 // a low is coming (guard crouching)? judged like the hit itself (heightClass): anything else is guarded standing
-const isLowAtk = o => golemLowAtk(o) || !!(o && o.state === 'attack' && o.move && (o.move.hitbox ? heightClass(o.move, boxOf(o, o.move.hitbox)) === 'low' : (!fromAbove(o.move) && (o.move.low || (!rising(o.move) && /low|Low|slide|Sweep|sweep|Belly/.test(o.move.pose || '')))))) ||
-  projs.some(p => p.owner === o && p.type !== 'decoy' && p.type !== 'guardShadow' && (p.h ? heightClass(p.h, projBox(p)) : (p.low && !fromAbove(p) ? 'low' : 'mid')) === 'low'); // (a shockwave along the floor, a shot at the feet...; a ring that rises into a column isn't)
+const isLowAtk = o => golemLowAtk(o) || !!(o && o.state === 'attack' && o.move && (o.move.hitbox ? heightClass(o.move, boxOf(o, o.move.hitbox)) === 'low' : (!o.move.midHit && !fromAbove(o.move) && (o.move.low || (!rising(o.move) && /low|Low|slide|Sweep|sweep|Belly/.test(o.move.pose || '')))))) ||
+  nearestProjLow(o); // (a shockwave along the floor, a shot at the feet...; a ring that rises into a column isn't) (midHit: a kick button that throws or punches at body height — not a low)
+function nearestProjLow(o) { // guard at the height of whichever of their projectiles reaches you first (a low one further back can wait: stand for the mid in front of it)
+  const t = o && other(o); let best = null, bd = Infinity;
+  for (const p of projs) { if (p.owner !== o || p.type === 'decoy' || p.type === 'guardShadow') continue;
+    const b = projBox(p), d = t ? Math.max(0, b.x0 - t.x, t.x - b.x1) : 0; if (d < bd) { bd = d; best = p; } }
+  return !!best && (best.h ? heightClass(best.h, projBox(best)) : (best.low && !fromAbove(best) ? 'low' : 'mid')) === 'low';
+}
 function threatOf(f, o) {
   const dist = Math.abs(o.x - f.x), gt = golemThreat(f, o); if (gt) return gt; // (the golem's blow)
   if (o.state === 'attack' && o.move && o.move.hitbox && o.mf <= o.move.startup + o.move.active && dist < 210)
@@ -81,6 +88,10 @@ class CPU {
   reset() { this.plan = {}; this.next = 0; this.def = null; this.threatKey = null; this.reactAt = 0; this.chargeUntil = 0; this.cancelTried = false; this.punishKey = null; }
   read(f, frame, o) { // (Jesse reloading doesn't shoot: he backs off and guards, and only throws Dynamite, counters with Showdown or goes for High Noon)
     if (f.reloadT > 0) { this.route = null; this.chainSeq = null; }
+    if (f.state === 'hitstun' && f.y <= 0) { // in a ground combo it may hold its guard, to stop a slow next attack (GUARD_BACK; decided once per combo)
+      if (this.mcFor !== f.comboSerial) { this.mcFor = f.comboSerial; this.mcGuard = Math.random() < (game.watch ? 0.6 : dif().block); }
+      if (this.mcGuard) return { ...EMPTY, h: -(golemGuardDir(f, o) || Math.sign(o.x - f.x) || f.facing), down: isLowAtk(o) };
+    }
     const out = this.think(f, frame, o);
     if (f.reloadT > 0 && out.btn && !out.sup && !(out.bb && (out.btn === 'lp' || out.btn === 'hk'))) Object.assign(out, { btn: null, ff: false, down: false, h: -(Math.sign(o.x - f.x) || f.facing) });
     return out;
@@ -298,13 +309,14 @@ class CPU {
   }
 }
 // training dummy: guards, stands, jumps, or hands control to the CPU
-const DUMMY_MODES = ['stand', 'guard', 'crouch', 'jump', 'cpu'];
-const DUMMY_LABEL_EN = { guard: 'Guard', stand: 'Stand still', crouch: 'Crouch', jump: 'Jump', cpu: 'Fight back' };
-const DUMMY_LABEL_JA = { guard: 'ガード', stand: '立ち', crouch: 'しゃがみ', jump: 'ジャンプ', cpu: '反撃' };
+// how the training dummy defends (T); repeating one of its own commands is set in the 技表's 相手 tab (game.repeat), on top of any of these
+const DUMMY_MODES = ['guard', 'sguard', 'cguard', 'jump', 'stand'];
+const DUMMY_LABEL_EN = { guard: 'Always guard', sguard: 'Stand guard', cguard: 'Crouch guard', jump: 'Jump', stand: 'No guard' };
+const DUMMY_LABEL_JA = { guard: '常にガード', sguard: '立ちガード', cguard: 'しゃがみガード', jump: 'ジャンプ', stand: 'ガードなし' };
 const DUMMY_LABEL = new Proxy({}, { get: (t, k) => (game.lang === 'ja' ? DUMMY_LABEL_JA : DUMMY_LABEL_EN)[k] });
 class Dummy {
   constructor() { this.cpu = new CPU(); }
-  reset() { this.cpu.reset(); }
+  reset() { this.cpu.reset(); this.rst = null; this.next = null; }
   read(f, frame, o) {
     if (game.demo) { // in Kuro's sample combos the dummy sometimes attacks once, so he can counter it
       const st = game.demoState, d = curDemos()[game.demoIdx];
@@ -318,12 +330,31 @@ class Dummy {
       if (d.dummy && d.dummy.inp && st && st.phase === 'run' && !st.dummyDone && st.t >= (d.dummy.at || 0)) { st.dummyDone = true; return { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false, ...d.dummy.inp }; }
       if (d.dummy && d.dummy.guardAfter && st && st.dummyDone && f.state !== 'attack' && (threatened(f, o) || f.state === 'blockstun')) return { h: -(golemGuardDir(f, o) || Math.sign(o.x - f.x) || f.facing), down: isLowAtk(o), up: false, btn: null, sup: false, ff: false, bb: false, charge: false }; // (a punish sample: once its technique is over, the opponent guards — only a real punish gets in)
     }
-    if (game.dummyMode === 'cpu') return this.cpu.read(f, frame, o);
-    const out = { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false };
-    if (game.dummyMode === 'guard' && (threatened(f, o) || f.state === 'blockstun')) { out.h = -(Math.sign(o.x - f.x) || f.facing); if (isLowAtk(o)) out.down = true; }
+    if (game.repeat) { const r = this.repeat(f, frame, o); if (r) return r; } // (its command, when it's time; otherwise it defends as set)
+    const out = { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false }, threat = threatened(f, o) || f.state === 'blockstun' || f.state === 'hitstun';
+    const away = -(golemGuardDir(f, o) || Math.sign(o.x - f.x) || f.facing);
+    if (game.dummyMode === 'guard' && threat) { out.h = away; out.down = isLowAtk(o); } // always guard: at the right height
+    if (game.dummyMode === 'sguard' && threat) out.h = away; // stand guard: lows get through
+    if (game.dummyMode === 'cguard') { out.down = true; if (threat) out.h = away; } // crouch guard: only lows are stopped
     if (game.dummyMode === 'jump') out.up = true;
-    if (game.dummyMode === 'crouch') out.down = true;
     return out;
+  }
+  // punish training: the chosen command (game.repeat, picked in the training bar), again and again — walks in to striking distance,
+  // does it, then waits the chosen interval before the next one
+  repeat(f, frame, o) {
+    const R = game.repeat, idle = null; // (null: not now — it defends as set)
+    if (!R) return idle;
+    if (this.rid !== R.id) { this.rid = R.id; this.rst = null; this.next = frame + 30; }
+    if (this.rst) { // doing it
+      const out = comboStep(f, o, R.steps, this.rst, { ...EMPTY });
+      if ((this.rst.i >= R.steps.length && f.state !== 'attack' && f.y <= 0) || frame - this.rt0 > 420) { this.rst = null; this.next = frame + R.every; }
+      return out;
+    }
+    if (frame < this.next || !((f.state === 'stand' || f.state === 'crouch') && f.atkCD <= 0)) return idle;
+    if (Math.abs(o.x - f.x) > R.reach) return { ...EMPTY, h: Math.sign(o.x - f.x) || f.facing }; // (too far: walk in first)
+    if (R.sup) f.meter = 100; // (a super needs a full gauge)
+    this.rst = { i: 0 }; this.rt0 = frame;
+    return comboStep(f, o, R.steps, this.rst, { ...EMPTY });
   }
 }
 

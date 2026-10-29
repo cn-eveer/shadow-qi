@@ -2,6 +2,15 @@
 /* ================= characters ================= */
 const CHARS = {
   ninja: {
+    // frames: wind-up 2 shorter (light) / 4 shorter (heavy), hand signs 20% shorter (still long enough to jab him first); every attack out 3 frames longer; recovery 3 / 5 / 5 longer
+    frameMod: { su: { light: 2, heavy: 4 }, tell: 0.8, act: 3, rec: { light: 3, heavy: 5, tech: 5 } },
+    // his techniques' 発生 (frames until they can hit) brought to about 16–22: how many times faster their lead-up plays (see techSpeed)
+    techSpeed: { shadowCharge: 4.5, swordSlash: 2.4, cloneStrike: 1.2, teleKick: 2.25, flame: 2.1, fireballs: 10, vanishSlide: 5, vanishDrop: 5.5, ambushLeap: 5, teleSpin: 1.68, ambushBehind: 1.35, ambushSlide: 1.25, ambushKick: 1.3,
+      jFire: 1.45, jRain: 1.5, jClone: 1.55, jIai: 1.45, jVanishHeel: 1.45 },
+    techDelay: { teleSlide: 5 }, // (and the other way: frames added before this one — the Drop Slide comes out a little later)
+    spBF: { lp: 'moonTempest', hp: 'fullMoon' }, // ← → + U / I: Moon Tempest, Full Moon Tempest (his I is no longer held to charge)
+    superPreMul: 0.2, // (Shadow Army: a shorter warning before the clones come — 発生 faster)
+    noLowSp: true, // (no ↓ versions of his techniques on demand: they still come out by themselves on someone in the air)
     name: 'KURO', dmgMul: 1.08, title: 'Shadow Ninja', nameJa: 'クロ', titleJa: '影の忍者', jugDmg: 1.15, scale: 1, walk: 3.4, back: 2.8, jumpX: 4.4,
     pDmg: 0.9, kDmg: 0.92, pReach: 1, kReach: 1.08, chargeRate: 0.5, auraCol: '185,145,255',
     sp: { fP: 'shadowCharge', fPH: 'swordSlash', fK: 'cloneStrike', fKH: 'teleKick', bP: 'flame', bPH: 'fireballs', bK: 'vanishSlide', bKH: 'vanishDrop' }, sup: 'shadowArmy',
@@ -162,18 +171,14 @@ Object.assign(CHARS, {
 CHARS.salary.lookKey = 'salary';
 // each fighter's own heavy attack in the air (I while jumping)
 const addLook = (ch, look) => { ch.normalLook = { ...(ch.normalLook || {}), ...look }; };
-addLook(CHARS.ninja, { jp1: { label: 'Air Kunai Slash', pose: 'slash', blade: true, trail: { cx: 15, cy: 100, r: 75, a0: 70, a1: -40, col: '225,235,255' } } });
+addLook(CHARS.ninja, { jp1: { label: 'Air Kunai Slash', pose: 'slash', blade: true, trail: { cx: 15, cy: 100, r: 75, a0: 70, a1: -40, col: '225,235,255' } },
+  cp1: { hitbox: [12,125,50,165], startup: 9 }, // ↓ + I, the Uppercut Launcher: reaches about twice as far, and comes out a little sooner (15F → 14F)
+  ck1: { hitbox: [20,150,0,30], cpLaunch: true, launchVy: 13 } }); // ↓ + K, the Sweep: reaches further, and like the Crescent Kick it launches on a counter or a punish (a juggle), knocking down otherwise
 addLook(CHARS.brawler, { jp1: { label: 'Air Hammer Fist', pose: 'tHammer', burst: [70, 70], aura: true } });
 addLook(CHARS.salary, { jp1: { label: 'Air Briefcase Drop', pose: 'sCase' }, jk1: { label: 'Air Briefcase Swing', pose: 'sCase' }, ck1: { label: 'Briefcase Trip', wind: 'crouch', pose: 'sCase', hitbox: [20,120,0,40] } });
 for (const k in CHARS) CHARS[k].key = k;
 
 // ---------- charge attacks (hold I) ----------
-makeCharged('ninja', [
-  { set: { label: 'Shadow Rush Slash', dmg: 52, hitbox: [10,125,40,175], launch: true, launchVy: 13, pose: 'slash', speedFx: true, recovery: 18, trail: { cx: 15, cy: 105, r: 90, a0: 80, a1: -40, col: '190,150,255' } }, rel: 14,
-    dash: true, act: (f, o, mf) => { const mv = f.move; if (mf <= mv.startup && mv.dashLeft > 0 && Math.abs(o.x - f.x) > 60) { f.vx = f.facing * mv.dashV; mv.dashLeft -= mv.dashV; if (mf % 2 === 0) parts.push({ type: 'smoke', x: f.x - f.facing * 20, y: GROUND - f.y - 90, vx: 0, vy: -0.4, r: 8, vr: 0.3, life: 14, max: 14, col: '120,90,190' }); } else f.vx *= 0.5; } },
-  { set: { label: 'Moon Tempest', hitbox: null, pose: 'slash', recovery: 22 }, rel: 6,
-    act: (f, o, mf) => { f.vx *= 0.6; if (mf === f.move.startup) { sfx('slash'); spawnPJ(f, 'crescent', { x: f.x + f.facing * 70, y: 70, vx: f.facing * 13, life: 40, r: 40, h: { dmg: 84, stun: 22, bstun: 14, push: 6, kd: true, kdVx: 17, kdVy: 8, gdrain: 14, label: 'Moon Tempest' } }); } } },
-]);
 makeCharged('brawler', [
   { set: { label: 'Charged Qi Palm', dmg: 54, hitbox: [10,125,60,170], launch: true, launchVy: 13.5, pose: 'palmUp', aura: true, burst: [80, 150], recovery: 18 }, rel: 7,
     act: (f, o, mf) => { if (mf <= f.move.startup && Math.abs(o.x - f.x) > 70) f.vx = f.facing * 6; else f.vx *= 0.6; } },
@@ -189,8 +194,8 @@ makeCharged('staff', [
     act: (f, o, mf) => { f.vx *= 0.5; if (mf === f.move.startup) { sfx('swing'); parts.push({ type: 'ring', x: f.x, y: GROUND - 90, r: 30, vr: 9, life: 16, max: 16, col: '255,210,110' }); for (let i = 0; i < 6; i++) parts.push({ type: 'star', x: f.x + rnd(-100, 100), y: GROUND - rnd(40, 160), vx: f.facing * rnd(2, 5), vy: -rnd(0, 2), r: 3, vr: -0.1, life: 18, max: 18, col: '255,210,110', rot: R() * 3 }); } } },
 ]);
 makeCharged('psychic', [
-  { set: { label: 'Rising Glyph', dmg: 50, launch: true, launchVy: 13.5, pose: 'psyUp', recovery: 20, hitbox: [40,195,0,200], floorGlyph: 150, psyFist: null }, rel: 8, onFire: (f, o) => lyraReach(f, o, 430, 100) },
-  { set: { label: 'Nova Glyph', dmg: 90, kd: true, kdVx: 17, kdVy: 8, push: 8, pose: 'psyPush', recovery: 24, gdrain: 18, psyFist: [150, 115, 1.6], burst: [150, 115] }, rel: 9, onFire: (f, o) => lyraReach(f, o, 430, 120),
+  { set: { label: 'Rising Glyph', dmg: 50, launch: true, launchVy: 13.5, pose: 'psyUp', recovery: 20, hitbox: [40,195,0,200], floorGlyph: 150, psyFist: null }, rel: 8, onFire: (f, o) => lyraReach(f, o, 320, 100) },
+  { set: { label: 'Nova Glyph', dmg: 90, kd: true, kdVx: 17, kdVy: 8, push: 8, pose: 'psyPush', recovery: 24, gdrain: 18, psyFist: [150, 115, 1.6], burst: [150, 115] }, rel: 9, onFire: (f, o) => lyraReach(f, o, 320, 120),
     act: (f, o, mf) => { f.vx *= 0.6; if (mf === f.move.startup) { sfx('hitH'); game.shake = Math.max(game.shake, 5); } } },
 ]);
 makeCharged('kappa', [
@@ -212,7 +217,7 @@ const devilAuto = (f, o, k) => k === 'bK' && tCrouch(o) ? 'sdTailDrop' : null;
 Object.assign(CHARS.salary, { normalLook: { ...(CHARS.salary.normalLook || {}),
   cp0: { label: 'Pen Throw', startup: 6, active: 2, recovery: 14, wind: 'crouch', pose: 'sShove', hitbox: null, crouch: true,
     onFrame: (f, o, mf) => { if (mf === f.move.startup) { sfx('throw'); spawnPJ(f, 'pen', { x: f.x + f.facing * 40, y: 62, vx: f.facing * 15, life: 40, r: 9, h: { dmg: 24, stun: 16, bstun: 8, push: 1.5, gdrain: 4, low: false, label: 'Pen Throw' } }); } } },
-  ck0: { label: 'Stapler Toss', startup: 9, active: 2, recovery: 16, wind: 'crouch', pose: 'sCase', hitbox: null, crouch: true,
+  ck0: { label: 'Stapler Toss', startup: 9, active: 2, recovery: 16, wind: 'crouch', pose: 'sCase', hitbox: null, crouch: true, midHit: true, /* (↓ + J, but the stapler flies at body height) */
     onFrame: (f, o, mf) => { if (mf === f.move.startup) { sfx('throw'); spawnPJ(f, 'stapler', { x: f.x + f.facing * 36, y: 80, vx: f.facing * 8.5, vy: 6.5, g: 0.42, life: 70, r: 12, h: { dmg: 34, stun: 18, bstun: 10, push: 2, gdrain: 6, label: 'Stapler Toss' } }); } } },
   jp1: { label: 'Mug Drop', startup: 8, active: 2, recovery: 14, wind: 'jump', pose: 'sCase', hitbox: null,
     onFrame: (f, o, mf) => { if (mf === f.move.startup) { sfx('throw'); spawnPJ(f, 'mug', { x: f.x + f.facing * 30, y: f.y + 100, vx: f.facing * 7, vy: -7, life: 50, r: 14, h: { dmg: 64, stun: 24, bstun: 12, push: 2, gdrain: 10, overhead: true, label: 'Mug Drop' } }); } } }, // (a heavy mug: an overhead)

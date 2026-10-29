@@ -2,12 +2,12 @@
 /* ================= online play (WebRTC through PeerJS; lockstep with input delay) ================= */
 // Both players run the same deterministic game. Each frame, every player sends their buttons for a frame a few
 // frames ahead (the input delay); a frame is simulated only once both players' buttons for it have arrived.
-const NETV = 1, NET_PREFIX = 'shadowqi-v' + NETV + '-', RAND_SLOTS = 6;
+const NETV = 2, NET_PREFIX = 'shadowqi-v' + NETV + '-', RAND_SLOTS = 6;
 const NBIT = { left: 1, right: 2, up: 4, down: 8, lp: 16, hp: 32, lk: 64, hk: 128, charge: 256 };
 const NET = { on: false, peer: null, conn: null, host: false, side: 0, delay: 4, tick: 0, cur: 0, local: {}, remote: {}, sentUpTo: -1,
   name: '', oppName: '', names: ['', ''], rtt: 0, stallT: 0, status: '', mode: null, busy: false, ck: {}, rematch: [false, false], joinTimer: null };
 function netLocalMask() { // this player's buttons right now
-  let m = 0; const k = c => keys.has(MAPS.p1[c]) || (ALT[c] && keys.has(ALT[c]));
+  let m = 0; const k = c => keys.has(MAPS.p1[c]) || (ALT[c] && keys.has(ALT[c])) || (ALT2[c] && keys.has(ALT2[c]));
   for (const c in NBIT) if (k(c)) m |= NBIT[c];
   return m;
 }
@@ -37,10 +37,10 @@ class NetHuman { // turns a player's button history into the same inputs the key
       if (pr(NBIT.lp) || pr(NBIT.hp)) this.lastP = frame;
       if (pr(NBIT.lk) || pr(NBIT.hk)) this.lastK = frame;
       if (pr(NBIT.lk)) this.lastJ = frame; if (pr(NBIT.hk)) this.lastKk = frame;
-      this.held = { btn, sup: Math.abs(this.lastP - this.lastK) <= 4, fuse: Math.abs(this.lastJ - this.lastKk) <= 4 && frame - this.bfT <= 20, ff, bb, t: frame };
+      this.held = { btn, sup: Math.abs(this.lastP - this.lastK) <= 4, fuse: Math.abs(this.lastJ - this.lastKk) <= 4 && frame - this.bfT <= 20, bf: frame - this.bfT <= 20, ff, bb, t: frame }; // (bf: ← then → before the button)
     }
     const hb = this.held && frame - this.held.t <= 5 ? this.held : null;
-    return { held: { lp: has(NBIT.lp), hp: has(NBIT.hp), lk: has(NBIT.lk), hk: has(NBIT.hk) }, h, down: has(NBIT.down), up: has(NBIT.up), upPress: pr(NBIT.up), btn: hb ? hb.btn : null, sup: hb ? hb.sup : false, fuse: hb ? !!hb.fuse : false, ff: hb ? hb.ff : false, bb: hb ? hb.bb : false, bt: hb ? hb.t : -1,
+    return { held: { lp: has(NBIT.lp), hp: has(NBIT.hp), lk: has(NBIT.lk), hk: has(NBIT.hk) }, h, down: has(NBIT.down), up: has(NBIT.up), upPress: pr(NBIT.up), btn: hb ? hb.btn : null, sup: hb ? hb.sup : false, fuse: hb ? !!hb.fuse : false, bf: hb ? !!hb.bf && !hb.fuse : false, ff: hb ? hb.ff : false, bb: hb ? hb.bb : false, bt: hb ? hb.t : -1,
       ffNow: this.ffDir === toward && frame - this.ffT <= 2, bbNow: this.ffDir === -toward && frame - this.ffT <= 2, tap, charge: has(NBIT.charge),
       dashTap: this.ffT === frame ? (this.ffDir === toward ? 1 : -1) : 0 };
   }
@@ -73,7 +73,7 @@ function netReceive(msg) {
   switch (msg.t) {
     case 'hello': NET.oppName = String(msg.name || '?').slice(0, 12); NET.oppChar = CHARS[msg.char] ? msg.char : 'ninja';
       if (NET.host && !NET.on) netStartAsHost(); break;
-    case 'busy': netStatus(L('That player is already in a match.', 'その相手はすでに対戦中です。')); break;
+    case 'busy': if (NET.mode !== 'random') netStatus(L('That player is already in a match.', 'その相手はすでに対戦中です。')); break; // (a random search just moves on)
     case 'start': netBegin(msg); break;
     case 'in': for (let i = 0; i < msg.m.length; i++) if (NET.remote[msg.f + i] == null && msg.f + i >= NET.tick - 30) NET.remote[msg.f + i] = msg.m[i]; break;
     case 'ping': netSend({ t: 'pong', at: msg.at }); break;
@@ -118,7 +118,7 @@ function netEnd(msg) { // leave online play and go back to the title screen
   NET.on = false; game.online = false; clearInterval(NET.pingT); clearTimeout(NET.joinTimer);
   try { if (NET.conn) NET.conn.close(); } catch (e) {}
   try { if (NET.peer) NET.peer.destroy(); } catch (e) {}
-  NET.conn = null; NET.peer = null; NET.mode = null;
+  NET.conn = null; NET.peer = null; NET.mode = null; NET.waitMsg = null;
   if (wasOn && msg) { showMenu(); showOnline(msg); } else if (msg) netStatus(msg);
 }
 function netStatus(t) { NET.status = t; const el = document.getElementById('netStatus'); if (el) el.textContent = t; }
@@ -133,7 +133,11 @@ const PEER_OPTS = { config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302
 function netWire(conn) { // a connected opponent: say hello, listen for messages
   NET.conn = conn;
   conn.on('data', netReceive);
-  conn.on('close', () => { if (NET.conn === conn) netEnd(L('The connection was closed.', '接続が切れました。')); });
+  conn.on('close', () => {
+    if (NET.conn !== conn) return;
+    if (!NET.on && NET.waitMsg && NET.peer && !NET.peer.destroyed) { NET.conn = null; netStatus(NET.waitMsg); return; } // (it fell through before the match started: still waiting in our slot or room)
+    netEnd(L('The connection was closed.', '接続が切れました。'));
+  });
   const hello = () => { netSend({ t: 'hello', name: NET.name, char: game.p1Char, v: NETV }); netSend({ t: 'ping', at: performance.now() }); };
   if (conn.open) hello(); else conn.on('open', hello);
 }
@@ -144,26 +148,30 @@ function hostAs(id) { // try to take this id and wait for someone to connect; re
     peer.on('open', () => { if (done) return; done = true; NET.peer = peer; NET.host = true; res(true); });
     peer.on('error', e => { if (!done) { done = true; try { peer.destroy(); } catch (x) {} res(false); } else if (e.type !== 'peer-unavailable') netStatus(L('Connection problem: ', '接続エラー：') + e.type); });
     peer.on('connection', c => {
-      if (NET.conn) { c.on('open', () => { c.send({ t: 'busy' }); setTimeout(() => c.close(), 300); }); return; }
-      clearTimeout(NET.joinTimer); netStatus(L('Opponent found! Starting…', '相手が見つかりました！開始します…')); netWire(c);
+      if (NET.conn) { c.on('open', () => { c.send({ t: 'busy' }); setTimeout(() => c.close(), 300); }); return; } // (already in a match, or already connecting to someone)
+      netStatus(L('Connecting to an opponent…', '対戦相手と接続中…')); netWire(c);
+      const giveUp = setTimeout(() => { if (NET.conn === c && !c.open) { NET.conn = null; try { c.close(); } catch (e) {} if (NET.waitMsg) netStatus(NET.waitMsg); } }, 15000); // (WebRTC can be slow, on an iPad especially — but a connection that never opens mustn't hold the slot)
+      c.on('open', () => { clearTimeout(giveUp); netStatus(L('Opponent found! Starting…', '相手が見つかりました！開始します…')); });
     });
   });
 }
 function joinId(id, guestPeer) { // try to connect to a host; resolves true once connected
   return new Promise(res => {
-    let done = false;
-    const fin = v => { if (!done) { done = true; guestPeer.off && guestPeer.off('error', onErr); res(v); } };
+    let done = false, c = null; NET.lastBusy = false;
+    const fin = v => { if (done) return; done = true; guestPeer.off && guestPeer.off('error', onErr);
+      if (v) NET.host = false; else { if (NET.conn === c) NET.conn = null; try { c && c.close(); } catch (e) {} } // (given up on: closed, so the other side stops waiting for it)
+      res(v); };
     const onErr = e => { if (e.type === 'peer-unavailable') fin(false); };
     guestPeer.on('error', onErr);
-    const c = guestPeer.connect(id, { reliable: true });
-    c.on('open', () => { NET.host = false; netWire(c); fin(true); });
-    c.on('data', d => { if (d && d.t === 'busy') { try { c.close(); } catch (e) {} if (NET.conn === c) NET.conn = null; } });
-    setTimeout(() => fin(false), 5000);
+    c = guestPeer.connect(id, { reliable: true });
+    c.on('data', d => { if (d && d.t === 'busy') { NET.lastBusy = true; fin(false); } else if (d && d.t === 'hello') fin(true); }); // (connected only once they say hello — a busy host isn't a match)
+    c.on('open', () => { if (done) { try { c.close(); } catch (e) {} return; } if (!NET.conn) netWire(c); else fin(false); }); // (too late, or we found someone meanwhile)
+    setTimeout(() => fin(false), 12000); // (an empty slot answers at once: this only waits on a real, slow connection)
   });
 }
 function newGuestPeer() { return new Promise((res, rej) => { const p = new Peer(PEER_OPTS); p.on('open', () => res(p)); p.on('error', e => rej(e)); }); }
 async function netRandom() { // random match: join someone waiting, or wait in a free slot yourself
-  NET.mode = 'random'; netStatus(L('Looking for an opponent…', '対戦相手を探しています…'));
+  NET.mode = 'random'; NET.waitMsg = null; netStatus(L('Looking for an opponent…', '対戦相手を探しています…'));
   try {
     await loadPeer();
     const guest = await newGuestPeer(); NET.peer = guest;
@@ -172,10 +180,11 @@ async function netRandom() { // random match: join someone waiting, or wait in a
     guest.destroy(); NET.peer = null;
     for (let k = 0; k < RAND_SLOTS && NET.mode === 'random'; k++) {
       if (await hostAs(NET_PREFIX + 'rand-' + k)) {
-        netStatus(L('Waiting for an opponent… (share the page with a friend!)', '対戦相手を待っています…（友だちにページを共有しよう！）'));
+        NET.waitMsg = L('Waiting for an opponent… (share the page with a friend!)', '対戦相手を待っています…（友だちにページを共有しよう！）'); netStatus(NET.waitMsg);
         const myK = k, retry = async () => { // meanwhile, check now and then whether someone is waiting in an earlier slot
-          if (NET.conn || NET.mode !== 'random' || myK === 0) return;
-          try { const g2 = await newGuestPeer(); for (let j = 0; j < myK && !NET.conn; j++) if (await joinId(NET_PREFIX + 'rand-' + j, g2)) { const old = NET.peer; NET.peer = g2; try { old.destroy(); } catch (e) {} return; } g2.destroy(); } catch (e) {}
+          if (NET.on || NET.mode !== 'random' || myK === 0) return;
+          if (NET.conn) { NET.joinTimer = setTimeout(retry, 5000); return; } // (someone is connecting to us: look again later, in case it falls through)
+          try { const g2 = await newGuestPeer(); for (let j = 0; j < myK && !NET.conn; j++) if (await joinId(NET_PREFIX + 'rand-' + j, g2)) { const old = NET.peer; NET.peer = g2; NET.waitMsg = null; try { old.destroy(); } catch (e) {} return; } /* (we joined them: no longer waiting in our own slot) */ g2.destroy(); } catch (e) {}
           NET.joinTimer = setTimeout(retry, 5000 + Math.random() * 3000);
         };
         NET.joinTimer = setTimeout(retry, 4000 + Math.random() * 3000);
@@ -185,20 +194,45 @@ async function netRandom() { // random match: join someone waiting, or wait in a
     netStatus(L('All match slots are busy. Try again in a moment.', '空きがありません。少し待ってからもう一度。'));
   } catch (e) { netStatus(L('Could not reach the matchmaking server.', 'マッチングサーバーに接続できませんでした。')); }
 }
+// How many players are waiting in random match: each waiting player holds one of the RAND_SLOTS names on the PeerJS server.
+// A name is checked by trying to take it — taken means someone waits there; free, it's let go at once (no one waiting is disturbed).
+// Shown next to the online buttons; nothing is shown offline or when the server can't be reached.
+const WAIT = { n: null, t: -1e9, busy: false };
+function slotTaken(id) { // true: someone is waiting there, false: free, null: couldn't tell
+  return new Promise(res => { let done = false; const p = new Peer(id, PEER_OPTS);
+    const fin = v => { if (done) return; done = true; try { p.destroy(); } catch (e) {} res(v); };
+    p.on('open', () => fin(false)); p.on('connection', () => fin(false)); p.on('error', e => fin(e.type === 'unavailable-id' ? true : null)); setTimeout(() => fin(null), 8000); });
+}
+async function netCountWaiting() {
+  if (WAIT.busy || NET.on || (NET.mode && !NET.waitMsg)) return; // (not mid-match, and not while searching: the search takes and tries these names itself)
+  if (!navigator.onLine) { WAIT.n = null; netShowCount(); return; }
+  WAIT.busy = true;
+  try { await loadPeer(); const r = []; for (let k = 0; k < RAND_SLOTS; k++) r.push(await slotTaken(NET_PREFIX + 'rand-' + k)); WAIT.n = r.every(v => v === null) ? null : r.filter(v => v === true).length; }
+  catch (e) { WAIT.n = null; }
+  WAIT.busy = false; WAIT.t = performance.now(); netShowCount();
+}
+function netShowCount() { // the count next to the online buttons
+  const t = WAIT.n == null ? '' : L(`${WAIT.n} waiting in random match`, `ランダムマッチ待ち：${WAIT.n}人`);
+  document.querySelectorAll('[data-oncount]').forEach(el => { el.textContent = t; el.hidden = !t; });
+}
+function netCountSoon() { if (performance.now() - WAIT.t > 30000) netCountWaiting(); } // (on the title or online screen: refresh if it's older than 30 s)
+setInterval(() => { if ((game.mode === 'menu' || game.mode === 'online') && document.visibilityState === 'visible') netCountWaiting(); }, 30000);
+addEventListener('offline', () => { WAIT.n = null; netShowCount(); });
+addEventListener('online', () => { WAIT.t = -1e9; if (game.mode === 'menu' || game.mode === 'online') netCountWaiting(); });
 async function netCreateRoom(code) {
-  NET.mode = 'room'; netStatus(L('Creating room ' + code + '…', 'ルーム ' + code + ' を作成中…'));
+  NET.mode = 'room'; NET.waitMsg = null; netStatus(L('Creating room ' + code + '…', 'ルーム ' + code + ' を作成中…'));
   try {
     await loadPeer();
-    if (await hostAs(NET_PREFIX + 'room-' + code)) netStatus(L('Room ' + code + ' is open. Waiting for your opponent to join…', 'ルーム ' + code + ' を作成しました。相手の参加を待っています…'));
+    if (await hostAs(NET_PREFIX + 'room-' + code)) { NET.waitMsg = L('Room ' + code + ' is open. Waiting for your opponent to join…', 'ルーム ' + code + ' を作成しました。相手の参加を待っています…'); netStatus(NET.waitMsg); }
     else netStatus(L('Room ' + code + ' is already in use. Pick another number.', 'ルーム ' + code + ' は使用中です。別の番号にしてください。'));
   } catch (e) { netStatus(L('Could not reach the matchmaking server.', 'マッチングサーバーに接続できませんでした。')); }
 }
 async function netJoinRoom(code) {
-  NET.mode = 'room'; netStatus(L('Joining room ' + code + '…', 'ルーム ' + code + ' に参加中…'));
+  NET.mode = 'room'; NET.waitMsg = null; netStatus(L('Joining room ' + code + '…', 'ルーム ' + code + ' に参加中…'));
   try {
     await loadPeer();
     const guest = await newGuestPeer(); NET.peer = guest;
-    if (!(await joinId(NET_PREFIX + 'room-' + code, guest))) netStatus(L('Room ' + code + ' was not found.', 'ルーム ' + code + ' が見つかりません。'));
+    if (!(await joinId(NET_PREFIX + 'room-' + code, guest))) netStatus(NET.lastBusy ? L('That player is already in a match.', 'その相手はすでに対戦中です。') : L('Room ' + code + ' was not found.', 'ルーム ' + code + ' が見つかりません。'));
     else netStatus(L('Connected! Starting…', '接続しました！開始します…'));
   } catch (e) { netStatus(L('Could not reach the matchmaking server.', 'マッチングサーバーに接続できませんでした。')); }
 }
@@ -211,11 +245,11 @@ function showOnline(msg) { // the online lobby: username first, then random matc
     <div class="lbl">${L('Username (required)', 'ユーザー名（必須）')}</div>
     <input id="netName" class="netin" maxlength="12" autocomplete="nickname" placeholder="${L('Your name', 'あなたの名前')}" value="${saved.replace(/"/g, '')}">
     <div class="vsrow">${L('Your fighter:', '使用キャラ：')} ${CHAR_ORDER.map(k => `<button class="${k === c ? 'on' : ''}" data-netchar="${k}" aria-pressed="${k === c}">${nm(CHARS[k])}</button>`).join('')}</div>
-    <div class="row"><button class="go" data-net="random">${L('Random match', 'ランダムマッチ')}</button></div>
+    <div class="row onrow"><button class="go" data-net="random">${L('Random match', 'ランダムマッチ')}</button><span class="oncount" data-oncount></span></div>
     <div class="row"><input id="netRoom" class="netin room" inputmode="numeric" maxlength="6" placeholder="${L('Room no.', 'ルーム番号')}"><button class="ghost" data-net="create">${L('Create room', 'ルーム作成')}</button><button class="ghost" data-net="join">${L('Join room', 'ルームに参加')}</button></div>
     <div class="hint" id="netStatus" role="status">${msg || L('Enter a username, then find a random opponent or use a room number to play a friend.', 'ユーザー名を入力して、ランダムマッチか、ルーム番号で友だちと対戦。')}</div>
     <div class="row"><button class="ghost" data-net="back">${L('Back', '戻る')}</button></div>
-  </div>`;
+  </div>`; netShowCount(); netCountSoon();
   const nameOk = () => { const v = document.getElementById('netName').value.trim(); if (!v) { netStatus(L('Please enter your username first.', '先にユーザー名を入力してください。')); document.getElementById('netName').focus(); return false; }
     NET.name = v.slice(0, 12); try { localStorage.setItem('sq-name', NET.name); } catch (e) {} return true; };
   ov.querySelectorAll('[data-netchar]').forEach(b => b.addEventListener('click', () => { game.p1Char = b.dataset.netchar; const v = document.getElementById('netName').value; showOnline(NET.status); document.getElementById('netName').value = v; }));

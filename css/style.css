@@ -32,6 +32,14 @@ h1{font-family:var(--hud);font-weight:400;font-size:clamp(24px,3.6vw,36px);line-
 .tag{color:var(--muted);font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} /* (shortened with … on a narrow window; the full text shows on hover) */
 .pill{font:700 14px var(--body);color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer}
 .tbar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+/* the 技表's tabs (技 / コンボ / 相手) and the dummy's ▶ (punish training) */
+.tlist .ttabs{display:flex;justify-content:center;align-items:center;gap:4px;margin-bottom:3px}
+.tlist .ttabs button{width:auto;aspect-ratio:auto;border-radius:999px;padding:1px 10px;font-size:.85em;border-width:1px;opacity:.7}
+.tlist .ttabs button.on{opacity:1;background:rgba(255,217,138,.25);border-color:#ffd98a}
+.tlist .ttabs small{opacity:.45;font-weight:400}
+.tlist .trow{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px 10px;margin-top:3px}.tlist .trow .tk{margin-top:0}
+.tlist .tplay{border-color:rgba(143,240,164,.8);color:#8ff0a4}.tlist .tplay.on{border-color:rgba(255,120,120,.8);color:#ff8a8a;background:rgba(255,120,120,.15)}
+.tlist .tev{display:inline-flex;align-items:center;gap:6px;font-weight:600}.tlist .tev button{width:clamp(20px,2.8cqw,28px)}
 .tbar[hidden]{display:none}
 .pill.watch{display:block;margin:12px 0 2px;border-color:var(--accent)}
 .pill:focus-visible,.overlay button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
@@ -50,6 +58,8 @@ h1{font-family:var(--hud);font-weight:400;font-size:clamp(24px,3.6vw,36px);line-
 .setrow{display:flex;flex-direction:column;gap:2px;padding:10px 14px;font-weight:700;overflow-y:auto;min-height:0}
 .srow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
 .srow:last-child{border-bottom:0}
+.onrow{align-items:center}.oncount{font-size:.85em;color:var(--muted);white-space:nowrap}.oncount::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:#5fd38a;margin-right:6px;vertical-align:1px}.oncount[hidden]{display:none}
+.fdhelp{padding:2px 0 10px;border-bottom:1px solid var(--line);color:var(--muted);font-size:.9em;line-height:1.5}.fdhelp p{margin:6px 0}
 .dseg{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
 .dseg .pill.on{background:var(--text);color:var(--surface);border-color:var(--text)}
 /* the drawer is either the settings (sound, music, language) or the move list (fighter tabs and cards), never both */
@@ -189,6 +199,7 @@ kbd{display:inline-block;min-width:1.75em;text-align:center;padding:1px 6px;font
 /* touch controls for phones and tablets: see-through, out of the way of the action */
 .touch{position:absolute;inset:0;pointer-events:none;z-index:6;user-select:none;-webkit-user-select:none}
 .touch[hidden]{display:none}
+.touch.viewonly .tpad,.touch.viewonly .tbtns{display:none} /* (watching samples or CPU vs CPU: only the pause button) */
 body.mobile .touch{position:fixed;inset:0;z-index:20} /* (moved beside the game panel on phones: see layoutTouch) */
 .tpad{pointer-events:auto;position:absolute;left:2.5%;bottom:5%;width:15%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.06),rgba(255,255,255,.14));border:2px solid rgba(255,255,255,.32);touch-action:none;box-shadow:0 0 18px rgba(0,0,0,.25) inset}
 .tknob{position:absolute;left:50%;top:50%;width:38%;height:38%;margin:-19% 0 0 -19%;border-radius:50%;background:rgba(255,255,255,.32);border:2px solid rgba(255,255,255,.55);box-shadow:0 4px 12px rgba(0,0,0,.3);transition:transform .05s}

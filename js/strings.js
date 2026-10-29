@@ -17,14 +17,25 @@ const tieWhip = f => { // Tanaka's necktie, cracked like a whip
 const LCR = (label, o = {}) => ({ kind: 'p', str: 0, label, wind: 'psyRaise', pose: 'psyUp', jug: true, stay: true, startup: 13, active: 10, recovery: 10, dmg: 0, hitbox: null, jugVy: 7.5, onFrame: lyraCrystals, ...o, active: (o.crystals || 2) * (o.gap || 3) + 2 });
 const STRINGS = {
   ninja: { // Kuro: kunai slashes and shadow steps
-    n2: SG('p', 'Kunai Slash', 'slashW', 'slash', { blade: true, trail: { cx: 15, cy: 105, r: 70, a0: 70, a1: -30, col: '225,235,255' } }),
-    n3: SG('p', 'Reverse Slash', 'slash', 'kReverse', { blade: true, trail: { cx: 15, cy: 110, r: 70, a0: -30, a1: 70, col: '225,235,255' } }),
-    n4: SG('p', 'Shadow Step', 'dash', 'kStepSlash', { blade: true, step: 10, speedFx: true, startup: 7, hitbox: [10,100,30,120] }),
-    nF: SF('k', 'Shadow Crescent', 'spinW', 'roundhouse', { spin: [3, 9], trail: { cx: 0, cy: 80, r: 100, a0: -70, a1: 60, col: '190,150,255' } }),
+    // U, U, U, U, K (Street Fighter 6 style: every hit has its own job; guarded, the string has holes)
+    //  U, U:  two fast hits (high, mid); guard the first U and a U of their own beats the second
+    //  3rd U: a medium (a mid), slower — slower than 10 frames, so they can guard it even on a hit (GUARD_BACK); guarded, a 20-frame hole before it
+    //  4th U: fast and low, no gap after the 3rd, safe when guarded; on a hit it trips them, and the K catches them as they fall
+    //  K:     the final blow, a high: guard the low 4th crouching and it passes over; slow, out a long time and slow to recover;
+    //         guarded standing, a fast attack punishes it from up close
+    n2: SG('p', 'Kunai Slash', 'slashW', 'slash', { fixedFrames: true, guardGap: 12, startup: 4, active: 6, recovery: 12, advHit: 14, advBlock: -2, blade: true, trail: { cx: 15, cy: 105, r: 70, a0: 70, a1: -30, col: '225,235,255' } }),
+    n3: SG('p', 'Reverse Slash', 'slash', 'kReverse', { fixedFrames: true, str: 1, dmg: 40, pre: 10, guardGap: 12, startup: 6, active: 6, recovery: 18, advHit: 14, advBlock: -5, hitbox: [20,98,55,140], blade: true, trail: { cx: 15, cy: 110, r: 70, a0: -30, a1: 70, col: '225,235,255' } }),
+    n4: SG('p', 'Shadow Step', 'crouch', 'cPunch', { fixedFrames: true, startup: 3, active: 6, recovery: 10, advBlock: 0, /* (−6 with the guard stall: safe even against an 8F jab) */ low: true, hitbox: [15,105,0,42], launch: true, launchVy: 9, trip: true, blade: true, step: 10, speedFx: true }),
+    nF: SF('k', 'Shadow Crescent', 'spinW', 'roundhouse', { fixedFrames: true, pre: 8, startup: 10, active: 9, recovery: 24, advBlock: -6, /* (−12 once the guard stall is added) */ bpush: 3.5, noFiveLag: true, spin: [3, 9], hitbox: [15,105,112,175], high: true, // (a high: it passes over someone crouching)
+      dmg: 88, hitstop: 16, gdrain: 26, kdVx: 17, kdVy: 10, push: 6, // a heavy blow: hits hard, freezes the screen longer, sends them flying, tears into a guard
+      trail: { cx: 0, cy: 80, r: 120, a0: -80, a1: 70, col: '190,150,255' },
+      onFrame(f, o, mf) { if (mf === f.move.startup + 1) { sfx('swing'); game.shake = Math.max(game.shake, 4); const x = f.x + f.facing * 70, y = GROUND - f.y - 90; parts.push({ type: 'ring', x, y, r: 10, vr: 7, life: 14, max: 14, col: '190,150,255' }); for (let i = 0; i < 8; i++) parts.push({ type: 'speed', x, y: y + rnd(-30, 30), vx: f.facing * rnd(6, 11), vy: rnd(-1, 1), life: 10, max: 10, col: '190,150,255' }); }
+        if (f.hitConnected && f.lastResult === 'hit' && !f.move.heavyHit) { f.move.heavyHit = true; game.shake = Math.max(game.shake, 9); sfx('hitH'); } } }),
     nL: SL('Kunai Rise', 'uppercutW', 'kunaiRise', { blade: true, trail: { cx: 10, cy: 90, r: 95, a0: -30, a1: 95, col: '225,235,255' } }),
     nE: SF('k', 'Crescent Kick', 'kickW', 'highKick', { dmg: 50, trail: { cx: 0, cy: 62, r: 78, a0: -45, a1: 95, col: '190,150,255' } }),
     nl2: SG('k', 'Sweep Slash', 'crouch', 'lowKick', { low: true, blade: true, hitbox: [20,90,8,44] }),
-    nlE: SF('k', 'Shadow Sweep', 'crouch', 'slideKick', { low: true, step: 8, hitbox: [0,90,0,34], kdVy: 5 }),
+    nlE: SF('k', 'Shadow Snap Kick', 'kickW', 'midKick', { step: 8, hitbox: [15,100,45,130], kdVy: 5 }), // J, J, K / J, K: low, low… then a mid (guard the lows crouching and this one hits)
+    nD: SF('k', 'Shadow Reaper', 'crouch', 'sweep', { fixedFrames: true, pre: 6, startup: 10, active: 7, recovery: 22, advBlock: -6, /* (−12 with the guard stall) */ noFiveLag: true, low: true, step: 8, hitbox: [0,105,0,34], kd: true, kdVx: 6, kdVy: 6 }), // U, U, ↓ + K: the low ending (U, U, K drops from above instead)
     jPalm: SJ('p', 'Rising Kunai Slash', 'jabW', 'kunaiRise', { blade: true, trail: { cx: 10, cy: 90, r: 80, a0: -30, a1: 90, col: '225,235,255' } }),
     jElbow: SJ('p', 'Twin Kunai', 'slashW', 'slash', { blade: true, multi: 2, interval: 3, dmg: 14, lastDmg: 16 }),
     jUpper: SJ('p', 'Shadow Upper', 'uppercutW', 'uppercut', { speedFx: true, dmg: 30, jugVy: 8 }),
@@ -296,6 +307,7 @@ Object.assign(STRINGS.salaryDevil, {
   jRise: JR('Brimstone Rise', 'kClawDown', 'kClawUp', { claw: [0, 0, -1.3, 64, '255,120,90', 'tgt'], onFrame: (f, o, mf) => { if (mf === f.move.startup) { parts.push({ type: 'wcol', x: o.x, w: 36, life: 16, max: 16, col: '255,100,40' }); sfx('flame'); } } }),
 });
 wireStrings(); // chain the aerial versions as well
+STRINGS.ninja.n2.chain = { ...STRINGS.ninja.n2.chain, dhk: 'nD' }; // Kuro: U, U, ↓ + K ends low
 STRINGS.kappa.$start.k = null;
 // fists, kunai and briefcases are short: in a juggle these fighters spring up to where the opponent is, so the blow really reaches them
 // (instead of a short blade somehow hitting someone high above). The hit area is now measured from where he is in the air.
@@ -318,7 +330,7 @@ const fxLighter = (fn) => { ctx.save(); ctx.globalCompositeOperation = 'lighter'
 const confetti = (x, y, n = 12) => { const cols = ['255,90,90', '255,210,80', '120,220,140', '120,180,255', '230,140,255']; for (let i = 0; i < n; i++) parts.push({ type: 'spark', x, y, vx: rnd(-5, 5), vy: rnd(-7, -2), life: 26, max: 26, col: cols[i % cols.length] }); };
 Object.assign(STRINGS.ninja, {
   nE: { kind: 'k', str: 1, label: 'Crescent Moon Drop', wind: 'jump', pose: 'axe', startup: 16, active: 6, recovery: 18, dmg: 60, hitbox: [-20,90,0,170],
-    launch: true, launchVy: 8, bounce: true, hitstop: 12, gdrain: 14, advBlock: -12, manualY: true, noPush: true,
+    launch: true, launchVy: 8, bounce: true, hitstop: 12, gdrain: 14, advBlock: -6, /* (−12 once the guard stall is added) */ manualY: true, noPush: true,
     poseFn: (f, mf) => mf < 9 ? POSES.slashW : mf < f.move.startup ? POSES.jump : null,
     onFrame(f, o, mf) { // vanishes, reappears above them, and drops a crescent-moon heel
       const S = f.move.startup;
@@ -620,6 +632,9 @@ function projBox(p) {
 const PJ = new Set(['spikes', 'puddle', 'skidcase', 'brimstone', 'pen', 'stapler', 'mug', 'plate', 'dish', 'crescent', 'water', 'bubble', 'bullet', 'dyna', 'card', 'feather', 'haloP', 'hellfire', 'stone', 'core', 'trap']);
 function spawnPJ(f, type, o) {
   const p = Object.assign({ id: ++serial, type, owner: f, dir: f.facing, x: f.x + f.facing * 60, y: 100, vx: f.facing * 10, vy: 0, g: 0, life: 60, r: 14, hits: 1, interval: 8, n: 0, last: -99, t: 0, spin: 0 }, o);
+  const mv = f.state === 'attack' && f.move;
+  if (mv && (!mv.normal || mv.lvl || mv.super) && p.h) p.h = { ...p.h, spx: true }; // (thrown by a technique, a charged attack or a super: costs far more to guard)
+  p.x0 = p.x; p.sup = !!((mv && mv.super) || (p.h && p.h.superHit)); // (where it started: see PROJ_RANGE)
   projs.push(p); return p;
 }
 function pjExplode(p) { // dynamite and water bubbles burst, hitting anyone close
@@ -639,6 +654,7 @@ function pjUpdate(p) {
     if (Math.abs(dx) < 30) { p.dead = true; own.plateOut = false; return; }
   }
   p.vy -= p.g || 0; p.x += p.vx; p.y += p.vy;
+  if (p.big && p.t % 2 === 0) for (let i = 0; i < 3; i++) { const yy = p.y + rnd(-p.r, p.r) * 0.9; parts.push({ type: i ? 'aura' : 'star', x: p.x - Math.sign(p.vx) * rnd(10, 40), y: GROUND - yy, vx: -Math.sign(p.vx) * rnd(0.5, 2), vy: -rnd(0, 1), life: 18, max: 18, r: rnd(2, 4), vr: -0.1, rot: rnd(0, 3), col: i ? '200,170,255' : '255,250,235' }); } // (the full moon: a wake of moonlight)
   if (p.bounce && p.y <= 0 && p.vy < 0) { p.y = 0; p.vy = -p.vy * 0.75; p.bounce--; sfx('block'); parts.push({ type: 'spark', x: p.x, y: GROUND, vx: 0, vy: -3, life: 8, max: 8, col: '255,230,150' }); }
   if (p.type === 'skidcase' && p.t % 2 === 0) { parts.push({ type: 'spark', x: p.x - p.vx * 0.6, y: GROUND - 4, vx: -p.vx * 0.15 + vrnd(-1, 1), vy: -vrnd(1, 3), life: 10, max: 10, col: '255,220,150' }); } // sparks where it scrapes the floor
   if (p.type === 'brimstone' && p.t % 3 === 0) { parts.push({ type: 'aura', x: p.x + vrnd(-6, 6), y: GROUND - 6, vx: 0, vy: -vrnd(2, 4), life: 22, max: 22, r: vrnd(5, 9), col: p.t % 6 ? '255,110,40' : '255,200,80' }); parts.push({ type: 'aura', x: p.x - p.vx * 2, y: GROUND - 2, vx: 0, vy: -0.2, life: 40, max: 40, r: 6, col: '120,20,10' }); } // flames erupt along its path, scorching the floor
@@ -669,9 +685,14 @@ function pjDraw(p) {
   const x = p.x, y = GROUND - p.y;
   ctx.save(); ctx.translate(x, y);
   switch (p.type) {
-    case 'crescent': { ctx.globalCompositeOperation = 'lighter'; const d = Math.sign(p.vx) || 1; ctx.scale(d, 1); // a crescent of shadow flying along the floor
-      ctx.fillStyle = 'rgba(190,150,255,.75)'; ctx.beginPath(); ctx.arc(-10, 0, 60, -1.2, 1.2); ctx.arc(-34, 0, 52, 1.05, -1.05, true); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = 'rgba(240,235,255,.9)'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(-10, 0, 60, -1.2, 1.2); ctx.stroke(); break; }
+    case 'crescent': { ctx.globalCompositeOperation = 'lighter'; const d = Math.sign(p.vx) || 1, k = (p.r || 40) / 40; ctx.scale(d * k, k); // a crescent of shadow flying along the floor (drawn as big as it hits)
+      if (p.big) { // the full moon: a halo of moonlight round it, pulsing, and a second, brighter edge
+        const pu = 0.8 + 0.2 * Math.sin(globalT * 0.4), g = ctx.createRadialGradient(-20, 0, 8, -20, 0, 78); g.addColorStop(0, `rgba(235,225,255,${0.45 * pu})`); g.addColorStop(0.6, `rgba(170,130,255,${0.25 * pu})`); g.addColorStop(1, 'rgba(120,80,220,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(-20, 0, 78, 0, Math.PI * 2); ctx.fill(); }
+      ctx.fillStyle = p.big ? 'rgba(205,175,255,.85)' : 'rgba(190,150,255,.75)'; ctx.beginPath(); ctx.arc(-10, 0, 60, -1.2, 1.2); ctx.arc(-34, 0, 52, 1.05, -1.05, true); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(240,235,255,.9)'; ctx.lineWidth = 2.5 / k * (p.big ? 2 : 1); ctx.beginPath(); ctx.arc(-10, 0, 60, -1.2, 1.2); ctx.stroke();
+      if (p.big) { ctx.strokeStyle = 'rgba(255,255,255,.95)'; ctx.lineWidth = 1.2 / k; ctx.beginPath(); ctx.arc(-6, 0, 63, -1.25, 1.25); ctx.stroke(); }
+      break; }
     case 'plate': case 'dish': { // the kappa's dish, spinning edge-on
       ctx.scale(1, 0.45 + 0.25 * Math.abs(Math.sin(p.spin))); ctx.fillStyle = '#f4f7fb'; ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#7cc6ef'; ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#b9dff5'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.stroke(); break; }
@@ -710,11 +731,15 @@ function pjDraw(p) {
   }
   ctx.restore();
 }
+// no shot travels further than this from where it was thrown (supers, and the shield that comes back, aside): it fades out
+const PROJ_RANGE = 520, PROJ_FREE = new Set(['beam', 'aegis', 'decoy', 'guardShadow', 'trap']);
 function updateProjs() {
   for (const p of projs) {
     FX_OWNER = p.owner; // (sparks from a projectile are its owner's)
     if (p.dead) continue;
     p.t = (p.t || 0) + 1;
+    if (p.vx && !p.sup && !p.boomerang && p.x0 != null && !PROJ_FREE.has(p.type) && Math.abs(p.x - p.x0) > PROJ_RANGE) {
+      p.dead = true; for (let i = 0; i < 5; i++) parts.push({ type: 'aura', x: p.x, y: GROUND - p.y, vx: rnd(-1, 1), vy: rnd(-1, 1), life: 12, max: 12, r: 3, col: '220,220,235' }); continue; }
     if (PJ.has(p.type)) { pjUpdate(p); continue; }
     if (p.type === 'beam') {
       const own = p.owner;
@@ -828,7 +853,7 @@ function updateProjs() {
       continue;
     }
     if (p.type === 'clone' && p.fall) { // dive from above, then fade after landing
-      p.yOff = Math.max(0, p.yOff - 18);
+      p.yOff = Math.max(0, p.yOff - (p.fallSp || 18));
       if (p.yOff === 0) { p.landT = (p.landT || 0) + 1; if (p.landT === 1) { dustAt(p.x, true); parts.push({ type: 'ering', x: p.x, y: GROUND, r: 10, vr: 8, life: 16, max: 16, col: '190,150,255' }); game.shake = Math.max(game.shake, 6); } if (p.landT > 6) p.dead = true; }
     }
     if (p.type === 'flame') {
@@ -841,7 +866,7 @@ function updateProjs() {
         const tgt = other(own), hu = hurtbox(tgt, false);
         if (hu && overlap(hb, hu)) {
           const last = p.hits === p.max - 1;
-          applyHit(own, tgt, { dmg: last ? p.lastDmg : p.dmg, stun: p.stun, bstun: p.bstun, push: last ? 4 : p.push, kd: false, type: 'mid', chip: true, stunT: 52, stunKind: 'burn',
+          applyHit(own, tgt, { dmg: last ? p.lastDmg : p.dmg, stun: p.stun, bstun: p.bstun, push: last ? 4 : p.push, kd: false, type: 'mid', chip: true,
             hitstop: last ? 8 : 2, proj: true, str: last ? 2 : 1, gdrain: 2, label: 'Fire Breath' }, own.facing, hb, hu);
           p.hits++; p.last = p.t;
         }
@@ -885,11 +910,13 @@ function updateProjs() {
     if (hu) {
       const hb = projBox(p);
       if (overlap(hb, hu)) {
-        applyHit(p.owner, tgt, { dmg: p.dmg, stun: p.stun, bstun: p.bstun, push: p.push, kd: !!p.kd, type: 'mid', chip: !!p.chip, hitstop: p.hitstop,
-          proj: true, str: p.kd ? 2 : 1, superHit: !!p.superHit, kdVx: p.kdVx, kdVy: p.kdVy, jugVy: p.jugVy, fixedLift: !!p.fixedLift, launch: !!p.launch, launchVy: p.launchVy, bounce: !!p.bounce, stunT: p.stunT, stunKind: p.stunKind, gdrain: p.type === 'shuriken' || p.type === 'homing' ? 5 : p.juggle ? 4 : 8,
+        const pr = applyHit(p.owner, tgt, { dmg: p.dmg, stun: p.stun, bstun: p.bstun, push: p.push, kd: !!p.kd, type: 'mid', chip: !!p.chip, hitstop: p.hitstop,
+          proj: true, str: p.kd ? 2 : 1, superHit: !!p.superHit, gMul: p.gMul, low: !!p.lowHit, overhead: !!p.overhead, kdVx: p.kdVx, kdVy: p.kdVy, jugVy: p.jugVy, fixedLift: !!p.fixedLift, launch: !!p.launch, launchVy: p.launchVy, bounce: !!p.bounce, stunT: p.stunT, stunKind: p.stunKind, gdrain: p.type === 'shuriken' || p.type === 'homing' ? 5 : p.juggle ? 4 : 8,
           label: p.type === 'pfist' ? (p.superHit ? 'Crystal Storm' : 'Crystal Shard') : p.type === 'shuriken' ? 'Shuriken' : p.type === 'homing' ? 'Lightning Ball' : p.type === 'wave' ? 'Earth Stomp' : p.type === 'rain' ? (p.qi ? 'Qi Spiral' : 'Lightning Rain') : p.type === 'qi' ? 'Qi Blast' : p.relay ? 'Clone Relay' : p.juggle ? 'Shadow Army' : 'Shadow Clone' }, Math.sign(p.vx) || p.dir, hb, hu);
         p.dead = true;
         if (p.type === 'clone') puff(p.x, 70);
+        if (p.army) p.armyRes = pr;
+        if (p.army && pr && pr !== 'block') Object.assign(spawnClone(p.owner, true, p.army === 'front' ? 0 : 1, 0, 'mid', true), ARMY_LAST); // Shadow Army: the dive hit — the last clone comes at once, at body height, to catch them as they bounce
         if (p.endOwner && tgt.juggle) { // Shadow Army up close: Kuro drops the hand sign right away to follow up
           tgt.vx = (Math.sign(p.owner.x - tgt.x) || 1) * 2.2;
           if (p.owner.state === 'attack' && p.owner.move && p.owner.move.super) endMove(p.owner);

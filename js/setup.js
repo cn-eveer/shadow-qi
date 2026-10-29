@@ -1,6 +1,6 @@
 'use strict';
 /* ================= setup ================= */
-const W = 960, H = 540, GROUND = 470, WALL_L = 42, WALL_R = 918, G = 0.75, JUMP_V = 17, RAD = Math.PI / 180;
+const W = 960, H = 540, GROUND = 470, WALL_L = 42, WALL_R = 918, G = 0.75, JUMP_V = 17, JUMP_HIGH = Math.sqrt(1.25) /* (every jump 25% higher) */, RAD = Math.PI / 180;
 const HUD = "'Bungee', Impact, 'Arial Black', sans-serif";
 const SMALL = "700 13px 'Rajdhani', 'Segoe UI', system-ui, sans-serif";
 const canvas = document.getElementById('game');
