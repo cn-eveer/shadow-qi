@@ -53,7 +53,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Anti-air<small>Near a jumping opponent, U, I and K become Twin Palm Lift, Rising Dragon Fist and Twin Dragon Palms, and the specials above come out on their own. In the air, U, I and K start the air string against them.</small></td><td class="cmd">U, I, K</td></tr>
         </tbody>
       </table></div>
-      <p class="note"><b>Combo strings.</b> U, U, U, U, K: qi straight, body blow, elbow smash, twin qi palms. U, U, U, U, ↓ + K ends with a low Dragon Sweep instead (a counter hit launches). I from any point: Rising Dragon launches; K ends with an axe kick. J, J, K: low kick, then a high kick to the head (crouch under it). J, K: a heavy front kick to the body. In a juggle: twin palm lift, hammer fist, body upper, qi explosion. In the air: palm, elbow, qi flurry, qi burst; I alone is an air hammer fist.</p>
+      <p class="note"><b>Combo strings.</b> U, U, U, U, K: qi straight, body blow, elbow smash, twin qi palms. U, U, U, U, ↓ + K ends with a low Dragon Sweep instead (a counter hit launches). I from any point: Rising Dragon launches; K ends with an axe kick. J, J, K (or J, K): low kick, then a high kick to the head (crouch under it). J, J, ↓ + K: a heavy front kick to the body instead. In a juggle: twin palm lift, hammer fist, body upper, qi explosion. In the air: palm, elbow, qi flurry, qi burst; I alone is an air hammer fist.</p>
     </article>
     <article class="card brawler" data-tab="brawler" data-lang="ja" hidden>
       <h2>テツ<span>気の拳士</span></h2>
@@ -94,6 +94,6 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
         </tbody>
       </table></div>
       <p class="note">空中の相手に→→+U・→→+I・→→+K・←←+U・←←+Kを使うと追撃版（鉄槌落とし・気柱・肩ロケット・気の螺旋・空中旋風）になる。↓を押しながら使うと単体でも出る。</p>
-      <p class="note"><b>連続技。</b> U、U、U、U、K：気のストレート・ボディブロー・肘打ち・双気掌。U、U、U、U、↓+Kは下段の龍の足払いで締める（カウンターで打ち上げ）。途中のIで昇龍（打ち上げ）、Kで踵落とし。J、J、K：ローキックから上段の蹴り（しゃがみでかわせる）。J、K：胴への重い前蹴り。空中追撃：双掌上げ・鉄槌・ボディアッパー・気の爆発。空中ではIで空中鉄槌。</p>
+      <p class="note"><b>連続技。</b> U、U、U、U、K：気のストレート・ボディブロー・肘打ち・双気掌。U、U、U、U、↓+Kは下段の龍の足払いで締める（カウンターで打ち上げ）。途中のIで昇龍（打ち上げ）、Kで踵落とし。J、J、K（またはJ、K）：ローキックから上段の蹴り（しゃがみでかわせる）。J、J、↓+K：代わりに胴への重い前蹴り。空中追撃：双掌上げ・鉄槌・ボディアッパー・気の爆発。空中ではIで空中鉄槌。</p>
     </article>
 `);

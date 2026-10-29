@@ -50,7 +50,7 @@ const STRINGS = {
     tE: SF('k', 'Axe Kick', 'kickW', 'axe', { dmg: 54, kdVx: 6, kdVy: 10 }),
     tl2: SG('k', 'Low Kick', 'kickW', 'lowKick', { low: true, hitbox: [20,80,8,44] }),
     tlE: SF('k', 'Crescent High Kick', 'kickW', 'highKick', { high: true, hitbox: [15,110,110,170], dmg: 56, kdVx: 14, kdVy: 8 }), // J, J, K: a high kick to the head (crouch under it) that knocks them away
-    tJK: SF('k', 'Mountain Front Kick', 'kickW', 'midKick', { hitbox: [15,115,50,125], dmg: 60, kdVx: 15, kdVy: 7 }), // J, K: a heavy front kick to the body
+    tlD: SF('k', 'Mountain Front Kick', 'kickW', 'midKick', { hitbox: [15,115,50,125], dmg: 60, kdVx: 15, kdVy: 7 }), // J, J, ↓ + K: a heavy front kick to the body
     tD: SF('k', 'Dragon Sweep', 'crouch', 'sweep', { low: true, step: 8, hitbox: [0,115,0,34], dmg: 54, kd: true, kdVx: 3, kdVy: 5, cpLaunch: true, launchVy: 13 }), // U, U, U, U, ↓ + K: a low sweep that takes their feet (a counter launches)
     jPalm: SJ('p', 'Twin Palm Lift', 'jabW', 'palmUp', { burst: [70, 160] }),
     jElbow: SJ('p', 'Hammer Fist', 'palmW', 'tHammer', { hitbox: [10,90,40,260], dmg: 28 }),
@@ -310,7 +310,7 @@ Object.assign(STRINGS.salaryDevil, {
 });
 wireStrings(); // chain the aerial versions as well
 STRINGS.ninja.n2.chain = { ...STRINGS.ninja.n2.chain, dhk: 'nD' }; // Kuro: U, U, ↓ + K ends low
-STRINGS.brawler.t4.chain = { ...STRINGS.brawler.t4.chain, dhk: 'tD' }; STRINGS.brawler.$start.k = { lk: 'tl2', hk: 'tJK' }; // Tetsu: U, U, U, U, ↓ + K ends low; J, K is its own kick (J, J, K the high one)
+STRINGS.brawler.t4.chain = { ...STRINGS.brawler.t4.chain, dhk: 'tD' }; STRINGS.brawler.tl2.chain = { ...STRINGS.brawler.tl2.chain, dhk: 'tlD' }; // Tetsu: U, U, U, U, ↓ + K ends low; J, J, ↓ + K with a mid kick (J, J, K the high one)
 STRINGS.kappa.$start.k = null;
 // fists, kunai and briefcases are short: in a juggle these fighters spring up to where the opponent is, so the blow really reaches them
 // (instead of a short blade somehow hitting someone high above). The hit area is now measured from where he is in the air.

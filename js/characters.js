@@ -47,8 +47,8 @@ const CHARS = {
       $tD: { su: 18, act: 8, rec: 24, blk: -21 }, // U, U, U, U, ↓ + K
       $tL: { su: 14, blk: -13 }, // U, I and U, U, I (−16 measured: the launch adds 3)
       $tl2: { su: 10 }, // J, J
-      $tlE: { su: 18, act: 7, rec: 24, blk: -16 }, // J, J, K (high)
-      $tJK: { su: 21, act: 8, rec: 24, blk: -16 }, // J, K (mid)
+      $tlE: { su: 18, act: 7, rec: 24, blk: -16 }, // J, J, K and J, K (high)
+      $tlD: { su: 21, act: 8, rec: 24, blk: -16 }, // J, J, ↓ + K (mid)
     },
     heavy: {
       p: { label: 'Qi Palm', startup: 10, active: 4, recovery: 19, hitbox: [20,118,106,130], wind: 'palmW', pose: 'palm', lunge: [3, 11, 5], push: 10, gdrain: 22, burst: [80, 108] },
