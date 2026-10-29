@@ -140,7 +140,7 @@ function startMove(f, mv, str, keepBuffer) {
   if (FM && !mv.super && !mv.air && !mv.jug && !mv.fixedFrames && mv.startup < 900 && !mv.fmDone) { // (fixedFrames: a string hit with its own hand-set frames) // (not supers, air attacks or juggle hits: combos keep their timing)
     mv.fmDone = true; const cls = !mv.normal ? 'tech' : (mv.str === 1 || mv.launch) ? 'heavy' : 'light';
     if (cls === 'tech') { if (mv.tellPre) { const cut = Math.round(mv.tellPre * (1 - FM.tell)); f.pre -= cut; mv.tellPre -= cut; } } // (shorter hand signs)
-    else { const cut = Math.min(FM.su[cls], Math.max(0, (mv.antiPre || 0) - 1)); f.pre -= cut; if (mv.antiPre) mv.antiPre -= cut; } // (a shorter wind-up: the move's own frames are untouched)
+    else { const cut = Math.min(FM.su[cls] + (mv.suCut || 0), Math.max(0, (mv.antiPre || 0) - 1)); f.pre -= cut; if (mv.antiPre) mv.antiPre -= cut; } // (a shorter wind-up: the move's own frames are untouched; suCut: a move's own extra)
     if (mv.preTotal != null) mv.preTotal = f.pre;
     if (mv.active < 60) mv.active += FM.act;
     if (mv.recovery < 90) { mv.recovery += FM.rec[cls]; mv.fmRec = FM.rec[cls]; } // (normals: hit and block stun grow with it, so only a miss costs more; techniques: see checkHits)
