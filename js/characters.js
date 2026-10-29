@@ -104,10 +104,10 @@ const CHARS = {
     pDmg: 0.9, kDmg: 0.9, pReach: 1.15, kReach: 1.0, chargeRate: 0.48, auraCol: '200,160,255', fxCol: '210,190,255',
     sp: { fP: 'phantomFist', fPH: 'crushFist', fK: 'psyLift', fKH: 'forceWave', bP: 'orbBurst', bPH: 'tripleRay', bK: 'orbStrong', bKH: 'orbLong' }, sup: 'thousandFists',
     frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
-      U: { su: 14, blk: -4 }, dU: { su: 14, blk: -4 }, J: { su: 14, blk: -4 }, dJ: { su: 14, blk: -4 },
-      I: { su: 16, suFar: 28, blk: -10 }, K: { su: 16, suFar: 28, blk: -10 }, dI: { su: 16, suFar: 28, blk: -16 }, dK: { su: 16, suFar: 28, blk: -14 }, // (her heavy spells reach end to end: 16F up close, up to 28F across the stage)
-      $y2: { su: 12, blk: -6 }, $y3: { su: 12, blk: -6 }, $y4: { su: 12, blk: -6 }, $yF: { su: 18, blk: -18 }, $yL: { su: 16, blk: -15 }, /* (−16 measured) */ $yE: { su: 20, blk: -15 }, /* (U, K: −16 measured) */
-      $yl2: { su: 12, blk: -6 }, $ylE: { su: 18, blk: -16 },
+      U: { su: 14, act: 8, rec: 10, blk: -4 }, dU: { su: 14, act: 8, rec: 10, blk: -4 }, J: { su: 14, act: 8, rec: 10, blk: -4 }, dJ: { su: 14, act: 8, rec: 10, blk: -4 }, // (her spells last longer and she recovers sooner)
+      I: { su: 16, suFar: 28, act: 10, rec: 14, blk: -10 }, K: { su: 16, suFar: 28, act: 10, rec: 14, blk: -10 }, dI: { su: 16, suFar: 28, act: 10, rec: 14, blk: -16 }, dK: { su: 16, suFar: 28, act: 10, rec: 14, blk: -14 }, // (her heavy spells reach end to end: 16F up close, up to 28F across the stage)
+      $y2: { su: 12, act: 8, rec: 12, blk: -6 }, $y3: { su: 12, act: 8, rec: 12, blk: -6 }, $y4: { su: 12, act: 8, rec: 12, blk: -6 }, $yF: { su: 18, act: 8, rec: 18, blk: -18 }, $yL: { su: 16, act: 6, rec: 18, blk: -15 }, /* (−16 measured) */ $yE: { su: 20, act: 6, rec: 18, blk: -15 }, /* (U, K: −16 measured) */
+      $yl2: { su: 12, act: 8, rec: 12, blk: -6 }, $ylE: { su: 18, act: 8, rec: 18, blk: -16 },
       phantomFist: { su: 18, blk: -6 }, crushFist: { su: 19, blk: -16 }, /* (the star drops on its own time) */ psyLift: { su: 22, blk: -16 }, forceWave: { su: 18, blk: -16 },
       orbBurst: { su: 18, blk: -12 }, tripleRay: { su: 20, blk: -14 }, orbStrong: { su: 14 }, orbLong: { su: 16 },
     },

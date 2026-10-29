@@ -274,10 +274,10 @@ class CPU {
       if (r < 0.05) return { jump: 1 }; if (r < 0.13) return { btn: 'lp', bb: true }; if (r < 0.19) return { btn: 'hk', ff: true }; if (r < 0.25) return { btn: Math.random() < 0.5 ? 'hp' : 'hk' }; // long staff pokes
     }
     if (f.key === 'psychic') { // Lyra: keeps her distance and fights from afar
-      if (dist > 380) return r < 0.3 ? { btn: 'lp', ff: true } : r < 0.45 ? { btn: 'hp', ff: true } : r < 0.55 ? { btn: 'lk', ff: true } : (r < 0.72 && f.meter < 100) ? { chargeMP: rnd(40, 100) | 0 } : r < 0.8 ? { btn: 'lp', bb: true } : { walk: 1 };
+      if (dist > 380) return r < 0.12 ? { btn: 'hp' } : r < 0.22 ? { btn: 'hk' } : r < 0.3 ? { btn: 'lp', ff: true } : r < 0.45 ? { btn: 'hp', ff: true } : r < 0.55 ? { btn: 'lk', ff: true } : (r < 0.72 && f.meter < 100) ? { chargeMP: rnd(40, 100) | 0 } : r < 0.8 ? { btn: 'lp', bb: true } : { walk: 1 };
       if (dist > 150) return r < 0.22 ? { btn: 'lp', ff: true } : r < 0.34 ? { btn: 'hp', ff: true } : r < 0.44 ? { btn: 'lk', ff: true } : (r < 0.52 && dist < 250) ? { btn: 'hp', bb: true }
-        : r < 0.58 ? { btn: 'hk', ff: true } : r < 0.66 ? { btn: 'lp', bb: true } : r < 0.72 ? { walk: -1 } : r < 0.78 ? { btn: 'lk', bb: true } : { walk: 1 };
-      if (r < 0.15) return { btn: 'hk', ff: true }; if (r < 0.22) return { btn: 'lk', bb: true }; if (r < 0.28) return { dash: -1 }; if (r < 0.32) return { btn: 'hk', bb: true };
+        : r < 0.58 ? { btn: 'hk', ff: true } : r < 0.66 ? { btn: 'lp', bb: true } : r < 0.72 ? { btn: 'hp' } : r < 0.78 ? { btn: 'lk', bb: true } : { walk: 1 }; // (she never backs away: her spells reach)
+      if (r < 0.15) return { btn: 'hk', ff: true }; if (r < 0.22) return { btn: 'lk', bb: true }; if (r < 0.28) return { btn: 'hk' }; if (r < 0.32) return { btn: 'hk', bb: true };
     }
     if (dist > 380) {
       if (N) return r < 0.3 ? { btn: 'lk', ff: true } : r < 0.4 ? { btn: 'hp', bb: true } : r < 0.5 ? { btn: 'hk', ff: true } : r < 0.6 ? { jump: 1 } : (r < 0.76 && f.meter < 100) ? { chargeMP: rnd(40, 100) | 0 } : { walk: 1 };
