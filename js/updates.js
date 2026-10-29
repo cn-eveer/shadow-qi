@@ -4,6 +4,17 @@
 // version.json on the server says which version is live. When the two differ, the player is asked to reload without the
 // browser's cache, or to erase the site's saved data and reload.
 const RELEASES = [ // notes: a string, or { g: 'group', items: [...] } (groups nest)
+  { v: '1.4.6', date: '2026-10-29', notes: [
+    { g: 'ライラ', items: [
+      'すべての技のフレームを調整（U・Jは14F、必殺技は14〜24Fなど）',
+      'I・K・↓+I・↓+Kは画面の端から端まで届く（遠いほど発生が遅い：16F〜28F）',
+      '魔法陣が先に現れ、そこから水晶が出るように。持続が長く、硬直は短く',
+      '↓+Iは下段3ヒット、↓+Kは下段で打ち上げ（ガードされても浮かせる）',
+      '霊気の拳（→→+K）は14Fでリーチ延長。オーブは攻撃が当たるかガードされた時に光線を放つ',
+      'I長押しの溜め技を削除',
+      '超必殺技「水晶の嵐」：16ヒットでダメージ増加。無敵なし（攻撃を受けると止まる）',
+    ] },
+  ] },
   { v: '1.4.5', date: '2026-10-29', notes: [
     { g: 'メイ', items: [
       'すべての技のフレームを調整（U・Jは6F、Iは12Fでリーチ延長など）',

@@ -88,7 +88,7 @@ function spawnCrush(f, o, juggle) { // a giant fist forms above them, then comes
   const tx = juggle ? o.x : clamp(f.x + clamp(o.x - f.x, -400, 400), WALL_L, WALL_R);
   const y = juggle ? Math.min(290, o.y + 160) : 280, x = juggle ? clamp(tx - f.facing * 150, 20, W - 20) : tx;
   if (juggle) parts.push({ type: 'skycircle', x, y: GROUND - y, r: 70, life: 14, max: 14 }); // in a combo: the meteor comes out of a magic circle
-  projs.push({ id: ++serial, type: 'crush', owner: f, x, tx, y, vx: 0, vy: 0, r: 34, t: 0, hold: juggle ? 4 : 14, juggle, life: 60, dir: f.facing, trail: [],
+  projs.push({ id: ++serial, type: 'crush', owner: f, x, tx, y, vx: 0, vy: 0, r: 34, t: 0, hold: juggle ? 4 : 10, /* (on its own: it hangs a moment, then drops) */ juggle, life: 60, dir: f.facing, trail: [],
     dmg: juggle ? 36 : 50, stun: 20, bstun: 14, push: 2, hitstop: 11, chip: true });
 }
 function spawnLift(f, o, juggle) { // a glowing ring on the floor (or around them), then a column that lifts them
@@ -177,7 +177,7 @@ function shoot(f, o) { // bullets fly 40% faster than before; o.range (in pixels
   sfx('shot'); if (lvl === 2) sfx('hitH');
 }
 // Lyra's crystals: they form above the opponent and fall on them, wherever they are (up to half the stage away); she never has to move
-const LYRA_RANGE = 400;
+const LYRA_RANGE = 400, LYRA_FAR = 900; // (her heavy spells — I, K, ↓ + I, ↓ + K — reach from one end of the stage to the other)
 function drawCrystal(x, y, r, a, rot) { // a long crystal of light, pale blue to pink
   ctx.save(); ctx.translate(x, y); ctx.rotate(rot || 0); ctx.globalAlpha = a;
   const g = ctx.createLinearGradient(0, -r * 1.6, 0, r * 1.6); g.addColorStop(0, '#f6f0ff'); g.addColorStop(0.5, '#b9dcff'); g.addColorStop(1, '#ff9be8');
@@ -186,16 +186,15 @@ function drawCrystal(x, y, r, a, rot) { // a long crystal of light, pale blue to
   ctx.globalCompositeOperation = 'lighter'; const h = ctx.createRadialGradient(0, 0, 2, 0, 0, r * 2); h.addColorStop(0, 'rgba(255,220,250,.45)'); h.addColorStop(1, 'rgba(255,190,245,0)'); ctx.fillStyle = h; ctx.beginPath(); ctx.arc(0, 0, r * 2, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
 }
-function lyraGroundCrystal(f, mv) { // the rune circle shows first; then a crystal falls into it (or spears up out of a floor glyph)
-  const s = f.ch.scale, S = mv.startup, mf = f.mf;
+function lyraGroundCrystal(f, mv) { // the rune circle shows first, where they stand; then the crystal comes up out of it and stays for as long as the spell lasts
+  const s = f.ch.scale, S = mv.startup, A = Math.max(4, mv.active || 4), mf = f.mf, fade = mf > S + A ? Math.max(0, 1 - (mf - S - A) / 6) : 1, rise = clamp((mf - S + 2) / 4, 0, 1);
   if (mv.psyFist) { const x = f.x + f.facing * mv.psyFist[0] * s, y = GROUND - f.y - mv.psyFist[1] * s, r = 12 + (mv.psyFist[2] || 1) * 10;
-    if (mf < S) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(255,190,245,${0.25 + 0.5 * mf / S})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 34 * (0.4 + 0.6 * mf / S), 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
+    const ca = mf < S ? 0.25 + 0.5 * mf / S : 0.75 * fade, cr = 34 * (mf < S ? 0.4 + 0.6 * mf / S : 1);
+    if (ca > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(255,190,245,${ca})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, cr, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); } // (the circle: first, and under the crystal while it lasts)
     if (mv.noCrystal) return; // (the U, U, K string: magic circles only)
-    if (mf >= S - 8 && mf <= S + 5) { ctx.save(); ctx.translate(x, y - 128); ctx.scale(1, 0.38); drawTriCircle(0, 0, 58, Math.min(1, (mf - S + 9) / 3) * (mf > S + 1 ? 1 - (mf - S - 1) / 5 : 1), mf * 0.15); drawTriCircle(0, 0, 58, 0.5 * Math.min(1, (mf - S + 9) / 3) * (mf > S + 1 ? 1 - (mf - S - 1) / 5 : 1), -mf * 0.1); ctx.restore(); } // the circle on top, that the crystal drops out of
-    if (mf >= S - 3 && mf <= S + 3) drawCrystal(x, y - Math.max(0, S - mf) * 40, r, 1, 0);
-    else if (mf > S + 3 && mf <= S + 7) drawCrystal(x, y, r * (1 + (mf - S - 3) * 0.15), 1 - (mf - S - 3) / 5, 0);
-  } else { const x = f.x + f.facing * mv.floorGlyph * s, k = clamp((mf - S + 1) / 3, 0, 1), fade = mf > S + 5 ? Math.max(0, 1 - (mf - S - 5) / 5) : 1;
-    if (mf >= S - 1 && fade > 0) drawCrystal(x, GROUND - 40 * k, 16, fade, 0); }
+    if (mf >= S - 2 && fade > 0) drawCrystal(x, y + (1 - rise) * 26, r * (0.55 + 0.45 * rise), fade, 0); // (it comes up out of the circle)
+  } else { const x = f.x + f.facing * mv.floorGlyph * s;
+    if (mf >= S - 1 && fade > 0) drawCrystal(x, GROUND - 40 * rise, 16, fade, 0); }
 }
 function drawTriCircle(x, y, R, a, spin) { // a triangular magic circle: two rings, a triangle, runes at the corners
   ctx.save(); ctx.translate(x, y); ctx.rotate(spin); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = a;
@@ -239,11 +238,11 @@ function lyraCrystals(f, o, mf) { // each juggle hit: crystals form above them a
 }
 // Lyra's runes appear right where the opponent stands, out to a long range (further than Jesse's guns)
 function lyraReach(f, o, maxD, minD) {
-  const mv = f.move, s = f.ch.scale, ahead = (o.x - f.x) * f.facing / s, base = mv.psyFist ? mv.psyFist[0] : mv.floorGlyph;
+  const mv = f.move, s = f.ch.scale, ahead = (o.x - f.x) * f.facing / s, base = mv.psyFist ? mv.psyFist[0] : mv.floorGlyph != null ? mv.floorGlyph : mv.groundBurst;
   if (base == null) return;
   const d = clamp(ahead, minD, maxD), shift = d - base;
   if (mv.psyFist) mv.psyFist = [d, ...mv.psyFist.slice(1)];
-  if (mv.floorGlyph) mv.floorGlyph = d;
+  if (mv.floorGlyph) mv.floorGlyph = d; else if (mv.groundBurst) mv.groundBurst = d;
   if (mv.hitbox) mv.hitbox = [mv.hitbox[0] + shift, mv.hitbox[1] + shift, mv.hitbox[2], mv.hitbox[3]];
 }
 // Tanaka's hit and run: after the hit he backs off fast

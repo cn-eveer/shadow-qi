@@ -743,7 +743,7 @@ function sorbPos(f, i, n) {
   const a = -globalT * 0.05 + i * Math.PI * 2 / n, s = f.ch.scale;
   return [f.x + Math.cos(a) * 70 * s, GROUND - f.y - (95 + Math.sin(a * 1.5) * 8) * s - Math.sin(a) * 24];
 }
-function orbAssist(f, mv) { // her attack is joined by rays from the summoned orbs
+function orbAssist(f, mv) { // her attack, hitting or guarded, is joined by rays from the summoned orbs (see applyHit)
   if (!f.sorbs || !f.sorbs.length || mv.summon) return;
   const o = other(f), n = f.sorbs.length;
   const fire = (i, strong) => {
@@ -751,8 +751,8 @@ function orbAssist(f, mv) { // her attack is joined by rays from the summoned or
     parts.push({ type: 'ray', x, y, x1: tx, y1: ty, life: 12, max: 12, col: strong ? '255,120,200' : '150,200,255', w: strong ? 1.6 : 1 });
     const hu = hurtbox(o, true); if (!hu) return;
     const hb = { x0: tx - 10, x1: tx + 10, y0: GROUND - ty - 10, y1: GROUND - ty + 10 };
-    applyHit(f, o, strong ? { dmg: 14, stun: 16, bstun: 10, push: 2, type: 'mid', chip: true, hitstop: 5, proj: true, str: 1, gdrain: 8, juggle: true, jugVy: 5, label: 'Strong Orb' }
-      : { dmg: 6, stun: 12, bstun: 8, push: 1, type: 'mid', chip: true, hitstop: 3, proj: true, str: 1, gdrain: 4, juggle: true, jugVy: 4.5, label: 'Long Orb' }, Math.sign(o.x - f.x) || f.facing, hb, hu);
+    applyHit(f, o, strong ? { dmg: 14, stun: 16, bstun: 10, push: 2, type: 'mid', chip: true, hitstop: 5, proj: true, str: 1, gdrain: 8, juggle: true, jugVy: 5, label: 'Strong Orb', orbRay: true }
+      : { dmg: 6, stun: 12, bstun: 8, push: 1, type: 'mid', chip: true, hitstop: 3, proj: true, str: 1, gdrain: 4, juggle: true, jugVy: 4.5, label: 'Long Orb', orbRay: true }, Math.sign(o.x - f.x) || f.facing, hb, hu);
   };
   const si = f.sorbs.findIndex(q => q.kind === 'strong');
   if (si >= 0) { fire(si, true); f.sorbs.splice(si, 1); sfx('zap'); return; }

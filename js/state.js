@@ -114,11 +114,10 @@ function startMove(f, mv, str, keepBuffer) {
     for (let i = 0; i < 16; i++) { const an = i * Math.PI / 8; parts.push({ type: 'speed', x: f.x + Math.cos(an) * 30, y: GROUND - f.y - 90 + Math.sin(an) * 30, vx: Math.cos(an) * 9, vy: Math.sin(an) * 9, life: 12, max: 12, col: f.ch.fxCol }); } }
   else if (!mv.normal) f.meter = Math.min(100, f.meter + 3); // ...and using techniques
   if (mv.normal) sfx('swing');
-  if (f.sorbs) orbAssist(f, mv);
   if (mv.rushTag) f.rushN = mv.rushOpen ? 0 : (f.rushN || 0) + 1;
   if (mv.jug) { const oj = other(f); if (oj && Math.abs(oj.x - f.x) > 6) f.facing = Math.sign(oj.x - f.x); } // (a juggle attack turns to face them: a juggle can carry them over to the other side)
   f.pre = mv.pre || 0; // frames spent gathering qi before the technique itself starts
-  if (mv.super) { const dg = SUPER_DODGE[mv.id], oc = other(f), caught = oc && ['hitstun', 'knock', 'stunned', 'down', 'getup', 'slashed', 'gbreak'].includes(oc.state); mv.dodge = caught ? null : dg; if (!caught && (dg === 'jump' || dg === 'dash')) { const sp = Math.round(SUPER_PRE * (f.ch.superPreMul || 1)); f.pre += sp; mv.superPre = sp; } if (!mv.supArmor) f.invul = Math.max(f.invul || 0, f.pre + mv.startup + 6); } // (invincible all the way through the wind-up — except Tetsu's and Kuro's, which have armor up close instead: supArmor) // (in a combo it comes straight out: they can't get away anyway)
+  if (mv.super) { const dg = SUPER_DODGE[mv.id], oc = other(f), caught = oc && ['hitstun', 'knock', 'stunned', 'down', 'getup', 'slashed', 'gbreak'].includes(oc.state); mv.dodge = caught ? null : dg; if (!caught && (dg === 'jump' || dg === 'dash')) { const sp = Math.round(SUPER_PRE * (f.ch.superPreMul || 1)); f.pre += sp; mv.superPre = sp; } if (!mv.supArmor && !mv.noInvul) f.invul = Math.max(f.invul || 0, f.pre + mv.startup + 6); } // (invincible all the way through the wind-up — except Tetsu's and Kuro's, which have armor up close instead: supArmor) // (in a combo it comes straight out: they can't get away anyway)
   const ksg = f.key === 'ninja' && (KURO_SIGNS[mv.id] || KURO_SPIRIT_LABEL[mv.label]);
   if (ksg) f.spirit = { sg: ksg, t0: game.frame, rise: mv.tellPre ? Math.min(12, mv.tellPre) : 6, hold: (mv.tellPre || 0) + 40, x: f.x - f.facing * 12, y: GROUND - f.y - 125 * f.ch.scale, dir: f.facing, hy: GROUND - f.y - 236 * f.ch.scale }; // the seal's spirit: it rises where he cast it and stays there a while, then fades slowly
   if (f.key === 'gunman' && !(f.gunOutT > 0)) for (const sd of [1, -1]) parts.push({ type: 'star', x: f.x + f.facing * sd * 14, y: GROUND - f.y - 92 * f.ch.scale, r: 8, vr: 1.4, life: 6, max: 6, col: '255,240,190', rot: 0.4 }); // the quick draw: a glint as the guns leave the holsters
@@ -167,9 +166,10 @@ function moveFrames(f, mv) {
   mv.framesDone = true;
   if (e.set) Object.assign(mv, e.set);
   if (mv.noGuardLag) f.lastMoveTech = false; // (guarded, no extra opening on top of its own recovery)
-  if (e.su) { const now = f.pre + mv.startup, want = e.su - (mv.hitbox ? 2 : 1); // (frames before it can hit: a blow lands on the frame after, a shot is thrown on it)
-    if (want > now) f.pre += want - now;
-    else if (want < now) { const cut = Math.min(f.pre, now - want); f.pre -= cut; if (mv.tellPre) mv.tellPre = Math.max(0, mv.tellPre - cut); if (mv.preTotal != null) mv.preTotal = f.pre; // (a shorter wind-up first: the move itself, its dash or leap, keeps its pace…
+  const su = e.suFar ? e.su + (e.suFar - e.su) * clamp((Math.abs(other(f).x - f.x) - 100) / (WALL_R - WALL_L - 140), 0, 1) : e.su; // (suFar: the further away they are, the longer it takes)
+  if (su) { const now = f.pre + mv.startup, want = su - (mv.hitbox ? 2 : 1); // (frames before it can hit: a blow lands on the frame after, a shot is thrown on it)
+    if (want > now) f.pre += Math.round(want - now);
+    else if (want < now) { const cut = Math.min(f.pre, Math.floor(now - want)); /* (whole frames off the wind-up; a fraction left over is played faster) */ f.pre -= cut; if (mv.tellPre) mv.tellPre = Math.max(0, mv.tellPre - cut); if (mv.preTotal != null) mv.preTotal = f.pre; // (a shorter wind-up first: the move itself, its dash or leap, keeps its pace…
       if (now - cut > want) mv.speedUp = (now - cut) / want; } } // …and only if that isn't enough does the move play faster)
   if (e.act != null) mv.active = e.act;
   if (e.rec != null) mv.recovery = e.rec;
@@ -329,7 +329,7 @@ function runMove(f, o, inp) {
 function threatened(f, o) {
   const d = Math.abs(o.x - f.x);
   if (o.golem && golemThreatening(f, o)) return true; // (the golem is attacking)
-  if (o.state === 'attack' && o.move && d < 280 && o.mf <= o.move.startup + o.move.active + 2 && !(o.move.walkAway && o.mf <= o.move.startup)) return true;
+  if (o.state === 'attack' && o.move && d < (o.key === 'psychic' ? LYRA_FAR : 280) && o.mf <= o.move.startup + o.move.active + 2 && !(o.move.walkAway && o.mf <= o.move.startup)) return true;
   for (const p of projs) if (p.owner === o && !p.dead && (p.type === 'beam' || p.type === 'flame' || (p.fall && Math.abs(p.x - f.x) < 150) || (Math.sign(f.x - p.x) === Math.sign(p.vx) && Math.abs(p.x - f.x) < 300))) return true; // (or one dropping on them from above)
   return false;
 }

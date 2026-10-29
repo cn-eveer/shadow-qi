@@ -131,7 +131,7 @@ function counterVanish(d, a) {
 const isTech = mv => !!mv.lunge || (!mv.normal && !mv.super && !mv.rushTag);
 const TECH_DMG = 0.8, AIR_TECH = 0.6; // strong techniques do a little less, and much less on a juggled opponent: combos beat a few big hits
 // every super's full damage evened out to about 220 (measured landing in full on a standing opponent); the kappa's Great Flood and Aldric's Sanctuary keep their own
-const SUPER_EQ = { shadowArmy: 0.756, qiCannon: 1.142, greatSage: 1.154, thousandFists: 0.923, gnHighNoon: 0.841, smDeadline: 1.115, saHeavenangel: 0.969, sdInfernodevil: 0.55, sdInfernodouble: 0.559 };
+const SUPER_EQ = { shadowArmy: 0.756, qiCannon: 1.142, greatSage: 1.154, thousandFists: 1.05, gnHighNoon: 0.841, smDeadline: 1.115, saHeavenangel: 0.969, sdInfernodevil: 0.55, sdInfernodouble: 0.559 };
 const SUPER_REF = { ninja: 1.08, brawler: 0.9, staff: 1.08, psychic: 1.25, gunman: 1.42, salary: 1.15 }; // each fighter's overall damage when the supers were evened out
 // guarding costs: every guarded hit takes a little health and a piece of the guard meter — techniques, charged attacks and supers far more
 const CHIP = 0.03, CHIP_BIG = 0.12;
@@ -309,6 +309,7 @@ function applyHit(a, d, h, side, hb, hu) {
       return 'block';
     }
     setState(d, 'blockstun'); d.stun = h.bstun || 10; d.cguard = low; d.vx = side * pushB;
+    if (h.guardPop && d.y <= 0) { d.y = 1; d.vy = 7.5; } // (Lyra's Glyph Trip: guarded, it still pops them up off the ground — they land, still guarding)
     techGuardLag(a, d, h); launcherGuardLag(a, d, h); // a technique or a launcher that's guarded leaves its user open
     d.hp = Math.max(1, d.hp - chipOf(h, big)); // chip damage through the guard: a little for anything, more for techniques and supers
     if (!h.proj) wallPush(a, d, side); // guarded against the wall: the attacker slides back instead
@@ -461,7 +462,7 @@ function checkHits(a, o) {
     stun: mv.stun, bstun: mv.bstun, gbstun: 45,
     push: (multi > 1 && last && mv.lastPush) ? mv.lastPush : mv.push,
     kd: multi > 1 ? (last && mv.kd) : mv.kd,
-    type: mv.type, low: !!mv.low, overhead: !!mv.overhead, hitstop: mv.hitstop, chip: mv.chip, bpush: mv.guardPush, /* (a technique's own push on a guard: guardPush) */ str: mv.str != null ? mv.str : a.str, proj: false, // (low: must be guarded crouching)
+    type: mv.type, low: !!mv.low, overhead: !!mv.overhead, hitstop: mv.hitstop, chip: mv.chip, bpush: mv.guardPush, /* (a technique's own push on a guard: guardPush) */ guardPop: !!mv.guardPop, str: mv.str != null ? mv.str : a.str, proj: false, // (low: must be guarded crouching)
     gdrain: mv.gdrain != null ? mv.gdrain : (multi > 1 ? 2 : 8), rushTag: !!mv.rushTag, tech: isTech(mv), label: mv.label || '', slash: !!mv.slash, iai: !!mv.iai, heavy: !!(mv.normal && mv.str === 1), kdVx: mv.kdVx, kdVy: mv.kdVy, noGrace: !!mv.noGrace, launch: multi > 1 ? (last && !!mv.launch) : !!mv.launch, launchVy: mv.launchVy, bounce: !!mv.bounce, cpLaunch: !!mv.cpLaunch, jugVy: (multi > 1 && last && mv.lastJugVy) ? mv.lastJugVy : mv.jugVy, fixedLift: !!mv.fixedLift, meteor: !!mv.meteor, stunT: mv.stunT, stunKind: mv.stunKind, neutralLaunch: multi > 1 ? (last && !!mv.neutralLaunch) : !!mv.neutralLaunch, relaunch: !!mv.relaunch, slashMark: !!mv.slashMark, brand: mv.brand || 0, grab: !!mv.grab, fullDmg: !!mv.fullDmg,
   };
   if (mv.normal && !mv.air) {
@@ -499,4 +500,4 @@ function fixAdv(a, d, h, r) {
   if (r === 'hit' && mv.cutOnHit && a.mf > mv.startup) mv.active = Math.max(0, a.mf - mv.startup); // (a long-lasting blow that has landed: it ends there, so the follow-up isn't late)
   if (r === 'hit' && mv.hitAdv != null && d.state === 'hitstun') d.stun = Math.max(1, left + mv.hitAdv - (d.ch.recoverT || 12)) + (d.wasCounter ? counterStunOf(a) : 0); // (they act once their recovery after the hit-stun is over; a counter hit adds COUNTER_STUN)
 }
-{ const core = applyHit; applyHit = function (a, d, h, side, hb, hu) { const r = core.apply(this, arguments); if (r === 'hit' || r === 'block') fixAdv(a, d, h, r); if (r === 'hit' && a.ch.hitPlus && d.state === 'hitstun') d.stun += a.ch.hitPlus; /* (a fighter whose hits all leave him further ahead: Tetsu) */ if (r === 'hit' && a.move && a.move.recPlusAmt && (!a.move.normal || d.state !== 'hitstun')) { a.move.recovery -= a.move.recPlusAmt; a.move.recPlusAmt = 0; } /* (Mei's longer recovery: given back when a technique lands, or a hit launches or knocks down — the follow-up keeps its timing) */ if ((r === 'hit' || r === 'block' || r === 'armor') && a.fd) fdContact(a, r); return r; }; } // a move's own advantage; the training frame data
+{ const core = applyHit; applyHit = function (a, d, h, side, hb, hu) { const r = core.apply(this, arguments); if (r === 'hit' || r === 'block') fixAdv(a, d, h, r); if (r === 'hit' && a.ch.hitPlus && d.state === 'hitstun') d.stun += a.ch.hitPlus; /* (a fighter whose hits all leave him further ahead: Tetsu) */ if (r === 'hit' && a.move && a.move.recPlusAmt && (!a.move.normal || d.state !== 'hitstun')) { a.move.recovery -= a.move.recPlusAmt; a.move.recPlusAmt = 0; } /* (Mei's longer recovery: given back when a technique lands, or a hit launches or knocks down — the follow-up keeps its timing) */ if ((r === 'hit' || r === 'block' || r === 'armor') && a.fd) fdContact(a, r); if ((r === 'hit' || r === 'block') && a.sorbs && a.sorbs.length && !h.orbRay && game.frame - (a.orbT || -99) > 10) { a.orbT = game.frame; orbAssist(a, a.move || {}); } /* (Lyra's orbs fire when one of her attacks lands or is guarded: one volley per attack) */ return r; }; } // a move's own advantage; the training frame data

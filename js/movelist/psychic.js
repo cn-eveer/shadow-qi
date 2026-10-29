@@ -8,23 +8,22 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="note"><b>v1.3.9: her staff.</b> She holds it low down — a short end below her hand, the long end with the crystal out in front — and her rays and Crystal Shard come out of the crystal at its tip.</p>
       <p class="note"><b>Slow magic, quick feet.</b> Her attacks are the slowest in the game to come out — every magic circle holds for a moment before its crystal falls — but she walks, backs off and jumps faster than anyone.</p>
       <p class="note"><b>Crystals.</b> On the ground, a rune circle flares right where they stand, then a crystal falls into it out of a second magic circle that opens above them (or spears up out of a floor rune). Her U, U, K uses magic circles only. In a juggle she never moves: crystals form above them, wherever they are up to half the stage away, and fall on them, several at a time (U: a rune bursts on them, U: a chain of runes, I: a magic circle opens above them and the crystal meteor falls out of it and lifts them again, K: a triangular magic circle closes around them and explodes).</p>
-      <p class="note"><b>Charge (hold I).</b> Qi gathers into him while you hold. Half a second: Rising Glyph, a rune under their feet lifts them, wherever they are — follow it with a juggle. Over a second: Nova Glyph, a giant starburst rune blasts them away. A tap is the normal heavy attack.</p>
       <p class="note"><b>Theme.</b> Astral crystal · lilac and crystal blue. A calm sage who reads the stars. Signatures: U, U, K Constellation Burst (three runes join into a constellation and burst); U, U, I Crystal Ascension (crystal spires grow under them).</p>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>Strong Orbs<small>Summons 3 strong pink orbs. Each of her next attacks also fires one heavy ray at them, then that orb is spent.</small></td><td class="cmd">← ← + J</td></tr>
-          <tr><td>Long Orbs<small>Summons 5 blue orbs that last much longer. Every ready one fires a lighter ray whenever she attacks.</small></td><td class="cmd">← ← + K</td></tr>
-          <tr><td>Ripple and Glyph Burst<small>Light and heavy punch: a rune circle flares right where they stand, out to about 400px (the furthest normal attacks in the game).</small></td><td class="keys"><kbd>U</kbd> <kbd>I</kbd></td></tr>
+          <tr><td>Strong Orbs<small>Summons 3 strong pink orbs. Each time one of her attacks hits or is guarded, one also fires a heavy ray at them, then that orb is spent.</small></td><td class="cmd">← ← + J</td></tr>
+          <tr><td>Long Orbs<small>Summons 5 blue orbs that last much longer. Every ready one fires a lighter ray whenever one of her attacks hits or is guarded.</small></td><td class="cmd">← ← + K</td></tr>
+          <tr><td>Ripple and Glyph Burst<small>Light and heavy punch: a rune circle flares right where they stand. Ripple reaches about 400px; Glyph Burst reaches from one end of the stage to the other, but the further away they are, the longer it takes (16F up close, up to 28F across the stage).</small></td><td class="keys"><kbd>U</kbd> <kbd>I</kbd></td></tr>
           <tr><td>Floor Glyph<small>Light kick button: no kick. A rune circle flares on the floor at their feet, wherever they are (out to about 450px), and light bursts up. Hits low.</small></td><td class="keys"><kbd>J</kbd></td></tr>
-          <tr><td>Gravity Well<small>Heavy kick. A gravity glyph crushes down in front of her; launches if it counters or punishes.</small></td><td class="keys"><kbd>K</kbd></td></tr>
+          <tr><td>Gravity Well<small>Heavy kick. A gravity glyph crushes down on them — from one end of the stage to the other, slower the further away they are (16F to 28F); launches if it counters or punishes.</small></td><td class="keys"><kbd>K</kbd></td></tr>
           <tr><td>Crystal Shard<small>Sends a crystal of light flying across the stage.</small></td><td class="cmd">→ → + U</td></tr>
           <tr><td>Falling Star<small>A giant fist of light forms above them and falls, bouncing them back toward her. In a combo it becomes a blazing star meteor out of a magic circle that slams them into the floor, and they bounce up again.</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>Psychic Lift<small>A glowing ring under their feet, then a column of light that lifts them and draws them toward her. Works from across the stage, but they can see it coming.</small></td><td class="cmd">→ → + J</td></tr>
-          <tr><td>Spirit Fist<small>A giant fist of light punches out in front of her, three hits that push them far away.</small></td><td class="cmd">→ → + K</td></tr>
+          <tr><td>Spirit Fist<small>A giant fist of light punches far out in front of her (about a third of the stage), three hits that send them flying.</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>Orb Burst<small>Every health orb fires a ray at them (with none, one ray from her hand).</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>Triple Ray<small>Three rays at once from her hands, reaching almost half the stage; the third leaves them stunned.</small></td><td class="cmd">← ← + I</td></tr>
-          <tr><td>Ground Burst<small>Up close: she barely moves, only raises her hand, and the ground bursts open under them in a column of light that launches.</small></td><td class="cmd">↓ + I</td></tr>
-          <tr class="super"><td>Super: Crystal Storm<small>Crystal shards rain in from every side, then one giant crystal. Up close it bounces them back to her. Needs a full MP gauge.</small></td><td class="cmd">Punch + Kick</td></tr>
+          <tr><td>Ground Burst<small>She barely moves, only raises her hand, and the ground bursts open under them in a column of light: a low, three hits — wherever they are, slower the further away (16F to 28F).</small></td><td class="cmd">↓ + I</td></tr>
+          <tr class="super"><td>Super: Crystal Storm<small>Crystal shards rain in from every side, then one giant crystal. Up close it bounces them back to her. Sixteen hits. Not invincible and no armor: hit her before the crystals come and it stops. Needs a full MP gauge.</small></td><td class="cmd">Punch + Kick</td></tr>
         </tbody>
       </table></div>
       <button class="pill watch" data-watch="psychic">▶ Watch Lyra’s sample combos</button>
@@ -32,7 +31,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <h3>Six combos, each with one or two juggles</h3>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>1. Ground Burst<small>One juggle: ↓ + I, U, U, K. Two juggles: ↓ + I, U, → → + J (Levitate lifts them again), K.</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>1. Glyph Trip<small>One juggle: ↓ + K, U, U, K. Two juggles: ↓ + K, U, → → + J (Levitate lifts them again), K.</small></td><td class="cmd">↓ + K</td></tr>
           <tr><td>2. Psychic Lift<small>From afar. One juggle: → → + J, U, U, K. Two juggles: → → + J, U, I (Crystal Meteor lifts them again), K.</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>3. Falling Star<small>One juggle: → → + I, U, U, K. Two juggles: → → + I, U, → → + I (a second star bounces them again), U, U, K.</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>4. Triple Ray<small>A stun, not a lift. One juggle: ↓ + I, U, U, K. Two juggles: ↓ + I, U, U, I (Crystal Meteor), K.</small></td><td class="cmd">← ← + I</td></tr>
@@ -50,23 +49,22 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="note"><b>v1.3.9：杖。</b>杖の下の方を握るように（手の下は短く、水晶のついた長い方が前に）。光線と水晶の欠片は、杖の先の水晶から放たれる。</p>
       <p class="note"><b>遅い魔法、速い足。</b>攻撃の発生は全キャラで一番遅い（魔法陣が少し留まってから水晶が落ちる）が、歩き・後退・ジャンプは誰よりも速い。</p>
       <p class="note"><b>水晶。</b> 地上では相手の立っている場所に魔法陣が光り、頭上に開いたもう一つの魔法陣から水晶が落ちる（床の紋からは水晶が突き上がる）。U、U、Kは魔法陣だけで戦う。空中追撃ではライラは動かない：画面の半分まで、相手がどこにいてもその上に水晶が現れて次々と降り注ぐ（U：魔法陣の炸裂、U：魔法陣の連鎖、I：頭上高くに大きな魔法陣が開き、巨大な水晶の流星が落ちて再び浮かせる、K：三角の爆発）。</p>
-      <p class="note"><b>溜め技（I長押し）。</b> 押している間、気が集まる。0.5秒：昇る紋（どこにいても足元の紋で浮かせる）、空中追撃につながる。1秒以上：新星の紋（巨大な星の紋で吹き飛ばす）。押すだけなら通常の強攻撃。</p>
       <p class="note"><b>テーマ.</b> 星と水晶・薄紫と水晶色。星を読む静かな賢者。決め技：U、U、K「星座の爆発」（3つの紋が星座を結び炸裂）／U、U、I「水晶の昇天」（足元から水晶の柱）。</p>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>強オーブ<small>強いピンクのオーブを3つ召喚。次の攻撃ごとに1つが強い光線を放って消える。</small></td><td class="cmd">← ← + J</td></tr>
-          <tr><td>長オーブ<small>長持ちする青いオーブを5つ召喚。攻撃するたびに準備のできたオーブが光線を放つ。</small></td><td class="cmd">← ← + K</td></tr>
-          <tr><td>波紋と紋章爆発<small>弱・強パンチ：相手の立っている場所に魔法陣が光る。約400pxまで届く（通常技ではゲーム最長）。</small></td><td class="keys"><kbd>U</kbd> <kbd>I</kbd></td></tr>
+          <tr><td>強オーブ<small>強いピンクのオーブを3つ召喚。攻撃が当たるかガードされるたびに、1つが強い光線を放って消える。</small></td><td class="cmd">← ← + J</td></tr>
+          <tr><td>長オーブ<small>長持ちする青いオーブを5つ召喚。攻撃が当たるかガードされるたびに、準備のできたオーブが光線を放つ。</small></td><td class="cmd">← ← + K</td></tr>
+          <tr><td>波紋と紋章爆発<small>弱・強パンチ：相手の立っている場所に魔法陣が光る。波紋は約400pxまで。紋章爆発は画面の端から端まで届くが、遠いほど発生が遅い（近くで16F、最大28F）。</small></td><td class="keys"><kbd>U</kbd> <kbd>I</kbd></td></tr>
           <tr><td>床の紋<small>キックではなく、相手がどこにいても（約450pxまで）足元の床に魔法陣が現れて光が噴き上がる。下段。</small></td><td class="keys"><kbd>J</kbd></td></tr>
-          <tr><td>重力井戸<small>強キック。重力の紋で押し潰す。カウンターで打ち上げ。</small></td><td class="keys"><kbd>K</kbd></td></tr>
+          <tr><td>重力井戸<small>強キック。重力の紋で押し潰す。画面の端から端まで届き、遠いほど発生が遅い（16F〜28F）。カウンターで打ち上げ。</small></td><td class="keys"><kbd>K</kbd></td></tr>
           <tr><td>水晶の欠片<small>光の水晶を飛ばす。</small></td><td class="cmd">→ → + U</td></tr>
           <tr><td>落ちる星<small>相手の上に巨大な光の拳ができて落下、手前にバウンドさせる。空中コンボ中は魔法陣から燃える星の流星が降り、床に叩きつけてバウンドさせる。</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>念動浮上<small>足元に光の輪、そして光の柱で持ち上げて引き寄せる。遠くからでも届くが見切られやすい。</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>霊気の拳<small>巨大な光の拳が3回殴り、遠くへ押し出す。</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>オーブ破裂<small>手から光線を放つ。</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>三連光線<small>両手から3本の光線を同時に放つ。3本目で気絶。</small></td><td class="cmd">← ← + I</td></tr>
-          <tr><td>大地噴出<small>至近距離で手を上げるだけで、相手の足元から光の柱が噴き上がって打ち上げる。</small></td><td class="cmd">↓ + I</td></tr>
-          <tr class="super"><td>超必殺技：水晶の嵐<small>四方から水晶の欠片が降り注ぎ、最後に巨大な水晶。至近距離なら手前にバウンド。MP満タンが必要。</small></td><td class="cmd">パンチ + キック</td></tr>
+          <tr><td>大地噴出<small>手を上げるだけで、相手の足元から光の柱が噴き上がる。下段3ヒット。どこにいても届き、遠いほど発生が遅い（16F〜28F）。</small></td><td class="cmd">↓ + I</td></tr>
+          <tr class="super"><td>超必殺技：水晶の嵐<small>四方から水晶の欠片が降り注ぎ、最後に巨大な水晶。至近距離なら手前にバウンド。16ヒット。無敵もアーマーもなく、水晶が来る前に攻撃を受けると止まる。MP満タンが必要。</small></td><td class="cmd">パンチ + キック</td></tr>
         </tbody>
       </table></div>
       <button class="pill watch" data-watch="psychic">▶ ライラのコンボ見本を見る</button>
@@ -74,7 +72,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <h3>6つのコンボ（1回打ち上げ／2回打ち上げ）</h3>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>1. 大地噴出<small>1回：↓+I、U、U、K。2回：↓+I、U、→→+J（浮揚）、K。</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>1. 躓きの紋<small>1回：↓+K、U、U、K。2回：↓+K、U、→→+J（浮揚）、K。</small></td><td class="cmd">↓ + K</td></tr>
           <tr><td>2. 念動浮上<small>遠くから。1回：→→+J、U、U、K。2回：→→+J、U、I（水晶流星）、K。</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>3. 落ちる星<small>1回：→→+I、U、U、K。2回：→→+I、U、→→+I（二つ目の星）、U、U、K。</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>4. 三連光線<small>気絶は打ち上げに数えない。1回：↓+I、U、U、K。2回：↓+I、U、U、I（水晶流星）、K。</small></td><td class="cmd">← ← + I</td></tr>
