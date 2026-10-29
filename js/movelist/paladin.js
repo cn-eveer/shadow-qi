@@ -41,7 +41,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <h3>9 samples</h3>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>1–6. Combos<small>1 Judgement Thrust. 2 Crouching Slash. 3 Crusader Leap. 4 Rising Parry. 5 Riposte Parry. 6 Rampart Charge from far away, then the Crusader Leap on them lying down. The juggles end with sword lift, shield lift, halo cleave (U, U, K).</small></td><td class="cmd">see note</td></tr>
+          <tr><td>1–6. Combos<small>1 Judgement Thrust. 2 Crouching Slash. 3 Crusader Leap. 4 Rising Parry. 5 Riposte Parry (knocks them away). 6 Rampart Charge from far away, then the Crusader Leap on them lying down. The juggles end with sword lift, shield lift, halo cleave (U, U, K).</small></td><td class="cmd">see note</td></tr>
           <tr><td>7–9. Techniques<small>7 Aegis stopping an attack. 8 Sanctuary. 9 Push Parry.</small></td><td class="cmd"></td></tr>
         </tbody>
       </table></div>
@@ -94,7 +94,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <h3>9の見本</h3>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>1〜6. コンボ<small>1 裁きの突き。2 しゃがみ斬り。3 聖戦の跳躍。4 受け流しから突き上げ。5 受け流しからリポスト。6 遠くからの城壁突撃、倒れた相手に聖戦の跳躍。空中追撃は剣上げ・盾上げ・光輪の斬り（U、U、K）。</small></td><td class="cmd">注を参照</td></tr>
+          <tr><td>1〜6. コンボ<small>1 裁きの突き。2 しゃがみ斬り。3 聖戦の跳躍。4 受け流しから突き上げ。5 受け流しからリポスト（吹き飛ばす）。6 遠くからの城壁突撃、倒れた相手に聖戦の跳躍。空中追撃は剣上げ・盾上げ・光輪の斬り（U、U、K）。</small></td><td class="cmd">注を参照</td></tr>
           <tr><td>7〜9. 技の見本<small>7 攻撃を止めるイージス。8 聖域。9 盾の押し返し。</small></td><td class="cmd"></td></tr>
         </tbody>
       </table></div>
