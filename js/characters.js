@@ -170,6 +170,14 @@ Object.assign(CHARS, {
     name: 'KAPPA', title: 'Mythic Kappa', nameJa: 'カッパ', titleJa: '幻獣カッパ', dmgMul: 1.03, scale: 0.86, walk: 3.3, back: 2.9, jumpX: 4.4, jumpV: 18, jugDmg: 1.1,
     pDmg: 1.0, kDmg: 1.0, pReach: 1.1, kReach: 0.9, chargeRate: 0.62, auraCol: '120,220,200', fxCol: '140,215,255',
     sp: { fP: 'kpPlate', fPH: 'kpCannon', fK: 'kpPounce', fKH: 'kpFrenzy', bP: 'kpBubble', bPH: 'kpGeyser', bK: 'kpShell', bKH: 'kpRiptide' }, sup: 'kpFlood',
+    frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
+      U: { su: 10, blk: -4 }, dU: { su: 10, blk: -4 }, dJ: { su: 10, blk: -4 }, J: { su: 10 }, // (J and K are throws: unblockable, no guard number)
+      I: { su: 16, blk: -12 }, K: { su: 14 }, dI: { su: 16, blk: -16 }, dK: { su: 16, blk: -14 },
+      $c2: { su: 12, blk: -6 }, $c3: { su: 12, blk: -6 }, $c4: { su: 12, blk: -6 }, $cF: { su: 18 }, $cL: { su: 16, blk: -15 }, $cE: { su: 20, blk: -12 }, // U, U … U×4 / U×4, K (throw) / U, I / U, K
+      $cl2: { su: 12, blk: -6 }, $clE: { su: 18, blk: -16 },
+      kpPlate: { su: 16, blk: -6 }, kpCannon: { su: 20, blk: -16 }, kpPounce: { su: 22, blk: -16 }, kpFrenzy: { su: 20, blk: -16 },
+      kpBubble: { su: 20, blk: -16 }, kpGeyser: { su: 24, blk: -15 }, kpRiptide: { su: 17, blk: -16 }, /* (the wall then takes a few frames to reach them: first hit at 24F up close) */
+    },
     heavy: { // no kicks: the K button grabs and throws
       p: { label: 'Rending Claws', startup: 10, active: 5, recovery: 18, hitbox: [10,150,40,160], wind: 'kClawUp', pose: 'kClawX', lunge: [3, 9, 4.5], hitstop: 11, claw: [95, 110, 0.9, 70] },
       k: { label: 'Whirlpool Toss', grab: true, startup: 7, active: 3, recovery: 26, hitbox: [10,92,20,150], wind: 'kGrab', pose: 'kToss', dmg: 58, stun: 24, launch: true, launchVy: 13, hitstop: 12, gdrain: 0, onFrame: kappaToss },
@@ -237,14 +245,7 @@ for (const k in CHARS) CHARS[k].key = k;
 // (Tetsu's I is no longer held to charge)
 // (Mei's I is no longer held to charge)
 // (Lyra's I is no longer held to charge)
-makeCharged('kappa', [
-  { set: { label: 'Ambush', dmg: 50, hitbox: [0,120,0,170], launch: true, launchVy: 13, pose: 'kClawUp', recovery: 18, claw: [60, 140, -1.3, 70], speedFx: true }, rel: 14, // short: he darts in low and rakes upward
-    dash: true, act: (f, o, mf) => { const mv = f.move; if (mf <= mv.startup && mv.dashLeft > 0 && Math.abs(o.x - f.x) > 55) { f.vx = f.facing * mv.dashV; mv.dashLeft -= mv.dashV; if (mf % 2 === 0) parts.push({ type: 'aura', x: f.x - f.facing * 16, y: GROUND - 6, vx: -f.facing, vy: -1.2, life: 12, max: 12, r: 3, col: '150,215,255' }); } else f.vx *= 0.5; } },
-  { set: { label: 'Dish Storm', hitbox: null, pose: 'kThrow', recovery: 24 }, rel: 6, // long: a whole stack of dishes thrown in a storm
-    act: (f, o, mf) => { f.vx *= 0.5; const k = (mf - f.move.startup) / 3;
-      if (mf >= f.move.startup && Number.isInteger(k) && k < 5) { sfx('throw'); spawnPJ(f, 'dish', { x: f.x + f.facing * 40, y: 120 + (k % 2) * 30, vx: f.facing * 12, vy: [1.5, -0.5, 2.5, 0, 1][k], g: 0.08, life: 60, r: 18,
-        h: { dmg: k === 4 ? 36 : 14, stun: 18, bstun: 10, push: k === 4 ? 8 : 1.5, gdrain: 6, label: 'Dish Storm', ...(k === 4 ? { kd: true, kdVx: 16, kdVy: 8 } : {}) } }); } } },
-]);
+// (the kappa's I is no longer held to charge)
 Object.assign(CHARS.salary, { spLow: { fK: 'smSlide', bK: 'smSpill', fKH: 'smSkid' } });
 // Tanaka's forms pick the right version of ← ← + J by themselves (the ↑ / ↓ commands still work):
 // the angel's ray goes up after someone in the air and down at someone crouching; the devil's tail comes down from overhead on someone crouching

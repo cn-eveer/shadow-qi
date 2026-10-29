@@ -7,7 +7,6 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="blurb">A small, round, very cute kappa with a turtle shell and a dish of water on his head, and a wild animal at heart: he crouches low like a beast, and almost everything he does is a claw attack that leaves three glowing slash marks. He never kicks; the kick buttons grab and throw (throws can’t be guarded, but they miss anyone in the air).</p>
       <p class="note"><b>v1.3.9.</b> Poison now takes only three separate attacks within three seconds, lasts eight seconds and drains twice as fast. His dash is quicker and dives under projectiles (DIVE), and Shell Guard (← ← + J) sends projectiles straight back at whoever fired them. Great Flood now floods the stage (see below). His dash and his Pounce have armor: hits land, but don’t stop him. New on ← ← + K (in place of the Cucumber Snack): <b>Riptide</b>, the answer to anyone who keeps their distance.</p>
       <p class="note"><b>Poison.</b> Land four separate attacks within two seconds and the river venom poisons them: they slowly lose health and move slower, until it wears off after about six seconds.</p>
-      <p class="note"><b>Charge (hold I).</b> Qi gathers into him while you hold. Half a second: Ambush, a short charge: he darts in low and rakes them into the air — follow it with a juggle. Over a second: Dish Storm, a long charge: a whole stack of dishes thrown in a storm, the last one sends them flying. A tap is the normal heavy attack.</p>
       <p class="note"><b>Theme.</b> River spirit · teal and water blue. A wild little creature from a mountain stream. Signatures: U, U, K Whirlpool Rake (a spinning whirlpool of claws); U, U, I Splash Geyser (a belly-flop splash, then a geyser under them).</p>
       <div class="scroll"><table>
         <tbody>
@@ -43,7 +42,6 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="blurb">甲羅と頭の皿の、小さくて丸くてとても可愛いカッパ。でも中身は野生の獣：獣のように低く構え、ほとんどの攻撃が光る三本の爪痕を残す爪攻撃。蹴りは使わず、キックボタンはつかみ投げ（ガード不能、空中の相手には当たらない）。</p>
       <p class="note"><b>v1.3.9。</b>毒は3秒以内に3回当てるだけで回り、8秒続き、減りも2倍に。ダッシュは速くなり、飛び道具の下をくぐる（DIVE）。甲羅ガード（←←+J）は飛び道具を撃った相手に跳ね返す。大洪水はステージを水没させる技に（下の表）。ダッシュと飛びかかりにはアーマー：攻撃を受けても止まらない。←←+K は、きゅうりおやつに代わって新技<b>引き波</b>に（距離を取る相手への切り札）。</p>
       <p class="note"><b>毒。</b> 2秒以内に4回攻撃を当てると川の毒が回り、相手は少しずつ体力を失い動きが遅くなる（約6秒で治る）。</p>
-      <p class="note"><b>溜め技（I長押し）。</b> 押している間、気が集まる。0.5秒：奇襲（短い溜め：低く飛び込んで爪で浮かせる）、空中追撃につながる。1秒以上：皿の嵐（長い溜め：皿を次々と投げ、最後の一枚で吹き飛ばす）。押すだけなら通常の強攻撃。</p>
       <p class="note"><b>テーマ.</b> 川の精・青緑と水色。山の渓流に住む野生の小さな生き物。決め技：U、U、K「渦巻き引っかき」（爪の渦巻き）／U、U、I「水しぶき間欠泉」（腹打ちの水しぶきから足元に間欠泉）。</p>
       <div class="scroll"><table>
         <tbody>

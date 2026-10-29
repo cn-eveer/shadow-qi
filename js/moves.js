@@ -559,11 +559,11 @@ function specialMoveBase(id) {
     // ← ← + J: Shell Guard. Pulls into his shell: everything bounces off, and if something did, he spins out of it
     // ← ← + K: Riptide. The water rises up BEHIND them and rolls in toward him, carrying them right up to him — guarding or not.
     // On a hit they arrive stunned in front of him, so his ground string follows. The answer to anyone who keeps their distance. Jump the wave and it passes under them
-    case 'kpRiptide': return { id, label: 'Riptide', startup: 16, active: 40, recovery: 18, wind: 'kToss', pose: 'kBlast', hitbox: null,
+    case 'kpRiptide': return { id, label: 'Riptide', startup: 5, active: 40, recovery: 18, wind: 'kToss', pose: 'kBlast', hitbox: null,
       onFrame(f, o, mf) { const mv = f.move; f.vx = 0;
         if (mf === 4) { const side = Math.sign(o.x - f.x) || f.facing; mv.dir = -side; mv.wx = clamp(Math.abs(o.x - f.x) <= RIP_REACH ? o.x + side * 150 : f.x + side * RIP_REACH, WALL_L - 20, WALL_R + 20); sfx('flame'); } // (the water rises behind them — if they're within RIP_REACH; further away it rises short of them and misses)
-        if (mf < 16 || mv.wx == null) return;
-        if (mf === 16) { sfx('splash'); game.shake = Math.max(game.shake, 3); }
+        if (mf < 5 || mv.wx == null) return;
+        if (mf === 5) { sfx('splash'); game.shake = Math.max(game.shake, 3); }
         mv.wx += mv.dir * 13;
         if (mv.dir * (f.x - mv.wx) < 50) { mv.done = true; if (mv.carry === 'hit' && o.state === 'hitstun') { o.stun = Math.max(o.stun, 26); o.x = clamp(f.x + f.facing * 72, WALL_L, WALL_R); popText(o.x, GROUND - 190, L('DRAGGED IN!', '引き寄せ！'), '150,215,255'); } else if (mv.carry) o.x = clamp(f.x + f.facing * 80, WALL_L, WALL_R); hitRecover(f, 6); return; } // (it breaks at his feet, leaving them right in front of him: on a hit, still stunned — start the string)
         const near = Math.abs(o.x - mv.wx) < 60 && o.y < 80;
