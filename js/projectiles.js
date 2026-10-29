@@ -29,7 +29,7 @@ function spawnClone(f, sup, idx, dmg, lvl, near) { // (dmg: a super's own damage
   puff(x, 60); sfx('clone');
   return projs[projs.length - 1];
 }
-const ARMY_LAST = { dmg: 75, kd: true, kdVx: 10, kdVy: 9, hitstop: 14, w: 34, gMul: 0.3 }; // Shadow Army's last clone: a heavy kick that knocks them away — from behind, back toward Kuro
+const ARMY_LAST = { dmg: 160, kd: true, kdVx: 10, kdVy: 9, hitstop: 14, w: 34, gMul: 0.3 }; // Shadow Army's last clone: a heavy kick that knocks them away — from behind, back toward Kuro
 const ARMY_SWEEP = { ...ARMY_LAST, kdVx: 3, kdVy: 5 }; // (low: it sweeps their feet out — they drop where they stand)
 function spawnDiveClone(f, overhead) { // the Shadow Army finisher drops from above (overhead: guard it standing)
   const o = other(f), close = Math.abs(o.x - f.x) < 240; // up close, it bounces them back toward Kuro so he can keep the combo going
