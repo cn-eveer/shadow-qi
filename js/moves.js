@@ -747,23 +747,24 @@ function specialMoveBase(id) {
         if (mf >= 11 && mf <= 22) f.y = 34 * Math.sin(Math.PI * Math.min(1, (mf - 11) / 11)); else f.y = 0;
         if (f.hitConnected && f.lastResult === 'block' && !f.move.smashed) { f.move.smashed = true; game.shake = Math.max(game.shake, 5); parts.push({ type: 'ring', x: o.x, y: GROUND - 90, r: 10, vr: 7, life: 12, max: 12, col: '255,210,120' }); }
         hitRecover(f, 8); }, manualY: true };
-    case 'smUpper': return { id, label: 'Overtime Uppercut', startup: 7, active: 6, recovery: 22, wind: 'uppercutW', pose: 'uppercut', burst: [60, 170], manualY: true, noPush: true,
-      onFrame(f, o, mf) { f.y = mf <= 14 ? 70 * Math.sin(Math.PI / 2 * mf / 14) : Math.max(0, 70 - (mf - 14) * 6); if (mf === 7) { popText(f.x, GROUND - 210, L('OVERTIME!', '残業！'), '255,140,90'); sfx('rise'); } if (mf > 6 && mf < 14) parts.push({ type: 'aura', x: f.x + f.facing * 30, y: GROUND - f.y - rnd(120, 180), vx: 0, vy: -2, life: 12, max: 12, r: 4, col: '255,140,60' }); },
-      hitbox: [10,120,40,195], dmg: 52, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 13, type: 'mid', hitstop: 11, gdrain: 10, onStart(f) { f.invul = 6; } };
+    // → → + K: Sliding Dogeza. He throws himself flat in a full apology and slides across the floor on his belly: a low that launches
+    case 'smUpper': return { id, label: 'Sliding Dogeza', startup: 9, active: 14, recovery: 20, wind: 'crouch', pose: 'sDogeza', crouch: true, selfMove: true, speedFx: true,
+      hitbox: [0,120,0,38], low: true, dmg: 46, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 11, type: 'mid', hitstop: 9, gdrain: 10,
+      onFrame(f, o, mf) { if (mf === 1) popText(f.x, GROUND - 170, L('I\'M SO SORRY!', '申し訳ございません！'), '230,230,240');
+        if (mf > 4 && mf <= 24 && !f.hitConnected && Math.abs(o.x - f.x) > 45) { f.vx = f.facing * 12; if (mf % 2 === 0) parts.push({ type: 'smoke', x: f.x - f.facing * 20, y: GROUND - 6, vx: -f.facing, vy: -0.5, r: 5, vr: 0.3, life: 14, max: 14, col: '220,215,205' }); } else f.vx *= 0.6; } };
     case 'smCoffee': return { id, label: 'Hot Coffee', startup: 10, active: 6, recovery: 20, wind: 'palmW', pose: 'palm',
       hitbox: [20,140,60,150], dmg: 34, stun: 20, bstun: 12, push: 1, stunT: 54, stunKind: 'burn', type: 'mid', hitstop: 8, gdrain: 8,
       onFrame(f, o, mf) { if (mf === 10) sfx('flame'); },
       drawFX(f) { if (f.mf < 9 || f.mf > 20) return; ctx.save(); const x = f.x + f.facing * 60, y = GROUND - f.y - 115;
         for (let i = 0; i < 9; i++) { const k = (f.mf - 9 + i * 0.4) / 10; ctx.fillStyle = `rgba(${110 + i * 6},${70 + i * 4},40,.85)`; ctx.beginPath(); ctx.arc(x + f.facing * k * 90, y - Math.sin(k * Math.PI) * 30 + i * 3, 5 - i * 0.3, 0, Math.PI * 2); ctx.fill(); }
         ctx.restore(); } };
-    case 'smBow': return { id, label: 'Dogeza Spring', startup: 36, active: 6, recovery: 16, wind: 'sDogeza', pose: 'sSpring', crouch: true, // a long, deep, shining bow — untouchable while he grovels — then he springs up
-      poseFn: (f, mf) => mf < 34 ? POSES.sDogeza : null,
-      drawFX(f) { if (f.mf > 36) return; const k = Math.min(1, f.mf / 8), x = f.x, y = GROUND - 30; ctx.save(); ctx.globalCompositeOperation = 'lighter'; // he glows with sincerity: a halo of light, rays, sparkles
-        const g = ctx.createRadialGradient(x, y, 6, x, y, 110); g.addColorStop(0, `rgba(255,250,220,${0.6 * k})`); g.addColorStop(1, 'rgba(255,230,150,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, y, 110, 60, 0, 0, Math.PI * 2); ctx.fill();
-        for (let i = 0; i < 8; i++) { const an = -Math.PI + i * Math.PI / 7 + Math.sin(globalT * 0.05) * 0.1; ctx.strokeStyle = `rgba(255,245,200,${0.35 * k})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(an) * 120, y + Math.sin(an) * 90); ctx.stroke(); }
-        for (let i = 0; i < 5; i++) { const ph = (globalT * 0.05 + i * 0.2) % 1; ctx.fillStyle = `rgba(255,255,230,${(1 - ph) * k})`; ctx.beginPath(); ctx.arc(x + Math.sin(i * 2.3) * 50, y - ph * 70, 2.5, 0, Math.PI * 2); ctx.fill(); } ctx.restore(); },
-      hitbox: [10,100,40,180], dmg: 44, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 12, type: 'mid', hitstop: 11, gdrain: 10,
-      onFrame(f, o, mf) { if (mf < 34) f.invul = Math.max(f.invul, 2); f.vx = mf > 34 && mf <= 40 ? f.facing * 7 : 0; if (mf === 2) popText(f.x, GROUND - 170, L('I\'M SO SORRY!', '申し訳ございません！'), '230,230,240'); if (mf === 36) { sfx('rise'); popText(f.x, GROUND - 210, L('...JUST KIDDING!', '…なんてね！'), '255,200,120'); } } };
+    // ← ← + J: Dogeza Uppercut. He dashes in crouched, face to the floor in an apology... then springs up with an uppercut (mid height)
+    case 'smBow': return { id, label: 'Dogeza Uppercut', startup: 16, active: 6, recovery: 20, wind: 'sDogeza', pose: 'uppercut', crouch: true, selfMove: true, speedFx: true,
+      poseFn: (f, mf) => mf < 12 ? POSES.sDogeza : null,
+      hitbox: [10,115,40,195], dmg: 48, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 13, type: 'mid', hitstop: 11, gdrain: 10, burst: [60, 170],
+      onFrame(f, o, mf) { if (mf === 2) popText(f.x, GROUND - 170, L('I\'M SO SORRY!', '申し訳ございません！'), '230,230,240');
+        if (mf > 2 && mf <= 14 && !f.hitConnected && Math.abs(o.x - f.x) > 50) { f.vx = f.facing * 10; if (mf % 2 === 0) parts.push({ type: 'smoke', x: f.x - f.facing * 20, y: GROUND - 6, vx: -f.facing, vy: -0.5, r: 4, vr: 0.3, life: 12, max: 12, col: '220,215,205' }); } else f.vx *= 0.6;
+        if (mf === 14) { sfx('rise'); popText(f.x, GROUND - 210, L('...JUST KIDDING!', '…なんてね！'), '255,200,120'); } } };
     case 'smAngel': return { id, label: 'Angel Possession', startup: 46, active: 2, recovery: 26, wind: 'saPray', pose: 'sArch', aura: true, manualY: true,
       poseFn: (f, mf) => mf < 30 ? POSES.saPray : null,
       onStart(f) { f.invul = 58; f.move.toDouble = f.ch.possess === 'devil'; },
