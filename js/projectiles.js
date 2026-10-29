@@ -400,6 +400,15 @@ function verdictPillar(f, o, last) { // one brand bursts: a pillar of light come
     str: last ? 2 : 1, gdrain: 10, juggle: true, jugVy: 6, label: 'Verdict' }, Math.sign(o.x - f.x) || f.facing, hb, hu);
 }
 // Bastion March finisher: the shield flies out spinning, hits up to three times and comes back to his hand
+function spawnStaffBoom(f, mode) { // Mei throws her staff: 'boom' spins out and back (a hit each way), 'triple' whirls out in front for three hits, then comes back
+  f.staffOut = true;
+  projs.push({ id: ++serial, type: 'staffBoom', mode, owner: f, x: f.x + f.facing * 50, y: 100, vx: f.facing * (mode === 'boom' ? 19 : 18.5), vy: 0, dir: f.facing, hits: 0, last: -99, life: 130, t: 0, outT: mode === 'boom' ? 28 : 34 });
+  sfx('throw');
+}
+function staffBack(f) { // she grabs her staff back (it vanishes from the air)
+  for (const p of projs) if (p.type === 'staffBoom' && p.owner === f && !p.dead) { p.dead = true; puff(p.x, GROUND - p.y); }
+  f.staffOut = false;
+}
 function spawnAegis(f) {
   f.shieldOut = true;
   projs.push({ id: ++serial, type: 'aegis', owner: f, x: f.x + f.facing * 50, y: 100, vx: f.facing * 13, vy: 0, dir: f.facing, hits: 0, last: -99, life: 120, t: 0 });

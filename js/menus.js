@@ -58,7 +58,7 @@ function trainingAction(t) {
   sfx('select'); updateTbar();
 }
 tbar.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { initAudio(); trainingAction(b.dataset.t); b.blur(); }));
-// punish training, in the 技表's 相手 tab: ▶ beside one of the dummy's own commands and it does it again and again, every 1–4 s (■ stops it)
+// punish training, in the 技表's 相手 tab: ▶ beside one of the dummy's own commands and it does it again and again, every 1–4 s, right where it stands (■ stops it)
 // (the list: the basic attacks and strings, then every command in its move list that can be done on the ground)
 const REP_EVERY = [1, 1.5, 2, 3, 4], REP_BTN = { U: 'lp', I: 'hp', J: 'lk', K: 'hk' };
 const REP_BASICS = ['U', 'I', 'J', 'K', '↓ + U', '↓ + I', '↓ + J', '↓ + K'], REP_STR_FALLBACK = ['U, U', 'U, U, I', 'U, U, K', 'U, U, U, U, K', 'J, J, K', 'J, K'];

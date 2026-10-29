@@ -305,6 +305,10 @@ function specialMoveBase(id) {
         if (mf === 22) { f.y = 0; dustAt(f.x, true); game.shake = Math.max(game.shake, 5); }
       } };
     // ----- Mei -----
+    case 'staffThrow': return { id, label: 'Staff Boomerang', pre: 4, startup: 10, active: 2, recovery: 18, wind: 'thrustW', pose: 'thrust', proj: 'staffBoom', limit: 1, // ← → + U: the staff spins out like a boomerang and comes back
+      onFrame(f, o, mf) { if (mf === f.move.startup) spawnStaffBoom(f, 'boom'); } };
+    case 'staffWhirl': return { id, label: 'Staff Whirlwind', pre: 4, startup: 12, active: 2, recovery: 18, wind: 'staffSwingW', pose: 'thrust', proj: 'staffBoom', limit: 1, // ← → + I: thrown spinning, it whirls in front of her for three hits
+      onFrame(f, o, mf) { if (mf === f.move.startup) spawnStaffBoom(f, 'triple'); } };
     case 'extendStaff': return { id, label: 'Extending Staff', startup: 11, active: 6, recovery: 18, wind: 'thrustW', pose: 'thrust', staffExt: 170, speedFx: true, spinWind: true,
       hitbox: [30,320,82,122], dmg: 62, stun: 20, bstun: 12, push: 7, type: 'mid', hitstop: 9, gdrain: 10,
       onFrame(f, o, mf) { if (mf === 11) { sfx('slash'); parts.push({ type: 'streak', x: 0, x0: f.x + f.facing * 60, x1: f.x + f.facing * 320, y: GROUND - f.y - 100 * f.ch.scale, life: 10, max: 10 }); } } };

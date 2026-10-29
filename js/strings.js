@@ -738,7 +738,7 @@ function pjDraw(p) {
   ctx.restore();
 }
 // no shot travels further than this from where it was thrown (supers, and the shield that comes back, aside): it fades out
-const PROJ_RANGE = 520, PROJ_FREE = new Set(['beam', 'aegis', 'decoy', 'guardShadow', 'trap']);
+const PROJ_RANGE = 520, PROJ_FREE = new Set(['beam', 'aegis', 'staffBoom', 'decoy', 'guardShadow', 'trap']);
 function updateProjs() {
   for (const p of projs) {
     FX_OWNER = p.owner; // (sparks from a projectile are its owner's)
@@ -770,6 +770,21 @@ function updateProjs() {
       if (!p.hit && hu && overlap(hb, hu) && tgt.state !== 'knock') { p.hit = true; // (it rolls under someone already in the air)
         applyHit(p.owner, tgt, { dmg: 40, stun: 24, bstun: 14, push: 3, kd: true, kdVx: 6, kdVy: 9, type: 'mid', low: true, chip: true, hitstop: 8, proj: true, str: 1, gdrain: 20, label: 'Heaven Splitter' }, p.dir, hb, hu);
         p.dead = true; }
+      continue;
+    }
+    if (p.type === 'staffBoom') { // Mei's thrown staff: out, then back to her hand
+      const own = p.owner, tgt = other(own); p.life--;
+      if (p.t < p.outT) p.vx *= p.mode === 'boom' ? 0.955 : 0.92; else { const dx = own.x - p.x; p.vx = Math.sign(dx) * Math.min(16, Math.abs(dx) * 0.2 + 7); }
+      p.x += p.vx; p.y += ((100 + Math.max(0, own.y)) - p.y) * 0.1;
+      if ((p.t > p.outT && Math.abs(own.x - p.x) < 34) || p.life <= 0 || p.x < -60 || p.x > W + 60 || own.ko) { p.dead = true; own.staffOut = false; sfx('block'); continue; }
+      const hu = hurtbox(tgt, true), hb = { x0: p.x - 46, x1: p.x + 46, y0: p.y - 40, y1: p.y + 40 }, back = p.t > p.outT;
+      const can = p.mode === 'boom' ? (p.hits === 0 && !back) || (p.hits <= 1 && back && !p.backHit) : p.hits < 3 && !back && p.t - p.last >= 6;
+      if (can && hu && overlap(hb, hu)) {
+        const last = p.mode === 'triple' && p.hits === 2;
+        applyHit(own, tgt, { dmg: p.mode === 'boom' ? (back ? 30 : 42) : (last ? 30 : 20), stun: p.mode === 'boom' ? 22 : 18, bstun: p.mode === 'boom' ? 14 : 10, push: last || back ? 3 : 1.2, type: 'mid', chip: true, hitstop: last ? 8 : 5, proj: true, str: 1, gdrain: 8,
+          juggle: true, jugVy: 5, label: p.mode === 'boom' ? 'Staff Boomerang' : 'Staff Whirlwind' }, Math.sign(p.vx) || p.dir, hb, hu);
+        if (back) p.backHit = true; p.hits++; p.last = p.t;
+      }
       continue;
     }
     if (p.type === 'aegis') { // out, then back to Aldric's hand

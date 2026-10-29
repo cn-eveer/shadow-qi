@@ -15,6 +15,8 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Double jump<small>Press up again in mid-air for a second jump with a somersault.</small></td><td class="cmd">W, then W</td></tr>
           <tr><td>Falling Staff<small>Heavy punch in the air: brings the staff down on them and bounces them off the ground.</small></td><td class="cmd">I in the air</td></tr>
           <tr><td>Extending Staff<small>The staff shoots out to a third of the stage.</small></td><td class="cmd">→ → + U</td></tr>
+          <tr><td>Staff Boomerang<small>She throws the staff spinning like a boomerang: it flies a third of the stage and comes back, hitting on the way out and on the way back. Quick to recover, even when guarded.</small></td><td class="cmd">← → + U</td></tr>
+          <tr><td>Staff Whirlwind<small>The staff, thrown spinning, whirls in front of her and hits three times, then comes back. Quick to recover, even when guarded.</small></td><td class="cmd">← → + I</td></tr>
           <tr><td>Pole Vault Smash<small>Plants the staff, vaults over the gap and slams it down, bouncing them.</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>Low Staff Dance<small>A low spinning sweep that pops them up on a hit. Guarded or not, it keeps going: U rising poke, I vaults over to their other side and strikes, J a second sweep, K a pole slam that knocks them down. Up to five parts, ending with the slam. On a hit every part combos; once it is guarded, the J sweep winds up slowly and they can hit her before it.</small></td><td class="cmd">→ → + K, then U / I / J / K</td></tr>
           <tr><td>Monkey Staff Rush<small>Opens with a pole spin kick, then keeps going whether it hits or is guarded. After each part press another button: U thrusts, J sweeps low, I hops into an overhead crash (bounces them on a hit), K ends with a spinning finish that knocks them away. Up to five parts in any order, ending with the finish; it wears down their guard fast. On a hit every part combos; once it is guarded, the J sweep winds up slowly and they can hit her before it.</small></td><td class="cmd">→ → + J, then U / I / J / K</td></tr>
@@ -56,6 +58,8 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>二段ジャンプ<small>空中でもう一度上を押すと宙返りしながら二段ジャンプ。</small></td><td class="cmd">W → W</td></tr>
           <tr><td>落とし棍<small>空中でI。棍を振り下ろしてバウンドさせる。</small></td><td class="cmd">空中で I</td></tr>
           <tr><td>伸縮棍<small>棍が画面の3分の1まで伸びる。</small></td><td class="cmd">→ → + U</td></tr>
+          <tr><td>回転棍投げ<small>棍をブーメランのように投げる。画面の3分の1まで飛んで戻り、行きと帰りで当たる。ガードされても硬直は短い。</small></td><td class="cmd">← → + U</td></tr>
+          <tr><td>旋風棍<small>回転させて投げた棍が目の前で渦を巻き、3回当たってから戻る。ガードされても硬直は短い。</small></td><td class="cmd">← → + I</td></tr>
           <tr><td>棒高跳び叩き<small>棍で跳び越えて叩きつけ、バウンドさせる。</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>棍の舞<small>低い回転払いで浮かせる。当たってもガードされても続く：U突き上げ、I反対側へ跳んで一撃、J二度目の払い、K叩きつけでダウン。最大5段。当たれば全段つながるが、ガードされるとJの払いの出が遅くなり割り込まれる。</small></td><td class="cmd">→ → + K → U/I/J/K</td></tr>
           <tr><td>猿王連棍<small>棍を軸に回し蹴りから始まり、当たってもガードされても続く：U突き、J足払い、I飛び上がって叩き（ヒットでバウンド）、K回転のとどめ。最大5段。ガードを大きく削る。当たれば全段つながるが、ガードされるとJの足払いの出が遅くなり割り込まれる。</small></td><td class="cmd">→ → + J → U/I/J/K</td></tr>
