@@ -61,11 +61,20 @@ tbar.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
 // punish training, in the 技表's 相手 tab: ▶ beside one of the dummy's own commands and it does it again and again, every 1–4 s (■ stops it)
 // (the list: the basic attacks and strings, then every command in its move list that can be done on the ground)
 const REP_EVERY = [1, 1.5, 2, 3, 4], REP_BTN = { U: 'lp', I: 'hp', J: 'lk', K: 'hk' };
-const REP_BASICS = ['U', 'I', 'J', 'K', '↓ + U', '↓ + I', '↓ + J', '↓ + K', 'U, U', 'U, U, I', 'U, U, K', 'U, U, U, U, K', 'J, J, K', 'J, K'];
+const REP_BASICS = ['U', 'I', 'J', 'K', '↓ + U', '↓ + I', '↓ + J', '↓ + K'], REP_STR_FALLBACK = ['U, U', 'U, U, I', 'U, U, K', 'U, U, U, U, K', 'J, J, K', 'J, K'];
+const STR_BTN = { lp: 'U', hp: 'I', lk: 'J', hk: 'K', dlp: '↓ + U', dhp: '↓ + I', dlk: '↓ + J', dhk: '↓ + K' };
+function stringsOf(ch) { // every ground string a fighter has, from his own string chains: [{ cmd: 'U, U, U, U, ↓ + K', label }]
+  const st = STRINGS[(CHARS[ch] && CHARS[ch].lookKey) || ch]; if (!st || !CHARS[ch]) return null;
+  const start = st.$start || { p: (normalMove(CHARS[ch], 'p', 0, 's') || {}).chain, k: (normalMove(CHARS[ch], 'k', 0, 's') || {}).chain }; // (Hohen's duet strings start from his own U and J)
+  const out = [], walk = (keys, chain) => { if (!chain || keys.length >= 5) return;
+    for (const [b, id] of Object.entries(chain)) { const d = st[id]; if (!d || !STR_BTN[b] || d.air || d.jug) continue; const k = [...keys, STR_BTN[b]]; out.push({ cmd: k.join(', '), label: d.label }); walk(k, d.chain); } };
+  walk(['U'], start.p); walk(['J'], start.k);
+  return out;
+}
 let repCh = '', repId = 0, repMoves = [];
 function repInput(tok) { // one command → its input (null: not one this can do)
-  const m = tok.replace(/ \/ .*$/, '').trim().match(/^(→ → \+ |← ← \+ |↓ \+ |→ → then ↓ \+ |← ← then ↓ \+ )?([UIJK])$/); if (!m) return null;
-  const p = m[1] || '', inp = { btn: REP_BTN[m[2]] }; if (p.startsWith('→ →')) inp.ff = true; if (p.startsWith('← ←')) inp.bb = true; if (p.includes('↓')) inp.down = true;
+  const m = tok.replace(/ \/ .*$/, '').trim().match(/^(→ → \+ |← ← \+ |← → \+ |↓ \+ |→ → then ↓ \+ |← ← then ↓ \+ )?([UIJK])$/); if (!m) return null;
+  const p = m[1] || '', inp = { btn: REP_BTN[m[2]] }; if (p.startsWith('→ →')) inp.ff = true; if (p.startsWith('← ←')) inp.bb = true; if (p.startsWith('← →')) inp.bf = true; if (p.includes('↓')) inp.down = true; // (← →: Kuro's and Tetsu's ← → techniques)
   return inp;
 }
 function repSteps(cmd) { // a command → the presses that do it (as the sample combos play them)
@@ -75,7 +84,8 @@ function repSteps(cmd) { // a command → the presses that do it (as the sample 
   const [first, then] = cmd.split(/, then /);
   if (then) { const a = repInput(first), b = repInput(then); return a && b ? { steps: [S(first, 'start', a), S(then, 'follow', b)] } : null; }
   const one = repInput(cmd); if (one) { if (hold) one.holdFor = 60; return { steps: [S(cmd, 'start', one)] }; }
-  const keys = cmd.split(/,? /); if (keys.length > 1 && keys.every(k => REP_BTN[k])) return { steps: keys.map((k, i) => S(k, i ? 'chain' : 'start', { btn: REP_BTN[k] })) };
+  const keys = cmd.split(', '), ins = keys.map(k => { const m = k.match(/^(↓ \+ )?([UIJK])$/); return m && { btn: REP_BTN[m[2]], down: !!m[1] }; }); // (a string: U, U, U, U, ↓ + K…)
+  if (keys.length > 1 && ins.every(Boolean)) return { steps: ins.map((inp, i) => S(keys[i], i ? 'chain' : 'start', inp.down ? inp : { btn: inp.btn })) };
   return null;
 }
 function repList(ch) {
@@ -83,6 +93,7 @@ function repList(ch) {
   const en = rows('en'), loc = rows(game.lang), same = en.length === loc.length, out = [];
   const nameOf = td => [...td.childNodes].filter(n => !(n.nodeType === 1 && n.tagName === 'SMALL')).map(n => n.textContent).join('').trim();
   for (const c of REP_BASICS) { const r = repSteps(c); if (r) out.push({ label: c, ...r }); }
+  for (const s of stringsOf(ch) || REP_STR_FALLBACK.map(c => ({ cmd: c }))) { const r = repSteps(s.cmd); if (r && !out.some(m => m.label === s.cmd)) out.push({ label: s.cmd, name: s.label ? L(s.label, '連続技') : '', ...r }); } // (all his strings)
   let parent = null, juggle = false;
   en.forEach((tr, i) => {
     const td = tr.querySelectorAll('td'); if (td.length < 2) { juggle = /juggle/i.test(tr.textContent); return; } // (a heading row: Hohen's juggle-only moves follow)
@@ -94,7 +105,8 @@ function repList(ch) {
     if (juggle || name.startsWith('·')) return; // (juggle-only, or only in Hohen's armour)
     const alt = cmd.match(/^(.*, then )([UIJK](?: \/ [UIJK])+)$/); // (a choice of follow-ups: one entry each)
     const cmds = alt ? alt[2].split(' / ').map(k => alt[1] + k) : kb.length > 1 && !kb.every(k => k === kb[0]) && !cmd.includes('+') ? kb : [cmd]; // (one row, two buttons: two moves)
-    for (const c of cmds) { const r = repSteps(c); if (!r) continue; const had = out.find(m => m.label === c); if (had) had.name = had.name || name; else out.push({ label: c, name, ...r }); }
+    const strs = stringsOf(ch); // (a row whose command is a run of buttons but no string of his — the anti-air U, I, K — isn't a string)
+    for (const c of cmds) { if (strs && /^[UIJK↓ +]+(, [UIJK↓ +]+)+$/.test(c) && !strs.some(s => s.cmd === c)) continue; const r = repSteps(c); if (!r) continue; const had = out.find(m => m.label === c); if (had) had.name = had.name || name; else out.push({ label: c, name, ...r }); }
   });
   return out;
 }
@@ -409,6 +421,9 @@ function moveListOf(ch) {
     if (tr.classList.contains('sub') && parent) out.push({ name, cmd: `${parent.cmd}, ${cmd}` }); // a follow-up: the move it follows, then its button
     else { parent = { name, cmd }; out.push(parent); }
   });
+  const at = out.findIndex(m => /[→←]/.test(m.cmd)); // (his strings go after the basic attacks, before the techniques)
+  const strs = (stringsOf(ch) || []).filter(s => !out.some(m => m.cmd === s.cmd)).map(s => ({ name: L(s.label, '連続技'), cmd: s.cmd }));
+  out.splice(at < 0 ? out.length : at, 0, ...strs);
   return out;
 }
 const comboListOf = ch => (COMBO_SET[ch] || []).map(d => ({ name: L(d.name, (JA_DEMO[d.name] || {}).n || d.name), keys: d.steps.map(s => s.key) })); // (the same combos as the sample combos)
