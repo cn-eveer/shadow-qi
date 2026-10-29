@@ -73,7 +73,7 @@ function netReceive(msg) {
   switch (msg.t) {
     case 'hello': NET.oppName = String(msg.name || '?').slice(0, 12); NET.oppChar = CHARS[msg.char] ? msg.char : 'ninja';
       if (NET.host && !NET.on) netStartAsHost(); break;
-    case 'busy': netStatus(L('That player is already in a match.', 'その相手はすでに対戦中です。')); break;
+    case 'busy': if (NET.mode !== 'random') netStatus(L('That player is already in a match.', 'その相手はすでに対戦中です。')); break; // (a random search just moves on)
     case 'start': netBegin(msg); break;
     case 'in': for (let i = 0; i < msg.m.length; i++) if (NET.remote[msg.f + i] == null && msg.f + i >= NET.tick - 30) NET.remote[msg.f + i] = msg.m[i]; break;
     case 'ping': netSend({ t: 'pong', at: msg.at }); break;
@@ -118,7 +118,7 @@ function netEnd(msg) { // leave online play and go back to the title screen
   NET.on = false; game.online = false; clearInterval(NET.pingT); clearTimeout(NET.joinTimer);
   try { if (NET.conn) NET.conn.close(); } catch (e) {}
   try { if (NET.peer) NET.peer.destroy(); } catch (e) {}
-  NET.conn = null; NET.peer = null; NET.mode = null;
+  NET.conn = null; NET.peer = null; NET.mode = null; NET.waitMsg = null;
   if (wasOn && msg) { showMenu(); showOnline(msg); } else if (msg) netStatus(msg);
 }
 function netStatus(t) { NET.status = t; const el = document.getElementById('netStatus'); if (el) el.textContent = t; }
@@ -133,7 +133,11 @@ const PEER_OPTS = { config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302
 function netWire(conn) { // a connected opponent: say hello, listen for messages
   NET.conn = conn;
   conn.on('data', netReceive);
-  conn.on('close', () => { if (NET.conn === conn) netEnd(L('The connection was closed.', '接続が切れました。')); });
+  conn.on('close', () => {
+    if (NET.conn !== conn) return;
+    if (!NET.on && NET.waitMsg && NET.peer && !NET.peer.destroyed) { NET.conn = null; netStatus(NET.waitMsg); return; } // (it fell through before the match started: still waiting in our slot or room)
+    netEnd(L('The connection was closed.', '接続が切れました。'));
+  });
   const hello = () => { netSend({ t: 'hello', name: NET.name, char: game.p1Char, v: NETV }); netSend({ t: 'ping', at: performance.now() }); };
   if (conn.open) hello(); else conn.on('open', hello);
 }
@@ -144,26 +148,30 @@ function hostAs(id) { // try to take this id and wait for someone to connect; re
     peer.on('open', () => { if (done) return; done = true; NET.peer = peer; NET.host = true; res(true); });
     peer.on('error', e => { if (!done) { done = true; try { peer.destroy(); } catch (x) {} res(false); } else if (e.type !== 'peer-unavailable') netStatus(L('Connection problem: ', '接続エラー：') + e.type); });
     peer.on('connection', c => {
-      if (NET.conn) { c.on('open', () => { c.send({ t: 'busy' }); setTimeout(() => c.close(), 300); }); return; }
-      clearTimeout(NET.joinTimer); netStatus(L('Opponent found! Starting…', '相手が見つかりました！開始します…')); netWire(c);
+      if (NET.conn) { c.on('open', () => { c.send({ t: 'busy' }); setTimeout(() => c.close(), 300); }); return; } // (already in a match, or already connecting to someone)
+      netStatus(L('Connecting to an opponent…', '対戦相手と接続中…')); netWire(c);
+      const giveUp = setTimeout(() => { if (NET.conn === c && !c.open) { NET.conn = null; try { c.close(); } catch (e) {} if (NET.waitMsg) netStatus(NET.waitMsg); } }, 15000); // (WebRTC can be slow, on an iPad especially — but a connection that never opens mustn't hold the slot)
+      c.on('open', () => { clearTimeout(giveUp); netStatus(L('Opponent found! Starting…', '相手が見つかりました！開始します…')); });
     });
   });
 }
 function joinId(id, guestPeer) { // try to connect to a host; resolves true once connected
   return new Promise(res => {
-    let done = false;
-    const fin = v => { if (!done) { done = true; guestPeer.off && guestPeer.off('error', onErr); res(v); } };
+    let done = false, c = null; NET.lastBusy = false;
+    const fin = v => { if (done) return; done = true; guestPeer.off && guestPeer.off('error', onErr);
+      if (v) NET.host = false; else { if (NET.conn === c) NET.conn = null; try { c && c.close(); } catch (e) {} } // (given up on: closed, so the other side stops waiting for it)
+      res(v); };
     const onErr = e => { if (e.type === 'peer-unavailable') fin(false); };
     guestPeer.on('error', onErr);
-    const c = guestPeer.connect(id, { reliable: true });
-    c.on('open', () => { NET.host = false; netWire(c); fin(true); });
-    c.on('data', d => { if (d && d.t === 'busy') { try { c.close(); } catch (e) {} if (NET.conn === c) NET.conn = null; } });
-    setTimeout(() => fin(false), 5000);
+    c = guestPeer.connect(id, { reliable: true });
+    c.on('data', d => { if (d && d.t === 'busy') { NET.lastBusy = true; fin(false); } else if (d && d.t === 'hello') fin(true); }); // (connected only once they say hello — a busy host isn't a match)
+    c.on('open', () => { if (done) { try { c.close(); } catch (e) {} return; } if (!NET.conn) netWire(c); else fin(false); }); // (too late, or we found someone meanwhile)
+    setTimeout(() => fin(false), 12000); // (an empty slot answers at once: this only waits on a real, slow connection)
   });
 }
 function newGuestPeer() { return new Promise((res, rej) => { const p = new Peer(PEER_OPTS); p.on('open', () => res(p)); p.on('error', e => rej(e)); }); }
 async function netRandom() { // random match: join someone waiting, or wait in a free slot yourself
-  NET.mode = 'random'; netStatus(L('Looking for an opponent…', '対戦相手を探しています…'));
+  NET.mode = 'random'; NET.waitMsg = null; netStatus(L('Looking for an opponent…', '対戦相手を探しています…'));
   try {
     await loadPeer();
     const guest = await newGuestPeer(); NET.peer = guest;
@@ -172,10 +180,11 @@ async function netRandom() { // random match: join someone waiting, or wait in a
     guest.destroy(); NET.peer = null;
     for (let k = 0; k < RAND_SLOTS && NET.mode === 'random'; k++) {
       if (await hostAs(NET_PREFIX + 'rand-' + k)) {
-        netStatus(L('Waiting for an opponent… (share the page with a friend!)', '対戦相手を待っています…（友だちにページを共有しよう！）'));
+        NET.waitMsg = L('Waiting for an opponent… (share the page with a friend!)', '対戦相手を待っています…（友だちにページを共有しよう！）'); netStatus(NET.waitMsg);
         const myK = k, retry = async () => { // meanwhile, check now and then whether someone is waiting in an earlier slot
-          if (NET.conn || NET.mode !== 'random' || myK === 0) return;
-          try { const g2 = await newGuestPeer(); for (let j = 0; j < myK && !NET.conn; j++) if (await joinId(NET_PREFIX + 'rand-' + j, g2)) { const old = NET.peer; NET.peer = g2; try { old.destroy(); } catch (e) {} return; } g2.destroy(); } catch (e) {}
+          if (NET.on || NET.mode !== 'random' || myK === 0) return;
+          if (NET.conn) { NET.joinTimer = setTimeout(retry, 5000); return; } // (someone is connecting to us: look again later, in case it falls through)
+          try { const g2 = await newGuestPeer(); for (let j = 0; j < myK && !NET.conn; j++) if (await joinId(NET_PREFIX + 'rand-' + j, g2)) { const old = NET.peer; NET.peer = g2; NET.waitMsg = null; try { old.destroy(); } catch (e) {} return; } /* (we joined them: no longer waiting in our own slot) */ g2.destroy(); } catch (e) {}
           NET.joinTimer = setTimeout(retry, 5000 + Math.random() * 3000);
         };
         NET.joinTimer = setTimeout(retry, 4000 + Math.random() * 3000);
@@ -186,19 +195,19 @@ async function netRandom() { // random match: join someone waiting, or wait in a
   } catch (e) { netStatus(L('Could not reach the matchmaking server.', 'マッチングサーバーに接続できませんでした。')); }
 }
 async function netCreateRoom(code) {
-  NET.mode = 'room'; netStatus(L('Creating room ' + code + '…', 'ルーム ' + code + ' を作成中…'));
+  NET.mode = 'room'; NET.waitMsg = null; netStatus(L('Creating room ' + code + '…', 'ルーム ' + code + ' を作成中…'));
   try {
     await loadPeer();
-    if (await hostAs(NET_PREFIX + 'room-' + code)) netStatus(L('Room ' + code + ' is open. Waiting for your opponent to join…', 'ルーム ' + code + ' を作成しました。相手の参加を待っています…'));
+    if (await hostAs(NET_PREFIX + 'room-' + code)) { NET.waitMsg = L('Room ' + code + ' is open. Waiting for your opponent to join…', 'ルーム ' + code + ' を作成しました。相手の参加を待っています…'); netStatus(NET.waitMsg); }
     else netStatus(L('Room ' + code + ' is already in use. Pick another number.', 'ルーム ' + code + ' は使用中です。別の番号にしてください。'));
   } catch (e) { netStatus(L('Could not reach the matchmaking server.', 'マッチングサーバーに接続できませんでした。')); }
 }
 async function netJoinRoom(code) {
-  NET.mode = 'room'; netStatus(L('Joining room ' + code + '…', 'ルーム ' + code + ' に参加中…'));
+  NET.mode = 'room'; NET.waitMsg = null; netStatus(L('Joining room ' + code + '…', 'ルーム ' + code + ' に参加中…'));
   try {
     await loadPeer();
     const guest = await newGuestPeer(); NET.peer = guest;
-    if (!(await joinId(NET_PREFIX + 'room-' + code, guest))) netStatus(L('Room ' + code + ' was not found.', 'ルーム ' + code + ' が見つかりません。'));
+    if (!(await joinId(NET_PREFIX + 'room-' + code, guest))) netStatus(NET.lastBusy ? L('That player is already in a match.', 'その相手はすでに対戦中です。') : L('Room ' + code + ' was not found.', 'ルーム ' + code + ' が見つかりません。'));
     else netStatus(L('Connected! Starting…', '接続しました！開始します…'));
   } catch (e) { netStatus(L('Could not reach the matchmaking server.', 'マッチングサーバーに接続できませんでした。')); }
 }
