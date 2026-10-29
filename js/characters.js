@@ -241,6 +241,7 @@ Object.assign(CHARS, {
       $sl2: { su: 12, blk: -6 }, $slE: { su: 18, blk: -16 },
       smCard: { su: 16, blk: -6 }, smCase: { su: 22, blk: -16 }, smTackle: { su: 20, blk: -16 }, smUpper: { su: 20, blk: -16 },
       smCoffee: { su: 20, blk: -16 }, smBow: { su: 20, blk: -16 },
+      smSlide: { su: 20, blk: -16 }, smSpill: { su: 15, blk: -16 }, smSkid: { su: 16, blk: -6 }, // (the low versions: → → ↓ + J, ← ← ↓ + J, → → ↓ + K)
     },
     heavy: {
       p: { label: 'Briefcase Swing', startup: 11, active: 5, recovery: 19, hitbox: [10,150,40,160], wind: 'slamW', pose: 'sCase', lunge: [3, 9, 3.5], hitstop: 10, kd: true, kdVx: 8 },
@@ -294,7 +295,7 @@ const DEVIL_CH = { ...CHARS.salary, spLow: { fK: 'sdCrawl', bK: 'sdTail', fKH: '
 // frames for the possessed forms (see moveFrames): the angel's strings and techniques, the devil's (two frames quicker: he is the faster of the two), and both for the double possession
 const ANGEL_FRAMES = { ...CHARS.salary.frames,
   $a2: { su: 12, blk: -6 }, $a3: { su: 12, blk: -6 }, $a4: { su: 12, blk: -6 }, $aF: { su: 18, blk: -18 }, $aL: { su: 16, blk: -15 }, $aE: { su: 20, blk: -12 }, $al2: { su: 12, blk: -6 }, $alE: { su: 18, blk: -16 },
-  saJab: { su: 12, blk: -6 }, saFist: { su: 20, blk: -16 }, saGlide: { su: 22, blk: -16 }, saAscend: { su: 22, blk: -16 }, saRay: { su: 24, blk: -16 }, saRayLow: { su: 24, blk: -16 }, saRayFly: { su: 24, blk: -16 }, saDive: { su: 24, blk: -16 } };
+  saJab: { su: 12, blk: -6 }, saFist: { su: 20, blk: -16 }, saGlide: { su: 22, blk: -16 }, saAscend: { su: 22, blk: -16 }, saRay: { su: 24, blk: -16 }, saRayLow: { su: 24, blk: -16 }, saRayFly: { su: 24, blk: -15 }, saDive: { su: 24, blk: -16 } };
 const DEVIL_FRAMES = { ...CHARS.salary.frames,
   $d2: { su: 10, blk: -6 }, $d3: { su: 10, blk: -6 }, $d4: { su: 10, blk: -6 }, $dF: { su: 16, blk: -18 }, $dL: { su: 14, blk: -16 }, $dE: { su: 18, blk: -12 }, $dl2: { su: 10, blk: -6 }, $dlE: { su: 16, blk: -16 },
   sdLunge: { su: 20, blk: -16 }, sdMaul: { su: 20, blk: -16 }, sdTailLash: { su: 20, blk: -16 }, sdTailUpper: { su: 20, blk: -16 }, sdWhip: { su: 20, blk: -16 }, sdCrawl: { su: 20, blk: -16 }, sdTail: { su: 18, blk: -14 }, sdTailDrop: { su: 22, blk: -16 }, sdChainB: { su: 20, blk: -16 }, sdTrail: { su: 20, blk: -16 }, sdDrain: { su: 24 } };

@@ -26,7 +26,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Dynamite<small>A lit stick lobbed at them; it blows them into the air.</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>Make ’em Dance<small>Shots at their feet; the last one leaves them dancing on the spot (stunned).</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>Backflip Shot<small>Flips away (untouchable at first) and shoots on the way.</small></td><td class="cmd">← ← + J</td></tr>
-          <tr><td>Showdown<small>Waits with his hand on the holster. Attack him from the front and he draws first, lifting them into a juggle.</small></td><td class="cmd">← ← + K</td></tr>
+          <tr><td>Showdown<small>Waits with his hand on the holster. Attack him from the front and he draws first, lifting them into a juggle. With no bullets (empty or reloading) he shoves them far away with the gun instead, unhurt.</small></td><td class="cmd">← ← + K</td></tr>
           <tr class="super"><td>Super: High Noon<small>Everything stops: six shots from the hip, then one that knocks them flat.</small></td><td class="cmd">U + J</td></tr>
         </tbody>
       </table></div>
@@ -66,7 +66,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>ダイナマイト<small>火のついたダイナマイトを投げ、爆発で宙へ。</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>踊らせ撃ち<small>足元を撃ちまくり、最後の一発でその場で踊らせる（気絶）。</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>バク転ショット<small>バク転で下がり（出始めは無敵）、空中で撃つ。</small></td><td class="cmd">← ← + J</td></tr>
-          <tr><td>決闘<small>ホルスターに手をかけて待つ。正面から攻撃されると先に抜き、空中追撃へ。</small></td><td class="cmd">← ← + K</td></tr>
+          <tr><td>決闘<small>ホルスターに手をかけて待つ。正面から攻撃されると先に抜き、空中追撃へ。弾がない時（撃ち尽くし・リロード中）は、銃で遠くへ突き飛ばす（ダメージなし）。</small></td><td class="cmd">← ← + K</td></tr>
           <tr class="super"><td>超必殺技：真昼の決闘<small>時が止まり、腰だめの6連射、最後の一発でダウン。</small></td><td class="cmd">U + J</td></tr>
         </tbody>
       </table></div>

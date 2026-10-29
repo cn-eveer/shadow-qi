@@ -649,7 +649,9 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { f.vx = 0; f.x = clamp(f.bfx - f.facing * 130 * Math.min(1, mf / 26), WALL_L, WALL_R); f.y = mf <= 26 ? 110 * Math.sin(Math.PI * mf / 26) : 0; f.flipT = mf < 18 ? 18 - mf : 0; f.flipMax = 18;
         if (mf === 16) shoot(f, { x: f.x + f.facing * 36, y: f.y + 80, vx: 18, vy: -6, life: 22, dmg: 26 }); } };
     // ← ← + K: Showdown. Stands still, hand over the holster; attack him from the front and he draws first
-    case 'gnShowdown': return { id, label: 'Showdown', startup: 4, active: 22, recovery: 22, wind: 'gIdle', pose: 'gIdle', parry: true, frontOnly: true, parryInto: 'gnDraw', fx: 'ward' };
+    case 'gnShowdown': return { id, label: 'Showdown', startup: 4, active: 22, recovery: 22, wind: 'gIdle', pose: 'gIdle', parry: true, frontOnly: true, parryInto: 'gnDraw', parryIntoDry: 'gnShove', fx: 'ward' }; // (with bullets he draws and shoots; with none — empty or reloading — he shoves them away with the gun instead)
+    case 'gnShove': return { id, label: 'Pistol Shove', startup: 2, active: 3, recovery: 14, wind: 'gIdle', pose: 'gTwin', hitbox: null, burst: [80, 110],
+      onStart(f, o) { const side = Math.sign(o.x - f.x) || f.facing; if (o.state !== 'ko') { setState(o, 'blockstun'); o.stun = 14; o.move = null; o.vx = side * 30; } sfx('palm'); game.shake = Math.max(game.shake, 3); } }; // (pushed far back, unhurt: it needs no bullets)
     case 'gnDraw': return { id, label: 'Draw!', startup: 3, active: 3, recovery: 18, wind: 'gIdle', pose: 'gTwin', noGrace: true, burst: [110, 120],
       hitbox: [10,170,60,150], dmg: 50, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 12.5, type: 'mid', hitstop: 14, gdrain: 10,
       onFrame(f, o, mf) { if (mf === 3) { sfx('shot'); sfx('hitH'); } } };

@@ -417,7 +417,8 @@ function parryCounter(d, a, h) {
   game.freeze = Math.max(game.freeze, 10);
   if (h.proj) return; // projectiles are just absorbed
   d.facing = Math.sign(a.x - d.x) || d.facing;
-  startMove(d, specialMove(d.move.parryInto || 'parryStrike'), 1, true); d.invul = 8;
+  const dry = d.move.parryIntoDry && d.ch.ammo && !(d.ammo > 0 && !(d.reloadT > 0)); // (Jesse with no bullets: the shove instead of the shot)
+  startMove(d, specialMove((dry ? d.move.parryIntoDry : d.move.parryInto) || 'parryStrike'), 1, true); d.invul = 8;
 }
 function spawnRain(f, o, idx) { // lightning balls drop straight down onto a juggled opponent
   projs.push({ id: ++serial, type: 'rain', owner: f, idx, x: o.x + (idx - 1) * 14, y: Math.min(o.y + 200, 420), vx: 0, vy: -11, r: 14,
