@@ -139,7 +139,7 @@ const CHIP = 0.03, CHIP_BIG = 0.12;
 const guardBig = (a, h) => !!(h.superHit || h.spx || (!h.proj && a.state === 'attack' && a.move && (a.move.super || !a.move.normal || a.move.lvl)));
 function guardCost(a, d, h, big) {
   const sup = h.superHit || (a.move && a.move.super), rush = a.move && ((a.move.rushTag && !a.move.rushOpen) || FINISHERS.has(a.move.id)), base = (h.gdrain || 0) * 0.6 + (h.dmg || 0) * 0.1;
-  return base * (big ? (sup ? 1.3 : rush ? 1.2 : 2.6) : 1) /* (a rush is one technique: only its opening costs the full price) */ * (d.ch.guardMul || 1) * (a.ch.guardDmgMul || 1) * (1 + 0.6 * stressK(d));
+  return base * (big ? (sup ? 1.3 : rush ? 1.2 : 2.6) : 1) /* (a rush is one technique: only its opening costs the full price) */ * (d.ch.guardMul || 1) * (a.ch.guardDmgMul || 1) * (h.gMul || 1) * (1 + 0.6 * stressK(d)); // (gMul: a hit that's heavy only when it lands)
 }
 const chipOf = (h, big) => Math.max(1, Math.ceil((h.dmg || 0) * (big ? CHIP_BIG : h.chip ? 0.075 : CHIP)));
 // a launcher (U, U, I, ↓ + I, any attack that lifts them) that's guarded leaves a big opening — bigger still when its user is stressed

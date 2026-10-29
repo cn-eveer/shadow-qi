@@ -329,7 +329,7 @@ function threatened(f, o) {
   const d = Math.abs(o.x - f.x);
   if (o.golem && golemThreatening(f, o)) return true; // (the golem is attacking)
   if (o.state === 'attack' && o.move && d < 280 && o.mf <= o.move.startup + o.move.active + 2 && !(o.move.walkAway && o.mf <= o.move.startup)) return true;
-  for (const p of projs) if (p.owner === o && !p.dead && (p.type === 'beam' || p.type === 'flame' || (Math.sign(f.x - p.x) === Math.sign(p.vx) && Math.abs(p.x - f.x) < 300))) return true;
+  for (const p of projs) if (p.owner === o && !p.dead && (p.type === 'beam' || p.type === 'flame' || (p.fall && Math.abs(p.x - f.x) < 150) || (Math.sign(f.x - p.x) === Math.sign(p.vx) && Math.abs(p.x - f.x) < 300))) return true; // (or one dropping on them from above)
   return false;
 }
 function teleport(f, o) {

@@ -853,7 +853,7 @@ function updateProjs() {
       continue;
     }
     if (p.type === 'clone' && p.fall) { // dive from above, then fade after landing
-      p.yOff = Math.max(0, p.yOff - 18);
+      p.yOff = Math.max(0, p.yOff - (p.fallSp || 18));
       if (p.yOff === 0) { p.landT = (p.landT || 0) + 1; if (p.landT === 1) { dustAt(p.x, true); parts.push({ type: 'ering', x: p.x, y: GROUND, r: 10, vr: 8, life: 16, max: 16, col: '190,150,255' }); game.shake = Math.max(game.shake, 6); } if (p.landT > 6) p.dead = true; }
     }
     if (p.type === 'flame') {
@@ -910,11 +910,13 @@ function updateProjs() {
     if (hu) {
       const hb = projBox(p);
       if (overlap(hb, hu)) {
-        applyHit(p.owner, tgt, { dmg: p.dmg, stun: p.stun, bstun: p.bstun, push: p.push, kd: !!p.kd, type: 'mid', chip: !!p.chip, hitstop: p.hitstop,
-          proj: true, str: p.kd ? 2 : 1, superHit: !!p.superHit, low: !!p.lowHit, overhead: !!p.overhead, kdVx: p.kdVx, kdVy: p.kdVy, jugVy: p.jugVy, fixedLift: !!p.fixedLift, launch: !!p.launch, launchVy: p.launchVy, bounce: !!p.bounce, stunT: p.stunT, stunKind: p.stunKind, gdrain: p.type === 'shuriken' || p.type === 'homing' ? 5 : p.juggle ? 4 : 8,
+        const pr = applyHit(p.owner, tgt, { dmg: p.dmg, stun: p.stun, bstun: p.bstun, push: p.push, kd: !!p.kd, type: 'mid', chip: !!p.chip, hitstop: p.hitstop,
+          proj: true, str: p.kd ? 2 : 1, superHit: !!p.superHit, gMul: p.gMul, low: !!p.lowHit, overhead: !!p.overhead, kdVx: p.kdVx, kdVy: p.kdVy, jugVy: p.jugVy, fixedLift: !!p.fixedLift, launch: !!p.launch, launchVy: p.launchVy, bounce: !!p.bounce, stunT: p.stunT, stunKind: p.stunKind, gdrain: p.type === 'shuriken' || p.type === 'homing' ? 5 : p.juggle ? 4 : 8,
           label: p.type === 'pfist' ? (p.superHit ? 'Crystal Storm' : 'Crystal Shard') : p.type === 'shuriken' ? 'Shuriken' : p.type === 'homing' ? 'Lightning Ball' : p.type === 'wave' ? 'Earth Stomp' : p.type === 'rain' ? (p.qi ? 'Qi Spiral' : 'Lightning Rain') : p.type === 'qi' ? 'Qi Blast' : p.relay ? 'Clone Relay' : p.juggle ? 'Shadow Army' : 'Shadow Clone' }, Math.sign(p.vx) || p.dir, hb, hu);
         p.dead = true;
         if (p.type === 'clone') puff(p.x, 70);
+        if (p.army) p.armyRes = pr;
+        if (p.army && pr && pr !== 'block') Object.assign(spawnClone(p.owner, true, p.army === 'front' ? 0 : 1, 0, 'mid', true), ARMY_LAST); // Shadow Army: the dive hit — the last clone comes at once, at body height, to catch them as they bounce
         if (p.endOwner && tgt.juggle) { // Shadow Army up close: Kuro drops the hand sign right away to follow up
           tgt.vx = (Math.sign(p.owner.x - tgt.x) || 1) * 2.2;
           if (p.owner.state === 'attack' && p.owner.move && p.owner.move.super) endMove(p.owner);

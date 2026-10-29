@@ -1105,17 +1105,24 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { f.vx *= 0.6; if (mf < f.move.startup && mf % 3 === 0) parts.push({ type: 'ring', x: f.x - f.facing * 10, y: GROUND - f.y - 150, r: 70 - mf * 3, vr: -1.5, life: 8, max: 8, col: '220,200,255' });
         if (mf === f.move.startup) { sfx('slash'); sfx('super'); game.shake = Math.max(game.shake, 8); for (let i = 0; i < 3; i++) parts.push({ type: 'ring', x: f.x + f.facing * 70, y: GROUND - 100, r: 20 + i * 18, vr: 6 + i * 2, life: 16, max: 16, col: i ? '200,170,255' : '255,250,235' }); dustAt(f.x + f.facing * 60, true);
         spawnPJ(f, 'crescent', { big: true, x: f.x + f.facing * 70, y: 100, vx: f.facing * 8, life: 70, r: 100, h: { dmg: 90, stun: 24, bstun: 8, push: 4, kd: true, kdVx: 16, kdVy: 8, gdrain: 18, overhead: true, floor: true, label: 'Full Moon Tempest' } }); /* (from the floor up to well above a jump: nothing ducks or dives under it) */ } } };
-    case 'shadowArmy': return { id, super: true, name: 'SHADOW ARMY', label: 'Shadow Army', startup: 14, active: 100, recovery: 22, blockAdv: 0, cutOnGuard: true, /* (out longer, slower to recover; even when guarded: once its clones are guarded he's done) */ wind: 'seal', pose: 'seal', aura: true,
+    case 'shadowArmy': return { id, super: true, name: 'SHADOW ARMY', label: 'Shadow Army', startup: 14, active: 125, recovery: 22, blockAdv: 0, cutOnGuard: true, /* (out longer, slower to recover; even when guarded: once its clones are guarded he's done) */ wind: 'seal', pose: 'seal', aura: true,
       onStart(f) { f.invul = 20; },
-      onFrame(f, o, mf) { // three tides: mid clones from both sides, low clones from both sides, then one dives from above (TOP) and one comes low from behind
-        if (f.move.dodge) { // (each clone a little lighter: about the same total)
-          if (mf >= 12 && mf <= 17) spawnClone(f, true, mf - 12, 14, 'mid'); // 1: mids from both sides — guard standing
-          if (mf >= 36 && mf <= 41) spawnClone(f, true, mf - 36, 14, 'low'); // 2: lows from both sides — guard crouching
-          if (mf === 60) spawnDiveClone(f, true); // 3: one drops from above — stand…
-          if (mf === 74) spawnClone(f, true, 1, 18, 'low'); // …then one comes in low from behind — crouch, and guard the other way
-        }
-        else if (mf >= 12 && mf <= 75 && (mf - 12) % 7 === 0) spawnClone(f, true, (mf - 12) / 7, 16); // (in a combo, one after another — ten of them: they keep the juggled opponent up until the last one drops)
-        f.move.cutOnGuard = mf >= (f.move.dodge ? 74 : 80); // (guarded: he's done only once the last clone is out — ±0 then)
+      onFrame(f, o, mf) { // three tides: mid clones from both sides, low clones from both sides, then one dives from above (TOP) and one last clone from behind
+        const mv = f.move;
+        if (mf === 1) { const back = Math.sign(o.x - f.x) || f.facing; mv.wall = back > 0 ? WALL_R - o.x < 150 : o.x - WALL_L < 150; // (they're in the corner: nothing can come from behind them)
+          mv.tr = Math.round(Math.max(0, Math.abs(o.x - f.x) - 40) / 16); // (how long the clones take to get to them)
+          if (mv.dodge) { mv.active += mv.tr + 20 + (mv.wall ? 40 : 0); if (f.fd) f.fd.act = mv.active; } } // (in the corner the tides come from his side only, one clone after another: it lasts longer)
+        if (mv.dodge) { const W2 = mv.wall, a = W2 ? 2 : 1, n = W2 ? 9 : 6, t1 = 12, t2 = W2 ? 44 : 36, t3 = t2 + n * a + 12 + mv.tr, dm = W2 ? 13 : 19; // (each clone lighter in the corner: about the same total; the dive only once the last low has reached them — far away, later)
+          const tide = (t0, lvl) => { const k = mf - t0; if (k >= 0 && k < n * a && k % a === 0) spawnClone(f, true, W2 ? 2 * (k / a) : k / a, dm, lvl).gMul = W2 ? 0.66 : 1; }; // (in the corner: even numbers only — all from his side; more of them, each wearing the guard down less)
+          tide(t1, 'mid'); // 1: mids — guard standing
+          tide(t2, 'low'); // 2: lows — guard crouching
+          if (mf === t3) { mv.dive = spawnDiveClone(f, true); mv.dive.army = W2 ? 'front' : 'back'; } // 3: one drops from above — stand…
+          const dv = mv.dive;
+          if (dv && dv.armyRes && dv.armyRes !== 'block' && !mv.short) { mv.short = true; mv.active = Math.min(mv.active, mf - mv.startup + 20); } // (it hit: the last clone came at once, as a mid — strings.js — and he's done soon after)
+          if (dv && dv.dead && !mv.finalT && !(dv.armyRes && dv.armyRes !== 'block')) mv.finalT = mf + (dv.armyRes ? 14 : 7); // (guarded or missed: once it's down…
+          if (mf === mv.finalT) Object.assign(spawnClone(f, true, W2 ? 0 : 1, 0, 'low'), ARMY_SWEEP); // …one comes in low from behind (from his side in the corner) — crouch, and turn if it's behind)
+          mv.cutOnGuard = !!mv.finalT && mf >= mv.finalT; } // (guarded: he's done only once the last clone is out — ±0 then)
+        else { if (mf >= 12 && mf <= 75 && (mf - 12) % 7 === 0) spawnClone(f, true, (mf - 12) / 7, 16); mv.cutOnGuard = mf >= 80; } // (in a combo, one after another — ten of them: they keep the juggled opponent up until the last one drops)
         if (!f.move.dodge && mf === 80) spawnDiveClone(f); // (in a combo it drops right onto them as the last clone passes)
         if (!f.move.dodge && mf === 86) { f.move.active = 86 - f.move.startup; f.move.recovery = 8; } // (in a combo he's free right after the last clone lands: follow up as they bounce)
       } };
