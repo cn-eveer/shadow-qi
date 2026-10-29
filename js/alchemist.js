@@ -55,6 +55,13 @@ function selfPunch(f, o, p) { // his own blow (the stone-knuckle)
   const res = applyHit(f, o, { type: 'mid', chip: false, proj: false, str: 0, gdrain: 2, label: 'Stone Knuckle', ...p }, Math.sign(o.x - f.x) || f.facing, hb, hu);
   if (res) { f.hitConnected = true; f.lastResult = res; }
 }
+function holdStrike(f, o) { // the golem holds them far from him: his knuckle is a fist of stone that arrives right where they're held
+  const hu = hurtbox(o, false, false); if (!hu) return;
+  const hb = { x0: o.x - 36, x1: o.x + 36, y0: 40, y1: 170 };
+  parts.push({ type: 'ring', x: o.x, y: GROUND - o.y - 100, r: 8, vr: 5, life: 12, max: 12, col: '255,210,120' }, { type: 'ring', x: o.x, y: GROUND - o.y - 100, r: 3, vr: 3, life: 14, max: 14, col: '255,240,200' }); sfx('hitH');
+  const res = applyHit(f, o, { type: 'mid', chip: false, proj: false, str: 0, gdrain: 2, dmg: Math.round(24 * holdMul(f)), stun: 22, bstun: 10, push: 0.001, hitstop: 6, label: 'Stone Knuckle' }, Math.sign(o.x - f.x) || f.facing, hb, hu);
+  if (res) { f.hitConnected = true; f.lastResult = res; }
+}
 function hohenStone(f, o, ex = {}) { // J: up close a stone-knuckle (no stone spent); from further off, a thrown stone
   if (nearO(f, o) || ex.knuckle) { const x = f.x + f.facing * 62, y = GROUND - f.y - 104; parts.push({ type: 'ring', x, y, r: 6, vr: 3.5, life: 10, max: 10, col: '255,210,120' }); sfx('swing');
     selfPunch(f, o, { box: [0, 100, 60, 140], dmg: Math.round(24 * (ex.k || 1) * holdMul(f)), stun: 22, bstun: 10, push: 1.4, hitstop: 6, gdrain: 5, label: ex.label === 'Stone Barrage' ? 'Stone Barrage' : 'Stone Knuckle', ...(ex.h || {}) }); }
@@ -66,7 +73,7 @@ const beat = (label, pose, kind, ex = {}) => ({ label, startup: 4, active: 2, re
     if (mf === 1 && ex.near && nearO(f, o)) Object.assign(mv, ex.near); // (up close: the knuckle's own wind-up and timing)
     if (mf === 1 && ex.holdPunch && f.golem && f.golem.hold && kind) Object.assign(mv, { punchNow: true, label: 'Stone Knuckle', selfMove: true, ...KNUCKLE, startup: 8 }); // (U while the golem holds them: its hands are full, so he steps in and punches himself)
     if (mv.punchNow && mf < mv.startup) { const gap = Math.abs(o.x - f.x) - 80; f.vx = gap > 0 ? f.facing * Math.min(9, gap / 3) : 0; }
-    if (mf === mv.startup) { if (mv.punchNow) { f.vx = 0; hohenStone(f, o, { knuckle: true }); } else if (kind) golemOrder(f, kind); if (ex.also) ex.also(f, o); }
+    if (mf === mv.startup) { if (mv.punchNow) { f.vx = 0; if (Math.abs(o.x - f.x) > 140) holdStrike(f, o); else hohenStone(f, o, { knuckle: true }); } /* (held far away: the fist of stone arrives where they are) */ else if (kind) golemOrder(f, kind); if (ex.also) ex.also(f, o); }
     if (ex.each && mf >= mv.startup) ex.each(f, o, mf - mv.startup);
     conductIn(f, mv, mf); } });
 const throwAnim = n => (f, mf) => { const mv = f.move; if (mf < mv.startup || mf > mv.startup + n) return null; const k = (mf - mv.startup) % 7; return lerpPose(POSES.alThrowW, POSES.alThrow, clamp(k / 2, 0, 1)); }; // (each stone of a volley gets its own throw)
