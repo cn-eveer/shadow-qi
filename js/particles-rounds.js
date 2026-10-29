@@ -164,7 +164,7 @@ function startRound(n) {
   fighters.forEach(updatePose);
 }
 function resetPositions() {
-  for (const f of fighters) { if (CHARS[f.key]) f.ch = CHARS[f.key]; f.possT = 0; f.aegisT = 0; f.plateOut = false; f.poisonT = 0; f.venom = 0; f.spirit = null; f.stuckT = 0; f.freeT = 0; f.loopGuard = 0; f.repLabel = null; f.repN = 0; f.liftT = null; f.recoilT = 0; f.settleT = 0; f.stunUsed = false; f.pendingStun = 0; f.stunT = 0; f.extendBonus = 0; f.prePoss = null; f.wholeRound = false; f.wholeKind = null; } // (a fresh start: no combo counters carried over from the last one) // (a sample combo starts the salaryman unpossessed)
+  for (const f of fighters) { if (CHARS[f.key]) f.ch = CHARS[f.key]; f.possT = 0; f.aegisT = 0; f.grabLock = 0; f.btnEdge = {}; f.plateOut = false; f.poisonT = 0; f.venom = 0; f.spirit = null; f.stuckT = 0; f.freeT = 0; f.loopGuard = 0; f.repLabel = null; f.repN = 0; f.liftT = null; f.recoilT = 0; f.settleT = 0; f.stunUsed = false; f.pendingStun = 0; f.stunT = 0; f.extendBonus = 0; f.prePoss = null; f.wholeRound = false; f.wholeKind = null; } // (a fresh start: no combo counters carried over from the last one) // (a sample combo starts the salaryman unpossessed)
   projs.length = 0; game.flood = null; game.track = null; game.advInfo = null; game.combo = null; game.routeName = null; fighters.forEach(f => { f.sorbs = []; });
   for (const f of fighters) resetFighter(f);
   fighters.forEach(updatePose);
@@ -185,15 +185,15 @@ function updateTrack() {
   if (!done && game.frame - tr.t < 240) return;
   game.track = null;
   const who = tr.a.side === 0 ? L('Your attack.', 'あなたの攻撃。') : L('Dummy’s attack.', 'ダミーの攻撃。');
-  if (tr.kind === 'gbreak') { game.advInfo = { text: `${tr.label}: ${L('guard break', 'ガードブレイク')}`, col: '#ff8a9a', note: `${who} ${L('The guard meter ran out.', 'ガードゲージが尽きた。')}` }; return; }
-  if (tr.launch) { game.advInfo = { text: `${tr.label}: ${L('launch', '打ち上げ')}`, col: '#ffd27a', note: `${who} ${L('Keep hitting them while they’re in the air.', '空中にいる間に追撃しよう。')}` }; return; }
-  if (tr.kd) { game.advInfo = { text: `${tr.label}: ${L('knockdown', 'ダウン')}`, col: '#ffe066', note: `${who} ${L('The defender is knocked down.', '相手はダウンした。')}` }; return; }
+  if (tr.kind === 'gbreak') { game.advInfo = { text: `${moveName(tr.label)}: ${L('guard break', 'ガードブレイク')}`, col: '#ff8a9a', note: `${who} ${L('The guard meter ran out.', 'ガードゲージが尽きた。')}` }; return; }
+  if (tr.launch) { game.advInfo = { text: `${moveName(tr.label)}: ${L('launch', '打ち上げ')}`, col: '#ffd27a', note: `${who} ${L('Keep hitting them while they’re in the air.', '空中にいる間に追撃しよう。')}` }; return; }
+  if (tr.kd) { game.advInfo = { text: `${moveName(tr.label)}: ${L('knockdown', 'ダウン')}`, col: '#ffe066', note: `${who} ${L('The defender is knocked down.', '相手はダウンした。')}` }; return; }
   if (!done) return;
   const adv = tr.dF - tr.aF, num = adv > 0 ? '+' + adv : adv < 0 ? '−' + (-adv) : '±0';
   let note = who;
   const near = Math.abs(tr.a.x - tr.d.x) < 115;
   if (tr.kind === 'block') note += adv >= 0 ? L(' Safe: the attacker recovers first.', ' 安全：攻撃側が先に動ける。') : adv > -7 ? L(' Slightly minus, but too quick to punish.', ' 少し不利だが反撃は間に合わない。') : near ? L(' Punishable with a light attack.', ' 弱攻撃で反撃できる。') : L(' Minus, but too far away to punish.', ' 不利だが遠くて反撃できない。');
-  game.advInfo = { text: L(`${tr.label} on ${tr.kind === 'block' ? 'guard' : 'hit'}: ${num}`, `${tr.label}（${tr.kind === 'block' ? 'ガード' : 'ヒット'}）：${num}`), col: adv >= 0 ? '#8ff0a4' : '#ff8a9a', note };
+  game.advInfo = { text: L(`${moveName(tr.label)} on ${tr.kind === 'block' ? 'guard' : 'hit'}: ${num}`, `${moveName(tr.label)}（${tr.kind === 'block' ? 'ガード' : 'ヒット'}）：${num}`), col: adv >= 0 ? '#8ff0a4' : '#ff8a9a', note };
 }
 function trainingUpkeep() {
   for (const f of fighters) {

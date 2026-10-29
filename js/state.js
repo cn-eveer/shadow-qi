@@ -362,6 +362,8 @@ function land(f) {
 
 function update(f, o, inp) {
   f.inp = inp; f.st++;
+  { const H = (inp && inp.held) || {}, pv = f.prevHeld || {}; f.btnEdge = f.btnEdge || {}; for (const b of ['lp', 'hp', 'lk', 'hk']) if (H[b] && !pv[b]) f.btnEdge[b] = game.frame; f.prevHeld = { lp: !!H.lp, hp: !!H.hp, lk: !!H.lk, hk: !!H.hk }; } // (when each button went down: for breaking Kappa's throws)
+  if (f.grabLock > 0) { f.grabLock--; inp = { ...EMPTY, held: inp && inp.held }; f.inp = inp; f.vx = 0; } // (caught in a throw: no moving, only pressing)
   if (f.golem) golemUpdate(f, o);
   if (f.brands && --f.brandT <= 0) f.brands = 0; // holy brands fade
   if (f.healT > 0) f.healT--;
@@ -396,8 +398,8 @@ function update(f, o, inp) {
       if (f.st % 7 === 0) ambientFX(f);
       f.facing = toward; f.combo = 0;
       if (f.atkCD <= 0 && tryAttack(f, o, inp)) break; // (a technique with ↑ held is tried before jumping)
-      if (inp.dashTap === 1) { setState(f, 'dash'); sfx('swing'); break; }
-      if (inp.dashTap === -1) { setState(f, 'bdash'); sfx('swing'); break; }
+      if (inp.dashTap === 1 && !f.ch.noDash) { setState(f, 'dash'); sfx('swing'); break; } // (Hohen can't dash or back dash)
+      if (inp.dashTap === -1 && !f.ch.noDash) { setState(f, 'bdash'); sfx('swing'); break; }
       if (inp.up) { startJump(f, inp); break; }
       // (charging MP by holding P has been removed: MP fills only by fighting)
       if (inp.down) { if (f.state !== 'crouch') setState(f, 'crouch'); f.vx = !f.backHeld && Math.sign(inp.h) === toward ? toward * f.ch.walk * 0.45 * (f.poisonT > 0 ? 0.6 : 1) * floodWalkMul(f) : 0; break; } // (crouching, ↓ + forward edges forward; ↓ + back stays the crouching guard)

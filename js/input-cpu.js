@@ -83,6 +83,46 @@ const DIFFS = {
 const DIFF_ORDER = ['easy', 'medium', 'hard', 'hell'], DIFF_NAMES = { easy: ['Easy', 'かんたん'], medium: ['Medium', 'ふつう'], hard: ['Hard', 'むずかしい'], hell: ['Hell', '地獄'] };
 const dif = () => DIFFS[game.diff] || DIFFS.medium;
 const cpuP = (p, watchP) => game.watch ? watchP : Math.min(0.95, p * dif().combo); // chance of going for a combo route
+// Tanaka's plan. As himself: calls a spirit from a distance, throws pens and staplers from afar, comes in with the rush, the dogeza and the cards, and hits and runs up close.
+// The angel fights from mid range (rays, the dive, the ascension) and prefers I and K up close, since they heal him. The devil rushes in: lunges, the chain, the crawl, and the grab up close.
+function tanakaPlan(f, o, dist, r) {
+  const ps = f.ch.possess, air = o.y > 40, far = dist > 420, mid = dist > 160;
+  if (o.key === 'psychic' && dist > 170) { // Lyra casts from across the stage and never backs away: close the distance with the dive, the ascension and the glide (or the devil's lunge and chain), then fight up close
+    if (ps === 'angel') return r < 0.3 ? { btn: 'lk', bb: true, fwdHold: true } : r < 0.52 ? { btn: 'hk', ff: true } : r < 0.66 ? { btn: 'lk', ff: true } : r < 0.78 ? { btn: 'lk', bb: true } : r < 0.9 ? { dash: 1 } : { walk: 1 };
+    if (ps) return r < 0.3 ? { btn: 'lk', bb: true, fwdHold: true } : r < 0.5 ? { btn: 'lp', ff: true } : r < 0.66 ? { btn: 'lk', ff: true } : r < 0.8 ? { btn: 'hp', ff: true } : r < 0.92 ? { dash: 1 } : { walk: 1 };
+    return r < 0.3 ? { btn: 'lk', ff: true } : r < 0.5 ? { btn: 'hk', ff: true } : r < 0.65 ? { btn: 'lp', ff: true } : r < 0.85 ? { dash: 1 } : { walk: 1 };
+  }
+  if (!ps) {
+    if (dist > 200 && r < 0.12 && !(f.possT > 0)) return { btn: r < 0.07 ? 'hp' : 'hk', bb: true }; // a spirit takes him: the angel (← ← + I) or the devil (← ← + K)
+    if (far) return r < 0.26 ? { btn: 'lp', down: true } : r < 0.42 ? { btn: 'lk', down: true } : r < 0.56 ? { btn: 'lp', ff: true } : (r < 0.7 && f.meter < 100) ? { chargeMP: rnd(40, 100) | 0 } : r < 0.82 ? { dash: 1 } : { walk: 1 };
+    if (dist > 200) return r < 0.14 ? { btn: 'hk', ff: true } : r < 0.27 ? { btn: 'lk', ff: true } : r < 0.37 ? { btn: 'lk', ff: true, down: true } : r < 0.45 ? { btn: 'lk', bb: true, down: true } : r < 0.55 ? { btn: 'lp', bb: true } : r < 0.64 ? { btn: 'lp', ff: true }
+      : r < 0.72 ? { btn: 'lp', down: true } : r < 0.78 ? { btn: 'lk', down: true } : r < 0.9 ? { dash: 1 } : { walk: 1 };
+    if (mid) return r < 0.18 ? { btn: 'hk', ff: true } : r < 0.34 ? { btn: 'lk', bb: true } : r < 0.46 ? { btn: 'lk', ff: true } : r < 0.56 ? { btn: 'hp', ff: true } : null;
+    return r < 0.12 ? { btn: 'lk', bb: true } : r < 0.2 ? { btn: 'hp', ff: true } : r < 0.3 ? { dash: -1 } : null; // close: hit and run
+  }
+  if (ps === 'angel') {
+    if (air && dist < 300 && r < 0.3) return { btn: 'lk', bb: true, up: true }; // Ascending Gaze at someone in the air
+    if (far) return r < 0.25 ? { btn: 'lk', bb: true } : r < 0.4 ? { btn: 'lk', bb: true, fwdHold: true } : r < 0.55 ? { btn: 'lk', ff: true } : r < 0.7 ? { dash: 1 } : { walk: 1 };
+    if (mid) return r < 0.2 ? { btn: 'lk', bb: true, fwdHold: true } : r < 0.34 ? { btn: 'hk', ff: true } : r < 0.46 ? { btn: 'lk', bb: true } : r < 0.56 ? { btn: 'lk', ff: true } : r < 0.64 ? { btn: 'hp', ff: true } : r < 0.72 ? { btn: 'lk', bb: true, down: true } : r < 0.82 ? { dash: 1 } : { walk: 1 };
+    return r < 0.3 ? { btn: 'hp' } : r < 0.5 ? { btn: 'hk' } : r < 0.6 ? { dash: -1 } : null; // close: I and K heal him
+  }
+  if (far) return r < 0.3 ? { dash: 1 } : r < 0.5 ? { btn: 'lp', ff: true } : r < 0.62 && f.meter < 100 ? { chargeMP: rnd(40, 100) | 0 } : { walk: 1 }; // the devil (and the double)
+  if (mid) return r < 0.2 ? { btn: 'lk', bb: true, fwdHold: true } : r < 0.34 ? { btn: 'lp', ff: true } : r < 0.46 ? { btn: 'hp', ff: true } : r < 0.58 ? { btn: 'lk', ff: true } : r < 0.66 ? { btn: 'hk', ff: true } : r < 0.74 ? { btn: 'lk', ff: true, down: true } : r < 0.82 ? { btn: 'lk', bb: true, up: true } : { dash: 1 };
+  return r < 0.18 ? { btn: 'hk', bb: true } : r < 0.3 ? { btn: 'hk', ff: true } : r < 0.4 ? { btn: 'lk', bb: true, down: true } : null; // close: the grab, the hook, the sweep
+}
+// Jesse's plan: a gunslinger. Empty or reloading he keeps away and answers with what needs no bullets (Dynamite, Showdown); otherwise he fights from range —
+// the fan, the heavy shots, the dynamite, the dance — backs away when they come close, and uses the sky shot and the backflip to get out
+function jessePlan(f, o, dist, r) {
+  const air = o.y > 40;
+  if (f.reloadT > 0 || f.ammo <= 0) { // out of bullets
+    if (dist < 170) return r < 0.34 ? { btn: 'hk', bb: true } : r < 0.55 ? { btn: 'lp', bb: true } : r < 0.75 ? { dash: -1 } : { walk: -1 };
+    return r < 0.3 ? { btn: 'lp', bb: true } : r < 0.5 ? { walk: -1 } : null;
+  }
+  if (air && dist < 260 && r < 0.4) return { btn: 'hp', down: true }; // the sky shot at someone in the air
+  if (dist < 150) return r < 0.2 ? { btn: 'lk', bb: true } : r < 0.34 ? { btn: 'hp', down: true } : r < 0.46 ? { btn: 'hk', bb: true } : r < 0.58 ? { btn: 'hp', ff: true } : r < 0.7 ? { dash: -1 } : r < 0.82 ? { btn: 'lp', chain: ['lp', 'lp', 'hk'] } : null;
+  if (dist < 300) return r < 0.16 ? { btn: 'lp', bb: true } : r < 0.3 ? { btn: 'hk', bf: true } : r < 0.42 ? { btn: 'hp', ff: true } : r < 0.54 ? { btn: 'hp', bb: true } : r < 0.64 ? { btn: 'hk' } : r < 0.72 ? { btn: 'hp' } : r < 0.8 ? { btn: 'lk', ff: true } : r < 0.9 ? { walk: -1 } : null;
+  return r < 0.2 ? { btn: 'lp', ff: true } : r < 0.32 ? { btn: 'hk', ff: true } : r < 0.44 ? { btn: 'lk', ff: true } : r < 0.55 ? { btn: 'hp', bb: true } : r < 0.66 ? { btn: 'hk', bf: true } : r < 0.76 ? { btn: 'hk' } : r < 0.84 ? { btn: 'hp' } : r < 0.92 ? { walk: 1 } : { walk: -0.5 };
+}
 class CPU {
   constructor() { this.reset(); }
   reset() { this.plan = {}; this.next = 0; this.def = null; this.threatKey = null; this.reactAt = 0; this.chargeUntil = 0; this.cancelTried = false; this.punishKey = null; }
@@ -98,6 +138,11 @@ class CPU {
   }
   think(f, frame, o) {
     const out = { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false };
+    if (f.state === 'stunned' && f.stunKind === 'held' && o.golem && o.golem.hold) { // held by the golem: now and then the CPU breaks it with U + I + J
+      if (this.heldFor !== o.golem.hold) { this.heldFor = o.golem.hold; this.escAt = Math.random() < (game.watch ? 0.7 : 0.55) ? frame + 15 + (Math.random() * 60 | 0) : null; }
+      if (this.escAt != null && frame >= this.escAt && frame < this.escAt + 4) return { ...out, held: { lp: true, hp: true, lk: true, hk: false } };
+      return out;
+    }
     const dx = o.x - f.x, dist = Math.abs(dx), fwd = Math.sign(dx) || f.facing, N = f.key === 'ninja', gdir = golemGuardDir(f, o) || fwd; // (gdir: which way to guard — toward the golem when it is the one attacking, else toward the alchemist)
     if (f.state === 'down' && !f.ko) { // roll away or get up
       if (this.wakeFor !== f.kdSerial) { this.wakeFor = f.kdSerial; const r = Math.random(); this.wakeRoll = r < 0.3 ? -fwd : r < 0.42 ? fwd : 0; this.wakeAtk = Math.random() < 0.3; }
@@ -249,6 +294,9 @@ class CPU {
       out.btn = p.btn; out.sup = !!p.sup; out.fuse = !!p.fuse; // (fuse: Hohen's ← → + J + K)
       if (p.ff) out.ff = true; else if (p.bb) out.bb = true; else if (p.dir === 'd') out.down = true;
       if (p.down) out.down = true; // rising version of a special
+      if (p.up) out.up = true; // (← ← ↑ + button)
+      if (p.bf) out.bf = true; // (← → + button)
+      if (p.fwdHold) out.h = fwd; // (← ← → + button: hold toward them)
       p.btn = null;
     }
     if (p.chain) { this.chainSeq = p.chain.slice(); p.chain = null; }
@@ -261,6 +309,8 @@ class CPU {
     if (o.golem && Math.random() < 0.75) { const vg = vsGolemPlan(f, o, dist); if (vg) return vg; } // (against Hohen: over the golem, or through it)
     if (Math.random() < (game.watch ? (dist < 95 ? 0.1 : 0.5) : Math.min(0.6, 0.18 * dif().combo))) { const rt = pickRoute(f, 'neutral', dist); if (rt) { this.route = rt; return {}; } } // go for one of the sample combos
     if (f.meter >= 100 && dist < 520 && r < 0.3) return { btn: 'hp', sup: true };
+    if (f.key === 'gunman') { const jp = jessePlan(f, o, dist, r); if (jp) return jp; } // (Jesse: a gunslinger who keeps his distance and counts his bullets)
+    if (f.key === 'salary') { const tp = tanakaPlan(f, o, dist, r); if (tp) return tp; } // (Tanaka: his own plan, for himself and for each spirit that takes him)
     if (dist < 330 && Math.random() < 0.07) { // rising versions used on their own
       const opts = N ? (dist < 110 ? [{ btn: 'lp', bb: true, down: true }, { btn: 'hk', bb: true, down: true }] : [{ btn: 'hp', bb: true, down: true }, { btn: 'lk', ff: true, down: true }, { btn: 'hp', ff: true, down: true }])
         : (dist < 110 ? [{ btn: 'lp', ff: true, down: true }, { btn: 'hk', ff: true, down: true }, { btn: 'hk', bb: true, down: true }] : [{ btn: 'lp', bb: true, down: true }, { btn: 'hp', ff: true, down: true }]);
@@ -314,6 +364,14 @@ const DUMMY_MODES = ['guard', 'sguard', 'cguard', 'jump', 'stand'];
 const DUMMY_LABEL_EN = { guard: 'Always guard', sguard: 'Stand guard', cguard: 'Crouch guard', jump: 'Jump', stand: 'No guard' };
 const DUMMY_LABEL_JA = { guard: '常にガード', sguard: '立ちガード', cguard: 'しゃがみガード', jump: 'ジャンプ', stand: 'ガードなし' };
 const DUMMY_LABEL = new Proxy({}, { get: (t, k) => (game.lang === 'ja' ? DUMMY_LABEL_JA : DUMMY_LABEL_EN)[k] });
+// training: Tanaka's dummy is himself, or taken by the angel, the devil or both, as the chosen command needs
+function setDummyForm(f, form) {
+  const now = f.ch.possess || null;
+  if (form === now) { if (form && f.possT < 300) f.possT = 900; return; }
+  if (now) endPossession(f);
+  if (form === 'angel') startPossession(f, 'angel'); else if (form === 'devil') startPossession(f, 'devil'); else if (form === 'double') { startPossession(f, 'devil'); startPossession(f, 'angel'); }
+  if (f.possT > 0) f.possT = 900;
+}
 class Dummy {
   constructor() { this.cpu = new CPU(); }
   reset() { this.cpu.reset(); this.rst = null; this.next = null; }
@@ -352,6 +410,7 @@ class Dummy {
     }
     if (frame < this.next || !((f.state === 'stand' || f.state === 'crouch') && f.atkCD <= 0)) return idle;
     if (R.sup) f.meter = 100; // (a super needs a full gauge)
+    if (f.key === 'salary') setDummyForm(f, R.form || null); // (Tanaka: himself, or the form the chosen command is for)
     this.rst = { i: 0 }; this.rt0 = frame;
     return comboStep(f, o, R.steps, this.rst, { ...EMPTY });
   }

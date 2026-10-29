@@ -109,9 +109,9 @@ const STRINGS = {
     aSpin: SAF('Air Cleave', 'pAirDown', { hitbox: [5,160,0,140] }),
   },
   kappa: { // Kappa: claws, beak bites, the shell — and a throw to end the string
-    c2: SG('p', 'Backhand Claw', 'kClawDown', 'kClawUp', { claw: [80, 120, -0.8, 46] }),
-    c3: SG('p', 'Beak Bite', 'kIdle', 'kBite', { hitbox: [20,85,80,140], burst: [70, 120], onFrame: (f, o, mf) => { if (mf === f.move.startup) sfx('block'); } }),
-    c4: SG('p', 'Double Rake', 'kClawUp', 'kClawX', { claw: [90, 110, 0.9, 64], dmg: 30 }),
+    c2: SG('p', 'Backhand Claw', 'kClawDown', 'kClawUp', { claw: [80, 120, -0.8, 46], advHit: 11 }), // (advHit: it leads into the 17F ankle bite as a true combo)
+    c3: SG('p', 'Ankle Bite', 'crouch', 'kLowClaw', { low: true, step: 4, hitbox: [20,105,0,40], claw: [80, 26, 0.2, 44], advHit: 15 }), // U, U, U: a low (advHit: it leads into the 21F tail sweep as a true combo)
+    c4: SG('p', 'Tail Sweep', 'crouch', 'kBelly', { low: true, step: 6, hitbox: [0,135,0,40], dmg: 30, advHit: 15 }), // U, U, U, U: a low, the slowest
     cF: SF('k', 'Whirlpool Toss', 'kGrab', 'kToss', { grab: true, kd: false, launch: true, launchVy: 13, hitbox: [10,95,20,150], dmg: 56, onFrame: kappaToss }),
     cL: SL('Upward Rake', 'kClawDown', 'kClawUp', { claw: [60, 140, -1.3, 70] }),
     cE: SF('p', 'Shell Slam', 'kCurl', 'kCurl', { spin: [2, 10], step: 7, hitbox: [10,100,0,110], dmg: 54 }),
@@ -316,6 +316,9 @@ STRINGS.staff.m4.chain = { ...STRINGS.staff.m4.chain, dhk: 'mD' }; STRINGS.staff
 STRINGS.paladin.pUI = SF('p', 'Low Cleave', 'pThrustW', 'pLowCut', { step: 0, low: true, hitbox: [20,180,0,50], dmg: 46, kd: false, launch: true, launchVy: 13.5, recovery: 16 }); // Aldric: U, ↓ + I (a low that lifts them, as high as his other launchers)
 STRINGS.paladin.pUK = SF('k', 'Shield Trip', 'crouch', 'pQuake', { step: 0, low: true, hitbox: [0,165,0,45], dmg: 50 }); // Aldric: U, ↓ + K (a low that trips them)
 STRINGS.paladin.$start.p = { ...STRINGS.paladin.$start.p, dhp: 'pUI', dhk: 'pUK' };
+STRINGS.kappa.cUI = SL('Surfacing Rake', 'crouch', 'kClawUp', { step: 0, low: true, hitbox: [10,140,0,60], claw: [60, 40, -1.3, 60], launchVy: 13.5, recovery: 16 }); // Kappa: U, ↓ + I (a low launcher)
+STRINGS.kappa.cUK = SF('k', 'Shell Sweep', 'crouch', 'kBelly', { step: 0, low: true, hitbox: [0,145,0,40], dmg: 50 }); // Kappa: U, ↓ + K (a low that trips them)
+STRINGS.kappa.$start.p = { ...STRINGS.kappa.$start.p, dhp: 'cUI', dhk: 'cUK' };
 STRINGS.brawler.t4.chain = { ...STRINGS.brawler.t4.chain, dhk: 'tD' }; STRINGS.brawler.tl2.chain = { ...STRINGS.brawler.tl2.chain, dhk: 'tlD' }; // Tetsu: U, U, U, U, ↓ + K ends low; J, J, ↓ + K with a mid kick (J, J, K the high one)
 STRINGS.kappa.$start.k = null;
 // fists, kunai and briefcases are short: in a juggle these fighters spring up to where the opponent is, so the blow really reaches them

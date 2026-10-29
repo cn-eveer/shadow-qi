@@ -14,7 +14,7 @@
      · it has its own health (it can be beaten apart) and lasts thirty seconds before it crumbles; either way it's rebuilt.
    Its blows are resolved from the golem's own position, so a defender guards relative to whoever is attacking. */
 CHARS.alchemist = {
-  name: 'HOHEN', title: 'Golem Doctor', nameJa: 'ホーエン', titleJa: 'ゴーレム博士', dmgMul: 1.15, scale: 1, walk: 3.0, back: 2.6, jumpX: 4.0, jumpV: 17, jugDmg: 1,
+  name: 'HOHEN', title: 'Golem Doctor', nameJa: 'ホーエン', titleJa: 'ゴーレム博士', dmgMul: 1.15, scale: 1, walk: 1.8, back: 1.5, jumpX: 2.8, noDash: true, jumpV: 17, jugDmg: 1,
   pDmg: 1, kDmg: 1, pReach: 1, kReach: 1, chargeRate: 0.6, auraCol: '255,200,120', fxCol: '255,200,120',
   ammo: 10, // ten glowing stones in his pockets: every stone he throws or sets as a trap uses one, and they come back one at a time
   sp: { fK: 'alUpStone', fKH: 'alTrap', fP: 'alShield', fPH: 'alTackle', bKH: 'alBedrock' }, sup: 'alOpus', fuseSp: 'alFuse', // (← → + J + K with a full fusion gauge: the golem armour)
@@ -55,6 +55,13 @@ function selfPunch(f, o, p) { // his own blow (the stone-knuckle)
   const res = applyHit(f, o, { type: 'mid', chip: false, proj: false, str: 0, gdrain: 2, label: 'Stone Knuckle', ...p }, Math.sign(o.x - f.x) || f.facing, hb, hu);
   if (res) { f.hitConnected = true; f.lastResult = res; }
 }
+function holdStrike(f, o) { // the golem holds them far from him: his knuckle is a fist of stone that arrives right where they're held
+  const hu = hurtbox(o, false, false); if (!hu) return;
+  const hb = { x0: o.x - 36, x1: o.x + 36, y0: 40, y1: 170 };
+  parts.push({ type: 'ring', x: o.x, y: GROUND - o.y - 100, r: 8, vr: 5, life: 12, max: 12, col: '255,210,120' }, { type: 'ring', x: o.x, y: GROUND - o.y - 100, r: 3, vr: 3, life: 14, max: 14, col: '255,240,200' }); sfx('hitH');
+  const res = applyHit(f, o, { type: 'mid', chip: false, proj: false, str: 0, gdrain: 2, dmg: Math.round(24 * holdMul(f)), stun: 22, bstun: 10, push: 0.001, hitstop: 6, label: 'Stone Knuckle' }, Math.sign(o.x - f.x) || f.facing, hb, hu);
+  if (res) { f.hitConnected = true; f.lastResult = res; }
+}
 function hohenStone(f, o, ex = {}) { // J: up close a stone-knuckle (no stone spent); from further off, a thrown stone
   if (nearO(f, o) || ex.knuckle) { const x = f.x + f.facing * 62, y = GROUND - f.y - 104; parts.push({ type: 'ring', x, y, r: 6, vr: 3.5, life: 10, max: 10, col: '255,210,120' }); sfx('swing');
     selfPunch(f, o, { box: [0, 100, 60, 140], dmg: Math.round(24 * (ex.k || 1) * holdMul(f)), stun: 22, bstun: 10, push: 1.4, hitstop: 6, gdrain: 5, label: ex.label === 'Stone Barrage' ? 'Stone Barrage' : 'Stone Knuckle', ...(ex.h || {}) }); }
@@ -66,7 +73,7 @@ const beat = (label, pose, kind, ex = {}) => ({ label, startup: 4, active: 2, re
     if (mf === 1 && ex.near && nearO(f, o)) Object.assign(mv, ex.near); // (up close: the knuckle's own wind-up and timing)
     if (mf === 1 && ex.holdPunch && f.golem && f.golem.hold && kind) Object.assign(mv, { punchNow: true, label: 'Stone Knuckle', selfMove: true, ...KNUCKLE, startup: 8 }); // (U while the golem holds them: its hands are full, so he steps in and punches himself)
     if (mv.punchNow && mf < mv.startup) { const gap = Math.abs(o.x - f.x) - 80; f.vx = gap > 0 ? f.facing * Math.min(9, gap / 3) : 0; }
-    if (mf === mv.startup) { if (mv.punchNow) { f.vx = 0; hohenStone(f, o, { knuckle: true }); } else if (kind) golemOrder(f, kind); if (ex.also) ex.also(f, o); }
+    if (mf === mv.startup) { if (mv.punchNow) { f.vx = 0; if (Math.abs(o.x - f.x) > 140) holdStrike(f, o); else hohenStone(f, o, { knuckle: true }); } /* (held far away: the fist of stone arrives where they are) */ else if (kind) golemOrder(f, kind); if (ex.also) ex.also(f, o); }
     if (ex.each && mf >= mv.startup) ex.each(f, o, mf - mv.startup);
     conductIn(f, mv, mf); } });
 const throwAnim = n => (f, mf) => { const mv = f.move; if (mf < mv.startup || mf > mv.startup + n) return null; const k = (mf - mv.startup) % 7; return lerpPose(POSES.alThrowW, POSES.alThrow, clamp(k / 2, 0, 1)); }; // (each stone of a volley gets its own throw)
@@ -84,8 +91,8 @@ const hStone = (label, chain) => beat(label, 'alThrow', null, { noSmear: true, w
   for (const st of ['s', 'j']) L[st + 'p1'] = beat('Golem Grab', 'gTwin', 'hp');
   L.cp1 = beat('Golem Uppercut', 'gTwin', 'upper', { crouch: true });
   L.sk0 = hStone('Stone Knuckle / Throw', DUET1);
-  L.ck0 = throwing('Low Stone Throw', (f, o) => alchemistStone(f, o, 24, {}), { pose: 'alThrowLow', crouch: true });
-  L.ck1 = throwing('Low Stone Volley', (f, o) => [0, 1, 2].forEach(i => alchemistStone(f, o, 24, { k: 0.7, sp: 9 + i * 1.6, fan: i, label: 'Stone Volley' })), { crouch: true, pose: 'alThrowLow' });
+  L.ck0 = throwing('Crouching Stone Throw', (f, o) => alchemistStone(f, o, 92, {}), { pose: 'alThrowLow', crouch: true }); // (thrown from a crouch, at chest height: a top, no longer a low)
+  L.ck1 = throwing('Crouching Stone Volley', (f, o) => [0, 1, 2].forEach(i => alchemistStone(f, o, 92, { k: 0.7, sp: 9 + i * 1.6, fan: i, label: 'Stone Volley' })), { crouch: true, pose: 'alThrowLow' });
   L.jk0 = throwing('Air Stone Throw', (f, o) => alchemistStone(f, o, 70, {}), { startup: 7 });
   L.jk1 = throwing('Air Stone Volley', (f, o) => alchemistVolley(f, o, 0, 1), { startup: 7 });
   L.sk1 = { label: 'Stone Volley', held: true, noSmear: true, startup: 999, active: 2, recovery: 14, wind: 'alThrowW', pose: 'alThrow', hitbox: null, chain: null, launch: false, kd: false, antiDone: true, onFrame: stoneCharged,
@@ -103,7 +110,7 @@ function stoneCharged(f, o, mf) { // K: hold to charge (three gauges), let go: t
   }
   const k = mf - mv.startup; if (k >= 0 && k <= 14 && k % 7 === 0) alchemistVolley(f, o, mv.lvl, k / 7);
 }
-const GOLEM_LIFE = 1800, GOLEM_REBUILD = 300, GOLEM_HP = 350; // frames the golem lasts before it crumbles (thirty seconds) and takes to rebuild (five); its own health (a third of a fighter's)
+const GOLEM_LIFE = 1800, GOLEM_REBUILD = 300, GOLEM_HP = 250; // frames the golem lasts before it crumbles (thirty seconds) and takes to rebuild (five); its own health (a third of a fighter's)
 const STONE_REGEN = 90; // frames for a stone to come back (a second and a half)
 const GRAB_CD = 150; // frames after a hold lets go before the golem can grab again (no grab loops)
 const HOLD_HITS = 4; // hits a held opponent takes before the golem's grip gives (no endless stones on someone held)
@@ -293,19 +300,20 @@ function fuseEnd(f) { // twenty seconds are up: the armour crumbles off him and 
 }
 function armourUp(f) { const g = f.golem; if (!g) return; f.ch = FUSED_CH; f.fuseT = FUSE_T; f.fuse = null; g.broken = true; g.hidden = true; g.brokenT = 9999; g.act = null; g.queue = null; g.hold = null; } // (a sample that starts with him already in the armour)
 const armorOf = f => (f.ch.fused ? ARMOR_PARTS.length : f.fuse ? f.fuse.n : f.move && f.move.stoneSkin ? 'skin' : 0); // (how much of the armour to draw on him)
+const GOLEM_SLOW = 0.4; // (the golem moves at 40% of its old speed: slow and heavy)
 const GOLEM_ACT = { // startup / active / recovery (frames), and the blow
-  lp: { su: 7, ac: 3, rec: 12, light: true, reach: [-20, 85], y: [40, 140], h: { dmg: 27, stun: 22, bstun: 11, push: 1.4, hitstop: 6, str: 0, gdrain: 4, label: 'Golem Jab' } }, // U: mid
-  lp2: { su: 6, ac: 3, rec: 12, light: true, reach: [-20, 90], y: [40, 140], h: { dmg: 28, stun: 22, bstun: 11, push: 1.4, hitstop: 6, str: 0, gdrain: 5, label: 'Golem Hook' } }, // U, U: the other fist
-  lowp: { su: 8, ac: 3, rec: 14, light: true, reach: [-20, 95], y: [0, 40], h: { dmg: 22, stun: 17, bstun: 11, push: 1.6, hitstop: 6, str: 0, gdrain: 4, low: true, label: 'Golem Low Punch' } }, // ↓ + U: low
-  ham: { su: 10, ac: 3, rec: 31, reach: [-10, 105], y: [0, 175], h: { dmg: 48, stun: 24, bstun: 16, push: 3, hitstop: 10, str: 1, gdrain: 16, overhead: true, kd: true, kdVx: 7, kdVy: 8, label: 'Golem Hammer', heavy: true } }, // U, U, U: both fists down from above (stand to guard)
-  upper: { su: 12, ac: 3, rec: 32, reach: [-10, 95], y: [10, 210], h: { dmg: 40, stun: 22, bstun: 14, push: 0.5, hitstop: 10, str: 1, gdrain: 10, launch: true, launchVy: 13.5, label: 'Golem Uppercut', heavy: true } }, // ↓ + I: the launcher
-  rise: { su: 6, ac: 4, rec: 12, light: true, jug: true, reach: [-30, 95], y: [60, 290], h: { dmg: 26, stun: 18, bstun: 10, push: 0.6, hitstop: 6, str: 0, gdrain: 4, jugVy: 7, label: 'Golem Rising Jab' } }, // U in a juggle
-  hp: { su: 10, ac: 2, rec: 22, grab: true, reach: [-35, 100], y: [0, 150], h: { dmg: 26, stun: 12, bstun: 12, push: 0, hitstop: 6, str: 1, gdrain: 0, grab: true, label: 'Golem Grab', heavy: true } }, // I: it seizes them and holds them for three seconds
-  shield: { su: 10, ac: 6, rec: 20, shield: true, reach: [10, 95], y: [0, 150], h: { dmg: 34, stun: 22, bstun: 22, push: 5, hitstop: 8, str: 1, gdrain: 24, label: 'Golem Shield Bash', heavy: true } }, // →→U: a slab of stone held out front; it blocks shots and bashes
-  tackle: { su: 8, ac: 18, rec: 22, rush: 13, reach: [10, 80], y: [0, 150], h: { dmg: 48, stun: 24, bstun: 16, push: 5, hitstop: 9, str: 1, gdrain: 16, kd: true, kdVx: 6, kdVy: 7, label: 'Golem Tackle', heavy: true } }, // →→I: it charges in
-  heave: { su: 9, ac: 1, rec: 18 }, // I while it holds them: it hoists them overhead and throws them up (the first lift)
-  pound: { su: 7, ac: 1, rec: 14 }, // the stone pillar: both fists pound the floor
-  meteor: { su: 5, ac: 30, rec: 14, leap: 14, reach: [-50, 100], y: [30, 200], h: { dmg: 60, stun: 20, bstun: 14, push: 1, hitstop: 12, str: 1, gdrain: 12, launch: true, bounce: true, launchVy: 10, label: 'Golem Meteor', heavy: true } }, // → → + I in a juggle: it leaps and slams them into the floor (the bounce)
+  lp: { su: 11, ac: 3, rec: 17, recHit: 12, light: true, reach: [-20, 85], y: [40, 140], h: { dmg: 27, stun: 22, bstun: 11, push: 1.4, hitstop: 6, str: 0, gdrain: 4, label: 'Golem Jab' } }, // U: mid
+  lp2: { su: 10, ac: 3, rec: 17, recHit: 12, light: true, reach: [-20, 90], y: [40, 140], h: { dmg: 28, stun: 22, bstun: 11, push: 1.4, hitstop: 6, str: 0, gdrain: 5, label: 'Golem Hook' } }, // U, U: the other fist
+  lowp: { su: 13, ac: 3, rec: 20, recHit: 14, light: true, reach: [-20, 95], y: [0, 40], h: { dmg: 22, stun: 17, bstun: 11, push: 1.6, hitstop: 6, str: 0, gdrain: 4, low: true, label: 'Golem Low Punch' } }, // ↓ + U: low
+  ham: { su: 16, ac: 3, rec: 43, recHit: 31, reach: [-10, 105], y: [0, 175], h: { dmg: 48, stun: 24, bstun: 16, push: 3, hitstop: 10, str: 1, gdrain: 16, overhead: true, kd: true, kdVx: 7, kdVy: 8, label: 'Golem Hammer', heavy: true } }, // U, U, U: both fists down from above (stand to guard)
+  upper: { su: 19, ac: 3, rec: 45, recHit: 32, reach: [-10, 95], y: [10, 210], h: { dmg: 40, stun: 22, bstun: 14, push: 0.5, hitstop: 10, str: 1, gdrain: 10, launch: true, launchVy: 13.5, label: 'Golem Uppercut', heavy: true } }, // ↓ + I: the launcher
+  rise: { su: 10, ac: 4, rec: 17, recHit: 12, light: true, jug: true, reach: [-30, 95], y: [60, 290], h: { dmg: 26, stun: 18, bstun: 10, push: 0.6, hitstop: 6, str: 0, gdrain: 4, jugVy: 7, label: 'Golem Rising Jab' } }, // U in a juggle
+  hp: { su: 16, ac: 2, rec: 31, recHit: 22, grab: true, reach: [-35, 100], y: [0, 150], h: { dmg: 26, stun: 12, bstun: 12, push: 0, hitstop: 6, str: 1, gdrain: 0, grab: true, label: 'Golem Grab', heavy: true } }, // I: it seizes them and holds them for three seconds
+  shield: { su: 16, ac: 6, rec: 28, recHit: 20, shield: true, reach: [10, 95], y: [0, 150], h: { dmg: 34, stun: 22, bstun: 22, push: 5, hitstop: 8, str: 1, gdrain: 24, label: 'Golem Shield Bash', heavy: true } }, // →→U: a slab of stone held out front; it blocks shots and bashes
+  tackle: { su: 13, ac: 18, rec: 31, recHit: 22, rush: 13, reach: [10, 80], y: [0, 150], h: { dmg: 48, stun: 24, bstun: 16, push: 5, hitstop: 9, str: 1, gdrain: 16, kd: true, kdVx: 6, kdVy: 7, label: 'Golem Tackle', heavy: true } }, // →→I: it charges in
+  heave: { su: 14, ac: 1, rec: 25, recHit: 18 }, // I while it holds them: it hoists them overhead and throws them up (the first lift)
+  pound: { su: 11, ac: 1, rec: 20, recHit: 14 }, // the stone pillar: both fists pound the floor
+  meteor: { su: 8, ac: 30, rec: 20, recHit: 14, leap: 14, reach: [-50, 100], y: [30, 200], h: { dmg: 60, stun: 20, bstun: 14, push: 1, hitstop: 12, str: 1, gdrain: 12, launch: true, bounce: true, launchVy: 10, label: 'Golem Meteor', heavy: true } }, // → → + I in a juggle: it leaps and slams them into the floor (the bounce)
 };
 const GOLEM_ARMS = { lp: [[8, -92], [0, -92]], lp2: [[-4, -100], [4, -96]], lowp: [[10, -60], [0, -30]], ham: [[6, -178], [58, -26]], upper: [[24, -26], [30, -176]], rise: [[16, -60], [26, -184]], hp: [[30, -96], [62, -98]],
   shield: [[10, -118], [52, -92]], tackle: [[-14, -88], [36, -92]], heave: [[34, -50], [14, -176]], pound: [[24, -164], [60, -8]], meteor: [[6, -176], [52, -40]] }; // each blow's arm: drawn back, then thrown (x forward of the golem, y up)
@@ -329,7 +337,7 @@ function golemPlace(f, o) { // while it holds them: they stay where the swap put
 }
 function golemSeize(f, o) { // the grab: if the golem was in front of him, it turns them round and the two trade places, so they're between it and him (not pulled in to him)
   const g = f.golem, near = Math.abs(g.x - f.x) < Math.abs(o.x - f.x) ? g.x : o.x, far = near === g.x ? o.x : g.x, away = Math.sign(near - f.x) || 1;
-  g.hold = { t: 180, c0: o.combo || 0, ox: clamp(near, WALL_L + 20, WALL_R - 20), gx: clamp(Math.abs(far - near) < 70 ? near + away * 70 : far, WALL_L, WALL_R) }; golemPlace(f, o); setState(o, 'stunned'); o.stunT = 184; o.stunKind = 'held'; o.stunUsed = true;
+  g.hold = { t: 180, c0: o.combo || 0, f0: game.frame, ox: o.x, gx: g.x }; /* (it holds them where they stand: no swapping places, no pulling) */ golemPlace(f, o); setState(o, 'stunned'); o.stunT = 184; o.stunKind = 'held'; o.stunUsed = true;
   popText(o.x, GROUND - 190, L('GRABBED!', '捕まえた！'), '255,215,140'); sfx('block'); game.shake = Math.max(game.shake, 3);
 }
 function golemRelease(f, o, recover) { const g = f.golem; g.hold = null; g.grabCD = GRAB_CD; if (recover && o.state === 'stunned') setState(o, 'recover'); }
@@ -340,7 +348,10 @@ function golemBreak(f, text) { // it comes apart (beaten apart, or worn out): a 
   for (let i = 0; i < 22; i++) parts.push({ type: 'spark', x: g.x + rnd(-40, 40), y: GROUND - rnd(10, 150), vx: rnd(-5, 5), vy: rnd(-3, 5), life: 22, max: 22, col: golemPal(f).spark }); dustAt(g.x, true);
 }
 function golemDamage(f, n, x, y) { // the golem takes a hit; at zero health it comes apart
-  const g = f.golem; if (g.broken) return; g.hp = Math.max(0, g.hp - n); g.flash = 5; sfx('hitH'); sparks(x, y, 'hit');
+  const g = f.golem; if (g.broken) return;
+  const A = g.act && GOLEM_ACT[g.act.kind], counter = !!(A && !A.shield && g.act.t <= A.su); // (hit while it winds up its blow: a counter — it hurts more and the blow is lost)
+  if (counter) { n = Math.round(n * 1.4); g.act = null; g.queue = null; g.cd = 45; popText(g.x, GROUND - 205 - g.y, L('COUNTER!', 'カウンター！'), '255,150,90'); game.freeze = Math.max(game.freeze, 6); }
+  g.hp = Math.max(0, g.hp - n); g.flash = 5; sfx('hitH'); sparks(x, y, 'hit');
   if (g.hp <= 0) golemBreak(f, L('GOLEM DOWN!', 'ゴーレム撃破！'));
 }
 function golemTakeHits(f, o) { // the opponent's attacks can hit the golem too (it stands in the way of blows meant for him)
@@ -355,8 +366,10 @@ function golemTakeHits(f, o) { // the opponent's attacks can hit the golem too (
   }
 }
 function golemHit(f, o, h, hb, hu) { // resolved as if the golem were the attacker: its side decides the guard
+  h = { ...h, push: 0.001, bpush: 0.001, lastPush: 0.001, kdVx: 0.001 }; // (the golem never pushes or pulls them: its blows land where they stand — a tiny value, 0 would mean the default)
   const g = f.golem, sv = [f.x, f.facing, f.vx, f.serial, f.kb]; f.x = g.x; f.facing = g.facing; f.serial = g.act ? g.act.id : ++serial;
   let res; try { res = applyHit(f, o, h, Math.sign(o.x - g.x) || g.facing, hb, hu); } finally { [f.x, f.facing, f.vx, f.serial, f.kb] = sv; } // (the wall pushes the attacker back: not the alchemist, when it's the golem that hit)
+  if (res && o.state !== 'ko') { o.vx = 0; o.kb = 0; } // (nothing carries them sideways)
   return res;
 }
 const HIT_STATES = ['hitstun', 'knock', 'stunned', 'gbreak', 'down'];
@@ -377,7 +390,7 @@ function golemUpdate(f, o) {
   if (!g.broken && fight && --g.life <= 0) golemBreak(f, L('WORN OUT', '崩れた')); // (it lasts thirty seconds, whatever its health)
   if (g.broken) { g.act = null; g.queue = null; g.hold = null; if (g.hidden) return; if (--g.brokenT <= 0) { g.broken = false; g.hp = g.max; g.life = GOLEM_LIFE; g.seen = {}; sfx('select'); if (!g.quiet) popText(g.x, GROUND - 190, L('GOLEM REBUILT', 'ゴーレム復活'), '255,220,140'); g.quiet = false; for (let i = 0; i < 14; i++) parts.push({ type: 'spark', x: g.x + rnd(-40, 40), y: GROUND - rnd(5, 120), vx: 0, vy: 2, life: 14, max: 14, col: golemPal(f).glow }); } return; }
   const live = game.phase === 'fight' && !f.ko && !o.ko, dx = o.x - g.x, dir = Math.sign(dx) || g.facing, dist = Math.abs(dx);
-  if (f.inp && f.inp.dashTap === 1) g.dashT = 18; // → → : the golem runs in too
+  g.dashT = 0; // (the golem doesn't dash either)
   if (g.dashT > 0) g.dashT--;
   if (g.cd > 0) g.cd--;
   if (g.grabCD > 0) g.grabCD--;
@@ -387,8 +400,8 @@ function golemUpdate(f, o) {
   if (HIT_STATES.includes(f.state)) { // hit the conductor: the order he gave is lost (a blow already on its way still lands), and a hold lets go
     g.queue = null; const A0 = g.act && GOLEM_ACT[g.act.kind]; if (A0 && g.act.t < A0.su && !A0.leap) g.act = null;
     if (g.hold) { golemRelease(f, o, true); popText(g.x, GROUND - 200, L('LET GO!', '手を離した！'), '220,220,230'); } }
-  const inp = f.inp || EMPTY; // the golem copies the alchemist: where he walks, when he jumps or crouches
-  if (g.js !== f.jumpSerial) { g.js = f.jumpSerial; if (f.state === 'jump' && g.y <= 0 && !g.act) g.vy = (f.ch.jumpV || JUMP_V) * JUMP_HIGH; }
+  const inp = f.inp || EMPTY; // the golem copies the alchemist: where he walks, and when he crouches (it never jumps)
+  g.js = f.jumpSerial; // (the golem doesn't jump: it copies his walking and crouching only)
   if (g.y > 0 || g.vy > 0) { g.vy -= G; g.y += g.vy; if (g.y <= 0) { g.y = 0; g.vy = 0; g.mvx = 0; dustAt(g.x, false); if (g.act && g.act.kind === 'meteor') { dustAt(g.x, true); game.shake = Math.max(game.shake, 5); sfx('land'); } } }
   g.crouch = !!inp.down && g.y <= 0 && !g.act;
   if (!live) { g.act = null; g.queue = null; return; }
@@ -397,15 +410,18 @@ function golemUpdate(f, o) {
     if (g.queue === 'heave' && !g.act) golemStart(f, 'heave'); else if (g.queue !== 'heave') g.queue = null;
     if (g.act && g.act.kind === 'heave') { if (++g.act.t >= GOLEM_ACT.heave.su) { golemRelease(f, o, false); golemHeave(f, o); return; } }
     else g.act = null;
-    if (hd.t <= 0 || o.ko || ['knock', 'down', 'getup'].includes(o.state) || (o.combo || 0) - hd.c0 >= HOLD_HITS) golemRelease(f, o, true);
+    const es = ['lp', 'hp', 'lk'].map(b => o.btnEdge && o.btnEdge[b] != null ? o.btnEdge[b] : -99); // (the one held breaks it by pressing U + I + J within 8 frames of each other)
+    const broke = Math.min(...es) >= hd.f0 - 6 && Math.max(...es) - Math.min(...es) <= 8 && !(g.act && g.act.kind === 'heave');
+    if (broke) { o.btnEdge = {}; golemRelease(f, o, true); popText(o.x, GROUND - o.y - 195, L('BREAK!', 'ブレイク！'), '255,235,140'); sfx('block'); game.freeze = Math.max(game.freeze, 8); }
+    else if (hd.t <= 0 || o.ko || ['knock', 'down', 'getup'].includes(o.state) || (o.combo || 0) - hd.c0 >= HOLD_HITS) golemRelease(f, o, true);
     else { golemPlace(f, o); if (o.state !== 'stunned') { setState(o, 'stunned'); o.stunT = hd.t + 4; } }
     g.spd = 0; return;
   }
   const a = g.act;
   if (a) {
     const A = GOLEM_ACT[a.kind]; a.t++;
-    if (a.t <= A.su && dist > 70 && A.reach && !A.rush && !A.leap) { const st = Math.min(4.5, (dist - 66) / 3); g.x += dir * st; g.spd = st; } // (it steps into the blow)
-    if (A.rush && a.t > A.su && a.t <= A.su + A.ac && !a.hit) { g.x += g.facing * A.rush; g.spd = A.rush; } // (the tackle: it charges until it hits)
+    if (a.t <= A.su && dist > 70 && A.reach && !A.rush && !A.leap) { const st = Math.min(4.5, (dist - 66) / 3) * GOLEM_SLOW; g.x += dir * st; g.spd = st; } // (it steps into the blow)
+    if (A.rush && a.t > A.su && a.t <= A.su + A.ac && !a.hit) { g.x += g.facing * A.rush * GOLEM_SLOW; g.spd = A.rush * GOLEM_SLOW; } // (the tackle: it charges until it hits)
     if (A.leap && a.t === A.su) { const tx = o.x + (o.vx || 0) * 12; g.vy = A.leap; g.mvx = clamp((tx - g.x) / (A.leap / G), -11, 11); g.facing = Math.sign(tx - g.x) || g.facing; }
     if (A.leap && a.t > A.su && g.y > 0 && !a.hit) g.x += g.mvx || 0;
     if (A.reach) {
@@ -415,18 +431,18 @@ function golemUpdate(f, o) {
         if (hu && overlap(hb, hu) && !slip) { const res = golemHit(f, o, { type: 'mid', chip: false, proj: false, gbstun: 45, juggle: !!A.jug, ...A.h }, hb, hu); if (res) { a.hit = true; a.res = res; if (A.grab && res === 'hit') golemSeize(f, o); if (A.leap) { g.mvx = 0; g.vy = Math.min(g.vy, 2); } if (a.kind === 'ham') { dustAt(g.x + g.facing * 70, true); game.shake = Math.max(game.shake, 5); } } }
       }
     } else if (a.t === A.su && GOLEM_FIRE[a.kind]) GOLEM_FIRE[a.kind](f, o);
-    if ((a.t >= A.su + A.ac + A.rec && (!A.leap || g.y <= 0)) || (a.hit && g.queue && A.light && a.t >= A.su + A.ac + 2)) { g.act = null; g.cd = 10; } // (a light blow that landed can be cancelled into the next order of the string)
+    if ((a.t >= A.su + A.ac + (a.hit && A.recHit != null ? A.recHit : A.rec) && (!A.leap || g.y <= 0)) || (a.hit && g.queue && A.light && a.t >= A.su + A.ac + 2)) { g.act = null; g.cd = 10; } // (a light blow that landed can be cancelled into the next order of the string)
   } else {
     g.facing = dir;
     const q = g.queue;
     if (q) { g.qT++; const Q = GOLEM_ACT[q]; if (!Q.reach || Q.rush || dist <= 100) golemStart(f, q); else if (g.qT > 45) g.queue = null; } // (the tackle starts from anywhere; punches and the grab come in first)
     if (!g.act) {
       const overhead = o.state === 'jump' && o.y > 40 && dist < GOLEM_GAP; // (someone jumping over it: it holds its ground rather than run in under them and push them back)
-      if (inp.h && !overhead) { const away = Math.sign(inp.h) === -(Math.sign(o.x - f.x) || f.facing), sp = g.dashT > 0 || away ? 7 : g.y > 0 ? 3.5 : 2.6; g.x += dir * sp; g.spd = sp; } // it always moves toward the opponent: when he backs away it dashes in, when he walks in it walks in
-      else if (g.y <= 0 && !g.crouch && dist > (q ? 80 : GOLEM_GAP + 6)) { const sp = g.dashT > 0 || q ? 6.5 : 2.5; g.x += dir * sp; g.spd = sp; } // otherwise it walks to the opponent itself
+      if (inp.h && !overhead) { const away = Math.sign(inp.h) === -(Math.sign(o.x - f.x) || f.facing), sp = (g.y > 0 ? 3.5 : 2.6) * GOLEM_SLOW; g.x += dir * sp; g.spd = sp; } // it always moves toward the opponent: when he backs away it dashes in, when he walks in it walks in
+      else if (g.y <= 0 && !g.crouch && dist > (q ? 80 : GOLEM_GAP + 6)) { const sp = 2.5 * GOLEM_SLOW; g.x += dir * sp; g.spd = sp; } // otherwise it walks to the opponent itself
       const between = Math.sign(g.x - o.x) === Math.sign(f.x - o.x); // (it belongs between him and them: on their far side, with nothing to do, it hops back over them)
       g.farT = !between && !q && !inp.h && g.y <= 0 ? (g.farT || 0) + 1 : 0;
-      if (g.farT > 90) { g.farT = 0; g.vy = 13; g.mvx = clamp((o.x + (Math.sign(f.x - o.x) || -dir) * (GOLEM_GAP + 10) - g.x) / (2 * 13 / G), -9, 9); sfx('rise'); dustAt(g.x, false); }
+      /* (it used to hop back over them here: the golem doesn't jump) */
     }
     if (!g.act && g.y > 0 && g.mvx) g.x += g.mvx; // (the hop)
   }
@@ -434,12 +450,15 @@ function golemUpdate(f, o) {
   golemBlock(f, o);
 }
 const GOLEM_GAP = 64; // how close the opponent can come to the golem's middle: it's solid — they jump over it or break it, they don't walk through
-function golemBlock(f, o) {
-  const g = f.golem; if (g.broken || g.hidden || g.hold) return;
+function golemBlock(f, o) { // the golem is solid, and nobody moves anybody: whoever walked into the other stops at its edge (no pushing the golem, no shoving them)
+  const g = f.golem, gp = g.px == null ? g.x : g.px, op = g.opx == null ? o.x : g.opx; g.px = g.x; g.opx = o.x;
+  if (g.broken || g.hidden || g.hold) return;
   const side = Math.sign(o.x - g.x) || g.oSide || 1;
-  if (Math.abs(o.x - g.x) >= GOLEM_GAP || o.y > 40 || g.y > 60 || ['knock', 'down', 'getup'].includes(o.state) || o.ko) { g.oSide = side; return; } // (clear of it, over it, or lying on the floor: no push)
-  const s = g.oSide || side, nx = g.x + s * GOLEM_GAP;
-  if (nx > WALL_L + 4 && nx < WALL_R - 4) o.x = nx; else g.x = clamp(o.x - s * GOLEM_GAP, WALL_L, WALL_R); // (pinned against a wall: the golem gives way instead)
+  if (Math.abs(o.x - g.x) >= GOLEM_GAP || o.y > 40 || g.y > 60 || ['knock', 'down', 'getup'].includes(o.state) || o.ko) { g.oSide = side; return; } // (clear of it, over it, or lying on the floor: no collision)
+  const s = g.oSide || side;
+  if (Math.abs(g.x - gp) > Math.abs(o.x - op)) g.x = clamp(o.x - s * GOLEM_GAP, WALL_L, WALL_R); // it walked into them: it stops at their edge
+  else o.x = clamp(g.x + s * GOLEM_GAP, WALL_L, WALL_R); // they walked into it: they stop at its edge
+  g.px = g.x; g.opx = o.x;
 }
 // the direction a defender guards in while the golem is the one attacking (0 when it isn't)
 function golemGuardDir(f, o) { const g = o && o.golem; return g && g.act && golemThreatening(f, o) ? (Math.sign(g.x - f.x) || 0) : 0; }
@@ -681,7 +700,7 @@ STRINGS.alchemist = { // the duet strings (any mix of U and J, three presses, th
 // in the golem armour: he fights in its stone himself
 const FUSED_LOOK = {}; for (const k of ['sk0', 'ck0', 'ck1', 'jk0', 'jk1', 'sk1']) FUSED_LOOK[k] = CHARS.alchemist.normalLook[k];
 Object.assign(FUSED_LOOK, { sp0: { label: 'Stone Jab', advHit: 11, push: 2 }, cp0: { label: 'Low Stone Jab' }, sp1: { label: 'Stone Smash' }, cp1: { label: 'Stone Uppercut' }, jp0: { label: 'Air Stone Jab' }, jp1: { label: 'Air Stone Smash' } }); // (his own stone fists)
-const FUSED_CH = { ...CHARS.alchemist, fused: true, lookKey: 'alchemistFused', normalLook: FUSED_LOOK, dmgMul: 1.15 * 1.3, takeMul: 0.7, scale: 1.12, idle: 'alArmorIdle', walk: 3.3, back: 2.8, pDmg: 1.1,
+const FUSED_CH = { ...CHARS.alchemist, fused: true, lookKey: 'alchemistFused', normalLook: FUSED_LOOK, dmgMul: 1.15 * 1.3, takeMul: 0.7, scale: 1.12, idle: 'alArmorIdle', walk: 2.0, back: 1.7, noDash: false, /* (in the golem armour he can dash and back dash) */ pDmg: 1.1,
   sp: { fP: 'afBeam', fPH: 'afBoulder', fK: 'afSlide', fKH: 'afShoulder', bP: 'afBoulderRoll', bPH: 'afWall', bK: 'afQuake', bKH: 'afCyclone', dP: 'afPillar' }, sup: 'afCannon', fuseSp: null }; // (Tetsu's commands, his own techniques)
 STRINGS.alchemistFused = { // stone fists: overhand smashes, a core-light burst from his belly, pillars of rock
   n2: SG('p', 'Stone Straight', 'jabW', 'straight'), n3: SG('p', 'Stone Hook', 'alKnuckleW', 'alKnuckle', { dmg: 30 }), n4: SG('p', 'Overhand Smash', 'alOpus', 'alThrowLow', { hitbox: [20, 90, 40, 130], push: 2 }),
@@ -701,8 +720,12 @@ STRINGS.alchemistFused = { // stone fists: overhand smashes, a core-light burst 
 function hohenPlan(f, o, dist, r) {
   const g = f.golem, between = g && !g.broken && !g.hidden && Math.sign(g.x - o.x) === Math.sign(f.x - o.x), reeling = o.state === 'stunned' || o.state === 'hitstun';
   if (f.ch.fuseSp && f.fuseG >= 100 && dist > 80) return { btn: 'hk', fuse: true };
-  if (f.meter >= 100 && f.ch.sup && (reeling || (dist < 320 && r < 0.4))) return { btn: 'hp', sup: true };
+  if (f.meter >= 100 && f.ch.sup && (reeling || (dist < 320 && r < 0.4) || (o.key === 'psychic' && r < 0.5))) return { btn: 'hp', sup: true }; // (against Lyra, who stays far away, the super from anywhere)
   if (f.ch.fused) return null; // (in the armour he fights up close: the usual plans and his armour routes)
+  if (o.key === 'psychic') { // Lyra casts from where she stands and never backs away, and he is slow: he walks up to her under his stones instead of backing off
+    if (dist > 230) return r < 0.5 ? { walk: 1 } : r < 0.65 ? { btn: 'hk' } : r < 0.78 ? { btn: 'lk', ff: true } : r < 0.88 ? { btn: 'lk' } : { btn: 'hp', ff: true };
+    if (dist > 110) return r < 0.4 ? { walk: 1 } : r < 0.55 ? { btn: 'hk' } : r < 0.7 ? { btn: 'lk', ff: true } : r < 0.85 ? { btn: 'lp', ff: true } : { btn: 'hp', ff: true };
+  }
   if (dist < 95 && !between && r < 0.45) return r < 0.25 ? { dash: -1 } : { jump: -1 }; // someone got inside, past the golem: make room
   if (dist < 95 && r < 0.75) return r < 0.2 ? { btn: 'lk' } : r < 0.35 ? { btn: 'lp' } : r < 0.45 ? { btn: 'hk', bb: true } : r < 0.6 ? { btn: 'hp' } : { btn: 'hp', down: true }; // close: knuckle, golem jab, Bedrock Stride, grab, uppercut
   if (dist > 300) return r < 0.25 ? { btn: 'hk' } : r < 0.4 ? { btn: 'lk', ff: true } : r < 0.52 ? { btn: 'hk', ff: true } : r < 0.66 ? { btn: 'lk' } : r < 0.75 ? { btn: 'hp', ff: true } : { walk: -0.5 }; // far: volleys, lobs, traps, the tackle
@@ -743,9 +766,9 @@ const ALCHEMIST_DEMOS = [
   { name: '3. Hohen far back (quick): jab, jab, volley', tail: 'golem jab, golem jab, stone volley', ax: 120, bx: 470, gx: 400, cpu: { min: 260, max: 460, golem: 'front' },
     note: 'Hohen stays back while the golem works. U, U: two golem jabs hold them there, K: his three stones fly the length of the stage and knock them down.',
     steps: [S('U', 'start', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
-  { name: '4. Hohen far back (long): uppercut, stone, pillar, meteor', tail: 'golem uppercut, rising jab, aimed stone, pillar, meteor, comet', ax: 150, bx: 470, gx: 400, cpu: { min: 260, max: 460, golem: 'front' },
-    note: '↓ + I: the golem uppercuts them (lift 1). U: its rising jab holds them up and J: his stone from afar meets them there. I: the stone pillar (lift 2), → → + I: Golem Meteor (bounce), K: Stone Comet.',
-    steps: [S('↓ + I', 'start', { btn: 'hp', down: true }), S('U', 'air', { btn: 'lp' }), S('J', 'chain', { btn: 'lk' }), S('I', 'chain', { btn: 'hp' }), S('→ → + I', 'air', { btn: 'hp', ff: true }), S('K', 'air', { btn: 'hk' })] },
+  { name: '4. Hohen far back (long): uppercut, pillar, meteor', tail: 'golem uppercut, rising jab, pillar, meteor', ax: 150, bx: 470, gx: 400, cpu: { min: 260, max: 460, golem: 'front' },
+    note: '↓ + I: the golem uppercuts them (lift 1). U: its rising jab holds them up. I: the stone pillar (lift 2), → → + I: Golem Meteor (bounce).',
+    steps: [S('↓ + I', 'start', { btn: 'hp', down: true }), S('U', 'air', { btn: 'lp' }), S('I', 'chain', { btn: 'hp' }), S('→ → + I', 'air', { btn: 'hp', ff: true })] },
   { name: '5. Pincer (quick): knuckle, golem, volley', tail: 'stone-knuckle, golem jab from behind, stone volley', ax: 300, bx: 385, gx: 470, cpu: { min: 50, max: 115, golem: 'behind' },
     note: 'They’re caught between the two. J: his stone-knuckle from the front, U: the golem from behind (they have to turn to guard it), K: his volley from the front again.',
     steps: [S('J', 'start', { btn: 'lk' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
@@ -764,9 +787,9 @@ const ALCHEMIST_DEMOS = [
   { name: '10. Golem armour', tail: 'armour, stone jab, upper, stone lift, overhand smash, core burst', ax: 300, bx: 385, gx: 230, cpu: { min: 60, max: 110, fuse: true },
     note: '← → + J + K with a full fusion gauge: the golem comes apart and its stones lock onto him piece by piece, boots to helmet. For twenty seconds he fights in it himself: U stone jab, I pillar upper, U, U, K core burst from his belly.',
     steps: [S('← → + J + K', 'start', { btn: 'hk', fuse: true }), S('U', 'start', { btn: 'lp' }), S('I', 'chain', { btn: 'hp' }), S('U', 'air', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
-  { name: '11. Bedrock Stride through a jab', tail: 'stone skin takes the jab, the burst, low stone on the ground', ax: 300, bx: 400, gx: 230, dummy: { at: 22, inp: { btn: 'lp' } },
-    note: '← ← + K: his skin turns to stone as he strides in — their jab lands but doesn’t stop him (armour) — then it bursts all round him and knocks them down. ↓ + J: a low stone as they lie there.',
-    steps: [S('← ← + K', 'start', { btn: 'hk', bb: true }), S('↓ + J', 'otg', { btn: 'lk', down: true })] },
+  { name: '11. Bedrock Stride through a jab', tail: 'stone skin takes the jab, the burst', ax: 300, bx: 400, gx: 230, dummy: { at: 22, inp: { btn: 'lp' } },
+    note: '← ← + K: his skin turns to stone as he strides in — their jab lands but doesn’t stop him (armour) — then it bursts all round him and knocks them down.',
+    steps: [S('← ← + K', 'start', { btn: 'hk', bb: true })] },
   // in the golem armour (these start with it already on): a quick strong combo and a long one for each range, and for a counter
   { name: '12. Armour, close (quick): fists into the Stone Arm', tail: 'stone jab, stone straight, stone arm', ax: 330, bx: 410, armored: true, cpu: { min: 40, max: 110, fused: true },
     note: 'Up close in the armour. U, U, then → → + K: a giant arm of stone bursts out of the floor and smashes them away.',
@@ -777,7 +800,7 @@ const ALCHEMIST_DEMOS = [
   { name: '14. Armour, mid range (quick): rubble wave, boulder crash', tail: 'rubble wave, boulder crash, stone arm', ax: 280, bx: 460, armored: true, cpu: { min: 140, max: 220, fused: true },
     note: '→ → + J: a low surge of rubble scoops them up. → → + I: a boulder drops out of the sky onto them (the bounce). → → + K: the stone arm bursts up under them as they come down.',
     steps: [S('→ → + J', 'start', { btn: 'lk', ff: true }), S('→ → + I', 'air', { btn: 'hp', ff: true, noChase: true }), S('→ → + K', 'air', { btn: 'hk', ff: true, noChase: true })] },
-  { name: '15. Armour, mid range (long): rubble wave, crash, geyser', tail: 'rubble wave, stone lift, boulder crash, stone lift, core geyser, overhand smash, core burst', ax: 280, bx: 460, armored: true, cpu: { min: 140, max: 220, fused: true },
+  { name: '15. Armour, mid range (long): rubble wave, crash, geyser', tail: 'rubble wave, stone lift, boulder crash, stone lift, core geyser, overhand smash, core burst', ax: 280, bx: 390, armored: true, cpu: { min: 140, max: 220, fused: true },
     note: '→ → + J scoops them up (lift 1). U, then → → + I: Boulder Crash (bounce). U, then → → + U: core light erupts under them (lift 2). U, K.',
     steps: [S('→ → + J', 'start', { btn: 'lk', ff: true }), S('U', 'air', { btn: 'lp' }), S('→ → + I', 'cancel', { btn: 'hp', ff: true }), S('U', 'air', { btn: 'lp' }), S('→ → + U', 'cancel', { btn: 'lp', ff: true }), S('U', 'air', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
   { name: '16. Armour, far (quick): boulder toss, stone spiral', tail: 'boulder toss, stone spiral', ax: 200, bx: 450, armored: true, cpu: { min: 200, max: 320, fused: true },
@@ -816,14 +839,14 @@ Object.assign(JA_DEMO, {
   '1. Golem in front (quick): jab, stone, hammer': { n: '1. ゴーレムが前（短）：ジャブ、石、ハンマー', tail: 'ゴーレムのジャブ、肩越しの石、ゴーレムハンマー', note: '博士はゴーレムのすぐ後ろ。U：ゴーレムのジャブ、J：石がゴーレムの肩越しに飛ぶ、U：ゴーレムが両拳を振り下ろす（立ってガード）。' },
   '2. Golem in front (long): lift, lift, bounce': { n: '2. ゴーレムが前（長）：浮かせ、浮かせ、バウンド', tail: '掴み、石拳、持ち上げ、ライジングジャブ、石柱、メテオ、コメット', note: 'I：ゴーレムが掴み、相手を博士の方へ向ける。J：捕まえた相手に石拳。I：持ち上げて投げ上げる（浮かせ1）。U：ライジングジャブ、I：足元から石柱（浮かせ2）、→→+I：跳んで叩きつける（バウンド）。K：ストーンコメットで締め。' },
   '3. Hohen far back (quick): jab, jab, volley': { n: '3. 博士が遠く（短）：ジャブ、ジャブ、三連投げ', tail: 'ゴーレムのジャブ、ジャブ、石の三連投げ', note: '博士は離れたまま、ゴーレムが戦う。U、U：ゴーレムのジャブで止め、K：三つの石が画面の端から飛んでダウン。' },
-  '4. Hohen far back (long): uppercut, stone, pillar, meteor': { n: '4. 博士が遠く（長）：アッパー、石、石柱、メテオ', tail: 'ゴーレムアッパー、ライジングジャブ、狙い石、石柱、メテオ、コメット', note: '↓+I：ゴーレムのアッパー（浮かせ1）。U：ライジングジャブで浮かせたところへ、J：遠くから博士の石。I：石柱（浮かせ2）、→→+I：ゴーレムメテオ（バウンド）、K：ストーンコメット。' },
+  '4. Hohen far back (long): uppercut, pillar, meteor': { n: '4. 博士が遠く（長）：アッパー、石柱、メテオ', tail: 'ゴーレムアッパー、ライジングジャブ、石柱、メテオ', note: '↓+I：ゴーレムのアッパー（浮かせ1）。U：ライジングジャブで浮かせ続ける。I：石柱（浮かせ2）、→→+I：ゴーレムメテオ（バウンド）。' },
   '5. Pincer (quick): knuckle, golem, volley': { n: '5. 挟み撃ち（短）：石拳、ゴーレム、三連投げ', tail: '石拳、背後からゴーレムのジャブ、三連投げ', note: '相手は二人の間。J：前から博士の石拳、U：後ろからゴーレム（ガードの向きが変わる）、K：また前から三連投げ。' },
   '6. Pincer (long): grab from behind': { n: '6. 挟み撃ち（長）：背後から掴み', tail: '石拳、背後から掴み、石拳、持ち上げ、ライジングジャブ、石柱、メテオ、コメット', note: 'J：石拳、I：ゴーレムが背後から掴み、博士の方へ向けて押さえる。J：もう一度石拳、I：持ち上げ（浮かせ1）、U、I：ライジングジャブと石柱（浮かせ2）、→→+I：メテオ（バウンド）、K：コメット。' },
   '7. Golem behind them (quick): jab, stone, volley': { n: '7. ゴーレムが相手の後ろ（短）：ジャブ、石、三連投げ', tail: '背後からゴーレムのジャブ、石、三連投げ', note: '博士は遠く、ゴーレムは相手の向こう側。U：ゴーレムが博士の方へ殴り、J：石で迎え、K：三連投げでダウン。' },
   '8. Golem behind them (long): lob, grab, heave': { n: '8. ゴーレムが相手の後ろ（長）：山なり、掴み、持ち上げ', tail: '山なり投げ、背後から掴み、持ち上げ、ライジングジャブ、石柱、メテオ、コメット', note: '→→+J：山なりの石で気絶。I：ゴーレムが背後から掴み、I：持ち上げ（浮かせ1）、U、I：ライジングジャブと石柱（浮かせ2）、→→+I：メテオ（バウンド）、K：コメット。' },
   '9. Magnum Opus': { n: '9. 大いなる錬成', tail: '山なり投げ（気絶）、大いなる錬成', note: '→→+Jで気絶させ、U+J：ゴーレムが石に砕けて相手に飛びつき、岩の殻で閉じ込める。博士が周りに光る石を6つ投げ、円が閉じると錬成陣が炸裂して打ち上げる。' },
   '10. Golem armour': { n: '10. ゴーレムアーマー', tail: 'アーマー、石のジャブ、石柱アッパー、石の持ち上げ、振り下ろし、コアバースト', note: '融合ゲージ満タンで← → + J + K：ゴーレムが砕け、石がブーツからヘルメットまで一つずつ博士に装着される。20秒間、博士自身が鎧で戦う：U 石のジャブ、I 石柱アッパー、U、U、K コアバースト。' },
-  '11. Bedrock Stride through a jab': { n: '11. 岩肌の行進でジャブを受け止める', tail: '石の肌でジャブを受け、炸裂、倒れた相手に下段の石', note: '←←+K：肌が石になって前進する——相手のジャブは当たるが止まらない（アーマー）——そして周囲に炸裂してダウン。↓+J：倒れた相手に下段の石。' },
+  '11. Bedrock Stride through a jab': { n: '11. 岩肌の行進でジャブを受け止める', tail: '石の肌でジャブを受け、炸裂', note: '←←+K：肌が石になって前進する——相手のジャブは当たるが止まらない（アーマー）——そして周囲に炸裂してダウン。' },
   '12. Armour, close (quick): fists into the Stone Arm': { n: '12. アーマー・近距離（短）：拳からストーンアーム', tail: '石のジャブ、ストレート、ストーンアーム', note: 'アーマーで接近戦。U、U、そして→→+K：床から巨大な石の腕が突き出し、殴り飛ばす。' },
   '13. Armour, close (long): lift, lift, bounce': { n: '13. アーマー・近距離（長）：浮かせ、浮かせ、バウンド', tail: 'ピラースパイク、石の持ち上げ、石柱アッパー、ボルダークラッシュ、石の持ち上げ、振り下ろし、コアバースト', note: 'アーマー中のコンボ上限：↓+I：ピラースパイク（浮かせ1）、U、I：石柱アッパー（浮かせ2）、→→+I：ボルダークラッシュ（バウンド）、U、U、K。' },
   '14. Armour, mid range (quick): rubble wave, boulder crash': { n: '14. アーマー・中距離（短）：ラブルウェーブ、ボルダークラッシュ', tail: 'ラブルウェーブ、ボルダークラッシュ、ストーンアーム', note: '→→+J：低く押し寄せる瓦礫がすくい上げる。→→+I：空から大岩が落ちてくる（バウンド）。→→+K：落ちてくる相手の真下から石の腕が突き出す。' },

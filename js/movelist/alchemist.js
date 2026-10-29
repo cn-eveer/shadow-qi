@@ -6,7 +6,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="blurb">An alchemist and doctor in a white coat, glowing stones on his chest and in his pockets, and Mortar, his stone golem. <b>U and I are the golem’s blows; J and K are Hohen’s own</b> — a stone-knuckle up close, glowing stones from further off. The golem walks out to stand between him and the opponent, and never attacks by itself.</p>
       <p class="note"><b>Duet strings.</b> Any mix of U and J, up to three presses, then a finisher: U the golem’s hammer, J his stone barrage, K his volley, I the golem’s grab, ↓ + I its uppercut. Where they stand changes the combo — golem in front of him or behind the opponent, Hohen close in or far back (see the sample combos). In a juggle: U the golem’s rising jab, J his aimed stone, I the stone pillar, → → + I the meteor, K the Stone Comet. At most lift, lift, bounce.</p>
       <p class="note"><b>The golem is solid.</b> The opponent can’t walk through it: they have to jump over it or break it (it has its own health, a third of a fighter’s; blows and shots that hit it don’t reach him). It lasts thirty seconds before it crumbles; beaten apart or worn out, it’s rebuilt five seconds later. Left on the opponent’s far side, it hops back over them. He has <b>ten stones</b>; one comes back every second and a half.</p>
-      <p class="note"><b>How to fight him.</b> Hit the conductor: when Hohen is hit, the golem’s order is lost and its grab lets go. Guard away from whoever is attacking — the golem or him. The golem’s heavy blows (hammer, uppercut, tackle) leave Hohen committed when they’re guarded or miss: punish him. Jump the grab and the Bedrock burst; throw him out of his stone skin. See the punish samples.</p>
+      <p class="note"><b>How to fight him.</b> Hit the conductor: when Hohen is hit, the golem’s order is lost and its grab lets go. Hohen can’t dash or back dash (except in the golem armour), the golem never dashes, jumps or hops. Held by the golem, press U + I + J (all three within 8 frames of each other) to break free. The golem’s blows can be countered too: hit it while it winds up and its blow is lost and it takes 40% more. Guard away from whoever is attacking — the golem or him. The golem’s heavy blows (hammer, uppercut, tackle) leave Hohen committed when they’re guarded or miss: punish him. Jump the grab and the Bedrock burst; throw him out of his stone skin. See the punish samples.</p>
       <div class="scroll"><table>
         <tbody>
           <tr><td>Golem Jab · Hook <small>Mid. U, then U again: its other fist.</small></td><td class="keys"><kbd>U</kbd></td></tr>
@@ -18,7 +18,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Stone Knuckle / Stone Throw <small>Mid. Up close he drives a stone held in his fist (no stone spent); further off he throws one.</small></td><td class="keys"><kbd>J</kbd></td></tr>
           <tr><td>Stone Barrage <small>The third J of a string: two blows, the second knocks down.</small></td><td class="keys"><kbd>J</kbd> <kbd>J</kbd> <kbd>J</kbd></td></tr>
           <tr><td>Stone Volley <small>Mid. Three stones; the third knocks down. Hold K to charge three gauges: harder, faster stones that shove them back and wear down the guard — a full charge (MAX) breaks a full guard.</small></td><td class="keys"><kbd>K</kbd></td></tr>
-          <tr><td>Low Stones <small>Low. One stone, or three, along the floor; they hit a downed opponent too.</small></td><td class="cmd">↓ + J / ↓ + K</td></tr>
+          <tr><td>Crouching Stones <small>Thrown from a crouch at chest height: a top (stand to guard). One stone, or three.</small></td><td class="cmd">↓ + J / ↓ + K</td></tr>
           <tr><td>Stone Lob <small>Mid + low (drops from above). It stuns.</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>Trap Stone <small>Set on the floor ahead; bursts when they step on it, or after six seconds. Six at most.</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>Golem Shield Bash <small>Mid + low. A slab of stone that stops shots and bashes; safe.</small></td><td class="cmd">→ → + U</td></tr>
@@ -50,7 +50,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="blurb">白衣の錬金術師で医師。胸とポケットに光る石を持ち、石のゴーレム「モルタル」を連れる。<b>U・Iはゴーレムの攻撃、J・Kはホーエン自身の攻撃</b>——近くでは石を握った拳、離れると光る石を投げる。ゴーレムは博士と相手の間に立ちに行き、自分からは攻撃しない。</p>
       <p class="note"><b>二重奏の連続技。</b>UとJを好きな順で3回まで、そして締め：Uでゴーレムハンマー、Jで石の連打、Kで三連投げ、Iでゴーレムの掴み、↓+Iでアッパー。立ち位置でコンボが変わる——ゴーレムが博士の前か、相手の後ろか、博士が近いか遠いか（コンボ見本を参照）。空中コンボ：Uでゴーレムのライジングジャブ、Jで狙い石、Iで石柱、→→+Iでメテオ、Kでストーンコメット。浮かせは「浮かせ・浮かせ・バウンド」まで。</p>
       <p class="note"><b>ゴーレムは通り抜けられない。</b>相手はジャンプで越えるか、壊すしかない（自分の体力はキャラの約3分の1。ゴーレムに当たった攻撃や飛び道具は博士に届かない）。30秒で崩れ、壊されても崩れても5秒後に復活する。相手の向こう側に残ると、飛び越えて間に戻る。<b>石は10個</b>、1.5秒ごとに1個戻る。</p>
-      <p class="note"><b>ホーエン対策。</b>指揮者を狙え：博士が攻撃を受けると、ゴーレムへの命令は取り消され、掴みも離れる。攻撃している側（ゴーレムか博士）の反対へガード。ゴーレムの重い攻撃（ハンマー・アッパー・タックル）は、ガードされたり外れたりすると博士が動けない——反撃を。掴みと岩肌の炸裂はジャンプでかわし、石の肌は投げで崩す。反撃見本を参照。</p>
+      <p class="note"><b>ホーエン対策。</b>指揮者を狙え：博士が攻撃を受けると、ゴーレムへの命令は取り消され、掴みも離れる。ホーエンはダッシュ・バックダッシュができず（ゴーレム融合中を除く）、ゴーレムはダッシュもジャンプもしない。ゴーレムに掴まれたら、U+I+Jを（3つとも8フレーム以内に）押すと抜け出せる。ゴーレムの攻撃もカウンターできる：振りかぶっている間に攻撃すると、その攻撃は潰れ、ダメージが4割増える。攻撃している側（ゴーレムか博士）の反対へガード。ゴーレムの重い攻撃（ハンマー・アッパー・タックル）は、ガードされたり外れたりすると博士が動けない——反撃を。掴みと岩肌の炸裂はジャンプでかわし、石の肌は投げで崩す。反撃見本を参照。</p>
       <div class="scroll"><table>
         <tbody>
           <tr><td>ゴーレムジャブ・フック <small>中段。Uのあと、もう一度U：もう片方の拳。</small></td><td class="keys"><kbd>U</kbd></td></tr>
@@ -62,7 +62,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>石拳・石投げ <small>中段。近くでは石を握った拳（石は減らない）、離れると石を投げる。</small></td><td class="keys"><kbd>J</kbd></td></tr>
           <tr><td>石の連打 <small>連続技の3回目のJ：2発、2発目でダウン。</small></td><td class="keys"><kbd>J</kbd> <kbd>J</kbd> <kbd>J</kbd></td></tr>
           <tr><td>石の三連投げ <small>中段。石を3つ、3つ目でダウン。Kを長押しで3段階の溜め：石が強く速くなり、大きく押し飛ばし、ガードを大きく削る。最大溜め（MAX）は満タンのガードも崩す。</small></td><td class="keys"><kbd>K</kbd></td></tr>
-          <tr><td>下段の石 <small>下段。床すれすれに1つ、または3つ。ダウン中の相手にも当たる。</small></td><td class="cmd">↓ + J / ↓ + K</td></tr>
+          <tr><td>しゃがみ投げの石 <small>しゃがんで胸の高さに投げる上段。立ちガードで防ぐ。1つ、または3つ。</small></td><td class="cmd">↓ + J / ↓ + K</td></tr>
           <tr><td>石の山なり投げ <small>中下段（上から落ちる）。気絶させる。</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>罠の石 <small>前方の床に置く。踏むか6秒で爆発。最大6個。</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>ゴーレムシールドバッシュ <small>中下段。飛び道具を止めて殴る。反撃されない。</small></td><td class="cmd">→ → + U</td></tr>

@@ -240,7 +240,9 @@ function lyraCrystals(f, o, mf) { // each juggle hit: crystals form above them a
 function lyraReach(f, o, maxD, minD) {
   const mv = f.move, s = f.ch.scale, ahead = (o.x - f.x) * f.facing / s, base = mv.psyFist ? mv.psyFist[0] : mv.floorGlyph != null ? mv.floorGlyph : mv.groundBurst;
   if (base == null) return;
-  const d = clamp(ahead, minD, maxD), shift = d - base;
+  const gol = o.golem; let at = ahead; // (Hohen out of her range, his golem in it: the spell goes for the golem)
+  if (gol && !gol.broken && !gol.hidden && ahead > maxD) { const ga = (gol.x - f.x) * f.facing / s; if (ga >= 0 && ga <= maxD) at = ga; }
+  const d = clamp(at, minD, maxD), shift = d - base;
   if (mv.psyFist) mv.psyFist = [d, ...mv.psyFist.slice(1)];
   if (mv.floorGlyph) mv.floorGlyph = d; else if (mv.groundBurst) mv.groundBurst = d;
   if (mv.hitbox) mv.hitbox = [mv.hitbox[0] + shift, mv.hitbox[1] + shift, mv.hitbox[2], mv.hitbox[3]];
@@ -314,7 +316,7 @@ const caughtIn = o => o.state === 'knock' && o.juggle; // already juggled in a c
 const jumpedOver = (o, h = 60) => o.y > h && !caughtIn(o); // a free opponent this high has jumped over a ranged attack aimed along the ground
 function columnHit(f, o, h) { // a hit that lands wherever they are (supers, floods, pillars)
   const hu = hurtbox(o, true); if (!hu) return;
-  const hb = { x0: o.x - 20, x1: o.x + 20, y0: 0, y1: 400 };
+  const hb = { x0: o.x - 20, x1: o.x + 20, y0: 0, y1: h.colH || 400 }; /* (colH: a low column, like Riptide's) */
   applyHit(f, o, { type: 'mid', chip: true, proj: true, str: h.launch || h.kd ? 2 : 1, hitstop: 4, gdrain: 6, ...h }, Math.sign(o.x - f.x) || f.facing, hb, hu);
 }
 // the salaryman's possession: the angel or the devil takes him over for ten seconds
@@ -323,7 +325,7 @@ const POSSESS_T = 900; // (fifteen seconds)
 // (never both at once before the round: the double only comes by calling the other one during the fight)
 function prePossessTick(f, t) {
   const o = other(f); let kind = null;
-  if (f.ctrl instanceof CPU) { if (t === 50 && !game.watch) { const r = Math.random(); kind = r < 0.3 ? 'angel' : r < 0.55 ? 'devil' : null; } } // the CPU sometimes does it too
+  if (f.ctrl instanceof CPU) { if (t === 50 && !game.watch) { const r = Math.random(); kind = r < 0.75 ? 'angel' : 'devil'; } } // the CPU always does it: he is weak as himself (the angel mostly: full damage and healing all round)
   else if (f.ctrl && f.ctrl.read) { const inp = f.ctrl.read(f, game.frame, o); if (inp && inp.bb && (inp.btn === 'hp' || inp.btn === 'hk')) { kind = inp.btn === 'hp' ? 'angel' : 'devil'; if (f.ctrl.consume) f.ctrl.consume(); } }
   if (!kind || f.prePoss === kind) return;
   f.prePoss = kind; sfx('charge'); game.shake = Math.max(game.shake, 4);
@@ -415,7 +417,8 @@ function parryCounter(d, a, h) {
   game.freeze = Math.max(game.freeze, 10);
   if (h.proj) return; // projectiles are just absorbed
   d.facing = Math.sign(a.x - d.x) || d.facing;
-  startMove(d, specialMove(d.move.parryInto || 'parryStrike'), 1, true); d.invul = 8;
+  const dry = d.move.parryIntoDry && d.ch.ammo && !(d.ammo > 0 && !(d.reloadT > 0)); // (Jesse with no bullets: the shove instead of the shot)
+  startMove(d, specialMove((dry ? d.move.parryIntoDry : d.move.parryInto) || 'parryStrike'), 1, true); d.invul = 8;
 }
 function spawnRain(f, o, idx) { // lightning balls drop straight down onto a juggled opponent
   projs.push({ id: ++serial, type: 'rain', owner: f, idx, x: o.x + (idx - 1) * 14, y: Math.min(o.y + 200, 420), vx: 0, vy: -11, r: 14,

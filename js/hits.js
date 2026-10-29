@@ -19,7 +19,7 @@ function staffTipBox(f, mv, hb0) {
 }
 // no blow reaches further than this in front of its user (Lyra's spells have their own range, LYRA_RANGE)
 const MELEE_REACH = 220;
-const meleeBox = (f, hb) => f.key === 'psychic' || hb[1] <= MELEE_REACH ? hb : [hb[0], Math.max(hb[0] + 30, MELEE_REACH), hb[2], hb[3]];
+const meleeBox = (f, hb) => f.key === 'psychic' || (f.move && f.move.longRange) || hb[1] <= MELEE_REACH ? hb : [hb[0], Math.max(hb[0] + 30, MELEE_REACH), hb[2], hb[3]];
 function boxOf(f, hb) {
   const s = f.ch.scale, [x0, x1, y0, y1] = hb, b0 = f.y + y0 * (f.ch.tallBox ? 1 : s); // tallBox (Tanaka's double possession, 1.4× his size): the blow grows forward and up, but still reaches as low as at normal size
   return f.facing > 0
@@ -43,7 +43,7 @@ const TECH_TIER = {
   // Lyra
   phantomFist: 'fast', crushFist: 'heavy', psyLift: 'heavy', forceWave: 'mod', orbBurst: 'mod', tripleRay: 'mod', orbStrong: 'mod', orbLong: 'mod',
   // Aldric
-  plRampart: 'mod', plJudgeThrust: 'heavy', plWindmill: 'mod', plLeap: 'heavy', plParryRise: 'fast', plParryStun: 'fast', plAegis: 'mod', plPray: 'fast', plShove: 'fast', plRiposte: 'fast', plRiseStrike: 'fast', /* (the answers to a parry come out at once) */
+  plRampart: 'mod', plJudgeThrust: 'heavy', plWindmill: 'mod', plLeap: 'heavy', plParryRise: 'fast', plParryStun: 'fast', plAegis: 'mod', plPray: 'fast', plShove: 'fast', plRiposte: 'fast', plRiseStrike: 'fast', gnDraw: 'fast', gnShove: 'fast', gnDouble: 'heavy', /* (the answers to a parry come out at once) */
   // Kappa
   kpPlate: 'fast', kpCannon: 'mod', kpPounce: 'heavy', kpFrenzy: 'mod', kpBubble: 'mod', kpGeyser: 'heavy', kpShell: 'fast', kpRiptide: 'mod',
   // Jesse
@@ -51,12 +51,31 @@ const TECH_TIER = {
   // Tanaka, and his angel and devil forms
   smCard: 'fast', smCase: 'heavy', smTackle: 'heavy', smUpper: 'heavy', smCoffee: 'mod', smAngel: 'mod', smBow: 'mod', smDevil: 'mod',
   saJab: 'fast', saFist: 'mod', saGlide: 'mod', saAscend: 'heavy', saBless: 'mod', saWard: 'fast', saStep: 'fast',
-  smSlide: 'mod', smSpill: 'mod', smSkid: 'fast', sdCrawl: 'heavy', sdTail: 'mod', sdTrail: 'mod',
+  smSlide: 'mod', smSpill: 'mod', sdCrawl: 'heavy', sdTail: 'mod',
   sdWhip: 'mod', sdTailDrop: 'mod', sdTailLash: 'mod', sdTailUpper: 'heavy', sdChainB: 'mod', saRay: 'mod', saRayLow: 'mod', saRayFly: 'mod', saDive: 'heavy',
   sdLunge: 'mod', sdMaul: 'mod', sdClaw: 'mod', sdUpper: 'heavy', sdBeckon: 'fast', sdChain: 'mod', sdDrain: 'heavy',
 };
 const NO_TELL = new Set(['risingFist', 'smBow', 'saRayFly', 'saDive', 'smAngel', 'smDevil']); // (these have their own long lead-in)
-function hasArmor(f) { const mv = f.move; return !!mv && ((mv.armorDive && f.mf >= 24) || (f.key === 'kappa' && (mv.id === 'kpPounce' || (mv.dashLeft > 0))) || (f.key === 'brawler' && mv.tArmor) || mv.id === 'plRampart' || mv.stoneSkin || (f.ch.fused && !mv.normal && !mv.super && techTier(mv) !== 'fast')); } // (Hohen's Bedrock Stride: stone skin; in the golem armour, his techniques have armour like Tetsu's)
+// Kappa's throws and U-string hits can be broken by the one they catch: I + U for the J throw, J + K for the K throw (and the string's), U + I + J for the U string.
+// The buttons are pressed together. A throw holds them for ten frames first (they can't move, only press): break it in time and nothing lands, the two are
+// pushed apart; if not, the throw lands. A string hit is broken by buttons pressed in the ten frames before it.
+const BREAK_BTN = { J: ['lp', 'hp'], K: ['lk', 'hk'], S: ['lp', 'hp', 'lk'] }, BREAK_WINDOW = 10;
+function throwBreak(a, d, h) {
+  const mv = a.move; if (a.key !== 'kappa' || !mv) return false;
+  if (mv.broken) return true; // (this one was already broken)
+  const need = h.grab ? (mv.normal && mv.kind === 'k' && mv.str === 0 ? BREAK_BTN.J : BREAK_BTN.K) : mv.inString && ['c2', 'c3', 'c4'].includes(mv.strKey) ? BREAK_BTN.S : null;
+  if (!need || ['knock', 'down', 'getup', 'gbreak', 'stunned', 'slashed', 'attack', 'jump'].includes(d.state)) return false;
+  const now = game.frame; if (h.grab && mv.grabT == null) { mv.grabT = now; d.grabLock = BREAK_WINDOW; popText(d.x, GROUND - d.y - 185, L('GRABBED!', '掴まれた！'), '255,200,120'); }
+  const from = h.grab ? mv.grabT - BREAK_WINDOW : now - BREAK_WINDOW, ts = need.map(b => d.btnEdge && d.btnEdge[b] != null ? d.btnEdge[b] : -99);
+  if (Math.min(...ts) >= from && Math.max(...ts) - Math.min(...ts) <= 5) {
+    const side = Math.sign(d.x - a.x) || a.facing; mv.broken = true; d.grabLock = 0;
+    sparks(d.x - side * 24, GROUND - d.y - 100, 'block'); sfx('block'); popText(d.x, GROUND - d.y - 185, L('BREAK!', 'ブレイク！'), '255,235,140'); game.freeze = Math.max(game.freeze, 8);
+    a.kb = -side * 6; d.kb = side * 6; d.btnEdge = {};
+    return true;
+  }
+  return !!(h.grab && now - mv.grabT < BREAK_WINDOW); // (still inside the window: not thrown yet)
+}
+function hasArmor(f) { const mv = f.move; return !!mv && ((mv.armorDive && f.mf >= (mv.armorFrom || 24)) || (f.key === 'kappa' && (mv.id === 'kpPounce' || mv.id === 'kpFrenzy' || (mv.dashLeft > 0))) || (f.key === 'brawler' && mv.tArmor) || (f.ch.possess === 'angel' && mv.id === 'saAscend') || mv.id === 'plRampart' || mv.stoneSkin || (f.ch.fused && !mv.normal && !mv.super && techTier(mv) !== 'fast')); } // (Hohen's Bedrock Stride: stone skin; in the golem armour, his techniques have armour like Tetsu's)
 function techTier(mv) { return TECH_TIER[mv.id] || (mv.parry ? 'fast' : mv.launch ? 'heavy' : 'mod'); }
 const TELL = { mod: 14, heavy: 20 }; // frames of the tell before the wind-up: long enough that a jab pressed after it starts still lands first
 const U_REACH = {};
@@ -220,6 +239,7 @@ function applyHit(a, d, h, side, hb, hu) {
     if (!d.passT || game.frame - d.passT > 20) { d.passT = game.frame; popText(d.x, GROUND - d.y - 180, 'PASS', '125,235,255'); }
     return null;
   }
+  if (throwBreak(a, d, h)) return null;
   // armor: Tetsu during his moderate and heavy techniques (tell included), and Aldric's Rampart Charge — the hits land and hurt,
   // but they don't stop him: the technique keeps going (no counter). They can only be punished afterwards.
   const dblArmor = d.ch.possess === 'double' && !h.grab && !h.superHit && !['knock', 'down', 'getup'].includes(d.state); // double possession: light hits can't stop him
@@ -499,4 +519,4 @@ function fixAdv(a, d, h, r) {
   if (r === 'hit' && mv.cutOnHit && a.mf > mv.startup) mv.active = Math.max(0, a.mf - mv.startup); // (a long-lasting blow that has landed: it ends there, so the follow-up isn't late)
   if (r === 'hit' && mv.hitAdv != null && d.state === 'hitstun') d.stun = Math.max(1, left + mv.hitAdv - (d.ch.recoverT || 12)) + (d.wasCounter ? counterStunOf(a) : 0); // (they act once their recovery after the hit-stun is over; a counter hit adds COUNTER_STUN)
 }
-{ const core = applyHit; applyHit = function (a, d, h, side, hb, hu) { const r = core.apply(this, arguments); if (r === 'hit' || r === 'block') fixAdv(a, d, h, r); if (r === 'hit' && a.ch.hitPlus && d.state === 'hitstun') d.stun += a.ch.hitPlus; /* (a fighter whose hits all leave him further ahead: Tetsu) */ if (r === 'hit' && a.move && a.move.recPlusAmt && (!a.move.normal || d.state !== 'hitstun')) { a.move.recovery -= a.move.recPlusAmt; a.move.recPlusAmt = 0; } /* (Mei's longer recovery: given back when a technique lands, or a hit launches or knocks down — the follow-up keeps its timing) */ if ((r === 'hit' || r === 'block' || r === 'armor') && a.fd) fdContact(a, r); if ((r === 'hit' || r === 'block') && a.sorbs && a.sorbs.length && !h.orbRay && game.frame - (a.orbT || -99) > 10) { a.orbT = game.frame; orbAssist(a, a.move || {}); } /* (Lyra's orbs fire when one of her attacks lands or is guarded: one volley per attack) */ return r; }; } // a move's own advantage; the training frame data
+{ const core = applyHit; applyHit = function (a, d, h, side, hb, hu) { const r = core.apply(this, arguments); if (r === 'hit' || r === 'block') fixAdv(a, d, h, r); if (r === 'hit' && a.ch.hitPlus && d.state === 'hitstun') d.stun += a.ch.hitPlus; /* (a fighter whose hits all leave him further ahead: Tetsu) */ if (r === 'hit' && a.move && a.move.recPlusAmt && (!a.move.normal || d.state !== 'hitstun' || a.ch.recRefund)) { a.move.recovery -= a.move.recPlusAmt; a.move.recPlusAmt = 0; } /* (Mei's longer recovery: given back when a technique lands, or a hit launches or knocks down — the follow-up keeps its timing) */ if (a.ch.possess === 'angel' && a.move && a.move.normal && a.move.str === 1 && (r === 'hit' || r === 'block') && a.hp > 0) { const n = r === 'block' ? 28 : 12; a.hp = Math.min(1000, a.hp + n); a.healT = 60; popText(a.x, GROUND - a.y - 200, '+' + n, '255,240,190'); } /* (the angel's I and K heal him: more when they're guarded) */ if ((r === 'hit' || r === 'block' || r === 'armor') && a.fd) fdContact(a, r); if ((r === 'hit' || r === 'block') && a.sorbs && a.sorbs.length && !h.orbRay && game.frame - (a.orbT || -99) > 10) { a.orbT = game.frame; orbAssist(a, a.move || {}); } /* (Lyra's orbs fire when one of her attacks lands or is guarded: one volley per attack) */ return r; }; } // a move's own advantage; the training frame data
