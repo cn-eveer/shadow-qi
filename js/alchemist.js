@@ -341,7 +341,10 @@ function golemBreak(f, text) { // it comes apart (beaten apart, or worn out): a 
   for (let i = 0; i < 22; i++) parts.push({ type: 'spark', x: g.x + rnd(-40, 40), y: GROUND - rnd(10, 150), vx: rnd(-5, 5), vy: rnd(-3, 5), life: 22, max: 22, col: golemPal(f).spark }); dustAt(g.x, true);
 }
 function golemDamage(f, n, x, y) { // the golem takes a hit; at zero health it comes apart
-  const g = f.golem; if (g.broken) return; g.hp = Math.max(0, g.hp - n); g.flash = 5; sfx('hitH'); sparks(x, y, 'hit');
+  const g = f.golem; if (g.broken) return;
+  const A = g.act && GOLEM_ACT[g.act.kind], counter = !!(A && !A.shield && g.act.t <= A.su); // (hit while it winds up its blow: a counter — it hurts more and the blow is lost)
+  if (counter) { n = Math.round(n * 1.4); g.act = null; g.queue = null; g.cd = 45; popText(g.x, GROUND - 205 - g.y, L('COUNTER!', 'カウンター！'), '255,150,90'); game.freeze = Math.max(game.freeze, 6); }
+  g.hp = Math.max(0, g.hp - n); g.flash = 5; sfx('hitH'); sparks(x, y, 'hit');
   if (g.hp <= 0) golemBreak(f, L('GOLEM DOWN!', 'ゴーレム撃破！'));
 }
 function golemTakeHits(f, o) { // the opponent's attacks can hit the golem too (it stands in the way of blows meant for him)
