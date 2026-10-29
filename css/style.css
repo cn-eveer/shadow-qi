@@ -32,12 +32,14 @@ h1{font-family:var(--hud);font-weight:400;font-size:clamp(24px,3.6vw,36px);line-
 .tag{color:var(--muted);font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} /* (shortened with … on a narrow window; the full text shows on hover) */
 .pill{font:700 14px var(--body);color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer}
 .tbar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
-/* punish training: the move the dummy repeats, over the game (the move / combo list moves down below it) */
-.stage.rep .tlist:not(.trepp){top:39%}
-.trepp .tm small{display:block;font-weight:600;opacity:.65;font-size:.85em}
-.trepp .tev{display:inline-flex;align-items:center;gap:6px;margin-left:10px;font-weight:600}
-.trepp .tev button{width:clamp(20px,2.8cqw,28px)}
-.trepp .trow{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px 10px;margin-top:3px}.trepp .trow .tk{margin-top:0}
+/* the 技表's tabs (技 / コンボ / 相手) and the dummy's ▶ (punish training) */
+.tlist .ttabs{display:flex;justify-content:center;align-items:center;gap:4px;margin-bottom:3px}
+.tlist .ttabs button{width:auto;aspect-ratio:auto;border-radius:999px;padding:1px 10px;font-size:.85em;border-width:1px;opacity:.7}
+.tlist .ttabs button.on{opacity:1;background:rgba(255,217,138,.25);border-color:#ffd98a}
+.tlist .ttabs small{opacity:.45;font-weight:400}
+.tlist .trow{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px 10px;margin-top:3px}.tlist .trow .tk{margin-top:0}
+.tlist .tplay{border-color:rgba(143,240,164,.8);color:#8ff0a4}.tlist .tplay.on{border-color:rgba(255,120,120,.8);color:#ff8a8a;background:rgba(255,120,120,.15)}
+.tlist .tev{display:inline-flex;align-items:center;gap:6px;font-weight:600}.tlist .tev button{width:clamp(20px,2.8cqw,28px)}
 .tbar[hidden]{display:none}
 .pill.watch{display:block;margin:12px 0 2px;border-color:var(--accent)}
 .pill:focus-visible,.overlay button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}

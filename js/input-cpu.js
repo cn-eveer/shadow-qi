@@ -304,9 +304,10 @@ class CPU {
   }
 }
 // training dummy: guards, stands, jumps, or hands control to the CPU
-const DUMMY_MODES = ['stand', 'guard', 'crouch', 'jump', 'cpu', 'repeat'];
-const DUMMY_LABEL_EN = { guard: 'Guard', stand: 'Stand still', crouch: 'Crouch', jump: 'Jump', cpu: 'Fight back', repeat: 'Repeat a move' };
-const DUMMY_LABEL_JA = { guard: 'ガード', stand: '立ち', crouch: 'しゃがみ', jump: 'ジャンプ', cpu: '反撃', repeat: '技を繰り返す' };
+// how the training dummy defends (T); repeating one of its own commands is set in the 技表's 相手 tab (game.repeat), on top of any of these
+const DUMMY_MODES = ['guard', 'sguard', 'cguard', 'jump', 'stand'];
+const DUMMY_LABEL_EN = { guard: 'Always guard', sguard: 'Stand guard', cguard: 'Crouch guard', jump: 'Jump', stand: 'No guard' };
+const DUMMY_LABEL_JA = { guard: '常にガード', sguard: '立ちガード', cguard: 'しゃがみガード', jump: 'ジャンプ', stand: 'ガードなし' };
 const DUMMY_LABEL = new Proxy({}, { get: (t, k) => (game.lang === 'ja' ? DUMMY_LABEL_JA : DUMMY_LABEL_EN)[k] });
 class Dummy {
   constructor() { this.cpu = new CPU(); }
@@ -324,18 +325,19 @@ class Dummy {
       if (d.dummy && d.dummy.inp && st && st.phase === 'run' && !st.dummyDone && st.t >= (d.dummy.at || 0)) { st.dummyDone = true; return { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false, ...d.dummy.inp }; }
       if (d.dummy && d.dummy.guardAfter && st && st.dummyDone && f.state !== 'attack' && (threatened(f, o) || f.state === 'blockstun')) return { h: -(golemGuardDir(f, o) || Math.sign(o.x - f.x) || f.facing), down: isLowAtk(o), up: false, btn: null, sup: false, ff: false, bb: false, charge: false }; // (a punish sample: once its technique is over, the opponent guards — only a real punish gets in)
     }
-    if (game.dummyMode === 'cpu') return this.cpu.read(f, frame, o);
-    if (game.dummyMode === 'repeat') return this.repeat(f, frame, o);
-    const out = { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false };
-    if (game.dummyMode === 'guard' && (threatened(f, o) || f.state === 'blockstun')) { out.h = -(Math.sign(o.x - f.x) || f.facing); if (isLowAtk(o)) out.down = true; }
+    if (game.repeat) { const r = this.repeat(f, frame, o); if (r) return r; } // (its command, when it's time; otherwise it defends as set)
+    const out = { h: 0, down: false, up: false, btn: null, sup: false, ff: false, bb: false, charge: false }, threat = threatened(f, o) || f.state === 'blockstun' || f.state === 'hitstun';
+    const away = -(golemGuardDir(f, o) || Math.sign(o.x - f.x) || f.facing);
+    if (game.dummyMode === 'guard' && threat) { out.h = away; out.down = isLowAtk(o); } // always guard: at the right height
+    if (game.dummyMode === 'sguard' && threat) out.h = away; // stand guard: lows get through
+    if (game.dummyMode === 'cguard') { out.down = true; if (threat) out.h = away; } // crouch guard: only lows are stopped
     if (game.dummyMode === 'jump') out.up = true;
-    if (game.dummyMode === 'crouch') out.down = true;
     return out;
   }
   // punish training: the chosen command (game.repeat, picked in the training bar), again and again — walks in to striking distance,
   // does it, then waits the chosen interval before the next one
   repeat(f, frame, o) {
-    const R = game.repeat, idle = { ...EMPTY };
+    const R = game.repeat, idle = null; // (null: not now — it defends as set)
     if (!R) return idle;
     if (this.rid !== R.id) { this.rid = R.id; this.rst = null; this.next = frame + 30; }
     if (this.rst) { // doing it
@@ -344,7 +346,7 @@ class Dummy {
       return out;
     }
     if (frame < this.next || !((f.state === 'stand' || f.state === 'crouch') && f.atkCD <= 0)) return idle;
-    if (Math.abs(o.x - f.x) > R.reach) return { ...idle, h: Math.sign(o.x - f.x) || f.facing }; // (too far: walk in first)
+    if (Math.abs(o.x - f.x) > R.reach) return { ...EMPTY, h: Math.sign(o.x - f.x) || f.facing }; // (too far: walk in first)
     if (R.sup) f.meter = 100; // (a super needs a full gauge)
     this.rst = { i: 0 }; this.rt0 = frame;
     return comboStep(f, o, R.steps, this.rst, { ...EMPTY });

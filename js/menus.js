@@ -45,28 +45,24 @@ function updateTbar() {
   tbar.querySelector('[data-t="mp"]').textContent = L(`MP refill: ${game.mpFull ? 'on' : 'off'} (M)`, `MP回復：${game.mpFull ? 'オン' : 'オフ'} (M)`);
   tbar.querySelector('[data-t="reset"]').textContent = L('Reset to start position (R)', '初期位置に戻す (R)');
   const lb = tbar.querySelector('[data-t="list"]'); lb.textContent = L(`Moves: ${game.moveList ? 'on' : 'off'} (L)`, `技表：${game.moveList ? 'オン' : 'オフ'} (L)`); lb.setAttribute('aria-pressed', String(!!game.moveList));
-  const cb = tbar.querySelector('[data-t="combos"]'); cb.textContent = L(`Combos: ${game.comboList ? 'on' : 'off'} (C)`, `コンボ：${game.comboList ? 'オン' : 'オフ'} (C)`); cb.setAttribute('aria-pressed', String(!!game.comboList));
   const dl = game.demoSet === 'punish' ? { prev: ['Previous punish (A)', '前の反撃 (A)'], replay: ['Replay (R)', 'もう一度 (R)'], next: ['Next punish (D)', '次の反撃 (D)'], switch: ['Switch fighter (F)', 'キャラ切替 (F)'] }
     : { prev: ['Previous combo (A)', '前のコンボ (A)'], replay: ['Replay (R)', 'もう一度 (R)'], next: ['Next combo (D)', '次のコンボ (D)'], switch: ['Switch fighter (F)', 'キャラ切替 (F)'] };
   dbar.querySelectorAll('button').forEach(b => { const t = dl[b.dataset.d]; if (t) b.textContent = L(t[0], t[1]); });
   if (IS_MOBILE) [...tbar.children, ...dbar.children].forEach(b => { if (b.tagName === 'BUTTON') b.textContent = b.textContent.replace(/ \([A-Z]\)$/, ''); }); // no keyboard on a phone
-  updateRepeat();
 }
 function trainingAction(t) {
   if (t === 'dummy') game.dummyMode = DUMMY_MODES[(DUMMY_MODES.indexOf(game.dummyMode) + 1) % DUMMY_MODES.length];
   else if (t === 'mp') game.mpFull = !game.mpFull;
   else if (t === 'reset') resetPositions();
-  else if (t === 'list') { game.moveList = !game.moveList; if (game.moveList) game.comboList = false; }
-  else if (t === 'combos') { game.comboList = !game.comboList; if (game.comboList) game.moveList = false; } // (the moves and the combos share one place over the game)
+  else if (t === 'list') game.moveList = !game.moveList;
   sfx('select'); updateTbar();
 }
 tbar.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { initAudio(); trainingAction(b.dataset.t); b.blur(); }));
-// punish training (dummy mode "Repeat a move"): pick one of the dummy's own commands and how often; it does it again and again
+// punish training, in the 技表's 相手 tab: ▶ beside one of the dummy's own commands and it does it again and again, every 1–4 s (■ stops it)
 // (the list: the basic attacks and strings, then every command in its move list that can be done on the ground)
-const trep = document.getElementById('trep'), stageBox = document.querySelector('.stage');
 const REP_EVERY = [1, 1.5, 2, 3, 4], REP_BTN = { U: 'lp', I: 'hp', J: 'lk', K: 'hk' };
 const REP_BASICS = ['U', 'I', 'J', 'K', '↓ + U', '↓ + I', '↓ + J', '↓ + K', 'U, U', 'U, U, I', 'U, U, K', 'U, U, U, U, K', 'J, J, K', 'J, K'];
-let repKey = '', repId = 0, repMoves = [], repShown = '';
+let repCh = '', repId = 0, repMoves = [];
 function repInput(tok) { // one command → its input (null: not one this can do)
   const m = tok.replace(/ \/ .*$/, '').trim().match(/^(→ → \+ |← ← \+ |↓ \+ |→ → then ↓ \+ |← ← then ↓ \+ )?([UIJK])$/); if (!m) return null;
   const p = m[1] || '', inp = { btn: REP_BTN[m[2]] }; if (p.startsWith('→ →')) inp.ff = true; if (p.startsWith('← ←')) inp.bb = true; if (p.includes('↓')) inp.down = true;
@@ -102,27 +98,16 @@ function repList(ch) {
   });
   return out;
 }
+function repMovesFor(ch) { // (built once per fighter and language; keeps the chosen command when it can)
+  if (ch + game.lang !== repCh) { repCh = ch + game.lang; const was = game.repeat && game.repeat.label; repMoves = repList(ch); game.repIdx = Math.max(0, repMoves.findIndex(m => m.label === was)); if (game.repeatOn) setRepeat(); }
+  return repMoves;
+}
 function setRepeat() {
-  const m = repMoves[game.repIdx || 0]; game.repEvery = game.repEvery || 1.5; repShown = '';
-  game.repeat = m ? { id: ++repId, label: m.label, steps: m.steps, sup: !!m.sup, every: Math.round(game.repEvery * 60), reach: 120 } : null;
+  const m = repMoves[game.repIdx || 0]; game.repEvery = game.repEvery || 1.5;
+  game.repeat = game.repeatOn && m ? { id: ++repId, label: m.label, steps: m.steps, sup: !!m.sup, every: Math.round(game.repEvery * 60), reach: 120 } : null;
 }
-function stepRepeat(d) { const n = repMoves.length; if (!n) return; game.repIdx = ((game.repIdx || 0) + d + n) % n; setRepeat(); sfx('select'); updateRepeat(); }
-function stepEvery(d) { const i = REP_EVERY.indexOf(game.repEvery || 1.5); game.repEvery = REP_EVERY[clamp(i + d, 0, REP_EVERY.length - 1)]; setRepeat(); sfx('select'); updateRepeat(); }
-function updateRepeat() { // over the game, like the move list: ◀ the move (its keys, its name) ▶, and how often
-  const on = game.mode === 'fight' && game.training && !game.demo && game.dummyMode === 'repeat' && !game.paused && drawer.hidden;
-  if (trep.hidden === on) trep.hidden = !on; stageBox.classList.toggle('rep', on);
-  if (!on) return;
-  const ch = fighters[1] ? fighters[1].key : game.p2Char, key = ch + game.lang;
-  if (key !== repKey) { repKey = key; const was = game.repeat && game.repeat.label; repMoves = repList(ch); game.repIdx = Math.max(0, repMoves.findIndex(m => m.label === was)); setRepeat(); }
-  const m = repMoves[game.repIdx], sig = key + game.repIdx + '/' + game.repEvery; if (!m || sig === repShown) return; repShown = sig;
-  const esc = t => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
-  const keys = m.label.replace(' (hold)', L(' (hold)', '（長押し）')).split(/, then | then |, /).map(k => `<span>${esc(k)}</span>`).join('<i>›</i>');
-  trep.innerHTML = `<button data-r="-1" aria-label="${L('Previous move', '前の技')}">◀</button><div class="tm"><small>${L('Dummy repeats', 'ダミーが繰り返す技')} ${game.repIdx + 1}/${repMoves.length}`
-    + (IS_MOBILE ? '' : ` · ${L('[ ] move, − = how often', '[ ] 技、− = 間隔')}`) + `</small>${m.name ? `<b>${esc(m.name)}</b>` : ''}<div class="trow"><div class="tk">${keys}</div>`
-    + `<span class="tev"><button data-e="-1" aria-label="${L('Shorter interval', '間隔を短く')}">−</button>${L(`every ${game.repEvery} s`, `${game.repEvery}秒ごと`)}<button data-e="1" aria-label="${L('Longer interval', '間隔を長く')}">+</button></span></div>`
-    + `</div><button data-r="1" aria-label="${L('Next move', '次の技')}">▶</button>`;
-}
-trep.addEventListener('pointerdown', e => { const b = e.target.closest('button'); if (!b) return; e.preventDefault(); e.stopPropagation(); if (b.dataset.r) stepRepeat(+b.dataset.r); else if (b.dataset.e) stepEvery(+b.dataset.e); });
+function toggleRepeat() { game.repeatOn = !game.repeatOn; setRepeat(); sfx('select'); updateMoveList(); }
+function stepEvery(d) { const i = REP_EVERY.indexOf(game.repEvery || 1.5); game.repEvery = REP_EVERY[clamp(i + d, 0, REP_EVERY.length - 1)]; setRepeat(); sfx('select'); updateMoveList(); }
 function showMenu() {
   game.mode = 'menu'; game.paused = false; game.netMenu = false; tbar.hidden = true; dbar.hidden = true;
   const c = game.p1Char;
@@ -271,11 +256,11 @@ window.addEventListener('keydown', e => {
       else if (e.code === 'KeyM') trainingAction('mp');
       else if (e.code === 'KeyR') trainingAction('reset');
       else if (e.code === 'KeyL') trainingAction('list');
-      else if (e.code === 'KeyC') trainingAction('combos');
-      else if (game.dummyMode === 'repeat' && (e.code === 'BracketLeft' || e.code === 'BracketRight')) stepRepeat(e.code === 'BracketLeft' ? -1 : 1); // punish training: the move…
-      else if (game.dummyMode === 'repeat' && (e.code === 'Minus' || e.code === 'Equal')) stepEvery(e.code === 'Minus' ? -1 : 1); // …and how often
-      else if (e.code === 'Comma' && (game.moveList || game.comboList)) stepMoveList(-1);
-      else if (e.code === 'Period' && (game.moveList || game.comboList)) stepMoveList(1);
+      else if (e.code === 'KeyC' && game.moveList) stepTab(); // (the 技表's tabs)
+      else if (e.code === 'Comma' && game.moveList) stepMoveList(-1);
+      else if (e.code === 'Period' && game.moveList) stepMoveList(1);
+      else if (e.code === 'Space' && game.moveList && game.listTab === 'opp') toggleRepeat(); // punish training: the dummy does it again and again…
+      else if ((e.code === 'Minus' || e.code === 'Equal') && game.moveList && game.listTab === 'opp') stepEvery(e.code === 'Minus' ? -1 : 1); // …this often
     }
   }
 });
@@ -406,10 +391,12 @@ function updateTouchUI() { // shown only on a phone or tablet, during play (not 
   if (portrait) { const ja = game.lang === 'ja'; document.getElementById('rotTxt').textContent = ja ? 'スマホを横向きにしてください' : 'Turn your phone sideways to play'; document.getElementById('rotSub').textContent = ja ? 'Shadow ✕ Qi は横画面でプレイします' : 'Shadow ✕ Qi plays in landscape'; }
 }
 updateTouchUI();
-// training: one move at a time, just its name and command, shown over the game (taken from the move list),
-// or one sample combo at a time, its keys in order; ◀ ▶ or , . step through them
+// training: the 技表 over the game (L), three tabs (C, or tap them): 技 — your moves one at a time, name and command (from the move list);
+// コンボ — your sample combos, their keys in order; 相手 — the dummy's commands, with ▶ to have it do one again and again (punish training).
+// ◀ ▶ or , . step through the tab; Space plays or stops the dummy's command, − = change how often
 document.querySelectorAll('.card .scroll').forEach(d => { const c = d.querySelector('tbody td'); if (c && /^\d+\./.test(c.textContent.trim())) d.classList.add('combo'); });
-const tlistUI = document.getElementById('tlist'); let tlistCh = '', tlistKey = '', tlistMoves = [], tlistIdx = 0;
+const tlistUI = document.getElementById('tlist'); let tlistCh = '', tlistKey = '', tlistMoves = [], tlistIdx = 0, tcomboIdx = 0;
+const TL_TABS = ['moves', 'combos', 'opp'];
 function moveListOf(ch) {
   const card = document.querySelector(`article.card[data-tab="${ch}"][data-lang="${game.lang}"]`); if (!card) return [];
   const out = []; let parent = null;
@@ -423,28 +410,33 @@ function moveListOf(ch) {
   return out;
 }
 const comboListOf = ch => (COMBO_SET[ch] || []).map(d => ({ name: L(d.name, (JA_DEMO[d.name] || {}).n || d.name), keys: d.steps.map(s => s.key) })); // (the same combos as the sample combos)
-let tcomboIdx = 0;
 function stepMoveList(d) {
-  const n = game.comboList ? comboListOf(tlistCh).length : tlistMoves.length; if (!n) return;
-  if (game.comboList) tcomboIdx = (tcomboIdx + d + n) % n; else tlistIdx = (tlistIdx + d + n) % n;
+  const tab = game.listTab || 'moves', n = tab === 'combos' ? comboListOf(fighters[0].key).length : tab === 'opp' ? repMoves.length : tlistMoves.length; if (!n) return;
+  if (tab === 'combos') tcomboIdx = (tcomboIdx + d + n) % n; else if (tab === 'opp') { game.repIdx = ((game.repIdx || 0) + d + n) % n; setRepeat(); } else tlistIdx = (tlistIdx + d + n) % n;
   sfx('select'); updateMoveList();
 }
-tlistUI.addEventListener('pointerdown', e => { const b = e.target.closest('button'); if (!b) return; e.preventDefault(); e.stopPropagation(); stepMoveList(+b.dataset.m); });
+function stepTab(t) { game.listTab = t || TL_TABS[(TL_TABS.indexOf(game.listTab || 'moves') + 1) % TL_TABS.length]; sfx('select'); updateMoveList(); }
+tlistUI.addEventListener('pointerdown', e => { const b = e.target.closest('button'); if (!b) return; e.preventDefault(); e.stopPropagation();
+  if (b.dataset.tab) stepTab(b.dataset.tab); else if (b.dataset.play) toggleRepeat(); else if (b.dataset.e) stepEvery(+b.dataset.e); else stepMoveList(+b.dataset.m); });
 function updateMoveList() {
-  updateRepeat();
-  const show = !!(game.moveList || game.comboList) && game.mode === 'fight' && game.training && !game.demo && !game.paused && drawer.hidden;
+  const show = !!game.moveList && game.mode === 'fight' && game.training && !game.demo && !game.paused && drawer.hidden;
   if (tlistUI.hidden === show) tlistUI.hidden = !show;
   if (!show) return;
-  const ch = fighters[0] ? fighters[0].key : game.p1Char;
-  if (ch !== tlistCh) { tlistCh = ch; tlistIdx = 0; tcomboIdx = 0; tlistKey = ''; }
-  const key = ch + game.lang + (game.comboList ? 'c' + tcomboIdx : tlistIdx); if (key === tlistKey) return; tlistKey = key;
-  const esc = t => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
-  if (game.comboList) {
-    const list = comboListOf(ch), c = list[tcomboIdx]; if (!c) { tlistUI.innerHTML = ''; return; }
-    tlistUI.innerHTML = `<button data-m="-1" aria-label="${L('Previous combo', '前のコンボ')}">◀</button><div class="tm"><b>${esc(c.name)}</b> <small>${tcomboIdx + 1}/${list.length}</small><div class="tk">${c.keys.map(k => `<span>${esc(k)}</span>`).join('<i>›</i>')}</div></div><button data-m="1" aria-label="${L('Next combo', '次のコンボ')}">▶</button>`;
-    return;
-  }
-  tlistMoves = moveListOf(ch); const m = tlistMoves[tlistIdx]; if (!m) { tlistUI.innerHTML = ''; return; }
-  tlistUI.innerHTML = `<button data-m="-1" aria-label="${L('Previous move', '前の技')}">◀</button><div class="tm"><b>${esc(m.name)}</b><div class="tc">${esc(m.cmd)}</div></div><button data-m="1" aria-label="${L('Next move', '次の技')}">▶</button>`;
+  const ch = fighters[0] ? fighters[0].key : game.p1Char, dch = fighters[1] ? fighters[1].key : game.p2Char, tab = game.listTab || 'moves';
+  if (ch + '/' + dch !== tlistCh) { tlistCh = ch + '/' + dch; tlistIdx = 0; tcomboIdx = 0; tlistKey = ''; }
+  const opp = repMovesFor(dch);
+  const key = [ch, dch, game.lang, tab, tlistIdx, tcomboIdx, game.repIdx, game.repeatOn, game.repEvery].join('|'); if (key === tlistKey) return; tlistKey = key;
+  const esc = t => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]), chips = ks => `<div class="tk">${ks.map(k => `<span>${esc(k)}</span>`).join('<i>›</i>')}</div>`;
+  const TAB = { moves: L('Moves', '技'), combos: L('Combos', 'コンボ'), opp: L('Opponent', '相手') };
+  const tabs = `<div class="ttabs">${TL_TABS.map(t => `<button data-tab="${t}"${t === tab ? ' class="on"' : ''}>${TAB[t]}</button>`).join('')}${IS_MOBILE ? '' : '<small>C</small>'}</div>`;
+  let body = '';
+  if (tab === 'combos') { const list = comboListOf(ch), c = list[tcomboIdx]; body = c ? `<b>${esc(c.name)}</b> <small>${tcomboIdx + 1}/${list.length}</small>${chips(c.keys)}` : ''; }
+  else if (tab === 'opp') {
+    const m = opp[game.repIdx || 0], shown = c => L(c, c.replace(', then ', '、続けて ').replace(' then ', ' から ').replace(' (hold)', '（長押し）'));
+    body = m ? `<small>${esc(nm(CHARS[dch]))} ${(game.repIdx || 0) + 1}/${opp.length}${IS_MOBILE ? '' : ` · ${L('Space play / stop, − = how often', 'Space 再生・停止、− = 間隔')}`}</small>${m.name ? `<b>${esc(m.name)}</b>` : ''}`
+      + `<div class="trow">${chips(shown(m.label).split(/、続けて | から |, then | then |, /))}<button class="tplay${game.repeatOn ? ' on' : ''}" data-play="1" aria-label="${game.repeatOn ? L('Stop', '停止') : L('Play: the dummy repeats it', '再生：ダミーが繰り返す')}">${game.repeatOn ? '■' : '▶'}</button>`
+      + `<span class="tev"><button data-e="-1" aria-label="${L('Shorter interval', '間隔を短く')}">−</button>${L(`every ${game.repEvery || 1.5} s`, `${game.repEvery || 1.5}秒ごと`)}<button data-e="1" aria-label="${L('Longer interval', '間隔を長く')}">+</button></span></div>` : '';
+  } else { tlistMoves = moveListOf(ch); const m = tlistMoves[tlistIdx]; body = m ? `<b>${esc(m.name)}</b><div class="tc">${esc(m.cmd)}</div>` : ''; }
+  tlistUI.innerHTML = `<button data-m="-1" aria-label="${L('Previous', '前へ')}">◀</button><div class="tm">${tabs}${body}</div><button data-m="1" aria-label="${L('Next', '次へ')}">▶</button>`;
 }
 requestAnimationFrame(loop);
