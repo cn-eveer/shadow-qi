@@ -178,6 +178,7 @@ const autoGuardFor = (f, toward) => game.autoGuard && !game.online && f.ctrl ins
 // or crouching with auto guard — if its 発生 (frames from its start until it reaches them) is more than GUARD_BACK; after a counter hit
 // they get back to guard 2 frames later (GUARD_BACK_CH). Fast follow-ups (U, U) stay a combo; slower ones (U, I — a medium) can be guarded
 const GUARD_BACK = 10, GUARD_BACK_CH = 12;
+const COUNTER_STUN = 4; // a counter hit (caught as they started something) stuns 4 frames longer: −4 for them, +4 for whoever countered
 const GUARD_STALL = 6;
 // (applyHit, below, reports each first hit or guard to the training frame data: fdContact) // frames an attacker loses when his attack is guarded (shown as a recoil)
 const JUG_HOLD_MAX = 150; // frames (2.5 s) U, U... can keep them up after the last lift or bounce: then only a new lift or the finisher still lands
@@ -412,7 +413,7 @@ function applyHit(a, d, h, side, hb, hu) {
     setState(d, 'knock'); d.juggle = air; d.jug = air ? (wasKnock ? Math.max(d.jug || 0, 2) : 2) : 0; // (still flying from this combo: the juggle count carries on, it doesn't start over)
     d.vy = h.kd ? (h.kdVy || 8.5) : 6.5; d.vx = side * (h.kd ? (h.kdVx || 4) : 1.4); d.y = Math.max(d.y, 1); // (hit out of the air: a smaller push unless it knocks them away)
   }
-  else { if (d.repLabel === h.label && d.stuckT > 0 && !(h.superHit && a.key === 'alchemist')) d.repN = (d.repN || 0) + 1; else { d.repLabel = h.label; d.repN = 0; } setState(d, 'hitstun'); d.stun = Math.max(5, Math.round(((h.stun || 16) - Math.max(0, d.combo - STUN_DECAY_AFTER) * 3) * Math.pow(0.6, d.repN))); /* (the same attack again and again in one combo — against a wall, say — stuns less each time: no repeat loops) */ d.crouchHit = low; /* (hit-stun decay: past the first few hits each one stuns less, so a string can't loop forever) */ d.vx = side * (h.push || 1) * 3 * (h.rushTag ? 1 : a.ch.pushMul || 1) * (d.ch.sturdy ? 0.5 : 1); } // knocked back by the hit (further by Mei and Lyra, except in Mei's rush strings)
+  else { if (d.repLabel === h.label && d.stuckT > 0 && !(h.superHit && a.key === 'alchemist')) d.repN = (d.repN || 0) + 1; else { d.repLabel = h.label; d.repN = 0; } setState(d, 'hitstun'); d.stun = Math.max(5, Math.round(((h.stun || 16) - Math.max(0, d.combo - STUN_DECAY_AFTER) * 3) * Math.pow(0.6, d.repN))) + (counter ? COUNTER_STUN : 0); /* (a counter hit: longer — COUNTER_STUN) (the same attack again and again in one combo — against a wall, say — stuns less each time: no repeat loops) */ d.crouchHit = low; /* (hit-stun decay: past the first few hits each one stuns less, so a string can't loop forever) */ d.vx = side * (h.push || 1) * 3 * (h.rushTag ? 1 : a.ch.pushMul || 1) * (d.ch.sturdy ? 0.5 : 1); } // knocked back by the hit (further by Mei and Lyra, except in Mei's rush strings)
   if (!h.proj) wallPush(a, d, side); // pinned at the wall: the attacker is pushed back the same way instead
   // Lightning Ball / Fire Breath: once the hit wears off they're left stunned (once until they're back on their feet)
   if (d.state === 'hitstun' && h.stunT && !d.stunUsed && d.hp > 0) { d.pendingStun = Math.max(d.pendingStun || 0, h.stunT); d.stunKind = h.stunKind; }
@@ -505,6 +506,6 @@ function fixAdv(a, d, h, r) {
     else mv.recovery = Math.max(1, mv.recovery + T - left);
     a.guardLagUntil = 0; a.guardLagNeed = 0; mv.lagLock = false;
   }
-  if (r === 'hit' && mv.hitAdv != null && d.state === 'hitstun') d.stun = Math.max(1, left + mv.hitAdv - (d.ch.recoverT || 12)); // (they act once their recovery after the hit-stun is over)
+  if (r === 'hit' && mv.hitAdv != null && d.state === 'hitstun') d.stun = Math.max(1, left + mv.hitAdv - (d.ch.recoverT || 12)) + (d.wasCounter ? COUNTER_STUN : 0); // (they act once their recovery after the hit-stun is over; a counter hit adds COUNTER_STUN)
 }
 { const core = applyHit; applyHit = function (a, d, h, side, hb, hu) { const r = core.apply(this, arguments); if (r === 'hit' || r === 'block') fixAdv(a, d, h, r); if ((r === 'hit' || r === 'block' || r === 'armor') && a.fd) fdContact(a, r); return r; }; } // a move's own advantage; the training frame data
