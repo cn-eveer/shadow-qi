@@ -22,7 +22,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Spirit Fist<small>A giant fist of light punches out in front of her, three hits that push them far away.</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>Orb Burst<small>Every health orb fires a ray at them (with none, one ray from her hand).</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>Triple Ray<small>Three rays at once from her hands, reaching almost half the stage; the third leaves them stunned.</small></td><td class="cmd">← ← + I</td></tr>
-          <tr><td>Ground Burst<small>She barely moves, only raises her hand, and the ground bursts open under them in a column of light that launches — wherever they are, slower the further away (16F to 28F).</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>Ground Burst<small>She barely moves, only raises her hand, and the ground bursts open under them in a column of light: a low, three hits — wherever they are, slower the further away (16F to 28F).</small></td><td class="cmd">↓ + I</td></tr>
           <tr class="super"><td>Super: Crystal Storm<small>Crystal shards rain in from every side, then one giant crystal. Up close it bounces them back to her. Not invincible: until the crystals come, light hits from up close don't stop it (she still takes their full damage — enough of it finishes her), but heavy attacks, techniques and anything from further away do. Needs a full MP gauge.</small></td><td class="cmd">Punch + Kick</td></tr>
         </tbody>
       </table></div>
@@ -31,7 +31,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <h3>Six combos, each with one or two juggles</h3>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>1. Ground Burst<small>One juggle: ↓ + I, U, U, K. Two juggles: ↓ + I, U, → → + J (Levitate lifts them again), K.</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>1. Glyph Trip<small>One juggle: ↓ + K, U, U, K. Two juggles: ↓ + K, U, → → + J (Levitate lifts them again), K.</small></td><td class="cmd">↓ + K</td></tr>
           <tr><td>2. Psychic Lift<small>From afar. One juggle: → → + J, U, U, K. Two juggles: → → + J, U, I (Crystal Meteor lifts them again), K.</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>3. Falling Star<small>One juggle: → → + I, U, U, K. Two juggles: → → + I, U, → → + I (a second star bounces them again), U, U, K.</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>4. Triple Ray<small>A stun, not a lift. One juggle: ↓ + I, U, U, K. Two juggles: ↓ + I, U, U, I (Crystal Meteor), K.</small></td><td class="cmd">← ← + I</td></tr>
@@ -63,7 +63,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>霊気の拳<small>巨大な光の拳が3回殴り、遠くへ押し出す。</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>オーブ破裂<small>手から光線を放つ。</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>三連光線<small>両手から3本の光線を同時に放つ。3本目で気絶。</small></td><td class="cmd">← ← + I</td></tr>
-          <tr><td>大地噴出<small>手を上げるだけで、相手の足元から光の柱が噴き上がって打ち上げる。どこにいても届き、遠いほど発生が遅い（16F〜28F）。</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>大地噴出<small>手を上げるだけで、相手の足元から光の柱が噴き上がる。下段3ヒット。どこにいても届き、遠いほど発生が遅い（16F〜28F）。</small></td><td class="cmd">↓ + I</td></tr>
           <tr class="super"><td>超必殺技：水晶の嵐<small>四方から水晶の欠片が降り注ぎ、最後に巨大な水晶。至近距離なら手前にバウンド。無敵ではない：水晶が来るまで、近くからの弱い攻撃では止まらない（ダメージはそのまま受け、体力が尽きればKO）が、強い攻撃・必殺技・離れた位置からの攻撃では止まる。MP満タンが必要。</small></td><td class="cmd">パンチ + キック</td></tr>
         </tbody>
       </table></div>
@@ -72,7 +72,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <h3>6つのコンボ（1回打ち上げ／2回打ち上げ）</h3>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>1. 大地噴出<small>1回：↓+I、U、U、K。2回：↓+I、U、→→+J（浮揚）、K。</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>1. 躓きの紋<small>1回：↓+K、U、U、K。2回：↓+K、U、→→+J（浮揚）、K。</small></td><td class="cmd">↓ + K</td></tr>
           <tr><td>2. 念動浮上<small>遠くから。1回：→→+J、U、U、K。2回：→→+J、U、I（水晶流星）、K。</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>3. 落ちる星<small>1回：→→+I、U、U、K。2回：→→+I、U、→→+I（二つ目の星）、U、U、K。</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>4. 三連光線<small>気絶は打ち上げに数えない。1回：↓+I、U、U、K。2回：↓+I、U、U、I（水晶流星）、K。</small></td><td class="cmd">← ← + I</td></tr>

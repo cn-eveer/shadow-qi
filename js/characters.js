@@ -117,12 +117,12 @@ const CHARS = {
     },
     normalLook: {
       sp0: { label: 'Ripple', noCrystal: true, wind: 'psyW', pose: 'psyPush', hitbox: [40,138,94,132], psyFist: [100, 112, 0.55], onStart: (f, o) => lyraReach(f, o, LYRA_RANGE, 80), onFrame: (f, o, mf) => { if (mf <= f.move.startup) lyraReach(f, o, LYRA_RANGE, 80); } },
-      cp1: { label: 'Ground Burst', wind: 'psyW', pose: 'psyUp', crouch: false, hitbox: [40,175,0,200], groundBurst: 115, onStart: (f, o) => lyraReach(f, o, LYRA_FAR, 115) }, // (bursts up under them, wherever they are)
+      cp1: { label: 'Ground Burst', wind: 'psyW', pose: 'psyUp', crouch: false, hitbox: [40,175,0,200], groundBurst: 115, low: true, multi: 3, interval: 4, dmg: 22, lastDmg: 30, push: 0.4, lastPush: 2, launch: false, kd: false, onStart: (f, o) => lyraReach(f, o, LYRA_FAR, 115) }, // (bursts up under them, wherever they are: a low, three hits, no launch)
       jp1: { label: 'Falling Glyph', pose: 'airPsyDown', hitbox: [10,115,10,100], psyFist: [85, 60, 0.8, 0.5] },
       sk0: { label: 'Floor Glyph', wind: 'psyW', pose: 'psyLowCast', hitbox: [80,195,0,42], floorGlyph: 145, onStart: (f, o) => lyraReach(f, o, LYRA_RANGE, 110), onFrame: (f, o, mf) => { if (mf <= f.move.startup) lyraReach(f, o, LYRA_RANGE, 80); } },
       sk1: null,
       ck0: { label: 'Crouch Floor Glyph', wind: 'crouch', pose: 'psyLowCast', hitbox: [70,180,0,30], floorGlyph: 130 },
-      ck1: { label: 'Glyph Trip', wind: 'crouch', pose: 'psyLowCast', hitbox: [90,215,0,30], floorGlyph: 160, onStart: (f, o) => lyraReach(f, o, LYRA_FAR, 160) }, // (the glyph opens under them, wherever they are)
+      ck1: { label: 'Glyph Trip', wind: 'crouch', pose: 'psyLowCast', hitbox: [90,215,0,30], floorGlyph: 160, kd: false, launch: true, launchVy: 12, guardPop: true, onStart: (f, o) => lyraReach(f, o, LYRA_FAR, 160) }, // (the glyph opens under them, wherever they are: a low that launches; guarded, it still pops them up off the ground)
       jk0: { label: 'Air Glyph Drop', wind: 'jump', pose: 'airPsyDown', hitbox: [10,110,0,60], psyFist: [70, 25, 0.6, 1] },
       jk1: { label: 'Air Glyph Spin', wind: 'jump', pose: 'airPsyBoth', hitbox: [-30,120,0,90], psyFist: [60, 50, 0.75, 0.5] },
     },
