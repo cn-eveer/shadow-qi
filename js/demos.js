@@ -101,20 +101,20 @@ const TETSU_DEMOS = [
     steps: [S('→ → + J', 'start', { btn: 'lk', ff: true }), S('U', 'air', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
   { name: '2. Qi Sweep: two juggles', cpu: { min: 120, max: 300 }, tail: 'Hammer Spike, palm, fist, Thunder Palms', ax: 300, bx: 520,
     note: 'Scoop them up, palm lift, then → → + I: Hammer Spike bounces them a second time. Palm, hammer fist, Thunder Palms.',
-    steps: [S('→ → + J', 'start', { btn: 'lk', ff: true }), S('U', 'air', { btn: 'lp' }), S('→ → + I', 'cancel', { btn: 'hp', ff: true }), S('U', 'air', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
+    steps: [S('→ → + J', 'start', { btn: 'lk', ff: true }), S('U', 'air', { btn: 'lp' }), S('→ → + U', 'cancel', { btn: 'lp', ff: true }), S('U', 'air', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
   { name: '3. Cyclone Lariat: one juggle', cpu: { min: 90, max: 220 }, tail: 'palm lift, knee, twin palms', ax: 380, bx: 520,
     note: 'Three spinning hits launch them, then palm lift, knee, twin palms.',
     steps: [S('← ← + K', 'start', { btn: 'hk', bb: true }), S('U', 'air', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
   { name: '3. Cyclone Lariat: two juggles', cpu: { min: 90, max: 220 }, tail: 'palm, Qi Pillar, palm, fist, Thunder Palms', ax: 380, bx: 520,
     note: 'The lariat launches them, palm, then → → + U: the Qi Pillar lifts them a second time. Palm, hammer fist, Thunder Palms.',
-    steps: [S('← ← + K', 'start', { btn: 'hk', bb: true }), S('U', 'air', { btn: 'lp' }), S('→ → + U', 'cancel', { btn: 'lp', ff: true }), S('U', 'air', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
-  { name: '4. Meteor Fist: one juggle', cpu: { min: 120, max: 250 }, tail: 'Air Cyclone, air hook, knee, twin palms', ax: 330, bx: 520,
-    note: 'The fist from above bounces them. Palm lift, then ← ← + K spins up with them straight into an air string.',
-    steps: [S('→ → + I', 'start', { btn: 'hp', ff: true }), S('U', 'air', { btn: 'lp' }), S('← ← + K', 'cancel', { btn: 'hk', bb: true }),
+    steps: [S('← ← + K', 'start', { btn: 'hk', bb: true }), S('U', 'air', { btn: 'lp' }), S('→ → + I', 'cancel', { btn: 'hp', ff: true }), S('U', 'air', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
+  { name: '4. Meteor Fist: one juggle', cpu: { counter: true }, tail: 'Air Cyclone, air hook, knee, twin palms', ax: 400, bx: 500, vs: 'kappa', dummy: { inp: { btn: 'lp', bb: true } }, /* (a counter hit: Meteor Fist launches) */
+    note: 'Meteor Fist catches their Water Bubble as it starts and launches. Palm lift, then ← ← + K spins up with them straight into an air string.',
+    steps: [S('→ → + U (counter)', 'counter', { btn: 'lp', ff: true }), S('U', 'air', { btn: 'lp' }), S('← ← + K', 'cancel', { btn: 'hk', bb: true }),
       S('U', 'airHit', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
-  { name: '4. Meteor Fist: two juggles', cpu: { min: 120, max: 250 }, tail: 'Air Cyclone, air hook, Meteor Knee, twin palms', ax: 330, bx: 520,
-    note: 'Air Cyclone, air hook, then ↓ + K: Meteor Knee bounces them a second time for twin palms.',
-    steps: [S('→ → + I', 'start', { btn: 'hp', ff: true }), S('U', 'air', { btn: 'lp' }), S('← ← + K', 'cancel', { btn: 'hk', bb: true }),
+  { name: '4. Meteor Fist: two juggles', cpu: { counter: true }, tail: 'Air Cyclone, air hook, Meteor Knee, twin palms', ax: 400, bx: 500, vs: 'kappa', dummy: { inp: { btn: 'lp', bb: true } },
+    note: 'A counter-hit Meteor Fist launches. Air Cyclone, air hook, then ↓ + K: Meteor Knee bounces them a second time for twin palms.',
+    steps: [S('→ → + U (counter)', 'counter', { btn: 'lp', ff: true }), S('U', 'air', { btn: 'lp' }), S('← ← + K', 'cancel', { btn: 'hk', bb: true }),
       S('U', 'airHit', { btn: 'lp' }), S('↓ + K', 'chain', { btn: 'hk', down: true }), S('K', 'air', { btn: 'hk' })] },
   { name: '5. Counter Axe: one juggle', cpu: { counter: true }, tail: 'palm lift, knee, twin palms', ax: 400, bx: 500, vs: 'kappa', dummy: { inp: { btn: 'lp', bb: true } }, /* (Kappa's Water Bubble: slow enough to catch as it starts — Kuro's techniques are too quick now) */
     note: 'Axe Kick catches their Water Bubble as it starts and launches. Palm lift, knee, twin palms.',
@@ -123,19 +123,18 @@ const TETSU_DEMOS = [
     note: 'Qi orbs circle them, jump, air hook, then Meteor Knee bounces them a second time for twin palms.',
     steps: [S('K (counter)', 'counter', { btn: 'hk' }), S('U', 'air', { btn: 'lp' }), S('← ← + U', 'cancel', { btn: 'lp', bb: true }), S('W', 'jump', { up: true }),
       S('U', 'airHit', { btn: 'lp' }), S('↓ + K', 'chain', { btn: 'hk', down: true }), S('K', 'air', { btn: 'hk' })] },
-  { name: '6. Qi Parry: one juggle', cpu: { parry: true }, tail: 'palm lift, knee, twin palms', ax: 400, bx: 500, dummy: { at: 8, inp: { btn: 'hp' } },
-    note: 'Parry their Kunai Slash; the palm launches them. Palm lift, knee, twin palms.',
-    steps: [S('← ← + I', 'start', { btn: 'hp', bb: true }), S('U', 'air', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
-  { name: '6. Qi Parry: two juggles', cpu: { parry: true, meter: true }, tail: 'knee, Rising Dragon Fist, Great Qi Cannon', ax: 400, bx: 500, dummy: { at: 8, inp: { btn: 'hp' } },
-    note: 'Parry, palm lift, knee, Rising Dragon Fist lifts them a second time, then Punch + Kick: Great Qi Cannon.',
-    steps: [S('← ← + I', 'start', { btn: 'hp', bb: true }), S('U', 'air', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('I', 'chain', { btn: 'hp' }),
-      S('U + J', 'cancel', { btn: 'hp', sup: true })] },
+  { name: '6. Kick Parry', cpu: { parry: true }, tail: 'counter kick', ax: 430, bx: 500, dummy: { at: 2, inp: { btn: 'lp' } }, /* (their jab lands inside the parry: frames 5 to 14) */
+    note: '← ← + I parries their jab and answers with a kick that knocks them away.',
+    steps: [S('← ← + I', 'start', { btn: 'hp', bb: true })] },
+  { name: '6. Push Parry', cpu: { parry: true }, tail: 'shove', ax: 430, bx: 500, dummy: { at: 2, inp: { btn: 'lp' } },
+    note: '← ← + U parries their jab and shoves them far away, unhurt: back to neutral, at a distance.',
+    steps: [S('← ← + U', 'start', { btn: 'lp', bb: true })] },
   { name: '7. Max combo: lift, lift, bounce', cpu: { min: 0, max: 95 }, tail: 'Qi Geyser Palm, Hammer Spike, palm, hammer fist, thunder palms', ax: 400, bx: 480,
     note: 'The most a combo allows: ↓ + I lifts them (1), U, I: Qi Geyser Palm lifts them again (2), → → + I: Hammer Spike bounces them (3), U, U, K.',
-    steps: [S('↓ + I', 'start', { btn: 'hp', down: true }), S('U', 'air', { btn: 'lp' }), S('I', 'chain', { btn: 'hp' }), S('→ → + I', 'cancel', { btn: 'hp', ff: true }), S('U', 'air', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
+    steps: [S('↓ + I', 'start', { btn: 'hp', down: true }), S('U', 'air', { btn: 'lp' }), S('I', 'chain', { btn: 'hp' }), S('→ → + U', 'cancel', { btn: 'lp', ff: true }), S('U', 'air', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
   { name: '8. Max combo: lift, bounce, lift', cpu: { min: 0, max: 95 }, tail: 'Hammer Spike, palm, Qi Geyser Palm, Shoulder Rocket', ax: 400, bx: 480,
     note: '↓ + I lifts them (1), U, → → + I: Hammer Spike bounces them (2), U, I: Qi Geyser Palm lifts them (3), → → + K: Shoulder Rocket.',
-    steps: [S('↓ + I', 'start', { btn: 'hp', down: true }), S('U', 'air', { btn: 'lp' }), S('→ → + I', 'cancel', { btn: 'hp', ff: true }), S('U', 'air', { btn: 'lp' }), S('I', 'chain', { btn: 'hp' }), S('→ → + K', 'cancel', { btn: 'hk', ff: true })] },
+    steps: [S('↓ + I', 'start', { btn: 'hp', down: true }), S('U', 'air', { btn: 'lp' }), S('→ → + U', 'cancel', { btn: 'lp', ff: true }), S('U', 'air', { btn: 'lp' }), S('I', 'chain', { btn: 'hp' }), S('→ → + K', 'cancel', { btn: 'hk', ff: true })] },
   { name: 'Tetsu string: five hits', tail: 'qi straight, body blow, elbow smash, twin qi palms', ax: 400, bx: 480,
     note: 'U, U, U, U, then K: Tetsu’s own five-hit string (qi straight, body blow, elbow smash, twin qi palms).',
     steps: [S('U', 'start', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
@@ -151,29 +150,23 @@ const TETSU_DEMOS = [
   { name: 'Tetsu mid-air: jumping', tail: 'air palm, air elbow, hundred fists, falling mountain', ax: 400, bx: 480,
     note: 'Launch with ↓ + I, jump after them (W), then U, U, I, K in the air (air palm, air elbow, hundred fists, falling mountain).',
     steps: [S('↓ + I', 'start', { btn: 'hp', down: true }), S('W', 'jump', { up: true }), S('U', 'airHit', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('I', 'chain', { btn: 'hp' }), S('K', 'chain', { btn: 'hk' })] },
-  { name: 'Tetsu charge: Charged Qi Palm', tail: 'charged qi palm, twin palm lift, hammer fist, thunder palms', ax: 390, bx: 480,
-    note: 'Hold I for half a second (qi gathers into him), then let go: Charged Qi Palm, a rising palm full of qi lifts them. Then the juggle.',
-    steps: [S('I', 'start', { btn: 'hp', holdFor: 40 }), S('U', 'air', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })] },
-  { name: 'Tetsu charge: Mountain Qi Blast', tail: '', ax: 330, bx: 520,
-    note: 'Hold I for over a second: Mountain Qi Blast, a blast of qi from both palms sends them across the stage.',
-    steps: [S('I', 'start', { btn: 'hp', holdFor: 80 })] },
   // punishes: their technique (played by a mirror) is countered during its tell, or guarded and then punished — or it's safe
-  { name: "Punish U, U, U, U, K: Twin Qi Palms", vs: 'self', tail: '', note: '', ax: 440, bx: 520, dummy: { at: 4, steps: [S('U', 'start', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })], guardAfter: true },
+  { name: "Guard U, U, U, U, K: Twin Qi Palms (safe)", vs: 'self', tail: '', note: '', ax: 440, bx: 520, dummy: { at: 4, steps: [S('U', 'start', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('U', 'chain', { btn: 'lp' }), S('K', 'chain', { btn: 'hk' })], guardAfter: true }, /* (guarded, it shoves them far back: nothing of his reaches in time) */
+    steps: [S('Guard ←', 'guard', {})] },
+  { name: "Punish → → + U: Meteor Fist", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"ff": true, "btn": "lp"}, "guardAfter": true}, /* (it shoves the guard far back: the Shoulder Charge closes the gap) */
+    steps: [S('Guard ←', 'guard', {}), S("→ → + K", "punish", {"btn": "hk", "ff": true})] },
+  { name: "Punish → → + I: Crouching Upper", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"ff": true, "btn": "hp"}, "guardAfter": true},
     steps: [S('Guard ←', 'guard', {}), S("↓ + I", "punish", {"btn": "hp", "down": true, "reach": 100}), S("U", "air", {"btn": "lp"}), S("U", "chain", {"btn": "lp"}), S("K", "chain", {"btn": "hk"})] },
-  { name: "Punish → → + U: Qi Blast (armor)", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"ff": true, "btn": "lp"}, "guardAfter": true},
-    steps: [S('Guard ←', 'guard', {}), S("U", "punish", {"btn": "lp", "reach": 100}), S("U", "chain", {"btn": "lp"})] },
-  { name: "Punish → → + I: Meteor Fist (armor)", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"ff": true, "btn": "hp"}, "guardAfter": true},
-    steps: [S('Guard ←', 'guard', {}), S("↓ + I", "punish", {"btn": "hp", "down": true, "reach": 100}), S("U", "air", {"btn": "lp"}), S("U", "chain", {"btn": "lp"}), S("K", "chain", {"btn": "hk"})] },
-  { name: "Punish → → + J: Qi Sweep (armor)", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"ff": true, "btn": "lk"}, "guardAfter": true},
+  { name: "Punish → → + J: Qi Sweep", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"ff": true, "btn": "lk"}, "guardAfter": true},
     steps: [S('Guard ←', 'guard', {}), S("↓ + I", "punish", {"btn": "hp", "down": true, "reach": 100}), S("U", "air", {"btn": "lp"}), S("U", "chain", {"btn": "lp"}), S("K", "chain", {"btn": "hk"})] },
   { name: "Punish → → + K: Shoulder Charge (armor)", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"ff": true, "btn": "hk"}, "guardAfter": true},
     steps: [S('Guard ←', 'guard', {}), S("U", "punish", {"btn": "lp", "reach": 100}), S("U", "chain", {"btn": "lp"})] },
-  { name: "Guard ← ← + U: Qi Orb (safe)", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"bb": true, "btn": "lp"}, "guardAfter": true},
-    steps: [S('Guard ←', 'guard', {})] },
-  { name: "Punish ← ← + I: Qi Parry", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"bb": true, "btn": "hp"}, "guardAfter": true},
+  { name: "Punish ← ← + U: Push Parry", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"bb": true, "btn": "lp"}, "guardAfter": true}, /* (a parry that catches nothing: long to recover) */
     steps: [S('Guard ←', 'guard', {}), S("U", "punish", {"btn": "lp", "reach": 100})] },
-  { name: "Punish ← ← + J: Earth Stomp (armor)", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"bb": true, "btn": "lk"}, "guardAfter": true},
-    steps: [S('Guard ←', 'guard', {}), S("↓ + I", "punish", {"btn": "hp", "down": true, "reach": 100}), S("U", "air", {"btn": "lp"}), S("U", "chain", {"btn": "lp"}), S("K", "chain", {"btn": "hk"})] },
+  { name: "Punish ← ← + I: Kick Parry", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"bb": true, "btn": "hp"}, "guardAfter": true},
+    steps: [S('Guard ←', 'guard', {}), S("U", "punish", {"btn": "lp", "reach": 100})] },
+  { name: "Guard ← ← + J: Earth Stomp (safe)", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"bb": true, "btn": "lk"}, "guardAfter": true},
+    steps: [S('Guard ←', 'guard', {})] },
   { name: "Punish ← ← + K: Cyclone Lariat (armor)", vs: 'self', tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"bb": true, "btn": "hk"}, "guardAfter": true},
     steps: [S('Guard ←', 'guard', {}), S("↓ + I", "punish", {"btn": "hp", "down": true, "reach": 100}), S("U", "air", {"btn": "lp"}), S("U", "chain", {"btn": "lp"}), S("K", "chain", {"btn": "hk"})] },
   { name: "Guard U + J: Qi Cannon (safe)", vs: 'self', bMeter: 100, tail: '', note: '', ax: 445, bx: 515, dummy: {"at": 4, "inp": {"sup": true, "btn": "hp"}, "guardAfter": true},
@@ -404,7 +397,7 @@ const JA_DEMO = {
   'Angel: triple juggle': { n: '天使：三段打ち上げ', tail: '', note: '天使憑依なら3回浮かせられる：↓＋I、U、U、Iで再び浮かせ、もう一度U、U、I、そしてK。' },
   'Angel: long air combo': { n: '天使：長い空中コンボ', tail: '', note: '空中では天使の連撃が長い（U、U、U、U）。ヒット中にWで翼の二段ジャンプ：打ち上げ、ジャンプ、U、U、U、U、W、U、U、K。' },
   "Punish U, U, U, U, K: Shadow Crescent": { n: "反撃 U、U、U、U、K：Shadow Crescent", tail: '', note: '' },
-  "Punish U, U, U, U, K: Twin Qi Palms": { n: "反撃 U、U、U、U、K：Twin Qi Palms", tail: '', note: '' },
+  "Guard U, U, U, U, K: Twin Qi Palms (safe)": { n: "ガード U、U、U、U、K：双気掌（安全）", tail: '', note: '' },
   "Punish U, U, U, U, K: Great Sweep": { n: "反撃 U、U、U、U、K：Great Sweep", tail: '', note: '' },
   "Punish U, U, U, U, K: Starburst": { n: "反撃 U、U、U、U、K：Starburst", tail: '', note: '' },
   "Punish U, U, U, U, K: Holy Thrust": { n: "反撃 U、U、U、U、K：Holy Thrust", tail: '', note: '' },
@@ -423,13 +416,13 @@ const JA_DEMO = {
   "Punish ← ← + J: Vanish Slide": { n: "反撃 ←←+J：Vanish Slide", tail: '', note: '' },
   "Punish ← ← + K: Vanish Drop Kick": { n: "反撃 ←←+K：Vanish Drop Kick", tail: '', note: '' },
   "Guard U + J: Shadow Army (safe)": { n: "ガード U+J：Shadow Army（反撃不可）", tail: '', note: '' },
-  "Punish → → + U: Qi Blast (armor)": { n: "反撃 →→+U：Qi Blast（アーマー）", tail: '', note: '' },
-  "Punish → → + I: Meteor Fist (armor)": { n: "反撃 →→+I：Meteor Fist（アーマー）", tail: '', note: '' },
-  "Punish → → + J: Qi Sweep (armor)": { n: "反撃 →→+J：Qi Sweep（アーマー）", tail: '', note: '' },
+  "Punish → → + U: Meteor Fist": { n: "反撃 →→+U：流星拳", tail: '', note: '' },
+  "Punish → → + I: Crouching Upper": { n: "反撃 →→+I：潜り昇拳", tail: '', note: '' },
+  "Punish → → + J: Qi Sweep": { n: "反撃 →→+J：Qi Sweep", tail: '', note: '' },
   "Punish → → + K: Shoulder Charge (armor)": { n: "反撃 →→+K：Shoulder Charge（アーマー）", tail: '', note: '' },
-  "Guard ← ← + U: Qi Orb (safe)": { n: "ガード ←←+U：Qi Orb（反撃不可）", tail: '', note: '' },
-  "Punish ← ← + I: Qi Parry": { n: "反撃 ←←+I：Qi Parry", tail: '', note: '' },
-  "Punish ← ← + J: Earth Stomp (armor)": { n: "反撃 ←←+J：Earth Stomp（アーマー）", tail: '', note: '' },
+  "Punish ← ← + U: Push Parry": { n: "反撃 ←←+U：気の押し返し（空振り）", tail: '', note: '' },
+  "Punish ← ← + I: Kick Parry": { n: "反撃 ←←+I：蹴り返し（空振り）", tail: '', note: '' },
+  "Guard ← ← + J: Earth Stomp (safe)": { n: "ガード ←←+J：大地踏み（安全）", tail: '', note: '' },
   "Punish ← ← + K: Cyclone Lariat (armor)": { n: "反撃 ←←+K：Cyclone Lariat（アーマー）", tail: '', note: '' },
   "Guard U + J: Qi Cannon (safe)": { n: "ガード U+J：Qi Cannon（反撃不可）", tail: '', note: '' },
   "Guard → → + U: Extending Staff (safe)": { n: "ガード →→+U：Extending Staff（反撃不可）", tail: '', note: '' },
@@ -520,8 +513,6 @@ const JA_DEMO = {
   "Guard U + J: Deadline Rush (safe)": { n: "ガード U+J：Deadline Rush（反撃不可）", tail: '', note: '' },
   'Kuro: Full Moon Tempest': { n: 'クロ：満月の嵐', tail: '', note: '←→＋I：満月の嵐。背の高いゆっくりした三日月で、ジャンプでかわせず、しゃがみガードにも当たる。' },
   'Kuro: Moon Tempest': { n: 'クロ：月の嵐', tail: '', note: '←→＋U：月の嵐。影の三日月が床を走る（中段：ジャンプでかわせる）。ダウンを奪う。' },
-  'Tetsu charge: Charged Qi Palm': { n: 'テツの溜め技：溜め気掌', tail: '', note: 'Iを0.5秒押し続けて（気が集まる）離す：溜め気掌。気を込めた掌で浮かせる。空中追撃へ。' },
-  'Tetsu charge: Mountain Qi Blast': { n: 'テツの溜め技：山の気功砲', tail: '', note: 'Iを1秒以上押し続ける：山の気功砲。両掌から気の奔流、画面の端まで吹き飛ばす。' },
   'Mei charge: Rising Cudgel': { n: 'メイの溜め技：昇り棍', tail: '', note: 'Iを0.5秒押し続けて（気が集まる）離す：昇り棍。棍を振り上げて浮かせる。空中追撃へ。' },
   'Mei charge: Typhoon Swing': { n: 'メイの溜め技：台風振り', tail: '', note: 'Iを1秒以上押し続ける：台風振り。回転する大振りで吹き飛ばす。' },
   'Lyra charge: Rising Glyph': { n: 'ライラの溜め技：昇る紋', tail: '', note: 'Iを0.5秒押し続けて（気が集まる）離す：昇る紋。どこにいても足元の紋で浮かせる。空中追撃へ。' },
@@ -632,12 +623,12 @@ const JA_DEMO = {
   '2. Qi Sweep: two juggles': { n: '2. 気の掬い：2回打ち上げ', tail: '鉄槌落とし、双掌、鉄槌、雷掌', note: '掬い上げ、双掌、→→+Iの鉄槌落としで再バウンド。双掌、鉄槌、雷掌。' },
   '3. Cyclone Lariat: one juggle': { n: '3. 旋風ラリアット：1回打ち上げ', tail: '双掌、膝、双龍掌', note: '回転3連撃で打ち上げ、双掌・膝蹴り・双龍掌。' },
   '3. Cyclone Lariat: two juggles': { n: '3. 旋風ラリアット：2回打ち上げ', tail: '双掌、気柱、双掌、鉄槌、雷掌', note: 'ラリアットで打ち上げ、双掌、→→+Uの気柱で再び打ち上げ。双掌、鉄槌、雷掌。' },
-  '4. Meteor Fist: one juggle': { n: '4. 流星拳：1回打ち上げ', tail: '空中旋風、空中フック、膝、双掌', note: '上からの拳でバウンド。双掌のあと←←+Kで一緒に回転上昇し、そのまま空中連続技。' },
-  '4. Meteor Fist: two juggles': { n: '4. 流星拳：2回打ち上げ', tail: '空中旋風、空中フック、流星膝、双掌', note: '空中旋風、空中フック、↓+Kの流星膝で再バウンド、双掌。' },
+  '4. Meteor Fist: one juggle': { n: '4. 流星拳：1回打ち上げ', tail: '空中旋風、空中フック、膝、双掌', note: '流星拳が相手の水泡の出だしをカウンターで捉えて打ち上げる。双掌のあと←←+Kで一緒に回転上昇し、そのまま空中連続技。' },
+  '4. Meteor Fist: two juggles': { n: '4. 流星拳：2回打ち上げ', tail: '空中旋風、空中フック、流星膝、双掌', note: 'カウンターの流星拳で打ち上げ。空中旋風、空中フック、↓+Kの流星膝で再バウンド、双掌。' },
   '5. Counter Axe: one juggle': { n: '5. カウンター踵落とし：1回打ち上げ', tail: '双掌、膝、双龍掌', note: '踵落としが水泡の出がかりを潰して打ち上げ。双掌・膝蹴り・双龍掌。' },
   '5. Counter Axe: two juggles': { n: '5. カウンター踵落とし：2回打ち上げ', tail: '気の螺旋、空中フック、流星膝、双掌', note: '気の玉が相手を囲み、ジャンプして空中フック、流星膝で再バウンド、双掌。' },
-  '6. Qi Parry: one juggle': { n: '6. 気の受け流し：1回打ち上げ', tail: '双掌、膝、双龍掌', note: 'クナイ斬りを受け流し、掌底で打ち上げ。双掌・膝蹴り・双龍掌。' },
-  '6. Qi Parry: two juggles': { n: '6. 気の受け流し：2回打ち上げ', tail: '膝、昇り龍拳、大気功砲', note: '受け流し、双掌、膝、昇り龍拳で再び打ち上げ、P+Kで大気功砲。' },
+  '6. Kick Parry': { n: '6. 蹴り返し', tail: '反撃の蹴り', note: '←←+Iで相手のジャブを受け流し、蹴りで吹き飛ばす。' },
+  '6. Push Parry': { n: '6. 気の押し返し', tail: '押し返し', note: '←←+Uで相手のジャブを受け流し、ダメージなしで大きく押し返す（離れて仕切り直し）。' },
   '1. Rising Staff: one juggle': { n: '1. 昇り棍：1回打ち上げ', tail: '棍突き上げ、振り上げ、旋回', note: '至近距離で↓+I、棍を振り上げて打ち上げ。突き・振り・旋回。' },
   '1. Rising Staff: two juggles': { n: '1. 昇り棍：2回打ち上げ', tail: '飛翔棍、旋回', note: '突きのあとIの飛翔棍で再び打ち上げ、落ちてきたところに旋回。' },
   '2. Sweeping Staff: one juggle': { n: '2. 足払い棍：1回打ち上げ', tail: '棍突き上げ、振り上げ、雲棍落とし', note: '低い回転払いで浮かせ、突き・振り上げ、雲棍落としで締める。' },
@@ -1049,16 +1040,18 @@ function comboStep(f, o, steps, st, out) {
   const free = (f.state === 'stand' || f.state === 'crouch') && f.atkCD <= 0;
   if (s.when === 'guard') { // guard their technique, then go straight on to the punish the moment he's free again
     if (f.state === 'blockstun') st.blocked = true;
-    const oAtk = o.state === 'attack' && o.move, rec = oAtk && o.move.startup < 900 && o.mf > o.move.startup + (o.move.active || 0) + 1;
+    const oAtk = o.state === 'attack' && o.move, rec = oAtk && o.move.startup < 900 && (o.mf > o.move.startup + (o.move.active || 0) + 1 || (o.hitConnected && !o.move.proj && (o.hitCount || 0) >= (o.move.multi || 1))); // (its active frames are over, or its blow is spent on the guard: it can't hit again)
     const shots = projs.some(p => p.owner === o && (p.dmg || (p.h && p.h.dmg)) && Math.abs(p.x - f.x) < 220 && (!p.vx || Math.sign(p.vx) === Math.sign(f.x - p.x))); // (their projectile still coming at him; one flying away doesn't matter)
-    const done = free && ((rec && !shots) || (st.blocked && !oAtk && !shots) || (!oAtk && !shots && (game.demoState.t || 0) > 60));
+    const freeG = free || (st.blocked && f.state === 'guard' && f.atkCD <= 0); // (out of a guard that stopped a hit: an attack comes out at once)
+    const done = freeG && ((rec && !shots) || (st.blocked && !oAtk && !shots) || (!oAtk && !shots && (game.demoState.t || 0) > 60));
     if (!done) { if (threatened(f, o) || f.state === 'blockstun' || projs.some(p => p.owner === o)) { out.h = -(golemGuardDir(f, o) || fwd); if (isLowAtk(o)) out.down = true; } return out; } // (against Hohen's golem: guard away from it)
     st.i++; return comboStep(f, o, steps, st, out);
   }
   if (s.when === 'punish' && free && s.inp.reach && dist > s.inp.reach) { out.dashTap = 1; return out; } // too far: dash in first
   const canCancel = f.state === 'attack' && f.move && f.move.normal && f.move.str === 0 && f.hitConnected && f.mf >= f.move.startup + f.move.active;
   let go = false;
-  if (s.when === 'start' || s.when === 'punish') go = free;
+  if (s.when === 'start') go = free;
+  else if (s.when === 'punish') go = free || (f.state === 'guard' && f.atkCD <= 0); // (straight out of the guard, on the first frame he can act)
   else if (s.when === 'djCancel') go = !f.dj && ((f.state === 'attack' && f.move && f.move.air && f.hitConnected && !f.chainQ && f.mf > f.move.startup) || (f.state === 'jump' && f.y > 20 && f.vy < 8)); // jump again on the wings (out of a landed air attack, or right after it) // the angel: jump again out of a landed air attack
   else if (s.when === 'otg') go = free && o.state === 'down' && o.st > 4 && !o.otgUsed; // they're lying on the floor: a low hit still reaches them once
   else if (s.when === 'airAny') go = f.state === 'jump' && !f.airAttacked && f.vy < 3; // any attack in the air, near the top of the jump

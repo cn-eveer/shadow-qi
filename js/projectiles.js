@@ -42,6 +42,7 @@ function spawnDiveClone(f, overhead) { // the Shadow Army finisher drops from ab
 const JUGGLE_SP = { flame: 'jFire', fireballs: 'jRain', cloneStrike: 'jClone', swordSlash: 'jIai', vanishDrop: 'jVanishHeel',
   qiBlast: 'jGeyser', meteorFist: 'jHammer', shoulder: 'jShoulder', qiOrb: 'jSpiral', tornado: 'jTornado' };
 Object.assign(JUGGLE_SP, { extendStaff: 'jExtend', vaultSmash: 'jVault', cloudLeap: 'jCloud', windmill: 'jWindmill', poleKick: 'jPoleKick' });
+JUGGLE_SP.duckUpper = 'jGeyser'; JUGGLE_SP.pushParry = 'jSpiral'; // (Tetsu in a juggle: → → + I the Qi Geyser, ← ← + U the Qi Spiral; → → + U, the Meteor Fist, gives the Hammer Spike)
 Object.assign(JUGGLE_SP, { phantomFist: 'jPhantom', crushFist: 'jCrush', psyLift: 'jLift', forceWave: 'jWave' });
 const RISING_IDS = new Set(Object.values(JUGGLE_SP));
 const NO_CLASH = new Set(['pillar', 'lift', 'crush', 'dish', 'crescent', 'plate', 'water', 'bubble', 'bullet', 'dyna', 'card', 'feather', 'haloP', 'hellfire']);
@@ -116,7 +117,7 @@ function spawnQiOrb(f) { // a slow orb that hits three times
   sfx('qi');
 }
 function spawnWave(f) { // a shockwave along the floor: hits low, even someone lying down
-  projs.push({ id: ++serial, type: 'wave', owner: f, x: f.x + f.facing * 50, y: 14, vx: f.facing * 7, vy: 0, r: 16, w: 22,
+  projs.push({ id: ++serial, type: 'wave', owner: f, x: f.x + f.facing * 50, y: 14, vx: f.facing * 9.5, vy: 0, r: 16, w: 22, /* (fast: across mid range quickly) */
     dmg: 40, stun: 18, bstun: 10, push: 3, kd: true, kdVx: 2, kdVy: 4, low: true, hitstop: 7, life: 80, chip: true, dir: f.facing });
 }
 function spawnSpiral(f, o, i) { // qi orbs rising up through a juggled opponent
@@ -586,6 +587,7 @@ function chainMove(id, f) {
   }
   const st = STRINGS[f.ch.lookKey || f.key], def = st && st[id];
   const mv = def ? buildString(def, f) : chainMoveBase(id, f);
+  if (mv && def) mv.strKey = id; // (which string hit it is: a fighter's frame table can set its frames)
   const look = LOOKS[f.ch.lookKey || f.key]; if (!def && mv && look && look[id]) Object.assign(mv, look[id]); // (a possessed salaryman fights with the angel's or the devil's moves)
   if (mv && f.ch.possess === 'angel' && id === 'aElbow' && mv.chain) mv.chain = { ...mv.chain, lp: 'aWing' }; // (the angel: U goes on in the air)
   if (mv && (id === 'jSpin' || id === 'jRise' || id === 'jUpper') && Array.isArray(mv.hitbox)) { // juggle lifts and finishers reach anyone still in the air in front of him — low after a bounce, or pushed a little away

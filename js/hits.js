@@ -38,7 +38,7 @@ const TECH_TIER = {
   // Kuro
   moonTempest: 'fast', fullMoon: 'fast', shadowCharge: 'heavy', swordSlash: 'heavy', cloneStrike: 'mod', teleKick: 'mod', flame: 'mod', fireballs: 'mod', vanishSlide: 'heavy', vanishDrop: 'mod',
   // Tetsu (Rising Fist: his uppercut comes out without a tell, but it's punished hard if guarded)
-  qiBlast: 'mod', meteorFist: 'heavy', qiSweep: 'heavy', shoulder: 'mod', qiOrb: 'fast', qiParry: 'fast', stomp: 'heavy', tornado: 'heavy', risingFist: 'heavy',
+  qiBlast: 'mod', tripleQi: 'mod', pushParry: 'fast', kickParry: 'fast', parryShove: 'fast', parryKick: 'fast', duckUpper: 'mod', meteorFist: 'heavy', qiSweep: 'heavy', shoulder: 'mod', qiOrb: 'fast', qiParry: 'fast', stomp: 'heavy', tornado: 'heavy', risingFist: 'heavy',
   // Mei
   extendStaff: 'fast', vaultSmash: 'heavy', sweepStaff: 'mod', poleKick: 'mod', windmill: 'mod', cloudLeap: 'heavy', somersault: 'heavy', feint: 'fast',
   // Lyra
@@ -57,7 +57,7 @@ const TECH_TIER = {
   sdLunge: 'mod', sdMaul: 'mod', sdClaw: 'mod', sdUpper: 'heavy', sdBeckon: 'fast', sdChain: 'mod', sdDrain: 'heavy',
 };
 const NO_TELL = new Set(['risingFist', 'smBow', 'saRayFly', 'saDive', 'smAngel', 'smDevil']); // (these have their own long lead-in)
-function hasArmor(f) { const mv = f.move; return !!mv && ((mv.armorDive && f.mf >= 24) || (f.key === 'kappa' && (mv.id === 'kpPounce' || (mv.dashLeft > 0))) || (f.key === 'brawler' && !mv.normal && !mv.super && techTier(mv) !== 'fast') || mv.id === 'plRampart' || mv.stoneSkin || (f.ch.fused && !mv.normal && !mv.super && techTier(mv) !== 'fast')); } // (Hohen's Bedrock Stride: stone skin; in the golem armour, his techniques have armour like Tetsu's)
+function hasArmor(f) { const mv = f.move; return !!mv && ((mv.armorDive && f.mf >= 24) || (f.key === 'kappa' && (mv.id === 'kpPounce' || (mv.dashLeft > 0))) || (f.key === 'brawler' && mv.tArmor) || mv.id === 'plRampart' || mv.stoneSkin || (f.ch.fused && !mv.normal && !mv.super && techTier(mv) !== 'fast')); } // (Hohen's Bedrock Stride: stone skin; in the golem armour, his techniques have armour like Tetsu's)
 function techTier(mv) { return TECH_TIER[mv.id] || (mv.parry ? 'fast' : mv.launch ? 'heavy' : 'mod'); }
 const TELL = { mod: 14, heavy: 20 }; // frames of the tell before the wind-up: long enough that a jab pressed after it starts still lands first
 const U_REACH = {};
@@ -161,6 +161,7 @@ const autoGuardFor = (f, toward) => game.autoGuard && !game.online && f.ctrl ins
 // they get back to guard 4 frames later (GUARD_BACK_CH). Fast follow-ups (U, U) stay a combo; slower ones (U, I — a medium) can be guarded
 const GUARD_BACK = 10, GUARD_BACK_CH = 14;
 const COUNTER_STUN = 4; // a counter hit (caught as they started something) stuns 4 frames longer: −4 for them, +4 for whoever countered
+const counterStunOf = a => (a && a.ch.counterStun) || COUNTER_STUN; // (a fighter's own: Tetsu's counters stun 8 longer)
 const GUARD_STALL = 6;
 // (applyHit, below, reports each first hit or guard to the training frame data: fdContact) // frames an attacker loses when his attack is guarded (shown as a recoil)
 const JUG_HOLD_MAX = 150; // frames (2.5 s) U, U... can keep them up after the last lift or bounce: then only a new lift or the finisher still lands
@@ -224,8 +225,10 @@ function applyHit(a, d, h, side, hb, hu) {
   // but they don't stop him: the technique keeps going (no counter). They can only be punished afterwards.
   const dblArmor = d.ch.possess === 'double' && !h.grab && !h.superHit && !['knock', 'down', 'getup'].includes(d.state); // double possession: light hits can't stop him
   const kDash = d.key === 'kappa' && d.state === 'dash' && !h.grab && !h.superHit; // the kappa's dash has armor: hits land, but don't stop him
-  if (dblArmor || kDash || (d.state === 'attack' && d.move && !h.grab && !h.superHit && hasArmor(d) && (d.pre > 0 || d.move.startup >= 900 || d.mf <= d.move.startup + (d.move.active || 0)))) {
-    const dmg = Math.max(1, Math.round(h.dmg * 0.85));
+  const strong = !!(h.heavy || h.tech || h.launch || h.kd || (h.str || 0) >= 1); // (a heavy blow, a technique, a launcher, a knockdown)
+  const supArmor = d.state === 'attack' && d.move && d.move.supArmor && d.mf <= d.move.startup && !h.grab && !h.superHit && !strong && Math.abs(a.x - d.x) < 220; // Tetsu's and Kuro's supers, before they come out: light hits from up close don't stop it (strong ones and anything from further away do)
+  if (supArmor || dblArmor || kDash || (d.state === 'attack' && d.move && !h.grab && !h.superHit && hasArmor(d) && !(d.key === 'brawler' && strong) && (d.pre > 0 || d.move.startup >= 900 || d.mf <= d.move.startup + (d.move.active || 0)))) {
+    const dmg = Math.max(1, Math.round(h.dmg * (supArmor ? 1 : 0.85))); // (the super's armor takes them in full: one that would finish him still does)
     if (d.hp - dmg > 0) {
       d.hp -= dmg; d.flash = 4; d.healT = 0;
       sparks(cx, cy, 'hit'); sfx('hitL'); if (!d.armorT || game.frame - d.armorT > 20) { d.armorT = game.frame; popText(d.x, GROUND - d.y - 175, L('ARMOR', 'アーマー'), '125,235,255'); }
@@ -395,7 +398,7 @@ function applyHit(a, d, h, side, hb, hu) {
     setState(d, 'knock'); d.juggle = air; d.jug = air ? (wasKnock ? Math.max(d.jug || 0, 2) : 2) : 0; // (still flying from this combo: the juggle count carries on, it doesn't start over)
     d.vy = h.kd ? (h.kdVy || 8.5) : 6.5; d.vx = side * (h.kd ? (h.kdVx || 4) : 1.4); d.y = Math.max(d.y, 1); // (hit out of the air: a smaller push unless it knocks them away)
   }
-  else { if (d.repLabel === h.label && d.stuckT > 0 && !(h.superHit && a.key === 'alchemist')) d.repN = (d.repN || 0) + 1; else { d.repLabel = h.label; d.repN = 0; } setState(d, 'hitstun'); d.stun = Math.max(5, Math.round(((h.stun || 16) - Math.max(0, d.combo - STUN_DECAY_AFTER) * 3) * Math.pow(0.6, d.repN))) + (counter ? COUNTER_STUN : 0); /* (a counter hit: longer — COUNTER_STUN) (the same attack again and again in one combo — against a wall, say — stuns less each time: no repeat loops) */ d.crouchHit = low; /* (hit-stun decay: past the first few hits each one stuns less, so a string can't loop forever) */ d.vx = side * (h.push || 1) * 3 * (h.rushTag ? 1 : a.ch.pushMul || 1) * (d.ch.sturdy ? 0.5 : 1); } // knocked back by the hit (further by Mei and Lyra, except in Mei's rush strings)
+  else { if (d.repLabel === h.label && d.stuckT > 0 && !(h.superHit && a.key === 'alchemist')) d.repN = (d.repN || 0) + 1; else { d.repLabel = h.label; d.repN = 0; } setState(d, 'hitstun'); d.stun = Math.max(5, Math.round(((h.stun || 16) - Math.max(0, d.combo - STUN_DECAY_AFTER) * 3) * Math.pow(0.6, d.repN))) + (counter ? counterStunOf(a) : 0); /* (a counter hit: longer — COUNTER_STUN) (the same attack again and again in one combo — against a wall, say — stuns less each time: no repeat loops) */ d.crouchHit = low; /* (hit-stun decay: past the first few hits each one stuns less, so a string can't loop forever) */ d.vx = side * (h.push || 1) * 3 * (h.rushTag ? 1 : a.ch.pushMul || 1) * (d.ch.sturdy ? 0.5 : 1); } // knocked back by the hit (further by Mei and Lyra, except in Mei's rush strings)
   if (!h.proj) wallPush(a, d, side); // pinned at the wall: the attacker is pushed back the same way instead
   // Lightning Ball / Fire Breath: once the hit wears off they're left stunned (once until they're back on their feet)
   if (d.state === 'hitstun' && h.stunT && !d.stunUsed && d.hp > 0) { d.pendingStun = Math.max(d.pendingStun || 0, h.stunT); d.stunKind = h.stunKind; }
@@ -458,7 +461,7 @@ function checkHits(a, o) {
     stun: mv.stun, bstun: mv.bstun, gbstun: 45,
     push: (multi > 1 && last && mv.lastPush) ? mv.lastPush : mv.push,
     kd: multi > 1 ? (last && mv.kd) : mv.kd,
-    type: mv.type, low: !!mv.low, overhead: !!mv.overhead, hitstop: mv.hitstop, chip: mv.chip, str: mv.str != null ? mv.str : a.str, proj: false, // (low: must be guarded crouching)
+    type: mv.type, low: !!mv.low, overhead: !!mv.overhead, hitstop: mv.hitstop, chip: mv.chip, bpush: mv.guardPush, /* (a technique's own push on a guard: guardPush) */ str: mv.str != null ? mv.str : a.str, proj: false, // (low: must be guarded crouching)
     gdrain: mv.gdrain != null ? mv.gdrain : (multi > 1 ? 2 : 8), rushTag: !!mv.rushTag, tech: isTech(mv), label: mv.label || '', slash: !!mv.slash, iai: !!mv.iai, heavy: !!(mv.normal && mv.str === 1), kdVx: mv.kdVx, kdVy: mv.kdVy, noGrace: !!mv.noGrace, launch: multi > 1 ? (last && !!mv.launch) : !!mv.launch, launchVy: mv.launchVy, bounce: !!mv.bounce, cpLaunch: !!mv.cpLaunch, jugVy: (multi > 1 && last && mv.lastJugVy) ? mv.lastJugVy : mv.jugVy, fixedLift: !!mv.fixedLift, meteor: !!mv.meteor, stunT: mv.stunT, stunKind: mv.stunKind, neutralLaunch: multi > 1 ? (last && !!mv.neutralLaunch) : !!mv.neutralLaunch, relaunch: !!mv.relaunch, slashMark: !!mv.slashMark, brand: mv.brand || 0, grab: !!mv.grab, fullDmg: !!mv.fullDmg,
   };
   if (mv.normal && !mv.air) {
@@ -482,12 +485,18 @@ function checkHits(a, o) {
 function fixAdv(a, d, h, r) {
   const mv = a.state === 'attack' && a.move; if (!mv || mv.startup >= 900) return;
   const left = mv.startup + (mv.active || 0) + mv.recovery - a.mf;
-  if (r === 'block' && mv.blockAdv != null && d.state === 'blockstun') {
+  if (r === 'block' && mv.blockAdv != null && d.state === 'blockstun' && (mv.advByStun || mv.untilLand)) { // (a move that carries him through the air: its end can't move, so the guard stun is set instead)
+    let y = a.y, vy = a.vy, n = 0; if (mv.untilLand) while (y > 0 && n < 200) { vy -= G; y += vy; n++; } // (frames until he lands)
+    const end = mv.untilLand ? n + (mv.landT || 0) : left;
+    d.stun = Math.max(1, end + mv.blockAdv + (!h.proj && !mv.guardStalled && !mv.super && !mv.untilLand ? GUARD_STALL : 0)); /* (landing: no guard stall after it) */ a.guardLagUntil = 0; a.guardLagNeed = 0; mv.lagLock = false;
+  }
+  else if (r === 'block' && mv.blockAdv != null && d.state === 'blockstun') {
     const T = d.stun - mv.blockAdv - (!h.proj && !mv.guardStalled && !mv.super ? GUARD_STALL : 0); // (a blow — not a shot — still gets the guard stall afterwards: see checkHits)
     if (T < left - mv.recovery && (!h.proj || mv.cutOnGuard)) { mv.active = Math.max(0, a.mf - mv.startup); mv.recovery = Math.max(1, T); } // (more of the blow is still to come than the opening allows: it ends here)
     else mv.recovery = Math.max(1, mv.recovery + T - left);
     a.guardLagUntil = 0; a.guardLagNeed = 0; mv.lagLock = false;
   }
-  if (r === 'hit' && mv.hitAdv != null && d.state === 'hitstun') d.stun = Math.max(1, left + mv.hitAdv - (d.ch.recoverT || 12)) + (d.wasCounter ? COUNTER_STUN : 0); // (they act once their recovery after the hit-stun is over; a counter hit adds COUNTER_STUN)
+  if (r === 'hit' && mv.cutOnHit && a.mf > mv.startup) mv.active = Math.max(0, a.mf - mv.startup); // (a long-lasting blow that has landed: it ends there, so the follow-up isn't late)
+  if (r === 'hit' && mv.hitAdv != null && d.state === 'hitstun') d.stun = Math.max(1, left + mv.hitAdv - (d.ch.recoverT || 12)) + (d.wasCounter ? counterStunOf(a) : 0); // (they act once their recovery after the hit-stun is over; a counter hit adds COUNTER_STUN)
 }
-{ const core = applyHit; applyHit = function (a, d, h, side, hb, hu) { const r = core.apply(this, arguments); if (r === 'hit' || r === 'block') fixAdv(a, d, h, r); if ((r === 'hit' || r === 'block' || r === 'armor') && a.fd) fdContact(a, r); return r; }; } // a move's own advantage; the training frame data
+{ const core = applyHit; applyHit = function (a, d, h, side, hb, hu) { const r = core.apply(this, arguments); if (r === 'hit' || r === 'block') fixAdv(a, d, h, r); if (r === 'hit' && a.ch.hitPlus && d.state === 'hitstun') d.stun += a.ch.hitPlus; /* (a fighter whose hits all leave him further ahead: Tetsu) */ if ((r === 'hit' || r === 'block' || r === 'armor') && a.fd) fdContact(a, r); return r; }; } // a move's own advantage; the training frame data

@@ -4,6 +4,20 @@
 // version.json on the server says which version is live. When the two differ, the player is asked to reload without the
 // browser's cache, or to erase the site's saved data and reload.
 const RELEASES = [ // notes: a string, or { g: 'group', items: [...] } (groups nest)
+  { v: '1.4.4', date: '2026-10-29', notes: [
+    { g: 'テツ', items: [
+      'すべての技のフレームを調整。ヒット時+4F、カウンター時+8F',
+      'コマンド変更：→→+U 流星拳、→→+I 潜り昇拳（新）、←→+U 気功弾、←→+I 三連気功弾（新）',
+      '新しい受け流し：←←+U 気の押し返し（ダメージなしで押し返す）、←←+I 蹴り返し（反撃の蹴り）',
+      '新しい連続技：U、U、U、U、↓+K（下段）、J、J、↓+K（中段）。J、J、Kは上段に',
+      'アーマーは肩当て・旋風ラリアットのみ。強い攻撃では止まる',
+      'I長押しの溜め技を削除',
+    ] },
+    { g: '超必殺技（クロ・テツ）', items: [
+      '無敵をなくし、近くからの弱い攻撃に耐えるアーマーに（ダメージは受ける。強い攻撃では止まる）',
+    ] },
+    'オンライン対戦は1.4.4同士でのみ遊べます',
+  ] },
   { v: '1.4.3', date: '2026-10-29', notes: [
     { g: 'システム', items: [
       'Spaceキーでもジャンプ。ジャンプが全キャラ25%高く',

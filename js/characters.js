@@ -26,7 +26,30 @@ const CHARS = {
   brawler: {
     name: 'TETSU', dmgMul: 0.97, title: 'Qi Brawler', nameJa: 'テツ', titleJa: '気の拳士', armor: 3, jugDmg: 1.2, scale: 1.08, walk: 3.0, back: 2.4, jumpX: 3.9,
     pDmg: 1.4, kDmg: 1.2, pReach: 1.04, kReach: 0.96, chargeRate: 0.68, auraCol: '125,235,255',
-    sp: { fP: 'qiBlast', fPH: 'meteorFist', fK: 'qiSweep', fKH: 'shoulder', bP: 'qiOrb', bPH: 'qiParry', bK: 'stomp', bKH: 'tornado', dP: 'risingFist' }, sup: 'qiCannon',
+    sp: { fP: 'meteorFist', fPH: 'duckUpper', fK: 'qiSweep', fKH: 'shoulder', bP: 'pushParry', bPH: 'kickParry', bK: 'stomp', bKH: 'tornado', dP: 'risingFist' }, sup: 'qiCannon',
+    spBF: { lp: 'qiBlast', hp: 'tripleQi' }, // ← → + U: Qi Blast, ← → + I: Triple Qi Blast
+    hitPlus: 4, counterStun: 8, // every hit leaves him 4 frames further ahead; a counter hit 8 (everyone else: 4)
+    frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
+      U: { su: 6, act: 6, rec: 9, blk: -4 }, dU: { su: 6, act: 6, rec: 9, blk: -4 }, J: { su: 6 }, dJ: { su: 10, act: 6, blk: -10 },
+      I: { su: 12, rec: 11, blk: -8, set: { cpLaunch: true, launchVy: 13 } }, // (a counter or a punish launches: a combo)
+      K: { su: 14, act: 7, rec: 22, blk: -14, set: { launchVy: 14.5 } }, // (a counter launches a little higher: the follow-up comes later after the longer recovery)
+      dK: { su: 12, act: 8, blk: -12, set: { launch: false, kd: true, kdVx: 3, kdVy: 5, cpLaunch: true, launchVy: 13 } }, // (sweeps them off their feet; a counter or a punish launches)
+      risingFist: { su: 14, act: 18, blk: -18 },
+      meteorFist: { su: 18, act: 20, blk: -18, set: { cutOnHit: true, launch: false, bounce: false, kd: true, kdVx: 16, kdVy: 9, cpLaunch: true, launchVy: 12, guardPush: 16, gdrain: 32, chip: true, hitbox: [-10,80,28,110] } }, // (a mid: the fists come down at body height) // (guarded: shoves them far back and tears at the guard)
+      duckUpper: { su: 18, act: 16, blk: -14, set: { cutOnHit: true } },
+      qiBlast: { su: 14, act: 3, rec: 3, blk: 0 }, tripleQi: { su: 16, act: 3, rec: 3, blk: 0 },
+      qiSweep: { su: 18, act: 18, blk: -21 },
+      shoulder: { su: 18, act: 12, blk: -21, set: { maxTravel: 300, tArmor: true } }, // (armor: shrugs off up to three light hits)
+      stomp: { su: 14, act: 6, rec: 3, blk: 0 },
+      tornado: { su: 18, act: 27, blk: -14, set: { maxTravel: 320, advByStun: true, tArmor: true } }, // (armor)
+      $t2: { su: 10, act: 6, rec: 14, blk: -2 }, $t3: { su: 10, act: 6, rec: 14, blk: -2 }, $t4: { su: 10, act: 6, rec: 14, blk: -2 }, // U, U / U, U, U / U, U, U, U
+      $tF: { su: 18, act: 7, rec: 24, blk: -16, set: { bpush: 16, gdrain: 30 } }, // U, U, U, U, K: guarded, it shoves them far back and tears at the guard
+      $tD: { su: 18, act: 8, rec: 24, blk: -21 }, // U, U, U, U, ↓ + K
+      $tL: { su: 14, blk: -13 }, // U, I and U, U, I (−16 measured: the launch adds 3)
+      $tl2: { su: 10 }, // J, J
+      $tlE: { su: 18, act: 7, rec: 24, blk: -16 }, // J, J, K and J, K (high)
+      $tlD: { su: 21, act: 8, rec: 24, blk: -16 }, // J, J, ↓ + K (mid)
+    },
     heavy: {
       p: { label: 'Qi Palm', startup: 10, active: 4, recovery: 19, hitbox: [20,118,106,130], wind: 'palmW', pose: 'palm', lunge: [3, 11, 5], push: 10, gdrain: 22, burst: [80, 108] },
       k: { label: 'Axe Kick', startup: 10, active: 4, recovery: 19, hitbox: [20,104,0,150], wind: 'axeW', pose: 'axe', lunge: [3, 11, 5.5], cpLaunch: true, launchVy: 13, kd: true, stomp: [56, 0],
@@ -179,14 +202,7 @@ addLook(CHARS.salary, { jp1: { label: 'Air Briefcase Drop', pose: 'sCase' }, jk1
 for (const k in CHARS) CHARS[k].key = k;
 
 // ---------- charge attacks (hold I) ----------
-makeCharged('brawler', [
-  { set: { label: 'Charged Qi Palm', dmg: 54, hitbox: [10,125,60,170], launch: true, launchVy: 13.5, pose: 'palmUp', aura: true, burst: [80, 150], recovery: 18 }, rel: 7,
-    act: (f, o, mf) => { if (mf <= f.move.startup && Math.abs(o.x - f.x) > 70) f.vx = f.facing * 6; else f.vx *= 0.6; } },
-  { set: { label: 'Mountain Qi Blast', dmg: 92, hitbox: [20,300,60,160], kd: true, kdVx: 18, kdVy: 8, push: 8, pose: 'blast', aura: true, recovery: 24, gdrain: 20 }, rel: 8,
-    act: (f, o, mf) => { f.vx *= 0.5; if (mf === f.move.startup) { sfx('qi'); game.shake = Math.max(game.shake, 6); } },
-    onFire: f => { f.move.drawFX = f => { const S = f.move.startup; if (f.mf < S - 1 || f.mf > S + 8) return; const a = 1 - Math.max(0, f.mf - S) / 9;
-      fxLighter(() => { const g = ctx.createLinearGradient(f.x, 0, f.x + f.facing * 300, 0); g.addColorStop(0, `rgba(125,235,255,${0.85 * a})`); g.addColorStop(1, 'rgba(125,235,255,0)'); ctx.fillStyle = g; ctx.fillRect(Math.min(f.x, f.x + f.facing * 300), GROUND - f.y - 150, 300, 70); }); }; } },
-]);
+// (Tetsu's I is no longer held to charge)
 makeCharged('staff', [
   { set: { label: 'Rising Cudgel', dmg: 52, hitbox: [10,175,40,225], launch: true, launchVy: 14, pose: 'staffRise', recovery: 18, trail: { cx: 20, cy: 90, r: 130, a0: -40, a1: 100, col: '255,205,110' } }, rel: 7,
     act: (f, o, mf) => { if (mf <= f.move.startup && Math.abs(o.x - f.x) > 80) f.vx = f.facing * 5; else f.vx *= 0.6; } },

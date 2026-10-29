@@ -1019,8 +1019,9 @@ function specialMoveBase(id) {
       },
       onFrame(f, o, mf) { // leap in and slam both fists down
         f.vx = 0;
-        if (mf <= 32) { const e = mf / 32; f.x = lerp(f.leap.x0, f.leap.tx, e); f.y = 140 * Math.sin(Math.PI * e); }
-        if (mf === 32) { f.y = 0; dustAt(f.x + f.facing * 30, true); cracks(f.x + f.facing * 40); parts.push({ type: 'ering', x: f.x + f.facing * 40, y: GROUND, r: 8, vr: 7, life: 14, max: 14, col: '125,235,255' }); game.shake = Math.max(game.shake, 5); sfx('land'); }
+        const L = f.key === 'brawler' ? f.move.startup + 2 : 32; // (Tetsu's lands as the blow comes out)
+        if (mf <= L) { const e = mf / L; f.x = lerp(f.leap.x0, f.leap.tx, e); f.y = 140 * Math.sin(Math.PI * e); }
+        if (mf === L) { f.y = 0; dustAt(f.x + f.facing * 30, true); cracks(f.x + f.facing * 40); parts.push({ type: 'ering', x: f.x + f.facing * 40, y: GROUND, r: 8, vr: 7, life: 14, max: 14, col: '125,235,255' }); game.shake = Math.max(game.shake, 5); sfx('land'); }
       } };
     case 'qiSweep': return { id, label: 'Qi Sweep', pre: 7, startup: 8, active: 14, recovery: 16, wind: 'scoopW', pose: 'scoop', selfMove: true, aura: true, speedFx: true,
       trail: { cx: 30, cy: 20, r: 62, a0: -75, a1: 65, col: '125,235,255' },
@@ -1029,11 +1030,19 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { if (mf > 4 && mf <= 22 && !f.hitConnected && Math.abs(o.x - f.x) > 50) { f.vx = f.facing * 11; if (mf % 2 === 0) dustAt(f.x, false); } else f.vx *= 0.6; } };
     case 'shoulder': return { id, label: 'Shoulder Charge', pre: 6, startup: 12, active: 8, recovery: 22, wind: 'crouch', pose: 'shoulder', selfMove: true, speedFx: true,
       hitbox: [10,62,40,120], dmg: 70, stun: 20, bstun: 12, push: 3, kd: true, kdVx: 10, kdVy: 6, type: 'mid', hitstop: 12, gdrain: 14,
-      onFrame(f, o, mf) { if (mf > 7 && mf <= 21 && !f.hitConnected && Math.abs(o.x - f.x) > 52) f.vx = f.facing * 11; else f.vx *= 0.6; } };
+      onFrame(f, o, mf) { if (mf > 3 && mf <= f.move.startup + f.move.active && !f.hitConnected && Math.abs(o.x - f.x) > 52) f.vx = f.facing * 13; else f.vx *= 0.6; } }; // (charges in from about a third of the screen)
     case 'qiOrb': return { id, label: 'Qi Orb', pre: 12, startup: 14, active: 2, recovery: 18, wind: 'blastW', pose: 'blast', proj: 'orb', limit: 1, aura: true,
       onFrame(f, o, mf) { if (mf === 14) spawnQiOrb(f); } };
     case 'qiParry': return { id, label: 'Qi Parry', startup: 7, active: 22, recovery: 20, wind: 'charge', pose: 'parryStance', parry: true, aura: true, fx: 'ward',
       onFrame(f, o, mf) { if (mf > 7 && mf <= 29 && mf % 3 === 0) auraParticle(f); } };
+    case 'pushParry': return { id, label: 'Push Parry', startup: 4, active: 10, recovery: 26, wind: 'charge', pose: 'parryStance', parry: true, parryInto: 'parryShove', aura: true, fx: 'ward', // ← ← + U: parries from the 5th frame; a parried blow gets a shove that sends them away (no damage)
+      onFrame(f, o, mf) { if (mf > 4 && mf <= 14 && mf % 3 === 0) auraParticle(f); } };
+    case 'kickParry': return { id, label: 'Kick Parry', startup: 4, active: 10, recovery: 32, wind: 'charge', pose: 'parryStance', parry: true, parryInto: 'parryKick', aura: true, fx: 'ward', // ← ← + I: the same, but he answers with a kick
+      onFrame(f, o, mf) { if (mf > 4 && mf <= 14 && mf % 3 === 0) auraParticle(f); } };
+    case 'parryShove': return { id, label: 'Qi Shove', startup: 2, active: 3, recovery: 14, wind: 'palmW', pose: 'blast', hitbox: null, aura: true, burst: [80, 110],
+      onStart(f, o) { const side = Math.sign(o.x - f.x) || f.facing; if (o.state !== 'ko') { setState(o, 'blockstun'); o.stun = 14; o.move = null; o.vx = side * 30; } sfx('qi'); game.shake = Math.max(game.shake, 3); } }; // (pushed far back, unhurt: back to neutral at a distance)
+    case 'parryKick': return { id, label: 'Counter Kick', startup: 4, active: 4, recovery: 18, wind: 'kickW', pose: 'midKick', hitbox: [10,115,50,135],
+      dmg: 64, stun: 20, bstun: 12, push: 6, kd: true, kdVx: 15, kdVy: 7, noGrace: true, type: 'mid', hitstop: 12, gdrain: 10 }; // (a kick to the body that knocks them away)
     case 'parryStrike': return { id, label: 'Parry Palm', startup: 4, active: 4, recovery: 16, wind: 'palmW', pose: 'palm', hitbox: [10,95,40,160], burst: [80, 108],
       dmg: 50, stun: 20, bstun: 12, push: 3, launch: true, launchVy: 13, noGrace: true, type: 'mid', hitstop: 12, gdrain: 10 };
     case 'stomp': return { id, label: 'Earth Stomp', low: true, projInvul: [0, 32], pre: 7, startup: 12, active: 2, recovery: 18, wind: 'stompW', pose: 'stompDown', proj: 'wave', limit: 1, // (low: its shockwave runs along the floor)
@@ -1043,9 +1052,10 @@ function specialMoveBase(id) {
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
       onFrame(f, o, mf) { // a small backstep, then a jumping spinning lariat forward
         if (mf <= 6) { f.vx = -f.facing * 3; f.y = 0; } else if (mf <= 8) f.vx = 0;
-        if (mf === 8) { f.tor = { x0: f.x, tx: clamp(f.x + f.facing * Math.min(230, Math.max(70, Math.abs(o.x - f.x) - 10)), WALL_L, WALL_R) }; sfx('slash'); }
-        if (mf > 8 && mf <= 32) { const e = (mf - 8) / 24; f.vx = 0; f.x = lerp(f.tor.x0, f.tor.tx, Math.sin(e * Math.PI / 2)); f.y = 85 * Math.sin(Math.PI * e); }
-        if (mf === 32) { f.y = 0; dustAt(f.x, false); }
+        const end = f.key === 'brawler' ? f.move.startup + f.move.active : 32, reach = f.key === 'brawler' ? 320 : 230; // (Tetsu's spins further and longer)
+        if (mf === 8) { f.tor = { x0: f.x, tx: clamp(f.x + f.facing * Math.min(reach, Math.max(70, Math.abs(o.x - f.x) - 10)), WALL_L, WALL_R) }; sfx('slash'); }
+        if (mf > 8 && mf <= end) { const e = (mf - 8) / (end - 8); f.vx = 0; f.x = lerp(f.tor.x0, f.tor.tx, Math.sin(e * Math.PI / 2)); f.y = 85 * Math.sin(Math.PI * e); }
+        if (mf === end) { f.y = 0; dustAt(f.x, false); }
       } };
     // Tetsu's juggle versions (used automatically while the opponent is launched)
     case 'jGeyser': return { id, label: 'Qi Geyser', startup: 5, active: 16, recovery: 16, wind: 'blastW', pose: 'palmUp', fireCol: 'qi', aura: true,
@@ -1078,6 +1088,12 @@ function specialMoveBase(id) {
         if (mf <= 8) { const e = mf / 8; f.x = lerp(f.tj.x0, f.tj.tx, e); f.y = f.tj.top * e; }
         else if (mf <= 26) { f.y = Math.max(f.y, f.y + (o.y + 10 - f.y) * 0.3); f.x = clamp(o.x - f.facing * 30, WALL_L, WALL_R); } // keep level with them as they rise
       } };
+    case 'duckUpper': return { id, label: 'Crouching Upper', pre: 6, startup: 11, active: 10, recovery: 18, wind: 'crouch', pose: 'uppercut', selfMove: true, speedFx: true, aura: true, burst: [60, 170], // → → + I: ducks in low and drives an uppercut up through them
+      hitbox: [10,95,30,180], dmg: 64, stun: 22, bstun: 14, push: 4, cpLaunch: true, launchVy: 13.5, type: 'mid', hitstop: 11, gdrain: 14, // (a counter or a punish launches: a combo)
+      onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
+      onFrame(f, o, mf) { if (mf <= f.move.startup && !f.hitConnected && Math.abs(o.x - f.x) > 60) { f.vx = f.facing * 9; if (mf % 2 === 0) dustAt(f.x, false); } else f.vx *= 0.6; } };
+    case 'tripleQi': return { id, label: 'Triple Qi Blast', pre: 8, startup: 13, active: 2, recovery: 22, wind: 'blastW', pose: 'blast', proj: 'qi', limit: 1, aura: true, // ← → + I: three blasts at once, each a little faster than the last — they arrive one after another
+      onFrame(f, o, mf) { if (mf === 13) for (const sp of [5, 7, 9.5]) { spawnQi(f); Object.assign(projs[projs.length - 1], { vx: f.facing * sp, dmg: 32, stun: 16, bstun: 12, push: 2.5 }); } } };
     case 'qiBlast': return { id, label: 'Qi Blast', pre: 8, startup: 13, active: 2, recovery: 22, wind: 'blastW', pose: 'blast', proj: 'qi', limit: 1, aura: true,
       onFrame(f, o, mf) { if (mf === 13) spawnQi(f); } };
     case 'risingFist': return { id, label: 'Rising Fist', startup: 3, active: 14, recovery: 99, untilLand: true, landT: 12, wind: 'uppercutW', pose: 'dragonFist', spin: [4, 11], fx: 'helix', aura: true,
@@ -1105,7 +1121,8 @@ function specialMoveBase(id) {
         if (mf === f.move.startup) { sfx('slash'); sfx('super'); game.shake = Math.max(game.shake, 8); for (let i = 0; i < 3; i++) parts.push({ type: 'ring', x: f.x + f.facing * 70, y: GROUND - 100, r: 20 + i * 18, vr: 6 + i * 2, life: 16, max: 16, col: i ? '200,170,255' : '255,250,235' }); dustAt(f.x + f.facing * 60, true);
         spawnPJ(f, 'crescent', { big: true, x: f.x + f.facing * 70, y: 100, vx: f.facing * 8, life: 70, r: 100, h: { dmg: 90, stun: 24, bstun: 8, push: 4, kd: true, kdVx: 16, kdVy: 8, gdrain: 18, overhead: true, floor: true, label: 'Full Moon Tempest' } }); /* (from the floor up to well above a jump: nothing ducks or dives under it) */ } } };
     case 'shadowArmy': return { id, super: true, name: 'SHADOW ARMY', label: 'Shadow Army', startup: 14, active: 125, recovery: 22, blockAdv: 0, cutOnGuard: true, /* (out longer, slower to recover; even when guarded: once its clones are guarded he's done) */ wind: 'seal', pose: 'seal', aura: true,
-      onStart(f) { f.invul = 20; },
+      supArmor: true, // not invincible: until the clones come out, light hits from up close don't stop him (taken in full); strong ones do
+      onStart(f) {},
       onFrame(f, o, mf) { // three tides: mid clones from both sides, low clones from both sides, then one dives from above (TOP) and one last clone from behind
         const mv = f.move;
         if (mf === 1) { const back = Math.sign(o.x - f.x) || f.facing; mv.wall = back > 0 ? WALL_R - o.x < 150 : o.x - WALL_L < 150; // (they're in the corner: nothing can come from behind them)
@@ -1126,7 +1143,8 @@ function specialMoveBase(id) {
         if (!f.move.dodge && mf === 86) { f.move.active = 86 - f.move.startup; f.move.recovery = 8; } // (in a combo he's free right after the last clone lands: follow up as they bounce)
       } };
     case 'qiCannon': return { id, super: true, name: 'GREAT QI CANNON', label: 'Qi Cannon', startup: 26, active: 56, recovery: 20, wind: 'blastW', pose: 'blast', aura: true,
-      onStart(f) { f.invul = 30; },
+      supArmor: true, // Tetsu (and Kuro's Shadow Army): not invincible — until the beam fires, light hits from up close don't stop him (he still takes them in full); strong ones do
+      onStart(f) { if (f.key !== 'brawler') f.invul = 30; }, // (Hohen's Core Cannon, built on this one, keeps its invincibility)
       onFrame(f, o, mf) { if (mf === 27) spawnBeam(f); if (mf < 27 && mf % 2 === 0) auraParticle(f); } };
   }
   return null;
