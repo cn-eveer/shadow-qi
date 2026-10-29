@@ -94,8 +94,8 @@ function heavyFX(f, mv) {
 }
 // Kuro's techniques recover faster (kept long enough for each one's animation to finish)
 const POUNCE_MAX = 240, RIP_REACH = 380, RIP_PULL = 240; // the kappa's Pounce leaps this far at most; Riptide catches them this far away at most, and drags them this far at most
-const KURO_REC = { cloneStrike: 12, shadowCharge: 20, counterVanish: 12, swordSlash: 24, ambushBehind: 16, ambushLeap: 20, ambushSlide: 16, ambushKick: 18, // Shadow Charge and its follow-ups can be punished
-  teleKick: 10, teleSlide: 9, teleSpin: 12, flame: 10, fireballs: 8, vanishDrop: 10, vanishSlide: 9, jFire: 10, jRain: 8, jClone: 8, jIai: 15, jVanishHeel: 9, shadowArmy: 14 };
+const KURO_REC = { cloneStrike: 8, shadowCharge: 14, counterVanish: 12, swordSlash: 18, ambushBehind: 16, ambushLeap: 20, ambushSlide: 16, ambushKick: 18, // Shadow Charge and its follow-ups can be punished
+  teleKick: 7, teleSlide: 9, teleSpin: 12, flame: 10, fireballs: 1, vanishDrop: 10, vanishSlide: 6, jFire: 10, jRain: 8, jClone: 8, jIai: 15, jVanishHeel: 9, shadowArmy: 14 };
 const SLOW_SPECIALS = { staff: new Set(['extendStaff', 'vaultSmash', 'sweepStaff', 'poleKick', 'windmill', 'cloudLeap', 'somersault', 'feint']),
   psychic: new Set(['phantomFist', 'crushFist', 'psyLift', 'forceWave', 'orbBurst', 'tripleRay', 'orbStrong', 'orbLong']) };
 // Tetsu's standing techniques drive forward while they wind up (speed per technique)
@@ -231,7 +231,7 @@ function specialMoveBase(id) {
     case 'flame': return { id, label: 'Fire Breath', startup: 24, active: 32, recovery: 16, /* (a shorter stream: 32 + 3 active) */ blockAdv: -14, hitAdv: 10, wind: 'seal', pose: 'breath', proj: 'flame', limit: 1, slow: true, interruptChance: 0.4,
       poseFn(f, mf) { return mf <= 24 ? handSign(mf) : null; },
       onFrame(f, o, mf) { if (mf <= 24 && mf % 2 === 0) ember(f); if (mf === 25) spawnFlame(f); } };
-    case 'fireballs': return { id, label: 'Lightning Volley', startup: 34, active: 12, recovery: 1, noGuardLag: true, /* (he's free once the last ball flies: a projectile) */ wind: 'seal', pose: 'throw', proj: 'homing', limit: 1, slow: true, interruptChance: 0.4,
+    case 'fireballs': return { id, label: 'Lightning Volley', startup: 34, active: 15, recovery: 1, noGuardLag: true, fixedFrames: true, /* (he's free once the last ball flies, frame 48: a projectile — no frameMod recovery added) */ wind: 'seal', pose: 'throw', proj: 'homing', limit: 1, slow: true, interruptChance: 0.4,
       poseFn(f, mf) { return mf <= 34 ? handSign(mf) : null; },
       onFrame(f, o, mf) {
         if (mf === 8 || mf === 16 || mf === 24) spawnOrb(f, (mf - 8) / 8);       // three lightning balls crackle into being overhead during the hand signs

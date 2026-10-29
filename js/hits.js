@@ -174,9 +174,10 @@ function comboBreak(f, o) {
 // he isn't attacking and isn't moving toward the opponent (toward: the way to them): standing still guards standing (not lows),
 // crouching guards crouching (lows only); a back dash guards too
 const autoGuardFor = (f, toward) => game.autoGuard && !game.online && f.ctrl instanceof Human && f.inp && f.inp.h !== toward;
-// a ground combo (not in the air, not stunned) only keeps its first two attacks for sure: from the third on, whoever is being hit can
-// guard again — holding back, or standing or crouching with auto guard. Juggles, stuns and knockdowns are untouched
-const MIDCOMBO_GUARD = 2;
+// a ground combo (not in the air, not stunned or knocked down): whoever is being hit can guard the next attack — holding back, or standing
+// or crouching with auto guard — if its 発生 (frames from its start until it reaches them) is more than GUARD_BACK; after a counter hit
+// they get back to guard 2 frames later (GUARD_BACK_CH). Fast follow-ups (U, U) stay a combo; slower ones (U, I — a medium) can be guarded
+const GUARD_BACK = 10, GUARD_BACK_CH = 12;
 const GUARD_STALL = 6;
 // (applyHit, below, reports each first hit or guard to the training frame data: fdContact) // frames an attacker loses when his attack is guarded (shown as a recoil)
 const JUG_HOLD_MAX = 150; // frames (2.5 s) U, U... can keep them up after the last lift or bounce: then only a new lift or the finisher still lands
@@ -286,7 +287,7 @@ function applyHit(a, d, h, side, hb, hu) {
     return 'block';
   }
   const airGuard = (d.state === 'jump' || (d.state === 'land' && d.y > 0)) && !h.grab; // jumping (not launched): they can guard in the air
-  const midCombo = d.state === 'hitstun' && d.y <= 0 && (d.comboMoves || 0) >= MIDCOMBO_GUARD && a.serial !== d.comboMoveSerial; // a ground combo past its second attack: the next one can be guarded
+  const midCombo = d.state === 'hitstun' && d.y <= 0 && a.state === 'attack' && a.move && a.move.t0 != null && a.serial !== d.comboMoveSerial && game.frame - a.move.t0 + 1 > (d.wasCounter ? GUARD_BACK_CH : GUARD_BACK); // a slow next attack in a ground combo can be guarded
   const canGuard = !d.ch.noGuard && ((d.state === 'stand' || d.state === 'crouch' || d.state === 'guard' || d.state === 'blockstun' || d.state === 'recover' || d.state === 'bdash' || midCombo) && d.y <= 0 && !h.grab) || airGuard; // a throw can't be guarded; a back dash still guards
   const autoAll = !airGuard && autoGuardFor(d, -side), hc = heightClass(h, hb);
   const low = !!d.inp.down || d.state === 'crouch'; // (crouching: the guard is a crouching one — lows only)
@@ -418,6 +419,7 @@ function applyHit(a, d, h, side, hb, hu) {
   else if (d.state !== 'hitstun') d.pendingStun = 0;
   if (h.slashMark) parts.push({ type: 'slashmark', x: d.x, y: GROUND - d.y - 70, dir: side, life: 34, max: 34, delay: 8 });
   if (d.combo >= 2) game.combo = { side: a.side, n: d.combo, t: 70 };
+  d.wasCounter = !!counter; // (caught as they started something: they get back to guard later — GUARD_BACK_CH)
   if (punish) popText(cx, cy - 46, 'PUNISH!', '255,210,90');
   else if (counter) popText(cx, cy - 46, 'COUNTER!', '255,160,90');
   const big = h.kd || h.str >= 2 || h.heavy;

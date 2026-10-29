@@ -162,6 +162,7 @@ function startMove(f, mv, str, keepBuffer) {
   if (mv.held && f.inp) { if (!mv.holdBtn) mv.holdBtn = f.inp.btn; if (f.inp.holdFor && mv.holdFor == null) mv.holdFor = f.inp.holdFor; }
   if (f.pre) sfx('charge');
   else if (mv.onStart) mv.onStart(f, other(f));
+  mv.t0 = game.frame; // (when it started: its 発生 decides whether someone in a combo can guard it — GUARD_BACK)
   mv.speedUp = (!mv.super && f.ch.techSpeed && f.ch.techSpeed[mv.id]) || 0; f.spdAcc = 0; // (a fighter's techniques sped up to their own 発生: techSpeed)
   if (f.ch.techDelay && f.ch.techDelay[mv.id] && !mv.delayed) { mv.delayed = true; f.pre += f.ch.techDelay[mv.id]; } // (…or slowed down: techDelay)
   fdStart(f, mv);
@@ -227,7 +228,8 @@ function fdContact(a, r) { // the first hit or guard of the attack
   if (d.held && a.move) { d.act = a.move.active; d.rec = a.move.recovery; } // (a held attack: its frames are only known once it's let go)
 }
 function fdWatch() { // each step: once both can act again, the advantage
-  for (const f of fighters) { const d = f.fd, o = other(f); if (!d || !d.wait) continue;
+  for (const f of fighters) { const d = f.fd, o = other(f); if (d && !d.res && !d.live && f.state === 'attack' && f.move && f.move.startup < 900 && f.mf > f.move.startup) { d.live = true; d.su = game.frame - d.t0 + 1; } // (its first active frame, as it really came: a technique may have been sped up)
+    if (!d || !d.wait) continue;
     if (['knock', 'down', 'getup', 'stunned', 'slashed', 'gbreak'].includes(o.state)) { d.adv = o.state === 'knock' ? 'launch' : o.state === 'stunned' ? 'stun' : o.state === 'gbreak' ? 'gb' : 'kd'; d.wait = false; continue; }
     if (d.atkT == null && FD_FREE(f.state) && f.state !== 'attack') d.atkT = game.frame; if (d.defT == null && FD_FREE(o.state)) d.defT = game.frame;
     if (d.atkT != null && d.defT != null) { d.adv = d.defT - d.atkT; d.wait = false; } }
@@ -278,9 +280,7 @@ function runMove(f, o, inp) {
     const id = f.chainQ; f.chainQ = null;
     const nm = chainMove(id, f);
     // only the press that queued this hit is used up, so a quick next press still counts for the following hit
-    if (nm) { const gap = nm.guardGap && f.lastResult === 'block' ? nm.guardGap : 0, wasHit = f.lastResult === 'hit'; nm.chainDepth = (mv.chainDepth || 0) + 1; nm.fiveEnder = nm.chainDepth >= 4 && !nm.air && !nm.jug; startMove(f, nm, nm.str, true); if (gap) { f.pre += gap; nm.preTotal = f.pre; } // (guardGap: when the last hit was guarded, this one comes later — a hole to hit into; on a hit the string stays a combo)
-      if (wasHit && !mv.str && !mv.air && (nm.str === 1 || nm.launch) && !nm.air && !nm.jug && o.state === 'hitstun' && o.y <= 0) { // a fast hit into a medium (U, I — U, K): the medium comes just after their hit-stun ends, so it can be guarded
-        const left = o.stun - o.st, arrive = f.pre + nm.startup + 1; if (arrive < left + 3) { f.pre += left + 3 - arrive; nm.preTotal = f.pre; } }
+    if (nm) { const gap = nm.guardGap && f.lastResult === 'block' ? nm.guardGap : 0; nm.chainDepth = (mv.chainDepth || 0) + 1; nm.fiveEnder = nm.chainDepth >= 4 && !nm.air && !nm.jug; startMove(f, nm, nm.str, true); if (gap) { f.pre += gap; nm.preTotal = f.pre; } // (guardGap: when the last hit was guarded, this one comes later — a hole to hit into; on a hit the string stays a combo)
       if (f.ctrl.consumeIf) f.ctrl.consumeIf(f.chainBt); return; } // (the fifth hit of a string: punishable when guarded)
   }
   // natural combos (Tekken style): a light attack that hit or was guarded can go straight into any other attack —

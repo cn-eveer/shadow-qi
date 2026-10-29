@@ -19,7 +19,7 @@ const STRINGS = {
   ninja: { // Kuro: kunai slashes and shadow steps
     // U, U, U, U, K (Street Fighter 6 style: every hit has its own job; guarded, the string has holes)
     //  U, U:  two fast hits (high, mid); guard the first U and a U of their own beats the second
-    //  3rd U: a medium (a mid), slower — the third attack of a combo, so they can start guarding here (MIDCOMBO_GUARD); guarded, a 20-frame hole before it
+    //  3rd U: a medium (a mid), slower — slower than 10 frames, so they can guard it even on a hit (GUARD_BACK); guarded, a 20-frame hole before it
     //  4th U: fast and low, no gap after the 3rd, safe when guarded; on a hit it trips them, and the K catches them as they fall
     //  K:     the final blow, a high: guard the low 4th crouching and it passes over; slow, out a long time and slow to recover;
     //         guarded standing, a fast attack punishes it from up close
