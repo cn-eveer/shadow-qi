@@ -28,7 +28,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Lightning Volley<small>A short casting raises three lightning balls overhead, then they chase the opponent one after another. If they hit, the opponent is electrified and stunned, so you can dash in and combo. Kuro is free as soon as the last ball flies, so it’s safe guarded. Getting hit before they launch cancels them.</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>Vanish Slide<small>Leaves a shadow standing on guard (it blocks up to two attacks), back-dashes as a shadow, then slides in and knocks the opponent down, coming out behind them; on a counter hit or a punish it pops them up for a juggle. Guarded, he stops where he is (−16).</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>Vanish Drop Kick<small>Leaves a shadow standing on guard, back-dashes as a shadow, then leaps high over long-range attacks and brings his heel down, bouncing the opponent off the ground into a juggle. It only travels about a quarter of the stage, so it can land short of a distant opponent.</small></td><td class="cmd">← ← + K</td></tr>
-          <tr class="super"><td>Super: Shadow Army<small>Six clones rush in from both sides, then a seventh dives from above. Up close, the last clone bounces them back to Kuro so he can keep juggling. Needs a full MP gauge.</small></td><td class="cmd">Punch + Kick</td></tr>
+          <tr class="super"><td>Super: Shadow Army<small>Three tides of clones: mids from both sides (guard standing), then lows from both sides (guard crouching), then one dives from above (stand) as another comes in low from behind (crouch, the other way). In a combo, ten clones keep them up and the last bounces them back to Kuro. Even when guarded. Needs a full MP gauge.</small></td><td class="cmd">Punch + Kick</td></tr>
         </tbody>
       </table></div>
       <button class="pill watch" data-watch="ninja">▶ Watch Kuro’s sample combos</button>
@@ -82,7 +82,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>雷球<small>雷の球を3つ浮かべ、順番に追尾させる。当たると感電して気絶。最後の球が飛んだらクロはすぐ動けるので、ガードされても安全。</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>消身滑り<small>ガードする影を残して下がり、滑り込んでダウンを奪う。カウンターや確定反撃なら浮かせて追撃できる。ガードされるとその場で止まる（−16）。</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>消身踵落とし<small>影を残して下がり、高く跳んで踵落とし。バウンドさせる。</small></td><td class="cmd">← ← + K</td></tr>
-          <tr class="super"><td>超必殺技：影分身・軍勢<small>6体の分身が両側から突進し、7体目が上から急降下。至近距離なら相手が手前にバウンドして追撃できる。MP満タンが必要。</small></td><td class="cmd">パンチ + キック</td></tr>
+          <tr class="super"><td>超必殺技：影分身・軍勢<small>分身が3つの波で襲う：両側から中段（立ちガード）、両側から下段（しゃがみガード）、最後に上から急降下（立ち）と同時に背後から下段（しゃがんで逆向きにガード）。コンボ中なら10体で浮かせ続け、最後の1体で手前にバウンド。ガードされても五分。MP満タンが必要。</small></td><td class="cmd">パンチ + キック</td></tr>
         </tbody>
       </table></div>
       <button class="pill watch" data-watch="ninja">▶ クロのコンボ見本を見る</button>
