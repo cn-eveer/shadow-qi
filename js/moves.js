@@ -258,13 +258,14 @@ function specialMoveBase(id) {
         if (mf === 57) { f.y = 0; dustAt(f.x, true); game.shake = Math.max(game.shake, 3); sfx('land'); }
       } };
     case 'vanishSlide': return { id, label: 'Vanish Slide', startup: 20, active: 42, recovery: 8, blockAdv: -16, cpLaunch: true, wind: 'crouch', pose: 'slideKick', selfMove: true, noPush: true,
-      hitbox: [0,64,0,34], dmg: 52, stun: 30, bstun: 10, push: 0, kd: true, kdVx: 4, kdVy: 6, launchVy: 11.5, low: true, type: 'mid', hitstop: 6, gdrain: 6, // (knocks down; a counter or a punish launches: cpLaunch)
+      hitbox: [0,64,0,34], dmg: 52, stun: 30, bstun: 10, push: 0, kd: true, kdVx: 4, kdVy: 6, launchVy: 13, low: true, type: 'mid', hitstop: 6, gdrain: 6, // (knocks down; a counter or a punish launches: cpLaunch)
       poseFn(f, mf) { return mf <= 20 ? POSES.crouch : null; },
       onFrame(f, o, mf) {
         if (mf <= 20) { shadowRetreat(f, mf); return; }
         if (mf === 21) { f.shadow = false; f.slideDir = Math.sign(o.x - f.x) || f.facing; f.facing = f.slideDir; puff(f.x, 20); }
         if (mf <= 56) {
           if (f.hitConnected && f.lastResult === 'block') { f.vx = 0; return; } // (guarded: he stops where he is — the frames left are his opening: blockAdv)
+          if (f.hitConnected && f.lastResult === 'hit') { f.vx = 0; f.mf = Math.max(f.mf, f.move.startup + f.move.active); hitRecover(f, 4); return; } // (a hit: he stops right there and recovers at once — after a counter launch he's free to juggle)
           f.vx = f.slideDir * 10;
           if (Math.sign(f.x - o.x) === f.slideDir && Math.abs(f.x - o.x) > (f.lastResult === 'hit' ? 40 : 85)) { f.vx = 0; f.mf = 56; } // past the opponent (stop sooner on a hit so you can juggle)
           if (mf % 2 === 0) dustAt(f.x, false);
