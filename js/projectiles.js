@@ -325,7 +325,7 @@ const POSSESS_T = 900; // (fifteen seconds)
 // (never both at once before the round: the double only comes by calling the other one during the fight)
 function prePossessTick(f, t) {
   const o = other(f); let kind = null;
-  if (f.ctrl instanceof CPU) { if (t === 50 && !game.watch) { const r = Math.random(); kind = r < 0.3 ? 'angel' : r < 0.55 ? 'devil' : null; } } // the CPU sometimes does it too
+  if (f.ctrl instanceof CPU) { if (t === 50 && !game.watch) { const r = Math.random(); kind = r < 0.75 ? 'angel' : 'devil'; } } // the CPU always does it: he is weak as himself (the angel mostly: full damage and healing all round)
   else if (f.ctrl && f.ctrl.read) { const inp = f.ctrl.read(f, game.frame, o); if (inp && inp.bb && (inp.btn === 'hp' || inp.btn === 'hk')) { kind = inp.btn === 'hp' ? 'angel' : 'devil'; if (f.ctrl.consume) f.ctrl.consume(); } }
   if (!kind || f.prePoss === kind) return;
   f.prePoss = kind; sfx('charge'); game.shake = Math.max(game.shake, 4);

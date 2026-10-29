@@ -87,6 +87,11 @@ const cpuP = (p, watchP) => game.watch ? watchP : Math.min(0.95, p * dif().combo
 // The angel fights from mid range (rays, the dive, the ascension) and prefers I and K up close, since they heal him. The devil rushes in: lunges, the chain, the crawl, and the grab up close.
 function tanakaPlan(f, o, dist, r) {
   const ps = f.ch.possess, air = o.y > 40, far = dist > 420, mid = dist > 160;
+  if (o.key === 'psychic' && dist > 170) { // Lyra casts from across the stage and never backs away: close the distance with the dive, the ascension and the glide (or the devil's lunge and chain), then fight up close
+    if (ps === 'angel') return r < 0.3 ? { btn: 'lk', bb: true, fwdHold: true } : r < 0.52 ? { btn: 'hk', ff: true } : r < 0.66 ? { btn: 'lk', ff: true } : r < 0.78 ? { btn: 'lk', bb: true } : r < 0.9 ? { dash: 1 } : { walk: 1 };
+    if (ps) return r < 0.3 ? { btn: 'lk', bb: true, fwdHold: true } : r < 0.5 ? { btn: 'lp', ff: true } : r < 0.66 ? { btn: 'lk', ff: true } : r < 0.8 ? { btn: 'hp', ff: true } : r < 0.92 ? { dash: 1 } : { walk: 1 };
+    return r < 0.3 ? { btn: 'lk', ff: true } : r < 0.5 ? { btn: 'hk', ff: true } : r < 0.65 ? { btn: 'lp', ff: true } : r < 0.85 ? { dash: 1 } : { walk: 1 };
+  }
   if (!ps) {
     if (dist > 200 && r < 0.12 && !(f.possT > 0)) return { btn: r < 0.07 ? 'hp' : 'hk', bb: true }; // a spirit takes him: the angel (← ← + I) or the devil (← ← + K)
     if (far) return r < 0.26 ? { btn: 'lp', down: true } : r < 0.42 ? { btn: 'lk', down: true } : r < 0.56 ? { btn: 'lp', ff: true } : (r < 0.7 && f.meter < 100) ? { chargeMP: rnd(40, 100) | 0 } : r < 0.82 ? { dash: 1 } : { walk: 1 };
