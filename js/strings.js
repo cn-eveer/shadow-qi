@@ -631,6 +631,7 @@ function projBox(p) {
   if (p.type === 'clone') { const t = other(p.owner), up = p.superHit && !p.fall && t && caughtIn(t) ? Math.max(0, t.y + 60 - p.h1) : 0; return { x0: p.x - p.w, x1: p.x + p.w, y0: p.h0 + (p.yOff || 0), y1: p.h1 + (p.yOff || 0) + up }; } // (in a combo, the super's clones leap up to catch someone already juggled)
   if (p.type === 'decoy' || p.type === 'guardShadow') return { x0: p.x - 25, x1: p.x + 25, y0: 0, y1: 135 };
   if (p.type === 'wave') return { x0: p.x - p.w, x1: p.x + p.w, y0: 0, y1: 34 };
+  if (p.type === 'staffBoom') return { x0: p.x - 46, x1: p.x + 46, y0: p.y - 40, y1: p.y + 40 };
   const back = p.vx && Math.abs(p.vx) > p.r ? p.vx : 0; // a fast projectile (a bullet) sweeps the whole stretch it crossed this frame, so it can't skip through someone point-blank
   return { x0: Math.min(p.x, p.x - back) - p.r, x1: Math.max(p.x, p.x - back) + p.r, y0: p.y - p.r, y1: p.y + p.r };
 }
@@ -774,7 +775,7 @@ function updateProjs() {
     }
     if (p.type === 'staffBoom') { // Mei's thrown staff: out, then back to her hand
       const own = p.owner, tgt = other(own); p.life--;
-      if (p.t < p.outT) p.vx *= p.mode === 'boom' ? 0.955 : 0.92; else { const dx = own.x - p.x; p.vx = Math.sign(dx) * Math.min(16, Math.abs(dx) * 0.2 + 7); }
+      if (p.stay > 0) { p.stay--; p.vx = (tgt.x - p.x) * 0.35; } else if (p.t < p.outT) p.vx *= p.mode === 'boom' ? 0.955 : 0.96; else { /* (stay: the whirlwind stops where it catches them, for its three hits) */ const dx = own.x - p.x; p.vx = Math.sign(dx) * Math.min(16, Math.abs(dx) * 0.2 + 7); }
       p.x += p.vx; p.y += ((100 + Math.max(0, own.y)) - p.y) * 0.1;
       if ((p.t > p.outT && Math.abs(own.x - p.x) < 34) || p.life <= 0 || p.x < -60 || p.x > W + 60 || own.ko) { p.dead = true; own.staffOut = false; sfx('block'); continue; }
       const hu = hurtbox(tgt, true), hb = { x0: p.x - 46, x1: p.x + 46, y0: p.y - 40, y1: p.y + 40 }, back = p.t > p.outT;
@@ -784,6 +785,7 @@ function updateProjs() {
         applyHit(own, tgt, { dmg: p.mode === 'boom' ? (back ? 30 : 42) : (last ? 30 : 20), stun: p.mode === 'boom' ? 22 : 18, bstun: p.mode === 'boom' ? 14 : 10, push: last || back ? 3 : 1.2, type: 'mid', chip: true, hitstop: last ? 8 : 5, proj: true, str: 1, gdrain: 8,
           juggle: true, jugVy: 5, label: p.mode === 'boom' ? 'Staff Boomerang' : 'Staff Whirlwind' }, Math.sign(p.vx) || p.dir, hb, hu);
         if (back) p.backHit = true; p.hits++; p.last = p.t;
+        if (p.mode === 'triple') { if (p.hits < 3) p.stay = 7; else { p.stay = 0; p.t = Math.max(p.t, p.outT + 1); } } // (it whirls on the spot, then comes back)
       }
       continue;
     }
@@ -957,9 +959,10 @@ function updateProjs() {
       if (++ga.hits >= 2) { ga.dead = true; puff(ga.x, 60); }
       continue;
     }
-    const sa = a.type === 'beam' || a.type === 'flame', sb = b.type === 'beam' || b.type === 'flame';
+    const strong = p => p.type === 'beam' || p.type === 'flame' || !!p.sup || !!p.superHit, sa = strong(a), sb = strong(b); // (a super's shot beats an ordinary one)
     if (sa && sb) continue;
-    if (sa) b.dead = true; else if (sb) a.dead = true; else { a.dead = true; b.dead = true; }
+    const knock = p => { if (p.type === 'staffBoom' || p.type === 'aegis') { p.t = Math.max(p.t, (p.outT || 22) + 1); p.stay = 0; return; } p.dead = true; if (p.type === 'plate' && p.owner) p.owner.plateOut = false; }; // (a thrown staff or shield is knocked back to its owner)
+    if (sa) knock(b); else if (sb) knock(a); else { knock(a); knock(b); }
     const mx = (Math.max(ba.x0, bb.x0) + Math.min(ba.x1, bb.x1)) / 2, my = GROUND - (Math.max(ba.y0, bb.y0) + Math.min(ba.y1, bb.y1)) / 2;
     sparks(mx, my, 'clash'); sfx('block');
   }

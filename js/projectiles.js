@@ -45,7 +45,7 @@ Object.assign(JUGGLE_SP, { extendStaff: 'jExtend', vaultSmash: 'jVault', cloudLe
 JUGGLE_SP.duckUpper = 'jGeyser'; JUGGLE_SP.pushParry = 'jSpiral'; // (Tetsu in a juggle: → → + I the Qi Geyser, ← ← + U the Qi Spiral; → → + U, the Meteor Fist, gives the Hammer Spike)
 Object.assign(JUGGLE_SP, { phantomFist: 'jPhantom', crushFist: 'jCrush', psyLift: 'jLift', forceWave: 'jWave' });
 const RISING_IDS = new Set(Object.values(JUGGLE_SP));
-const NO_CLASH = new Set(['pillar', 'lift', 'crush', 'dish', 'crescent', 'plate', 'water', 'bubble', 'bullet', 'dyna', 'card', 'feather', 'haloP', 'hellfire']);
+const NO_CLASH = new Set(['pillar', 'lift', 'crush']); // (not shots in flight — a column or a grip where they stand: every flying shot cancels another out)
 const pullV = (f, t) => { const d = f.x - t.x; return Math.sign(d || 1) * clamp((Math.abs(d) - 60) / 55, 0.5, 5.5); }; // drift a launched opponent back toward her
 const FINISHERS = new Set(['mrFinish', 'srSlam']);
 // ← ← + I: three rays at once, like Orb Burst all in one go; the third leaves them stunned
@@ -402,7 +402,7 @@ function verdictPillar(f, o, last) { // one brand bursts: a pillar of light come
 // Bastion March finisher: the shield flies out spinning, hits up to three times and comes back to his hand
 function spawnStaffBoom(f, mode) { // Mei throws her staff: 'boom' spins out and back (a hit each way), 'triple' whirls out in front for three hits, then comes back
   f.staffOut = true;
-  projs.push({ id: ++serial, type: 'staffBoom', mode, owner: f, x: f.x + f.facing * 50, y: 100, vx: f.facing * (mode === 'boom' ? 19 : 18.5), vy: 0, dir: f.facing, hits: 0, last: -99, life: 130, t: 0, outT: mode === 'boom' ? 28 : 34 });
+  projs.push({ id: ++serial, type: 'staffBoom', mode, owner: f, x: f.x + f.facing * 50, y: 100, vx: f.facing * (mode === 'boom' ? 19 : 30), vy: 0, dir: f.facing, hits: 0, last: -99, life: 170, t: 0, outT: mode === 'boom' ? 28 : 55 }); // (the whirlwind flies up to 7/10 of the stage)
   sfx('throw');
 }
 function staffBack(f) { // she grabs her staff back (it vanishes from the air)
