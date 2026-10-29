@@ -162,6 +162,7 @@ function startMove(f, mv, str, keepBuffer) {
   if (mv.held && f.inp) { if (!mv.holdBtn) mv.holdBtn = f.inp.btn; if (f.inp.holdFor && mv.holdFor == null) mv.holdFor = f.inp.holdFor; }
   if (f.pre) sfx('charge');
   else if (mv.onStart) mv.onStart(f, other(f));
+  mv.speedUp = (!mv.super && f.ch.techSpeed && f.ch.techSpeed[mv.id]) || 0; f.spdAcc = 0; // (a fighter's techniques sped up to their own 発生: techSpeed)
   fdStart(f, mv);
 }
 function tryAttack(f, o, inp, noLight) { // (noLight: anything but a light attack — a string can't start itself over)
@@ -229,6 +230,14 @@ function fdWatch() { // each step: once both can act again, the advantage
     if (['knock', 'down', 'getup', 'stunned', 'slashed', 'gbreak'].includes(o.state)) { d.adv = o.state === 'knock' ? 'launch' : o.state === 'stunned' ? 'stun' : o.state === 'gbreak' ? 'gb' : 'kd'; d.wait = false; continue; }
     if (d.atkT == null && FD_FREE(f.state) && f.state !== 'attack') d.atkT = game.frame; if (d.defT == null && FD_FREE(o.state)) d.defT = game.frame;
     if (d.atkT != null && d.defT != null) { d.adv = d.defT - d.atkT; d.wait = false; } }
+}
+// a technique sped up to the 発生 its fighter's techSpeed gives it (Kuro): everything before it can first hit — hand signs, wind-up,
+// the run in, the leap — plays that many times faster (extra steps of the move, moving him as it goes); from the first active frame on,
+// 持続 and 硬直 run at their normal speed
+function techSpeed(f, o, inp) {
+  const mv = f.move; if (!mv || !mv.speedUp || f.hitConnected || (f.pre <= 0 && f.mf >= mv.startup)) return;
+  f.spdAcc = (f.spdAcc || 0) + mv.speedUp - 1;
+  while (f.spdAcc >= 1 && f.move === mv && f.state === 'attack' && !f.hitConnected && (f.pre > 0 || f.mf < mv.startup)) { f.spdAcc -= 1; runMove(f, o, inp); if (!mv.manualY) f.x = clamp(f.x + f.vx, WALL_L, WALL_R); }
 }
 // no attack carries its user further than this (dashes, rushes, lunges, step-ins, leaps out of them; supers and air attacks aside)
 const MOVE_TRAVEL = 180;
@@ -413,7 +422,7 @@ function update(f, o, inp) {
         else startMove(f, normalMove(f.ch, isP ? 'p' : 'k', str, 'j'), str);
       }
       break;
-    case 'attack': if (floodVictim(f) && game.frame % 5 === 0 && f.move && f.mf <= f.move.startup) break; runMove(f, o, inp); if (floodOwner(f) && f.state === 'attack' && game.frame % 5 === 0 && f.move && f.mf <= f.move.startup + (f.move.active || 0)) runMove(f, o, inp); if (f.move && f.move.lvl != null && !f.move.fired && f.state === 'attack') qiGather(f, f.mf, Math.min(1, f.mf / 120), f.key === 'gunman' ? '255,200,110' : null); break; // held charge attacks gather qi too // (flooded: the kappa's attacks come out a fifth faster, the other's a fifth slower — but recovery isn't touched, so the kappa can still be punished and the other can still get away)
+    case 'attack': if (floodVictim(f) && game.frame % 5 === 0 && f.move && f.mf <= f.move.startup) break; runMove(f, o, inp); if (f.state === 'attack') techSpeed(f, o, inp); if (floodOwner(f) && f.state === 'attack' && game.frame % 5 === 0 && f.move && f.mf <= f.move.startup + (f.move.active || 0)) runMove(f, o, inp); if (f.move && f.move.lvl != null && !f.move.fired && f.state === 'attack') qiGather(f, f.mf, Math.min(1, f.mf / 120), f.key === 'gunman' ? '255,200,110' : null); break; // held charge attacks gather qi too // (flooded: the kappa's attacks come out a fifth faster, the other's a fifth slower — but recovery isn't touched, so the kappa can still be punished and the other can still get away)
     case 'land': if (f.st >= f.landT) setState(f, 'stand'); break;
     case 'hitstun':
       if (f.st >= f.stun) {

@@ -228,7 +228,7 @@ function specialMoveBase(id) {
       hitbox: [10,98,40,118], dmg: 85, stun: 20, bstun: 14, push: 5, kd: true, kdVx: 15, kdVy: 10, type: 'mid', hitstop: 11, gdrain: 14,
       trail: { cx: 0, cy: 70, r: 86, a0: -60, a1: 40, col: '190,150,255' },
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; sfx('slash'); } };
-    case 'flame': return { id, label: 'Fire Breath', startup: 24, active: 50, recovery: 16, wind: 'seal', pose: 'breath', proj: 'flame', limit: 1, slow: true, interruptChance: 0.4,
+    case 'flame': return { id, label: 'Fire Breath', startup: 24, active: 32, recovery: 16, /* (a shorter stream: 32 + 3 active) */ wind: 'seal', pose: 'breath', proj: 'flame', limit: 1, slow: true, interruptChance: 0.4,
       poseFn(f, mf) { return mf <= 24 ? handSign(mf) : null; },
       onFrame(f, o, mf) { if (mf <= 24 && mf % 2 === 0) ember(f); if (mf === 25) spawnFlame(f); } };
     case 'fireballs': return { id, label: 'Lightning Volley', startup: 34, active: 20, recovery: 12, wind: 'seal', pose: 'throw', proj: 'homing', limit: 1, slow: true, interruptChance: 0.4,
