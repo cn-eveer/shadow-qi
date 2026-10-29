@@ -148,12 +148,29 @@ function startMove(f, mv, str, keepBuffer) {
   }
   if (f.ch.fastAtk && mv.normal && !mv.fastDone && mv.startup < 900) { mv.fastDone = true; mv.startup = Math.max(3, mv.startup - 2); mv.recovery = Math.max(4, Math.round(mv.recovery * 0.8)); } // the devil: wild and fast
   if (mv.held && f.inp) { if (!mv.holdBtn) mv.holdBtn = f.inp.btn; if (f.inp.holdFor && mv.holdFor == null) mv.holdFor = f.inp.holdFor; }
+  moveFrames(f, mv); // (before onStart: with no wind-up left it starts right away)
   if (f.pre) sfx('charge');
   else if (mv.onStart) mv.onStart(f, other(f));
   mv.t0 = game.frame; // (when it started: its 発生 decides whether someone in a combo can guard it — GUARD_BACK)
-  mv.speedUp = (!mv.super && f.ch.techSpeed && f.ch.techSpeed[mv.id]) || 0; f.spdAcc = 0; // (a fighter's techniques sped up to their own 発生: techSpeed)
+  mv.speedUp = mv.speedUp || (!mv.super && f.ch.techSpeed && f.ch.techSpeed[mv.id]) || 0; f.spdAcc = 0; // (or already set by the fighter's frame table: moveFrames) // (a fighter's techniques sped up to their own 発生: techSpeed)
   if (f.ch.techDelay && f.ch.techDelay[mv.id] && !mv.delayed) { mv.delayed = true; f.pre += f.ch.techDelay[mv.id]; } // (…or slowed down: techDelay)
   fdStart(f, mv);
+}
+// a fighter's own frames for each of his attacks (ch.frames): keyed by technique id, for ground buttons U I J K (dU dI dJ dK crouching), or $ and the string hit's key ($t2…).
+// su: 発生 (the lead-up plays faster, or waits longer, to reach it), act: 持続, rec: 硬直, blk: 硬直差 when guarded, set: anything else about the move
+const NORMAL_KEY = { p0: 'U', p1: 'I', k0: 'J', k1: 'K' };
+function moveFrames(f, mv) {
+  const T = f.ch.frames; if (!T || mv.framesDone || mv.super || mv.air || mv.jug || mv.startup >= 900) return;
+  const e = T[mv.inString ? '$' + mv.strKey : mv.normal ? (mv.stance === 'c' ? 'd' : '') + NORMAL_KEY[mv.kind + mv.str] : mv.id]; if (!e) return; // (a string hit: $ and its key, $t2, $tF…)
+  mv.framesDone = true;
+  if (e.set) Object.assign(mv, e.set);
+  if (e.su) { const now = f.pre + mv.startup, want = e.su - (mv.hitbox ? 2 : 1); // (frames before it can hit: a blow lands on the frame after, a shot is thrown on it)
+    if (want > now) f.pre += want - now;
+    else if (want < now) { const cut = Math.min(f.pre, now - want); f.pre -= cut; if (mv.tellPre) mv.tellPre = Math.max(0, mv.tellPre - cut); if (mv.preTotal != null) mv.preTotal = f.pre; // (a shorter wind-up first: the move itself, its dash or leap, keeps its pace…
+      if (now - cut > want) mv.speedUp = (now - cut) / want; } } // …and only if that isn't enough does the move play faster)
+  if (e.act != null) mv.active = e.act;
+  if (e.rec != null) mv.recovery = e.rec;
+  if (e.blk != null) { mv.blockAdv = e.blk; mv.noGuardLag = true; f.lastMoveTech = false; } // (its own guard number: no extra off-balance on top)
 }
 function tryAttack(f, o, inp, noLight) { // (noLight: anything but a light attack — a string can't start itself over)
   if (!inp.btn) return false;
