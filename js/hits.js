@@ -122,6 +122,27 @@ function hurtbox(d, juggle, low) {
 }
 const overlap = (a, b) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
 const atWall = d => d.x <= WALL_L + 1 || d.x >= WALL_R - 1;
+// training only (H): the boxes hit detection actually uses this frame — hurtboxes in blue, an active hitbox in red, a flying
+// projectile's in orange — drawn in world space (y: height above the floor), the same boxes checkHits and the projectile
+// hit loops read, so what's on screen is exactly what would trade
+function drawHitBox(b, col, fillA, lineA) {
+  if (!b) return;
+  const x = b.x0, y = GROUND - b.y1, w = Math.max(1, b.x1 - b.x0), h = Math.max(1, b.y1 - b.y0);
+  ctx.save(); ctx.fillStyle = `rgba(${col},${fillA})`; ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = `rgba(${col},${lineA})`; ctx.lineWidth = 2; ctx.strokeRect(x, y, w, h); ctx.restore();
+}
+function drawHitboxDebug() {
+  for (const f of fighters) { if (f.hidden) continue; drawHitBox(hurtbox(f, !!f.juggle, true), '90,180,255', 0.16, 0.85); }
+  for (const f of fighters) {
+    const mv = f.state === 'attack' && f.move; if (!mv || !mv.hitbox) continue;
+    if (f.mf <= mv.startup || f.mf > mv.startup + mv.active) continue; // (only while it can actually hit: checkHits' own window)
+    let hb = boxOf(f, meleeBox(f, mv.hitbox));
+    if (f.key === 'staff') hb = staffTipBox(f, mv, hb);
+    if (floodOwner(f)) hb = { ...hb, x0: -200, x1: W + 200 };
+    drawHitBox(hb, '255,70,70', 0.3, 0.95);
+  }
+  for (const p of projs) { if (!p.dead) drawHitBox(projBox(p), '255,170,60', 0.24, 0.9); }
+}
 // the wall stops the defender: whatever push they can't take, the attacker gets, the same way back
 function wallPush(a, d, side) {
   const v = Math.abs(d.vx); if (!v) return;
