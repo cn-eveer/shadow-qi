@@ -65,8 +65,10 @@ const CHARS = {
       $tlD: { su: 21, act: 8, rec: 24, blk: -16 }, // J, J, ↓ + K (mid)
     },
     heavy: {
-      p: { label: 'Qi Palm', startup: 10, active: 4, recovery: 19, hitbox: [20,118,106,130], wind: 'palmW', pose: 'palm', lunge: [3, 11, 5], push: 10, gdrain: 22, burst: [80, 108] },
-      k: { label: 'Axe Kick', startup: 10, active: 4, recovery: 19, hitbox: [20,104,0,150], wind: 'axeW', pose: 'axe', lunge: [3, 11, 5.5], cpLaunch: true, launchVy: 13, kd: true, stomp: [56, 0],
+      p: { label: 'Qi Palm', startup: 10, active: 4, recovery: 19, hitbox: [20,118,106,130], wind: 'palmW', pose: 'palm', lunge: [3, 11, 5], push: 10, gdrain: 22, burst: [80, 108], bodyHurt: true,
+        limbJoint: 'h1', limbReach: 55, limbBack: 12, limbUp: 16, limbDown: 16 }, // a compact box on the striking palm
+      k: { label: 'Axe Kick', startup: 10, active: 4, recovery: 19, hitbox: [20,104,0,150], wind: 'axeW', pose: 'axe', lunge: [3, 11, 5.5], cpLaunch: true, launchVy: 13, kd: true, stomp: [56, 0], bodyHurt: true,
+        limbJoint: 'f1', limbReach: 28, limbBack: 14, limbUp: 16, limbDown: 16, // a compact box on the kicking foot
         trail: { cx: 5, cy: 62, r: 72, a0: 100, a1: -20, col: '255,215,160' } },
     },
     colors: { skin: '#c98b5e', skinB: '#a46c45', pants: '#2d303c', pantsB: '#1e2029', vest: '#2f7d5c', vestB: '#235c44', wrap: '#f0e8d8', wrapB: '#cdc4b1', hair: '#18120e', band: '#8a5129', belt: '#5a3a1f', shoe: '#17181c', bead: '#7a4b2a', sash: '#c23b2e' },
