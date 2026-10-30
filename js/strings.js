@@ -564,11 +564,13 @@ function chainMoveBase(id, f) {
       multi: 3, interval: 3, dmg: 12, lastDmg: 20, hitbox: [5,90,0,135], jugVy: 3.5, blade: K, wind: 'jump', pose: 'slash',
       trail: { cx: 15, cy: 100, r: 75, a0: 70, a1: -40, col: K ? '225,235,255' : FXC }, chain: { hk: 'aSpin', dhk: 'aMeteor' } };
     // ↓ + K in the air: dive feet-first through them and bounce them off the ground (once per combo)
-    case 'aMeteor': return { ...base, kind: 'k', str: 1, stance: 'j', air: true, untilLand: true, landT: 5, label: K ? 'Shadow Meteor' : 'Meteor Knee', startup: 3, active: 22, recovery: 30, dmg: 40,
+    case 'aMeteor': { const m = { ...base, kind: 'k', str: 1, stance: 'j', air: true, untilLand: true, landT: 5, label: K ? 'Shadow Meteor' : 'Meteor Knee', startup: 3, active: 22, recovery: 30, dmg: 40,
       hitbox: [-15,90,-40,115], meteor: true, kd: true, kdVx: 1, kdVy: -8, hitstop: 11, gdrain: 10, wind: 'jump', pose: 'diveKick', selfMove: true,
       trail: { cx: 0, cy: 40, r: 70, a0: 160, a1: 260, col: K ? '190,150,255' : FXC },
       onStart(f) { f.vy = 3; f.vx = f.facing * 2; }, // a little hop over them...
       onFrame(f, o, mf) { if (mf === 4) { f.vy = -14; f.vx = f.facing * 5; } } }; // ...then dive feet-first
+      if (K) Object.assign(m, { limbJoint: 'f1', limbReach: 26, limbBack: 14, limbUp: 16, limbDown: 16, sweepBox: true, bodyHurt: true }); // Kuro: a compact box on the diving foot, swept along the fast dive, in place of the shared, oversized guess (and reaching below the floor)
+      return m; }
     case 'aSpin': return { ...base, kind: 'k', str: 1, stance: 'j', air: true, label: 'Air Spin Kick', startup: 4, active: 4, recovery: 10, dmg: 38, hitbox: [5,100,0,130],
       kd: true, kdVx: 12, kdVy: 6, hitstop: 11, gdrain: 10, wind: 'spinW', pose: 'roundhouse', spin: [1, 4],
       trail: { cx: 0, cy: 70, r: 88, a0: -60, a1: 50, col: K ? '190,150,255' : FXC } };
