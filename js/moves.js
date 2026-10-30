@@ -1021,16 +1021,17 @@ function specialMoveBase(id) {
     case 'jWave': return { id, label: 'Spirit Fist Burst', startup: 6, active: 6, recovery: 18, wind: 'psyW', pose: 'psyUp', giantFist: [115, 150, 1.1, -0.5],
       hitbox: [30,175,30,250], dmg: 50, kd: true, kdVx: 14, kdVy: 9, type: 'mid', hitstop: 13, gdrain: 10 };
     // ----- Tetsu -----
-    case 'meteorFist': return { id, label: 'Meteor Fist', pre: 6, startup: 22, active: 10, recovery: 18, wind: 'meteorW', pose: 'meteorPunch', fx: 'comet', manualY: true, noPush: true, selfMove: true, aura: true,
+    case 'meteorFist': return { id, label: 'Meteor Fist', pre: 6, startup: 22, active: 10, recovery: 18, wind: 'meteorW', pose: 'meteorPunch', fx: 'comet', manualY: true, noPush: true, selfMove: true, aura: true, bodyHurt: true,
+      limbJoint: 'h1', limbReach: 30, limbBack: 34, limbUp: 20, limbDown: 20, sweepBox: true, // a box on the slamming fist, swept along the leap
       hitbox: [-10,80,-20,90], dmg: 62, stun: 20, bstun: 14, push: 3, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 11, gdrain: 12,
       onStart(f, o) {
-        const side = Math.sign(o.x - f.x) || f.facing; f.facing = side;
+        const side = Math.sign(o.x - f.x) || f.facing; f.facing = side; f.mfOrigDist = Math.abs(o.x - f.x); // the real gap, before the leap moves him: a short hop for someone close, not the same tall arc every time
         f.leap = { x0: f.x, tx: clamp(f.x + side * Math.min(Math.max(0, Math.abs(o.x - f.x) - 30), 250), WALL_L, WALL_R) }; sfx('rise');
       },
       onFrame(f, o, mf) { // leap in and slam both fists down
         f.vx = 0;
-        const L = f.key === 'brawler' ? f.move.startup + 2 : 32; // (Tetsu's lands as the blow comes out)
-        if (mf <= L) { const e = mf / L; f.x = lerp(f.leap.x0, f.leap.tx, e); f.y = 140 * Math.sin(Math.PI * e); }
+        const L = f.key === 'brawler' ? f.move.startup + 6 : 32, peak = clamp((f.mfOrigDist || 250) * 0.85, 60, 140); // (Tetsu: landing comes well after active starts, not 2 frames after — so the leap itself, not just the slam, is a real hit window)
+        if (mf <= L) { const e = mf / L; f.x = lerp(f.leap.x0, f.leap.tx, e); f.y = peak * Math.sin(Math.PI * e); }
         if (mf === L) { f.y = 0; dustAt(f.x + f.facing * 30, true); cracks(f.x + f.facing * 40); parts.push({ type: 'ering', x: f.x + f.facing * 40, y: GROUND, r: 8, vr: 7, life: 14, max: 14, col: '125,235,255' }); game.shake = Math.max(game.shake, 5); sfx('land'); }
       } };
     case 'qiSweep': return { id, label: 'Qi Sweep', pre: 7, startup: 8, active: 14, recovery: 16, wind: 'scoopW', pose: 'scoop', selfMove: true, aura: true, speedFx: true,
