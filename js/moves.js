@@ -1034,13 +1034,13 @@ function specialMoveBase(id) {
         if (mf <= L) { const e = mf / L; f.x = lerp(f.leap.x0, f.leap.tx, e); f.y = peak * Math.sin(Math.PI * e); }
         if (mf === L) { f.y = 0; dustAt(f.x + f.facing * 30, true); cracks(f.x + f.facing * 40); parts.push({ type: 'ering', x: f.x + f.facing * 40, y: GROUND, r: 8, vr: 7, life: 14, max: 14, col: '125,235,255' }); game.shake = Math.max(game.shake, 5); sfx('land'); }
       } };
-    case 'qiSweep': return { id, label: 'Qi Sweep', pre: 7, startup: 8, active: 14, recovery: 16, wind: 'scoopW', pose: 'scoop', selfMove: true, aura: true, speedFx: true, bodyHurt: true,
+    case 'qiSweep': return { id, label: 'Qi Sweep', pre: 7, startup: 8, active: 14, recovery: 16, wind: 'scoopW', pose: 'scoop', selfMove: true, aura: true, speedFx: true, bodyHurt: true, hurtSkip: 'h1', // (his own hurtbox doesn't reach out to the scooping hand's own tip — that's his attack's reach, not a reason to be that exposed)
       trail: { cx: 30, cy: 20, r: 62, a0: -75, a1: 65, col: '125,235,255' },
-      hitbox: [0,70,0,36], low: true, dmg: 48, stun: 20, bstun: 10, push: 2, launch: true, launchVy: 11, type: 'mid', hitstop: 8, gdrain: 8,
+      hitbox: [0,95,0,36], low: true, dmg: 48, stun: 20, bstun: 10, push: 2, launch: true, launchVy: 11, type: 'mid', hitstop: 8, gdrain: 8, // (longer reach: 70 -> 95)
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
       onFrame(f, o, mf) { if (mf > 4 && mf <= 22 && !f.hitConnected && Math.abs(o.x - f.x) > 50) { f.vx = f.facing * 11; if (mf % 2 === 0) dustAt(f.x, false); } else f.vx *= 0.6; } };
     case 'shoulder': return { id, label: 'Shoulder Charge', pre: 6, startup: 12, active: 8, recovery: 22, wind: 'crouch', pose: 'shoulder', selfMove: true, speedFx: true, bodyHurt: true,
-      hitbox: [10,62,40,120], dmg: 70, stun: 20, bstun: 12, push: 3, kd: true, kdVx: 10, kdVy: 6, type: 'mid', hitstop: 12, gdrain: 14,
+      hitbox: [10,112,40,120], dmg: 70, stun: 20, bstun: 12, push: 3, kd: true, kdVx: 10, kdVy: 6, type: 'mid', hitstop: 12, gdrain: 14, // (reach extended well past his own hurtbox's leading edge during the charge — it shouldn't be possible for him to be more exposed than his own shoulder is threatening)
       onFrame(f, o, mf) { if (mf > 3 && mf <= f.move.startup + f.move.active && !f.hitConnected && Math.abs(o.x - f.x) > 52) f.vx = f.facing * 13; else f.vx *= 0.6; } }; // (charges in from about a third of the screen)
     case 'qiOrb': return { id, label: 'Qi Orb', pre: 12, startup: 14, active: 2, recovery: 18, wind: 'blastW', pose: 'blast', proj: 'orb', limit: 1, aura: true,
       onFrame(f, o, mf) { if (mf === 14) spawnQiOrb(f); } };

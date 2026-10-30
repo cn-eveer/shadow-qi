@@ -142,8 +142,10 @@ function popTextOnce(f, t) { if (!f.airGuardT || game.frame - f.airGuardT > 20) 
 // already track the limb throwing the blow
 function poseHurtbox(d) {
   const J = solve(d.pose), s = d.ch.scale, dir = d.facing, hu = d.hipUp || 0;
+  const skip = d.move && (d.move.hurtSkip || d.move.limbJoint); // the limb actually throwing the blow: a counter shouldn't be able to snipe the very tip of his own outstretched fist or foot — the hitbox out there is his, not a reason to also widen his hurtbox (hurtSkip: for a move whose hitbox isn't itself limb-tracked, but which still reaches an arm or leg out far enough to need the same exclusion)
   let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
   for (const k of ['hip', 'sh', 'head', 'e1', 'h1', 'e2', 'h2', 'k1', 'f1', 'k2', 'f2']) {
+    if (k === skip) continue;
     const j = J[k], wx = d.x + (d.animDX || 0) + dir * s * j[0], wy = d.y + s * (j[1] + hu);
     if (wx < x0) x0 = wx; if (wx > x1) x1 = wx;
     if (wy < y0) y0 = wy; if (wy > y1) y1 = wy;
