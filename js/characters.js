@@ -68,7 +68,11 @@ const CHARS = {
       p: { label: 'Qi Palm', startup: 10, active: 4, recovery: 19, hitbox: [20,118,106,130], wind: 'palmW', pose: 'palm', lunge: [3, 11, 5], push: 10, gdrain: 22, burst: [80, 108], bodyHurt: true,
         limbJoint: 'h1', limbReach: 55, limbBack: 12, limbUp: 16, limbDown: 16 }, // a compact box on the striking palm
       k: { label: 'Axe Kick', startup: 10, active: 4, recovery: 19, hitbox: [20,104,0,150], wind: 'axeW', pose: 'axe', lunge: [3, 11, 5.5], cpLaunch: true, launchVy: 13, kd: true, stomp: [56, 0],
-        limbJoint: 'f1', limbReach: 48, limbBack: 14, limbUp: 16, limbDown: 16, // a compact box on the kicking foot, longer reach
+        limbJoint: 'f1', limbReach: 48, limbBack: 14, limbUp: 10, limbDown: 10, // a compact box on the kicking foot, longer reach, shorter height
+        poseFn(f, mf) { // the leg raised (axeW) and the chop down (axe) play across the whole technique, so it's still coming down through the active frames instead of arriving early
+          const mv = f.move, total = mv.startup + mv.active; if (mf >= total) return null;
+          return lerpPose(POSES.axeW, POSES.axe, easeInOutQ(Math.min(1, mf / total)));
+        },
         hurtW: 25, hurtBack: 10, // narrower than his full stretched-out silhouette: the leg reaching out shouldn't make his whole body that exposed
         trail: { cx: 5, cy: 62, r: 72, a0: 100, a1: -20, col: '255,215,160' } },
     },
