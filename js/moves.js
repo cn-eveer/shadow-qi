@@ -250,9 +250,11 @@ function specialMoveBase(id) {
     case 'vanishDrop': return { id, label: 'Vanish Drop Kick', startup: 36, active: 22, recovery: 15, blockAdv: -16, /* (a longer fall: out longer in the air, where it can be punished) */ wind: 'crouch', pose: 'axe', manualY: true,
       hurtW: 20, hurtBack: 10, // (narrower through the leap, pulled back from the direction he's carried in)
       trail: { cx: 5, cy: 62, r: 72, a0: 110, a1: -20, col: '190,150,255' }, noPush: true, selfMove: true,
-      hitbox: [-30,55,0,40], dmg: 60, stun: 20, bstun: 14, push: 4, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 10, gdrain: 12, // (shorter, not below the floor any more, but still reaches behind him: the arc carries him over the opponent and past them, so they can be on either side of him when it lands)
+      hitbox: [-30,55,0,40], dmg: 60, stun: 20, bstun: 14, push: 4, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 10, gdrain: 12, // (hitbox: the fallback for other systems; the real one below is the kicking leg)
+      limbJoint: 'f1', limbReach: 28, limbBack: 28, limbUp: 18, limbDown: 18, sweepBox: true, // the box rides the leg itself, swept along its own path: the foot crosses the whole stage diagonally fast enough that a single frame's box can pass clean by someone without ever overlapping them
       poseFn(f, mf) { return mf <= 20 ? POSES.crouch : mf <= 36 ? POSES.axeW : null; },
       onFrame(f, o, mf) {
+        if (mf === 1) f.vdOrigDist = Math.abs(o.x - f.x); // the real distance to them, before the backward retreat (which can by itself put him most of a leap's width away) — the arc height is scaled off this, not off how far the leap itself ends up travelling
         if (mf <= 20) { shadowRetreat(f, mf); return; }
         if (mf === 21) {
           const side = Math.sign(o.x - f.x) || f.facing;
@@ -260,8 +262,10 @@ function specialMoveBase(id) {
           const want = o.x + side * 65; // over the opponent, but never more than about a third of the stage
           f.leap = { x0: f.x, tx: clamp(f.x + side * Math.min(Math.abs(want - f.x), 230), WALL_L, WALL_R) };
         }
-        // a high arc (well above projectiles and beams) that passes over the opponent's head and lands behind them
-        if (mf > 21 && mf <= 57) { const e = (mf - 21) / 36; f.vx = 0; f.x = lerp(f.leap.x0, f.leap.tx, e); f.y = 215 * Math.sin(Math.PI * e); }
+        // a high arc (well above projectiles and beams) that passes over the opponent's head and lands behind them —
+        // shorter when he started close, the same way a real jump would be, so the foot still actually passes near
+        // someone close instead of sailing high over them on the same tall arc a longer leap needs
+        if (mf > 21 && mf <= 57) { const e = (mf - 21) / 36, peak = clamp((f.vdOrigDist || 230) * 1.3, 90, 215); f.vx = 0; f.x = lerp(f.leap.x0, f.leap.tx, e); f.y = peak * Math.sin(Math.PI * e); }
         if (mf === 57) { f.y = 0; dustAt(f.x, true); game.shake = Math.max(game.shake, 3); sfx('land'); }
       } };
     case 'vanishSlide': return { id, label: 'Vanish Slide', startup: 20, active: 42, recovery: 8, blockAdv: -16, cpLaunch: true, crouch: true, wind: 'crouch', pose: 'slideKick', selfMove: true, noPush: true, // (crouch: his hurtbox stays low the whole slide, not a standing-height one — he's flat on the ground)

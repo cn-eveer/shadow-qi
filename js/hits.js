@@ -518,7 +518,7 @@ function checkHits(a, o) {
   if (a.hitCount > 0 && a.mf - a.lastHitMf < (mv.interval || 99)) return;
   let hb = mv.kunaiBox ? kunaiBox(a) : mv.limbJoint ? limbBox(a, mv) : boxOf(a, meleeBox(a, mv.hitbox));
   if (a.key === 'staff') hb = staffTipBox(a, mv, hb);
-  if (mv.iai) hb = iaiSweepBox(a, mv, hb); // Iai Slash: a tight box on the blade, swept along the dash so it can't tunnel past someone between frames
+  if (mv.iai || mv.sweepBox) hb = iaiSweepBox(a, mv, hb); // a tight box on the limb itself, swept along its own path so a fast or diagonal motion can't tunnel past someone between two frames (mv.sweepBox: any other move whose tracked limb moves fast enough to need the same thing — Vanish Drop Kick's diagonal arc, say)
   if (floodOwner(a)) hb = { ...hb, x0: -200, x1: W + 200 }; // the flood carries the kappa's every blow: it reaches them anywhere on the stage // Mei: the staff hits along its front half, out to the tip — not at her fists
   mv.dbgBox = hb; mv.dbgBoxMf = a.mf; // training's H overlay reads this back, so it draws exactly the box just computed here — never a separate, possibly stale recomputation (iaiSweepBox in particular keeps its own frame-to-frame state, which a second call would corrupt)
   if (hitDecoys(a, hb)) { // a guarding shadow soaked up this attack
