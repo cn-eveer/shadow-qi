@@ -1034,7 +1034,7 @@ function specialMoveBase(id) {
         if (mf <= L) { const e = mf / L; f.x = lerp(f.leap.x0, f.leap.tx, e); f.y = peak * Math.sin(Math.PI * e); }
         if (mf === L) { f.y = 0; dustAt(f.x + f.facing * 30, true); cracks(f.x + f.facing * 40); parts.push({ type: 'ering', x: f.x + f.facing * 40, y: GROUND, r: 8, vr: 7, life: 14, max: 14, col: '125,235,255' }); game.shake = Math.max(game.shake, 5); sfx('land'); }
       } };
-    case 'qiSweep': return { id, label: 'Qi Sweep', pre: 7, startup: 8, active: 14, recovery: 16, wind: 'scoopW', pose: 'scoop', selfMove: true, aura: true, speedFx: true,
+    case 'qiSweep': return { id, label: 'Qi Sweep', pre: 7, startup: 8, active: 14, recovery: 16, wind: 'scoopW', pose: 'scoop', selfMove: true, aura: true, speedFx: true, bodyHurt: true,
       trail: { cx: 30, cy: 20, r: 62, a0: -75, a1: 65, col: '125,235,255' },
       hitbox: [0,70,0,36], low: true, dmg: 48, stun: 20, bstun: 10, push: 2, launch: true, launchVy: 11, type: 'mid', hitstop: 8, gdrain: 8,
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
