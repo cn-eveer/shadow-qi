@@ -25,25 +25,24 @@ function iaiSweepBox(f, mv, hb0) {
   mv.iaiBox = hb0; mv.iaiBoxMf = f.mf;
   return prev ? { x0: Math.min(hb0.x0, prev.x0), x1: Math.max(hb0.x1, prev.x1), y0: Math.min(hb0.y0, prev.y0), y1: Math.max(hb0.y1, prev.y1) } : hb0;
 }
+// Kunai Slash / Counter Vanish: the hitbox is the kunai exactly as it's drawn — the same hand-to-blade-tip segment
+// drawBody lays down for o.blade (draw-fighters.js), not a guessed box around the arm
+function kunaiBox(f) {
+  const J = solve(f.pose), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0;
+  const dx = J.h1[0] - J.e1[0], dy = J.h1[1] - J.e1[1], L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
+  const W = (lx, ly) => [f.x + (f.animDX || 0) + d * s * lx, Math.max(0, f.y + s * (ly + hu))];
+  const [hx, hy] = W(J.h1[0], J.h1[1]), [tx, ty] = W(J.h1[0] + ux * 21, J.h1[1] + uy * 21), pad = 7 * s; // 21: the same blade length drawBody draws; pad: its own width plus a little grace
+  return { x0: Math.min(hx, tx) - pad, x1: Math.max(hx, tx) + pad, y0: Math.max(0, Math.min(hy, ty) - pad), y1: Math.max(hy, ty) + pad };
+}
 // a hitbox that moves with the limb actually throwing the blow — the kicking foot, the hand holding the fist or the blade —
 // instead of a box fixed to his position: read straight off his live pose, so it travels exactly as the limb does, frame by
 // frame, through the wind-up and the strike (mv.hitbox is left alone: other systems — CPU reads, height labels, step-in — still use it)
 function limbBox(f, mv) {
   const J = solve(f.pose), s = f.ch.scale, j = J[mv.limbJoint], hu = f.hipUp || 0;
-  const x = f.x + (f.animDX || 0) + f.facing * s * j[0];
+  const x = f.x + (f.animDX || 0) + f.facing * s * j[0], y = Math.max(0, f.y + s * (j[1] + hu));
   const reach = mv.limbReach || 40, back = mv.limbBack != null ? mv.limbBack : 15, up = mv.limbUp || 20, down = mv.limbDown != null ? mv.limbDown : 20;
-  let y0, y1;
-  if (mv.sweepY) { // checkHits only ever calls this while the move is active, by which point the pose itself has usually stopped moving — a blade that's meant to still be swinging through the hit window needs its own top-to-bottom sweep, timed off how far through that window this frame is, not off a now-still pose
-    const k = clamp((f.mf - mv.startup) / Math.max(1, mv.active), 0, 1), mid = mv.sweepY[0] + (mv.sweepY[1] - mv.sweepY[0]) * k;
-    y0 = mid - down; y1 = mid + up;
-  } else {
-    const y = Math.max(0, f.y + s * (j[1] + hu));
-    y0 = y - down; y1 = y + up;
-    if (mv.limbMinY && y0 < mv.limbMinY) { const lift = mv.limbMinY - y0; y0 += lift; y1 += lift; } // (a floor under the whole box, lifted as one piece so its own height never shrinks)
-  }
-  y0 = Math.max(0, y0);
-  return f.facing > 0 ? { x0: x - back, x1: x + reach, y0, y1 }
-                       : { x0: x - reach, x1: x + back, y0, y1 };
+  return f.facing > 0 ? { x0: x - back, x1: x + reach, y0: Math.max(0, y - down), y1: y + up }
+                       : { x0: x - reach, x1: x + back, y0: Math.max(0, y - down), y1: y + up };
 }
 // no blow reaches further than this in front of its user (Lyra's spells have their own range, LYRA_RANGE)
 const MELEE_REACH = 220;
@@ -515,7 +514,7 @@ function checkHits(a, o) {
   const multi = mv.multi || 1;
   if (a.hitCount >= multi) return;
   if (a.hitCount > 0 && a.mf - a.lastHitMf < (mv.interval || 99)) return;
-  let hb = mv.limbJoint ? limbBox(a, mv) : boxOf(a, meleeBox(a, mv.hitbox));
+  let hb = mv.kunaiBox ? kunaiBox(a) : mv.limbJoint ? limbBox(a, mv) : boxOf(a, meleeBox(a, mv.hitbox));
   if (a.key === 'staff') hb = staffTipBox(a, mv, hb);
   if (mv.iai) hb = iaiSweepBox(a, mv, hb); // Iai Slash: a tight box on the blade, swept along the dash so it can't tunnel past someone between frames
   if (floodOwner(a)) hb = { ...hb, x0: -200, x1: W + 200 }; // the flood carries the kappa's every blow: it reaches them anywhere on the stage // Mei: the staff hits along its front half, out to the tip — not at her fists

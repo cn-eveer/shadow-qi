@@ -15,8 +15,8 @@ const CHARS = {
     pDmg: 0.9, kDmg: 0.92, pReach: 1, kReach: 1.08, chargeRate: 0.5, auraCol: '185,145,255',
     sp: { fP: 'shadowCharge', fPH: 'swordSlash', fK: 'cloneStrike', fKH: 'teleKick', bP: 'flame', bPH: 'fireballs', bK: 'vanishSlide', bKH: 'vanishDrop' }, sup: 'shadowArmy',
     heavy: {
-      p: { label: 'Kunai Slash', startup: 9, active: 5, recovery: 18, hitbox: [10,104,106,140], wind: 'slashW', pose: 'slash', blade: true, lunge: [3, 9, 4.5], hitstop: 10, speedFx: true, // (hitbox: a fallback box for the other systems that read it; the real one below travels with the blade)
-        limbJoint: 'h1', limbReach: 45, limbBack: 10, limbUp: 12, limbDown: 13, sweepY: [150, 119], // (the box itself swings top to middle across the 5 active frames — 150 down to 119, landing at y0 106, the same floor the original box used, so a crouching guard still ducks it like every other punch)
+      p: { label: 'Kunai Slash', startup: 9, active: 5, recovery: 18, hitbox: [10,104,106,140], wind: 'slashW', pose: 'slash', blade: true, lunge: [3, 9, 4.5], hitstop: 10, speedFx: true, // (hitbox: a fallback box for the other systems that read it; the real one below is the kunai itself)
+        kunaiBox: true, // the hitbox is exactly the drawn kunai — hand to blade-tip, read straight off the same pose drawBody uses, frame by frame through the swing
         trail: { cx: 15, cy: 105, r: 80, a0: 80, a1: -35, col: '225,235,255' } },
       k: { label: 'Crescent Kick', startup: 10, active: 5, recovery: 19, hitbox: [15,92,45,140], wind: 'crescentW', pose: 'crescent', lunge: [2, 8, 3.5], cpLaunch: true, launchVy: 13,
         trail: { cx: 0, cy: 62, r: 78, a0: -45, a1: 95, col: '190,150,255' } },
