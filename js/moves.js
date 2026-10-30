@@ -1022,7 +1022,7 @@ function specialMoveBase(id) {
       hitbox: [30,175,30,250], dmg: 50, kd: true, kdVx: 14, kdVy: 9, type: 'mid', hitstop: 13, gdrain: 10 };
     // ----- Tetsu -----
     case 'meteorFist': return { id, label: 'Meteor Fist', pre: 6, startup: 22, active: 10, recovery: 18, wind: 'meteorW', pose: 'meteorPunch', fx: 'comet', manualY: true, noPush: true, selfMove: true, aura: true, bodyHurt: true,
-      limbJoint: 'h1', limbReach: 30, limbBack: 34, limbUp: 20, limbDown: 20, sweepBox: true, // a box on the slamming fist, swept along the leap
+      limbJoint: 'h1', limbReach: 50, limbBack: 34, limbUp: 10, limbDown: 14, sweepBox: true, // a box on the slamming fist, longer reach, lower and more compact — the slam, not a tall guess
       hitbox: [-10,80,-20,90], dmg: 62, stun: 20, bstun: 14, push: 3, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 11, gdrain: 12,
       onStart(f, o) {
         const side = Math.sign(o.x - f.x) || f.facing; f.facing = side; f.mfOrigDist = Math.abs(o.x - f.x); // the real gap, before the leap moves him: a short hop for someone close, not the same tall arc every time

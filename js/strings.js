@@ -570,6 +570,7 @@ function chainMoveBase(id, f) {
       onStart(f) { f.vy = 3; f.vx = f.facing * 2; }, // a little hop over them...
       onFrame(f, o, mf) { if (mf === 4) { f.vy = -14; f.vx = f.facing * 5; } } }; // ...then dive feet-first
       if (K) Object.assign(m, { limbJoint: 'f1', limbReach: 26, limbBack: 14, limbUp: 16, limbDown: 16, sweepBox: true, bodyHurt: true }); // Kuro: a compact box on the diving foot, swept along the fast dive, in place of the shared, oversized guess (and reaching below the floor)
+      if (f.key === 'brawler') Object.assign(m, { limbJoint: 'f1', limbReach: 26, limbBack: 14, limbUp: 16, limbDown: 16, sweepBox: true, bodyHurt: true }); // Tetsu: the same — the shared box was just as oversized for him
       return m; }
     case 'aSpin': return { ...base, kind: 'k', str: 1, stance: 'j', air: true, label: 'Air Spin Kick', startup: 4, active: 4, recovery: 10, dmg: 38, hitbox: [5,100,0,130],
       kd: true, kdVx: 12, kdVy: 6, hitstop: 11, gdrain: 10, wind: 'spinW', pose: 'roundhouse', spin: [1, 4],
