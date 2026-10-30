@@ -1036,7 +1036,7 @@ function specialMoveBase(id) {
       } };
     case 'qiSweep': return { id, label: 'Qi Sweep', pre: 7, startup: 8, active: 14, recovery: 16, wind: 'scoopW', pose: 'scoop', selfMove: true, aura: true, speedFx: true, bodyHurt: true, hurtSkip: 'h1', // (his own hurtbox doesn't reach out to the scooping hand's own tip — that's his attack's reach, not a reason to be that exposed)
       trail: { cx: 30, cy: 20, r: 62, a0: -75, a1: 65, col: '125,235,255' },
-      hitbox: [0,95,0,36], low: true, dmg: 48, stun: 20, bstun: 10, push: 2, launch: true, launchVy: 11, type: 'mid', hitstop: 8, gdrain: 8, // (longer reach: 70 -> 95; any further and the scoop connects from farther away, so it leaves them too far out for the "Qi Sweep" combo demo's scripted juggle follow-up to reach — see note to the user)
+      hitbox: [0,99,0,36], low: true, dmg: 48, stun: 20, bstun: 10, push: 2, launch: true, launchVy: 11, type: 'mid', hitstop: 8, gdrain: 8, // (longer reach: 70 -> 95 -> 99, the practical ceiling — any further connects from far enough away that the launched opponent clears the engine's 130-unit air-juggle-continuation range, so his own U follow-up whiffs)
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
       onFrame(f, o, mf) { if (mf > 4 && mf <= 22 && !f.hitConnected && Math.abs(o.x - f.x) > 50) { f.vx = f.facing * 11; if (mf % 2 === 0) dustAt(f.x, false); } else f.vx *= 0.6; } };
     case 'shoulder': return { id, label: 'Shoulder Charge', pre: 6, startup: 12, active: 8, recovery: 22, wind: 'crouch', pose: 'shoulder', selfMove: true, speedFx: true, bodyHurt: true,
