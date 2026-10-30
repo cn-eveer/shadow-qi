@@ -1039,7 +1039,7 @@ function specialMoveBase(id) {
       hitbox: [0,70,0,36], low: true, dmg: 48, stun: 20, bstun: 10, push: 2, launch: true, launchVy: 11, type: 'mid', hitstop: 8, gdrain: 8,
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
       onFrame(f, o, mf) { if (mf > 4 && mf <= 22 && !f.hitConnected && Math.abs(o.x - f.x) > 50) { f.vx = f.facing * 11; if (mf % 2 === 0) dustAt(f.x, false); } else f.vx *= 0.6; } };
-    case 'shoulder': return { id, label: 'Shoulder Charge', pre: 6, startup: 12, active: 8, recovery: 22, wind: 'crouch', pose: 'shoulder', selfMove: true, speedFx: true,
+    case 'shoulder': return { id, label: 'Shoulder Charge', pre: 6, startup: 12, active: 8, recovery: 22, wind: 'crouch', pose: 'shoulder', selfMove: true, speedFx: true, bodyHurt: true,
       hitbox: [10,62,40,120], dmg: 70, stun: 20, bstun: 12, push: 3, kd: true, kdVx: 10, kdVy: 6, type: 'mid', hitstop: 12, gdrain: 14,
       onFrame(f, o, mf) { if (mf > 3 && mf <= f.move.startup + f.move.active && !f.hitConnected && Math.abs(o.x - f.x) > 52) f.vx = f.facing * 13; else f.vx *= 0.6; } }; // (charges in from about a third of the screen)
     case 'qiOrb': return { id, label: 'Qi Orb', pre: 12, startup: 14, active: 2, recovery: 18, wind: 'blastW', pose: 'blast', proj: 'orb', limit: 1, aura: true,
@@ -1058,7 +1058,7 @@ function specialMoveBase(id) {
       dmg: 50, stun: 20, bstun: 12, push: 3, launch: true, launchVy: 13, noGrace: true, type: 'mid', hitstop: 12, gdrain: 10 };
     case 'stomp': return { id, label: 'Earth Stomp', low: true, projInvul: [0, 32], pre: 7, startup: 12, active: 2, recovery: 18, wind: 'stompW', pose: 'stompDown', proj: 'wave', limit: 1, // (low: its shockwave runs along the floor)
       onFrame(f, o, mf) { if (mf === 12) { spawnWave(f); dustAt(f.x + f.facing * 40, true); cracks(f.x + f.facing * 22); game.shake = Math.max(game.shake, 4); sfx('land'); } } };
-    case 'tornado': return { id, label: 'Cyclone Lariat', projInvul: [1, 34], pre: 7, startup: 12, active: 21, recovery: 12, wind: 'lariatW', pose: 'lariat', fx: 'cyclone', manualY: true, noPush: true, selfMove: true, spin: [13, 33],
+    case 'tornado': return { id, label: 'Cyclone Lariat', projInvul: [1, 34], pre: 7, startup: 12, active: 21, recovery: 12, wind: 'lariatW', pose: 'lariat', fx: 'cyclone', manualY: true, noPush: true, selfMove: true, spin: [13, 33], bodyHurt: true,
       hitbox: [-20,100,20,140], multi: 3, interval: 5, dmg: 22, lastDmg: 34, stun: 18, bstun: 10, push: 1.5, lastPush: 3, launch: true, launchVy: 12, type: 'mid', hitstop: 6, gdrain: 10,
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
       onFrame(f, o, mf) { // a small backstep, then a jumping spinning lariat forward
