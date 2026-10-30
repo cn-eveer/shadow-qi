@@ -16,7 +16,7 @@ const CHARS = {
     sp: { fP: 'shadowCharge', fPH: 'swordSlash', fK: 'cloneStrike', fKH: 'teleKick', bP: 'flame', bPH: 'fireballs', bK: 'vanishSlide', bKH: 'vanishDrop' }, sup: 'shadowArmy',
     heavy: {
       p: { label: 'Kunai Slash', startup: 9, active: 5, recovery: 18, hitbox: [10,104,106,140], wind: 'slashW', pose: 'slash', blade: true, lunge: [3, 9, 4.5], hitstop: 10, speedFx: true, // (hitbox: a fallback box for the other systems that read it; the real one below travels with the blade)
-        limbJoint: 'h1', limbReach: 45, limbBack: 10, limbUp: 10, limbDown: 15, limbMinY: 106, // (the kunai swings top to middle: the box rides the hand down as it swings, instead of sitting fixed at the top — but a punch is still a punch: limbMinY keeps it at the same floor the original box used, so it's still a crouching guard's same duck as every other one in the game)
+        limbJoint: 'h1', limbReach: 45, limbBack: 10, limbUp: 12, limbDown: 13, sweepY: [150, 119], // (the box itself swings top to middle across the 5 active frames — 150 down to 119, landing at y0 106, the same floor the original box used, so a crouching guard still ducks it like every other punch)
         trail: { cx: 15, cy: 105, r: 80, a0: 80, a1: -35, col: '225,235,255' } },
       k: { label: 'Crescent Kick', startup: 10, active: 5, recovery: 19, hitbox: [15,92,45,140], wind: 'crescentW', pose: 'crescent', lunge: [2, 8, 3.5], cpLaunch: true, launchVy: 13,
         trail: { cx: 0, cy: 62, r: 78, a0: -45, a1: 95, col: '190,150,255' } },

@@ -30,10 +30,17 @@ function iaiSweepBox(f, mv, hb0) {
 // frame, through the wind-up and the strike (mv.hitbox is left alone: other systems — CPU reads, height labels, step-in — still use it)
 function limbBox(f, mv) {
   const J = solve(f.pose), s = f.ch.scale, j = J[mv.limbJoint], hu = f.hipUp || 0;
-  const x = f.x + (f.animDX || 0) + f.facing * s * j[0], y = Math.max(0, f.y + s * (j[1] + hu));
+  const x = f.x + (f.animDX || 0) + f.facing * s * j[0];
   const reach = mv.limbReach || 40, back = mv.limbBack != null ? mv.limbBack : 15, up = mv.limbUp || 20, down = mv.limbDown != null ? mv.limbDown : 20;
-  let y0 = y - down, y1 = y + up;
-  if (mv.limbMinY && y0 < mv.limbMinY) { const lift = mv.limbMinY - y0; y0 += lift; y1 += lift; } // (a floor under the whole box, lifted as one piece so its own height never shrinks: Kunai Slash's hand ends up at waist height, but it's still a punch — a crouching guard still ducks under it)
+  let y0, y1;
+  if (mv.sweepY) { // checkHits only ever calls this while the move is active, by which point the pose itself has usually stopped moving — a blade that's meant to still be swinging through the hit window needs its own top-to-bottom sweep, timed off how far through that window this frame is, not off a now-still pose
+    const k = clamp((f.mf - mv.startup) / Math.max(1, mv.active), 0, 1), mid = mv.sweepY[0] + (mv.sweepY[1] - mv.sweepY[0]) * k;
+    y0 = mid - down; y1 = mid + up;
+  } else {
+    const y = Math.max(0, f.y + s * (j[1] + hu));
+    y0 = y - down; y1 = y + up;
+    if (mv.limbMinY && y0 < mv.limbMinY) { const lift = mv.limbMinY - y0; y0 += lift; y1 += lift; } // (a floor under the whole box, lifted as one piece so its own height never shrinks)
+  }
   y0 = Math.max(0, y0);
   return f.facing > 0 ? { x0: x - back, x1: x + reach, y0, y1 }
                        : { x0: x - reach, x1: x + back, y0, y1 };
