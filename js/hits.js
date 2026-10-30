@@ -167,9 +167,8 @@ function drawHitboxDebug() {
   for (const f of fighters) {
     const mv = f.state === 'attack' && f.move; if (!mv || !mv.hitbox) continue;
     if (f.mf <= mv.startup || f.mf > mv.startup + mv.active) continue; // (only while it can actually hit: checkHits' own window)
-    let hb = boxOf(f, meleeBox(f, mv.hitbox));
-    if (f.key === 'staff') hb = staffTipBox(f, mv, hb);
-    if (floodOwner(f)) hb = { ...hb, x0: -200, x1: W + 200 };
+    if (f.hitCount >= (mv.multi || 1)) continue; // (already landed everything it's going to: checkHits stops computing a box for it, so there's nothing current left to show)
+    const hb = mv.dbgBoxMf === f.mf ? mv.dbgBox : boxOf(f, meleeBox(f, mv.hitbox)); // the exact box checkHits used this frame, not a recomputation (kunaiBox, limbBox, iaiSweepBox and the rest all live there — this just mirrors it)
     drawHitBox(hb, '255,70,70', 0.3, 0.95);
   }
   for (const p of projs) { if (!p.dead) drawHitBox(projBox(p), '255,170,60', 0.24, 0.9); }
@@ -518,6 +517,7 @@ function checkHits(a, o) {
   if (a.key === 'staff') hb = staffTipBox(a, mv, hb);
   if (mv.iai) hb = iaiSweepBox(a, mv, hb); // Iai Slash: a tight box on the blade, swept along the dash so it can't tunnel past someone between frames
   if (floodOwner(a)) hb = { ...hb, x0: -200, x1: W + 200 }; // the flood carries the kappa's every blow: it reaches them anywhere on the stage // Mei: the staff hits along its front half, out to the tip — not at her fists
+  mv.dbgBox = hb; mv.dbgBoxMf = a.mf; // training's H overlay reads this back, so it draws exactly the box just computed here — never a separate, possibly stale recomputation (iaiSweepBox in particular keeps its own frame-to-frame state, which a second call would corrupt)
   if (hitDecoys(a, hb)) { // a guarding shadow soaked up this attack
     a.hitCount = multi; a.hitConnected = true; a.lastResult = 'block'; a.vx -= (Math.sign(o.x - a.x) || a.facing) * 2;
     return;
