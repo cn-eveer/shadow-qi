@@ -125,7 +125,7 @@ function specialMoveBase(id) {
       poseFn(f, mf) {
         if (mf <= 12) return lerpPose(f.prevPose, POSES.seal, Math.min(1, mf / 5));
         if (mf <= 46) return f.chargeStop ? lerpPose(POSES.dash, POSES.uppercutW, Math.min(1, (mf - f.stopMf) / 4)) : POSES.dash;
-        if (mf <= 51) return lerpPose(POSES.uppercutW, POSES.uppercut, Math.min(1, (mf - 46) / 4)); // a smooth rising uppercut out of the dash
+        const total = f.move.startup + f.move.active; if (mf <= total) return lerpPose(POSES.uppercutW, POSES.uppercut, easeOutQ(Math.min(1, (mf - 46) / Math.max(1, total - 46)))); // a smooth rising uppercut out of the dash, still rising through the whole active window instead of arriving early and holding
         return null;
       },
       speedHold: f => f.mf > 12 && !f.chargeStop,
