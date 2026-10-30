@@ -1030,7 +1030,7 @@ function specialMoveBase(id) {
       },
       onFrame(f, o, mf) { // leap in and slam both fists down
         f.vx = 0;
-        const L = f.key === 'brawler' ? f.move.startup + 6 : 32, peak = clamp((f.mfOrigDist || 250) * 0.85, 60, 140); // (Tetsu: landing comes well after active starts, not 2 frames after — so the leap itself, not just the slam, is a real hit window)
+        const L = f.key === 'brawler' ? f.move.startup + 9 : 32, peak = clamp((f.mfOrigDist || 250) * 0.85, 60, 140); // (Tetsu: landing comes well after active starts, not 2 frames after — so the leap itself, not just the slam, is a real hit window)
         if (mf <= L) { const e = mf / L; f.x = lerp(f.leap.x0, f.leap.tx, e); f.y = peak * Math.sin(Math.PI * e); }
         if (mf === L) { f.y = 0; dustAt(f.x + f.facing * 30, true); cracks(f.x + f.facing * 40); parts.push({ type: 'ering', x: f.x + f.facing * 40, y: GROUND, r: 8, vr: 7, life: 14, max: 14, col: '125,235,255' }); game.shake = Math.max(game.shake, 5); sfx('land'); }
       } };
