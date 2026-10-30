@@ -84,10 +84,12 @@ function countProj(f, type) { let n = 0; for (const p of projs) if (p.owner === 
 // Punch + Kick = super; → → + Punch / Kick and ↓ + Punch = specials (Kuro's light and heavy buttons give different moves)
 // an opponent in the air: launched into a juggle, or jumping / attacking from a jump
 const inAir = o => (o.state === 'knock' && o.juggle) || ((o.state === 'jump' || o.state === 'attack') && o.y > 25);
+// a ← → technique that spends part of the gauge instead of filling it (Full Moon Tempest: too strong to throw out for free)
+const METER_COST = { fullMoon: 50 };
 function resolveSpecial(f, o, inp) {
   if (!inp.btn) return null;
   if (inp.fuse && f.ch.fuseSp && f.fuseG >= 100) return f.ch.fuseSp; // ← → + J + K with his fusion gauge full (Hohen's golem armour)
-  if (inp.bf && f.ch.spBF && f.ch.spBF[inp.btn]) return f.ch.spBF[inp.btn]; // ← → + a button (Kuro's Moon Tempests)
+  if (inp.bf && f.ch.spBF && f.ch.spBF[inp.btn]) { const sid = f.ch.spBF[inp.btn]; if (!METER_COST[sid] || f.meter >= METER_COST[sid]) return sid; } // ← → + a button (Kuro's Moon Tempests)
   if (inp.sup && f.meter >= 100) return f.ch.sup;
   const isP = inp.btn[1] === 'p', heavy = inp.btn[0] === 'h';
   if (inp.ff || inp.bb) {
@@ -112,6 +114,7 @@ function startMove(f, mv, str, keepBuffer) {
   if (f.y <= 0 && !mv.selfMove) f.vx = 0;
   if (mv.super) { f.meter = 0; game.superFlash = { f, name: mv.name, t: SUPER_CUT, max: SUPER_CUT }; sfx('super');
     for (let i = 0; i < 16; i++) { const an = i * Math.PI / 8; parts.push({ type: 'speed', x: f.x + Math.cos(an) * 30, y: GROUND - f.y - 90 + Math.sin(an) * 30, vx: Math.cos(an) * 9, vy: Math.sin(an) * 9, life: 12, max: 12, col: f.ch.fxCol }); } }
+  else if (METER_COST[mv.id]) f.meter = Math.max(0, f.meter - METER_COST[mv.id]); // a technique that spends the gauge instead
   else if (!mv.normal) f.meter = Math.min(100, f.meter + 3); // ...and using techniques
   if (mv.normal) sfx('swing');
   if (mv.rushTag) f.rushN = mv.rushOpen ? 0 : (f.rushN || 0) + 1;

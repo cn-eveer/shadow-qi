@@ -17,6 +17,14 @@ function staffTipBox(f, mv, hb0) {
   if (mv.launch || mv.jug || mv.air || f.y > 0 || /rise|Rise|Up\b|up\b|Upper|Cudgel|Swing/.test((mv.pose || '') + ' ' + (mv.label || ''))) out = U(out, hb0); // (rising swings and juggle hits scoop up close to her too)
   return out;
 }
+// Kuro's Iai Slash dashes at 32 px/frame through the opponent — far more than the blade's own reach in one frame —
+// so its hitbox also covers whatever ground it swept since the last frame, the same way Mei's staff-tip box does:
+// the blade itself can stay a tight box around his arm instead of a wide one guessing where he'll have moved to
+function iaiSweepBox(f, mv, hb0) {
+  const prev = mv.iaiBox && mv.iaiBoxMf === f.mf - 1 ? mv.iaiBox : null;
+  mv.iaiBox = hb0; mv.iaiBoxMf = f.mf;
+  return prev ? { x0: Math.min(hb0.x0, prev.x0), x1: Math.max(hb0.x1, prev.x1), y0: Math.min(hb0.y0, prev.y0), y1: Math.max(hb0.y1, prev.y1) } : hb0;
+}
 // no blow reaches further than this in front of its user (Lyra's spells have their own range, LYRA_RANGE)
 const MELEE_REACH = 220;
 const meleeBox = (f, hb) => f.key === 'psychic' || (f.move && f.move.longRange) || hb[1] <= MELEE_REACH ? hb : [hb[0], Math.max(hb[0] + 30, MELEE_REACH), hb[2], hb[3]];
@@ -485,6 +493,7 @@ function checkHits(a, o) {
   if (a.hitCount > 0 && a.mf - a.lastHitMf < (mv.interval || 99)) return;
   let hb = boxOf(a, meleeBox(a, mv.hitbox));
   if (a.key === 'staff') hb = staffTipBox(a, mv, hb);
+  if (mv.iai) hb = iaiSweepBox(a, mv, hb); // Iai Slash: a tight box on the blade, swept along the dash so it can't tunnel past someone between frames
   if (floodOwner(a)) hb = { ...hb, x0: -200, x1: W + 200 }; // the flood carries the kappa's every blow: it reaches them anywhere on the stage // Mei: the staff hits along its front half, out to the tip — not at her fists
   if (hitDecoys(a, hb)) { // a guarding shadow soaked up this attack
     a.hitCount = multi; a.hitConnected = true; a.lastResult = 'block'; a.vx -= (Math.sign(o.x - a.x) || a.facing) * 2;
