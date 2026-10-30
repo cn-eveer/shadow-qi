@@ -1,5 +1,12 @@
 'use strict';
 /* ================= pose selection ================= */
+// a technique sped up by techSpeed (Kuro's hand signs and wind-ups) packs several logic frames into one real tick,
+// so f.pose alone only ever shows where it lands, never where it passed through: true while this tick is one of those,
+// so drawFighter can bridge the gap with a few extra in-between poses instead of a single snapped-to pose.
+function speedBridgeActive(f) {
+  const mv = f.state === 'attack' && f.move; if (!mv || !mv.speedUp) return false;
+  return !f.hitConnected && (f.pre > 0 || f.mf < mv.startup) && !(mv.speedHold && mv.speedHold(f));
+}
 const STEADY_IDLE = { staff: true, paladin: true, psychic: true };
 function idlePose(phase, key, ch) { // (a possessed salaryman stands the angel's or the devil's way)
   const c = ch || CHARS[key], s = Math.sin(globalT * 0.09 + phase), p = { ...POSES[(c && c.idle) || 'idle'] };

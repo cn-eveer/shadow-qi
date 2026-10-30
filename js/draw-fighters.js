@@ -863,6 +863,11 @@ function drawFighter(f) {
     for (let k = 3; k >= 1; k--) drawBody(f.key, f.pose, f.x - (f.x - (f.ia ? f.ia.x0 : f.x)) * 0.08 * k, GROUND - f.y + k * 6, f.facing, f.hipUp, { scale: f.ch.scale, alpha: 0.14 * (4 - k), sword: true });
   if (mv && mv.iai && f.mf > 16 && f.mf <= 24) // afterimages along the iai dash
     for (let k = 3; k >= 1; k--) drawBody(f.key, f.pose, f.x - f.vx * k * 0.5, GROUND - f.y, f.facing, f.hipUp, { scale: f.ch.scale, alpha: 0.15 * (4 - k), sword: true });
+  if (mv && mv.speedUp > 1 && f.tw && f.tw[2] && speedBridgeActive(f)) { // a sped-up wind-up skips real poses between one tick and the next: a few in-between bodies, faint, bridge the jump
+    const n = clamp(Math.round(mv.speedUp) - 1, 1, 3);
+    for (let i = n; i >= 1; i--) { const k = i / (n + 1);
+      drawBody(f.key, lerpPose(f.tw[2], f.pose, k), f.x + (f.animDX || 0), GROUND - f.y, f.facing, f.hipUp, { scale: f.ch.scale, alpha: 0.16 * (1 - k * 0.35), tint: GHOST_TINT[f.key] }); }
+  }
   const sp = f.state === 'attack' && f.move && f.move.spin;
   const turn = sp && f.mf >= sp[0] && f.mf <= sp[1] ? (f.mf - sp[0] + 1) / (sp[1] - sp[0] + 1) : null;
   if (turn !== null) drawSpinFX(f, turn);
