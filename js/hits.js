@@ -34,7 +34,7 @@ function kunaiBox(f) {
   const J = solve(f.pose), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0;
   const dx = J.h1[0] - J.e1[0], dy = J.h1[1] - J.e1[1], L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
   const W = (lx, ly) => [f.x + (f.animDX || 0) + d * s * lx, Math.max(0, f.y + s * (ly + hu))];
-  const [hx, hy] = W(J.h1[0], J.h1[1]), [tx, ty] = W(J.h1[0] + ux * 28, J.h1[1] + uy * 28), pad = 7 * s; // 28: a touch past the blade's own drawn 21, the point of the kunai
+  const [hx, hy] = W(J.h1[0], J.h1[1]), [tx, ty] = W(J.h1[0] + ux * 42, J.h1[1] + uy * 42), pad = 7 * s; // 42: a longer reach past the hand, well past the blade's own drawn 21
   return { x0: Math.min(hx, tx) - pad, x1: Math.max(hx, tx) + pad, y0: Math.max(0, Math.min(hy, ty) - pad), y1: Math.max(hy, ty) + pad };
 }
 // a hitbox that moves with the limb actually throwing the blow — the kicking foot, the hand holding the fist or the blade —

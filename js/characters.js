@@ -25,7 +25,7 @@ const CHARS = {
         },
         trail: { cx: 15, cy: 105, r: 80, a0: 80, a1: -35, col: '225,235,255' } },
       k: { label: 'Crescent Kick', startup: 10, active: 5, recovery: 19, hitbox: [15,92,45,140], wind: 'crescentW', pose: 'crescent', lunge: [2, 8, 3.5], cpLaunch: true, launchVy: 13, bodyHurt: true,
-        limbJoint: 'f1', limbReach: 20, limbBack: 15, limbUp: 15, limbDown: 15, // a compact box on the kicking foot, not the whole leg's reach
+        limbJoint: 'f1', limbReach: 34, limbBack: 15, limbUp: 15, limbDown: 15, // a compact box on the kicking foot, longer reach than just the foot's own width
         poseFn(f, mf) { // the kick swings through: crescentW raised, into crescent, across the whole technique so it's still turning during the active frames
           const mv = f.move, su = mv.startup, total = su + mv.active; if (mf >= total) return null;
           const riseEnd = Math.max(1, Math.round(su * 0.5));
@@ -272,7 +272,7 @@ const addLook = (ch, look) => { ch.normalLook = { ...(ch.normalLook || {}), ...l
 addLook(CHARS.ninja, { jp1: { label: 'Air Kunai Slash', pose: 'slash', blade: true, kunaiBox: true, bodyHurt: true, trail: { cx: 15, cy: 100, r: 75, a0: 70, a1: -40, col: '225,235,255' } }, // kunaiBox: the same hand-to-blade-tip box as the grounded Kunai Slash, compact instead of a guessed box
   cp1: { hitbox: [12,125,50,165], startup: 9, // ↓ + I, the Uppercut Launcher: reaches about twice as far, and comes out a little sooner (15F → 14F). hitbox: the fallback for other systems; the real one below is the rising fist
     limbJoint: 'h1', limbReach: 75, limbBack: 12, limbUp: 22, limbDown: 16, bodyHurt: true },
-  ck1: { hitbox: [20,150,0,30], cpLaunch: true, launchVy: 13, // (hitbox: the fallback for other systems; the real one below is the kicking leg)
+  ck1: { hitbox: [20,150,0,30], cpLaunch: true, launchVy: 13, pose: 'slideKick', // (hitbox: the fallback for other systems; the real one below is the kicking leg. pose: the same low silhouette as Vanish Slide — planted, not sliding anywhere)
     limbJoint: 'f1', limbReach: 70, limbBack: 15, limbUp: 15, limbDown: 15, sweepBox: true, bodyHurt: true } }); // ↓ + K, the Sweep: reaches further, and like the Crescent Kick it launches on a counter or a punish (a juggle), knocking down otherwise — a compact box on the leg itself, low and planted, no retreat of any kind, his own hurtbox fitted to the crouch
 addLook(CHARS.brawler, { jp1: { label: 'Air Hammer Fist', pose: 'tHammer', burst: [70, 70], aura: true } });
 addLook(CHARS.salary, { jp1: { label: 'Air Briefcase Drop', pose: 'sCase' }, jk1: { label: 'Air Briefcase Swing', pose: 'sCase' }, ck1: { label: 'Briefcase Trip', wind: 'crouch', pose: 'sCase', hitbox: [20,120,0,40] } });
