@@ -25,6 +25,16 @@ function iaiSweepBox(f, mv, hb0) {
   mv.iaiBox = hb0; mv.iaiBoxMf = f.mf;
   return prev ? { x0: Math.min(hb0.x0, prev.x0), x1: Math.max(hb0.x1, prev.x1), y0: Math.min(hb0.y0, prev.y0), y1: Math.max(hb0.y1, prev.y1) } : hb0;
 }
+// a hitbox that moves with the limb actually throwing the blow — the kicking foot, the hand holding the fist or the blade —
+// instead of a box fixed to his position: read straight off his live pose, so it travels exactly as the limb does, frame by
+// frame, through the wind-up and the strike (mv.hitbox is left alone: other systems — CPU reads, height labels, step-in — still use it)
+function limbBox(f, mv) {
+  const J = solve(f.pose), s = f.ch.scale, j = J[mv.limbJoint], hu = f.hipUp || 0;
+  const x = f.x + (f.animDX || 0) + f.facing * s * j[0], y = Math.max(0, f.y + s * (j[1] + hu));
+  const reach = mv.limbReach || 40, back = mv.limbBack != null ? mv.limbBack : 15, up = mv.limbUp || 20, down = mv.limbDown != null ? mv.limbDown : 20;
+  return f.facing > 0 ? { x0: x - back, x1: x + reach, y0: Math.max(0, y - down), y1: y + up }
+                       : { x0: x - reach, x1: x + back, y0: Math.max(0, y - down), y1: y + up };
+}
 // no blow reaches further than this in front of its user (Lyra's spells have their own range, LYRA_RANGE)
 const MELEE_REACH = 220;
 const meleeBox = (f, hb) => f.key === 'psychic' || (f.move && f.move.longRange) || hb[1] <= MELEE_REACH ? hb : [hb[0], Math.max(hb[0] + 30, MELEE_REACH), hb[2], hb[3]];
@@ -491,7 +501,7 @@ function checkHits(a, o) {
   const multi = mv.multi || 1;
   if (a.hitCount >= multi) return;
   if (a.hitCount > 0 && a.mf - a.lastHitMf < (mv.interval || 99)) return;
-  let hb = boxOf(a, meleeBox(a, mv.hitbox));
+  let hb = mv.limbJoint ? limbBox(a, mv) : boxOf(a, meleeBox(a, mv.hitbox));
   if (a.key === 'staff') hb = staffTipBox(a, mv, hb);
   if (mv.iai) hb = iaiSweepBox(a, mv, hb); // Iai Slash: a tight box on the blade, swept along the dash so it can't tunnel past someone between frames
   if (floodOwner(a)) hb = { ...hb, x0: -200, x1: W + 200 }; // the flood carries the kappa's every blow: it reaches them anywhere on the stage // Mei: the staff hits along its front half, out to the tip — not at her fists

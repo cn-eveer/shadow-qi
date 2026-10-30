@@ -104,7 +104,7 @@ function drawProjBase(p) {
     ctx.restore();
   } else if (p.type === 'clone') {
     const tgt = other(p.owner), near = Math.abs(tgt.x - p.x) < 110, yS = GROUND - (p.yOff || 0);
-    const pose = p.fall ? POSES.diveKick : near ? POSES.midKick : POSES.dash, hu = p.fall ? 55 : hipFor(pose);
+    const pose = p.fall ? POSES.diveKick : p.low ? POSES.slideKick : near ? POSES.midKick : POSES.dash, hu = p.fall ? 55 : hipFor(pose); // (a low clone slides in — the same tell his own low kicks give, so it reads as low)
     for (let k = 3; k >= 1; k--) drawBody('ninja', pose, p.x - p.vx * k * 1.8, yS + (p.fall ? -k * 14 : 0), p.dir, hu, { tint: SHADOW_TINT, alpha: 0.12 * (4 - k) });
     drawBody('ninja', pose, p.x, yS, p.dir, hu, { tint: SHADOW_TINT, alpha: 0.85 });
   } else if (p.type === 'decoy') { // looks like the real Kuro: hand sign, then back to his stance
