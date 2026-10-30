@@ -1099,7 +1099,8 @@ function specialMoveBase(id) {
         if (mf <= 8) { const e = mf / 8; f.x = lerp(f.tj.x0, f.tj.tx, e); f.y = f.tj.top * e; }
         else if (mf <= 26) { f.y = Math.max(f.y, f.y + (o.y + 10 - f.y) * 0.3); f.x = clamp(o.x - f.facing * 30, WALL_L, WALL_R); } // keep level with them as they rise
       } };
-    case 'duckUpper': return { id, label: 'Crouching Upper', pre: 6, startup: 11, active: 10, recovery: 18, wind: 'crouch', pose: 'uppercut', selfMove: true, speedFx: true, aura: true, burst: [60, 170], // → → + I: ducks in low and drives an uppercut up through them
+    case 'duckUpper': return { id, label: 'Crouching Upper', pre: 6, startup: 11, active: 10, recovery: 18, wind: 'crouch', pose: 'uppercut', selfMove: true, speedFx: true, aura: true, burst: [60, 170], bodyHurt: true, // → → + I: ducks in low and drives an uppercut up through them
+      limbJoint: 'h1', limbReach: 75, limbBack: 16, limbUp: 60, limbDown: 30, // tall (the uppercut's own pose stretches the arm a long way up, same as Rising Fist), but still rides the fist through the dash and the rise
       hitbox: [10,95,30,180], dmg: 64, stun: 22, bstun: 14, push: 4, cpLaunch: true, launchVy: 13.5, type: 'mid', hitstop: 11, gdrain: 14, // (a counter or a punish launches: a combo)
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
       onFrame(f, o, mf) { if (mf <= f.move.startup && !f.hitConnected && Math.abs(o.x - f.x) > 60) { f.vx = f.facing * 9; if (mf % 2 === 0) dustAt(f.x, false); } else f.vx *= 0.6; } };
