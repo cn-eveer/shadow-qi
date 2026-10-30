@@ -132,11 +132,15 @@ function hurtbox(d, juggle, low) {
   if (d.state === 'knock' && (d.jugSpent || (!juggle && !d.juggle))) return null; // launched opponents can be hit by anything (until the juggle is spent)
   const s = d.ch.scale;
   let h = 135;
-  const crouching = d.state === 'crouch' || (d.state === 'blockstun' && d.cguard) || (d.state === 'hitstun' && d.crouchHit) || (d.state === 'attack' && d.move && d.move.crouch);
+  const atkMv = d.state === 'attack' && d.move;
+  const crouching = d.state === 'crouch' || (d.state === 'blockstun' && d.cguard) || (d.state === 'hitstun' && d.crouchHit) || (atkMv && d.move.crouch);
   if (crouching) h = 95;
   if (d.state === 'land') h = 110;
   if (d.y > 0 || d.state === 'knock') h = 118;
-  return { x0: d.x - 25 * s, x1: d.x + 25 * s, y0: d.y, y1: d.y + h * s };
+  const w = (atkMv && d.move.hurtW) || 25; // narrower than the usual 25 either side: a move that pulls most of him back out of the way
+  const back = (atkMv && d.move.hurtBack) || 0; // shifted behind his facing, away from however far forward the attack reaches
+  const cx = d.x - back * d.facing;
+  return { x0: cx - w * s, x1: cx + w * s, y0: d.y, y1: d.y + h * s };
 }
 const overlap = (a, b) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
 const atWall = d => d.x <= WALL_L + 1 || d.x >= WALL_R - 1;
