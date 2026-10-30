@@ -270,7 +270,8 @@ CHARS.salary.lookKey = 'salary';
 // each fighter's own heavy attack in the air (I while jumping)
 const addLook = (ch, look) => { ch.normalLook = { ...(ch.normalLook || {}), ...look }; };
 addLook(CHARS.ninja, { jp1: { label: 'Air Kunai Slash', pose: 'slash', blade: true, kunaiBox: true, bodyHurt: true, trail: { cx: 15, cy: 100, r: 75, a0: 70, a1: -40, col: '225,235,255' } }, // kunaiBox: the same hand-to-blade-tip box as the grounded Kunai Slash, compact instead of a guessed box
-  cp1: { hitbox: [12,125,50,165], startup: 9 }, // ↓ + I, the Uppercut Launcher: reaches about twice as far, and comes out a little sooner (15F → 14F)
+  cp1: { hitbox: [12,125,50,165], startup: 9, // ↓ + I, the Uppercut Launcher: reaches about twice as far, and comes out a little sooner (15F → 14F). hitbox: the fallback for other systems; the real one below is the rising fist
+    limbJoint: 'h1', limbReach: 75, limbBack: 12, limbUp: 22, limbDown: 16, bodyHurt: true },
   ck1: { hitbox: [20,150,0,30], cpLaunch: true, launchVy: 13, // (hitbox: the fallback for other systems; the real one below is the kicking leg)
     limbJoint: 'f1', limbReach: 70, limbBack: 15, limbUp: 15, limbDown: 15, sweepBox: true, bodyHurt: true } }); // ↓ + K, the Sweep: reaches further, and like the Crescent Kick it launches on a counter or a punish (a juggle), knocking down otherwise — a compact box on the leg itself, low and planted, no retreat of any kind, his own hurtbox fitted to the crouch
 addLook(CHARS.brawler, { jp1: { label: 'Air Hammer Fist', pose: 'tHammer', burst: [70, 70], aura: true } });
