@@ -343,7 +343,7 @@ const confetti = (x, y, n = 12) => { const cols = ['255,90,90', '255,210,80', '1
 Object.assign(STRINGS.ninja, {
   nE: { kind: 'k', str: 1, label: 'Crescent Moon Drop', wind: 'jump', pose: 'axe', startup: 16, active: 6, recovery: 18, dmg: 60, hitbox: [-10,75,20,100], // (hitbox: the fallback for other systems; the real one below is the kicking leg)
     limbJoint: 'f1', limbReach: 26, limbBack: 26, limbUp: 16, limbDown: 16, sweepBox: true, // the box rides the leg itself, swept along its own path the same way Vanish Drop Kick's does
-    hurtW: 20, hurtBack: 10, // (narrower on the vanish and the drop)
+    bodyHurt: true, // (fitted to his actual silhouette on the vanish and the drop)
     launch: true, launchVy: 8, bounce: true, hitstop: 12, gdrain: 14, advBlock: -6, /* (−12 once the guard stall is added) */ manualY: true, noPush: true,
     poseFn: (f, mf) => mf < 9 ? POSES.slashW : mf < f.move.startup ? POSES.jump : null,
     onFrame(f, o, mf) { // vanishes, reappears above them, and drops a crescent-moon heel

@@ -15,7 +15,7 @@ const CHARS = {
     pDmg: 0.9, kDmg: 0.92, pReach: 1, kReach: 1.08, chargeRate: 0.5, auraCol: '185,145,255',
     sp: { fP: 'shadowCharge', fPH: 'swordSlash', fK: 'cloneStrike', fKH: 'teleKick', bP: 'flame', bPH: 'fireballs', bK: 'vanishSlide', bKH: 'vanishDrop' }, sup: 'shadowArmy',
     heavy: {
-      p: { label: 'Kunai Slash', startup: 9, active: 5, recovery: 18, hitbox: [10,104,106,140], wind: 'slashW', pose: 'slash', blade: true, lunge: [3, 9, 4.5], hitstop: 10, speedFx: true, // (hitbox: a fallback box for the other systems that read it; the real one below is the kunai itself)
+      p: { label: 'Kunai Slash', startup: 9, active: 5, recovery: 18, hitbox: [10,104,106,140], wind: 'slashW', pose: 'slash', blade: true, lunge: [3, 9, 4.5], hitstop: 10, speedFx: true, bodyHurt: true, // (hitbox: a fallback box for the other systems that read it; the real one below is the kunai itself. bodyHurt: his own hurtbox fitted to the swing too)
         kunaiBox: true, // the hitbox is exactly the drawn kunai — hand to blade-tip, read straight off the same pose drawBody uses, frame by frame through the swing
         poseFn(f, mf) { // the swing (slashW, kunai raised overhead -> slash, brought down and through) plays across the whole technique, wind-up and strike together, so it's still under way during the active frames instead of finished before them
           const mv = f.move, su = mv.startup, total = su + mv.active; if (mf >= total) return null; // recovery: back to the generic system
@@ -24,7 +24,7 @@ const CHARS = {
           return lerpPose(POSES.slashW, POSES.slash, easeInOutQ(Math.min(1, (mf - riseEnd) / Math.max(1, total - riseEnd)))); // …then down through the rest of the wind-up and the whole active window
         },
         trail: { cx: 15, cy: 105, r: 80, a0: 80, a1: -35, col: '225,235,255' } },
-      k: { label: 'Crescent Kick', startup: 10, active: 5, recovery: 19, hitbox: [15,92,45,140], wind: 'crescentW', pose: 'crescent', lunge: [2, 8, 3.5], cpLaunch: true, launchVy: 13,
+      k: { label: 'Crescent Kick', startup: 10, active: 5, recovery: 19, hitbox: [15,92,45,140], wind: 'crescentW', pose: 'crescent', lunge: [2, 8, 3.5], cpLaunch: true, launchVy: 13, bodyHurt: true,
         limbJoint: 'f1', limbReach: 20, limbBack: 15, limbUp: 15, limbDown: 15, // a compact box on the kicking foot, not the whole leg's reach
         poseFn(f, mf) { // the kick swings through: crescentW raised, into crescent, across the whole technique so it's still turning during the active frames
           const mv = f.move, su = mv.startup, total = su + mv.active; if (mf >= total) return null;

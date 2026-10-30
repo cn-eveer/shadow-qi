@@ -136,15 +136,31 @@ function techGuardLag(a, d, h) {
   if (!a.lagShown || game.frame - a.lagShown > 30) { a.lagShown = game.frame; popText(a.x, GROUND - a.y - 175, L('OPEN!', '隙あり！'), '255,170,120'); }
 }
 function popTextOnce(f, t) { if (!f.airGuardT || game.frame - f.airGuardT > 20) { f.airGuardT = game.frame; popText(f.x, GROUND - f.y - 170, t, '190,225,255'); } }
+// a hurtbox fitted to wherever his body actually is this frame — hip, shoulders, head, both arms and both legs, the same
+// pose solve() already gives the drawing — instead of a box of fixed width and height centered on his feet: a sliding,
+// stretched-out or airborne silhouette covers different ground than a standing one, frame by frame, just as his hitboxes
+// already track the limb throwing the blow
+function poseHurtbox(d) {
+  const J = solve(d.pose), s = d.ch.scale, dir = d.facing, hu = d.hipUp || 0;
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const k of ['hip', 'sh', 'head', 'e1', 'h1', 'e2', 'h2', 'k1', 'f1', 'k2', 'f2']) {
+    const j = J[k], wx = d.x + (d.animDX || 0) + dir * s * j[0], wy = d.y + s * (j[1] + hu);
+    if (wx < x0) x0 = wx; if (wx > x1) x1 = wx;
+    if (wy < y0) y0 = wy; if (wy > y1) y1 = wy;
+  }
+  const pad = 9 * s;
+  return { x0: x0 - pad, x1: x1 + pad, y0: Math.max(0, y0 - pad), y1: y1 + pad };
+}
 function hurtbox(d, juggle, low) {
   if (d.invul > 0 || d.hidden || d.ko || d.state === 'getup' || d.state === 'roll' || d.state === 'slashed') return null;
   if (d.loopGuard > 0) return null; // stuck too long in one combo: nothing more can hit them until they're free (no endless loops)
   // lying down: only a low attack can still reach, once per knockdown
   if (d.state === 'down') return (low && !d.otgUsed && d.st > 4) ? { x0: d.x - 58, x1: d.x + 58, y0: 0, y1: 28 } : null;
   if (d.state === 'knock' && (d.jugSpent || (!juggle && !d.juggle))) return null; // launched opponents can be hit by anything (until the juggle is spent)
+  const atkMv = d.state === 'attack' && d.move;
+  if (atkMv && d.move.bodyHurt && d.pose) return poseHurtbox(d); // fitted to the body's own silhouette this frame, not a fixed box
   const s = d.ch.scale;
   let h = 135;
-  const atkMv = d.state === 'attack' && d.move;
   const crouching = d.state === 'crouch' || (d.state === 'blockstun' && d.cguard) || (d.state === 'hitstun' && d.crouchHit) || (atkMv && d.move.crouch);
   if (crouching) h = 95;
   if (d.state === 'land') h = 110;

@@ -116,7 +116,7 @@ function specialMoveBase(id) {
     case 'cloneStrike': return { id, label: 'Shadow Clone', startup: 13, active: 6, recovery: 8, blockAdv: 0, noFmRec: true, noGuardLag: true, /* (the clone does the work: if it's guarded after he's recovered, he isn't caught off balance) */ /* (no recovery added by his frame tuning) */ wind: 'seal', pose: 'seal', proj: 'clone', limit: 1,
       onFrame(f, o, mf) { if (mf === 12) spawnClone(f, false, 0); } };
     case 'shadowCharge': return { id, label: 'Shadow Charge Upper', startup: 46, active: 9, recovery: 16, blockAdv: -21, wind: 'seal', pose: 'uppercut', selfMove: true, counterVanish: true, slow: true, interruptChance: 0.2,
-      hurtW: 20, hurtBack: 10, // (narrower while he's committed to the charge and the rise, pulled back from how far forward it carries him)
+      bodyHurt: true, // (fitted to his actual silhouette, mid-dash and mid-rise)
       hitbox: [10,92,45,165], dmg: 45, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 13, type: 'mid', hitstop: 9, gdrain: 6, // (the rising fist's own reach: longer, a little less tall)
       limbJoint: 'h1', limbReach: 30, limbBack: 10, limbUp: 20, limbDown: 15, // (the hitbox itself travels with the fist, through the whole rising arc)
       trail: { cx: 15, cy: 90, r: 95, a0: -70, a1: 100, col: '190,150,255' },
@@ -145,7 +145,7 @@ function specialMoveBase(id) {
       hitbox: [10,88,40,130], dmg: 62, stun: 20, bstun: 12, push: 2, stunT: 62, stunKind: 'shadow', type: 'mid', hitstop: 10, gdrain: 10,
       trail: { cx: 15, cy: 105, r: 72, a0: 70, a1: -30, col: '200,170,255' } };
     case 'swordSlash': return { id, label: 'Iai Slash', startup: 16, active: 12, recovery: 26, blockAdv: -20, /* (−18 measured: it cuts through) */ cpLaunch: true, launchVy: 13, wind: 'iaiStance', pose: 'iaiDash', sword: true, iai: true, slow: true, selfMove: true, noPush: true,
-      hurtW: 20, hurtBack: 15, // (narrow and pulled back behind the dash, so he isn't wide open on the way through)
+      bodyHurt: true, // (fitted to his actual silhouette through the dash)
       hitbox: [-5,80,35,115], dmg: 80, stun: 20, bstun: 12, push: 0, slash: true, type: 'mid', hitstop: 12, gdrain: 20, // (the blade's own reach, longer and thinner — iaiSweepBox covers the 32 px/frame dash so it still can't pass through someone)
       limbJoint: 'h1', limbReach: 65, limbBack: 10, limbUp: 22, limbDown: 22, // (the box travels with the sword hand; iaiSweepBox still unions it with last frame's)
       poseFn(f, mf) {
@@ -206,6 +206,7 @@ function specialMoveBase(id) {
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; puff(f.x, 40); },
       onFrame(f, o, mf) { if (mf === 5) { dustAt(f.x, false); sfx('swing'); } if (mf === 18) sfx('slash'); } };
     case 'teleKick': return { id, label: 'Sky Drop Kick', startup: 28, active: 14, recovery: 16, blockAdv: -21, wind: 'seal', pose: 'diveKick', manualY: true, noPush: true, selfMove: true,
+      bodyHurt: true, // (fitted to his actual silhouette, hanging in the air and falling — no narrower than he really is: the whole point of the longer hang is that he's genuinely open there)
       hitbox: [-10,52,-12,50], dmg: 58, stun: 24, bstun: 14, push: 2, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 9, gdrain: 10,
       limbJoint: 'f1', limbReach: 35, limbBack: 10, limbUp: 18, limbDown: 18, // (the box travels with the falling kick)
       follow: { from: 18, to: 56, at: 43, opts: { lk: 'teleSlide', hk: 'teleSpin' } },
@@ -226,6 +227,7 @@ function specialMoveBase(id) {
         if (mf === 42) { f.y = 0; dustAt(f.x, false); }
       } };
     case 'teleSlide': return { id, label: 'Drop Slide', startup: 3, active: 16, recovery: 14, blockAdv: -16, wind: 'crouch', pose: 'slideKick', selfMove: true,
+      bodyHurt: true, // (fitted to his actual silhouette: low and stretched out, the same as Vanish Slide, not the standing-height box it had no override for before)
       hitbox: [0,64,0,34], dmg: 48, stun: 18, bstun: 10, push: 2, kd: true, kdVx: 1.5, kdVy: 4, low: true, type: 'mid', hitstop: 7, gdrain: 6,
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
       onFrame(f, o, mf) {
@@ -248,7 +250,7 @@ function specialMoveBase(id) {
         if (mf <= 34 && mf % 2 === 0) crackle(f);
       } };
     case 'vanishDrop': return { id, label: 'Vanish Drop Kick', startup: 36, active: 22, recovery: 15, blockAdv: -16, /* (a longer fall: out longer in the air, where it can be punished) */ wind: 'crouch', pose: 'axe', manualY: true,
-      hurtW: 20, hurtBack: 10, // (narrower through the leap, pulled back from the direction he's carried in)
+      bodyHurt: true, // (fitted to his actual silhouette through the leap)
       trail: { cx: 5, cy: 62, r: 72, a0: 110, a1: -20, col: '190,150,255' }, noPush: true, selfMove: true,
       hitbox: [-30,55,0,40], dmg: 60, stun: 20, bstun: 14, push: 4, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 10, gdrain: 12, // (hitbox: the fallback for other systems; the real one below is the kicking leg)
       limbJoint: 'f1', limbReach: 28, limbBack: 28, limbUp: 18, limbDown: 18, sweepBox: true, // the box rides the leg itself, swept along its own path: the foot crosses the whole stage diagonally fast enough that a single frame's box can pass clean by someone without ever overlapping them
@@ -269,7 +271,7 @@ function specialMoveBase(id) {
         if (mf === 57) { f.y = 0; dustAt(f.x, true); game.shake = Math.max(game.shake, 3); sfx('land'); }
       } };
     case 'vanishSlide': return { id, label: 'Vanish Slide', startup: 20, active: 42, recovery: 8, blockAdv: -16, cpLaunch: true, crouch: true, wind: 'crouch', pose: 'slideKick', selfMove: true, noPush: true, // (crouch: his hurtbox stays low the whole slide, not a standing-height one — he's flat on the ground)
-      hurtW: 20, hurtBack: 12, // (narrower, and pulled back behind the leading kick — most of him is stretched out low and trailing, not square on where he's sliding to)
+      bodyHurt: true, // (fitted to his actual silhouette through the slide — low and stretched out, not a fixed box)
       maxTravel: 420, // (the 42 active frames at 10 px/frame can cover this much ground on their own — the default dash cap would otherwise freeze him mid-slide, well short of a far opponent, for the rest of his active frames)
       hitbox: [0,86,0,22], dmg: 52, stun: 30, bstun: 10, push: 0, kd: true, kdVx: 4, kdVy: 6, launchVy: 13, low: true, type: 'mid', hitstop: 6, gdrain: 6, // (knocks down; a counter or a punish launches: cpLaunch)
       poseFn(f, mf) { return mf <= 20 ? POSES.crouch : null; },
@@ -307,7 +309,7 @@ function specialMoveBase(id) {
         if (mf === 28) sfx('sheath');
       } };
     case 'jVanishHeel': return { id, label: 'Vanish Heel', startup: 12, active: 10, recovery: 14, wind: 'seal', pose: 'axe', manualY: true, noPush: true, selfMove: true,
-      hurtW: 20, hurtBack: 10, // (narrower on the way down)
+      bodyHurt: true, // (fitted to his actual silhouette on the way down)
       hitbox: [-10,65,0,55], dmg: 50, stun: 20, bstun: 14, push: 2, kd: true, kdVx: 1, kdVy: -8, type: 'mid', hitstop: 12, gdrain: 10, // (the same reach as Vanish Drop Kick's own axe kick, not a box of his whole body)
       limbJoint: 'f1', limbReach: 35, limbBack: 10, limbUp: 18, limbDown: 15, // (travels with the kicking foot)
       trail: { cx: 5, cy: 62, r: 72, a0: 110, a1: -20, col: '190,150,255' },
