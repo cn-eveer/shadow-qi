@@ -25,6 +25,13 @@ const CHARS = {
         },
         trail: { cx: 15, cy: 105, r: 80, a0: 80, a1: -35, col: '225,235,255' } },
       k: { label: 'Crescent Kick', startup: 10, active: 5, recovery: 19, hitbox: [15,92,45,140], wind: 'crescentW', pose: 'crescent', lunge: [2, 8, 3.5], cpLaunch: true, launchVy: 13,
+        limbJoint: 'f1', limbReach: 20, limbBack: 15, limbUp: 15, limbDown: 15, // a compact box on the kicking foot, not the whole leg's reach
+        poseFn(f, mf) { // the kick swings through: crescentW raised, into crescent, across the whole technique so it's still turning during the active frames
+          const mv = f.move, su = mv.startup, total = su + mv.active; if (mf >= total) return null;
+          const riseEnd = Math.max(1, Math.round(su * 0.5));
+          if (mf <= riseEnd) return lerpPose(f.prevPose, POSES.crescentW, easeOutQ(Math.min(1, mf / riseEnd)));
+          return lerpPose(POSES.crescentW, POSES.crescent, easeInOutQ(Math.min(1, (mf - riseEnd) / Math.max(1, total - riseEnd))));
+        },
         trail: { cx: 0, cy: 62, r: 78, a0: -45, a1: 95, col: '190,150,255' } },
     },
     colors: { cloth: '#29324d', back: '#181d2e', dark: '#0f131e', wrap: '#4a5674', glove: '#141822', accent: '#dd3a52', skin: '#f1d0aa', metal: '#8d97b0' },
