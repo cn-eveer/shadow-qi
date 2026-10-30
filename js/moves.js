@@ -258,7 +258,7 @@ function specialMoveBase(id) {
         if (mf > 21 && mf <= 57) { const e = (mf - 21) / 36; f.vx = 0; f.x = lerp(f.leap.x0, f.leap.tx, e); f.y = 215 * Math.sin(Math.PI * e); }
         if (mf === 57) { f.y = 0; dustAt(f.x, true); game.shake = Math.max(game.shake, 3); sfx('land'); }
       } };
-    case 'vanishSlide': return { id, label: 'Vanish Slide', startup: 20, active: 42, recovery: 8, blockAdv: -16, cpLaunch: true, wind: 'crouch', pose: 'slideKick', selfMove: true, noPush: true,
+    case 'vanishSlide': return { id, label: 'Vanish Slide', startup: 20, active: 42, recovery: 8, blockAdv: -16, cpLaunch: true, crouch: true, wind: 'crouch', pose: 'slideKick', selfMove: true, noPush: true, // (crouch: his hurtbox stays low the whole slide, not a standing-height one — he's flat on the ground)
       maxTravel: 420, // (the 42 active frames at 10 px/frame can cover this much ground on their own — the default dash cap would otherwise freeze him mid-slide, well short of a far opponent, for the rest of his active frames)
       hitbox: [0,86,0,30], dmg: 52, stun: 30, bstun: 10, push: 0, kd: true, kdVx: 4, kdVy: 6, launchVy: 13, low: true, type: 'mid', hitstop: 6, gdrain: 6, // (knocks down; a counter or a punish launches: cpLaunch)
       poseFn(f, mf) { return mf <= 20 ? POSES.crouch : null; },
