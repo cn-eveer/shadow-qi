@@ -17,6 +17,12 @@ const CHARS = {
     heavy: {
       p: { label: 'Kunai Slash', startup: 9, active: 5, recovery: 18, hitbox: [10,104,106,140], wind: 'slashW', pose: 'slash', blade: true, lunge: [3, 9, 4.5], hitstop: 10, speedFx: true, // (hitbox: a fallback box for the other systems that read it; the real one below is the kunai itself)
         kunaiBox: true, // the hitbox is exactly the drawn kunai — hand to blade-tip, read straight off the same pose drawBody uses, frame by frame through the swing
+        poseFn(f, mf) { // the swing (slashW, kunai raised overhead -> slash, brought down and through) plays across the whole technique, wind-up and strike together, so it's still under way during the active frames instead of finished before them
+          const mv = f.move, su = mv.startup, total = su + mv.active; if (mf >= total) return null; // recovery: back to the generic system
+          const riseEnd = Math.max(1, Math.round(su * 0.55)); // raised overhead partway through the wind-up…
+          if (mf <= riseEnd) return lerpPose(f.prevPose, POSES.slashW, easeOutQ(Math.min(1, mf / riseEnd)));
+          return lerpPose(POSES.slashW, POSES.slash, easeInOutQ(Math.min(1, (mf - riseEnd) / Math.max(1, total - riseEnd)))); // …then down through the rest of the wind-up and the whole active window
+        },
         trail: { cx: 15, cy: 105, r: 80, a0: 80, a1: -35, col: '225,235,255' } },
       k: { label: 'Crescent Kick', startup: 10, active: 5, recovery: 19, hitbox: [15,92,45,140], wind: 'crescentW', pose: 'crescent', lunge: [2, 8, 3.5], cpLaunch: true, launchVy: 13,
         trail: { cx: 0, cy: 62, r: 78, a0: -45, a1: 95, col: '190,150,255' } },

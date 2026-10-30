@@ -25,16 +25,17 @@ function iaiSweepBox(f, mv, hb0) {
   mv.iaiBox = hb0; mv.iaiBoxMf = f.mf;
   return prev ? { x0: Math.min(hb0.x0, prev.x0), x1: Math.max(hb0.x1, prev.x1), y0: Math.min(hb0.y0, prev.y0), y1: Math.max(hb0.y1, prev.y1) } : hb0;
 }
-// Kunai Slash / Counter Vanish: the hitbox rides the arm, from the hand out past the blade's own tip — longer than the blade
-// drawBody actually draws, and always reaching up to about head height, since the swing starts with the kunai raised
-// overhead and comes down from there: by the time it's active the pose itself has already settled low, so the box
-// covers the whole arc the blade swept through on the way down, not just where the hand ends up at the very end of it
+// Kunai Slash / Counter Vanish: the hitbox is the kunai exactly as it's drawn — the same hand-to-blade-tip segment
+// drawBody lays down for o.blade (draw-fighters.js). Kunai Slash's own poseFn carries the overhead-to-strike swing
+// through its active window (not finished before it, the way the generic wind-up would), so this box genuinely moves
+// frame by frame with it — starting up near the head and coming down to the arm — instead of a single box sized to
+// cover the whole arc at once
 function kunaiBox(f) {
   const J = solve(f.pose), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0;
   const dx = J.h1[0] - J.e1[0], dy = J.h1[1] - J.e1[1], L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
   const W = (lx, ly) => [f.x + (f.animDX || 0) + d * s * lx, Math.max(0, f.y + s * (ly + hu))];
-  const [hx, hy] = W(J.h1[0], J.h1[1]), [tx, ty] = W(J.h1[0] + ux * 36, J.h1[1] + uy * 36), pad = 7 * s; // 36: a longer reach than the blade's own 21, past the tip
-  return { x0: Math.min(hx, tx) - pad, x1: Math.max(hx, tx) + pad, y0: Math.max(0, Math.min(hy, ty) - pad), y1: Math.max(Math.max(hy, ty) + pad, 150 * s) }; // 150: about head height — the top of the swing it started from
+  const [hx, hy] = W(J.h1[0], J.h1[1]), [tx, ty] = W(J.h1[0] + ux * 28, J.h1[1] + uy * 28), pad = 7 * s; // 28: a touch past the blade's own drawn 21, the point of the kunai
+  return { x0: Math.min(hx, tx) - pad, x1: Math.max(hx, tx) + pad, y0: Math.max(0, Math.min(hy, ty) - pad), y1: Math.max(hy, ty) + pad };
 }
 // a hitbox that moves with the limb actually throwing the blow — the kicking foot, the hand holding the fist or the blade —
 // instead of a box fixed to his position: read straight off his live pose, so it travels exactly as the limb does, frame by
