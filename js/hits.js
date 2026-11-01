@@ -41,12 +41,14 @@ function staffBoxes(f, mv) {
 }
 // Lyra: her blows are the magic drawn where they land (drawEffects), so the hitbox is that magic: the crystal fist's circle, the floor
 // glyph (low), the column of a ground burst, the giant fist's shape — not the much wider box the move carries for the other systems
-function lyraParts(f, mv) {
+function lyraParts(f, mv, o) {
   const s = f.ch.scale, d = f.facing, out = [], at = (lx, ly) => [f.x + d * lx * s, f.y + ly * s], box = (cx, cy, hw, hh) => ({ x0: cx - hw, x1: cx + hw, y0: Math.max(0, cy - hh), y1: cy + hh });
   if (mv.psyFist) { const [px, py, sc] = mv.psyFist, R = Math.max(14, 30 * (sc || 1) * s), c = at(px, py); out.push(box(c[0], c[1], R, R)); }
   if (mv.giantFist) { const [gx, gy, sc] = mv.giantFist, k = (sc || 1) * s, c = at(gx, gy); out.push({ x0: Math.min(c[0] - d * 34 * k, c[0] + d * 28 * k), x1: Math.max(c[0] - d * 34 * k, c[0] + d * 28 * k), y0: Math.max(0, c[1] - 22 * k), y1: c[1] + 22 * k }); }
   if (mv.floorGlyph) { const gx = f.x + d * mv.floorGlyph * s; out.push({ x0: gx - 38, x1: gx + 38, y0: 0, y1: 40 }); }
   if (mv.groundBurst) { const gx = f.x + d * mv.groundBurst * s; out.push({ x0: gx - 36, x1: gx + 36, y0: 0, y1: 200 }); }
+  if (mv.shardsTo && o) { const k = (f.mf - mv.startup + 3) / 9; for (let i = 0; i < 3; i++) { const t = clamp(k * 2.2 - i * 0.15, 0, 1), x = lerp(f.x + d * 30, o.x, t), y = lerp(f.y + 100, o.y + 70, t) - (i - 1) * 12; out.push(box(x, y, 14, 9)); } } // (the three shards, where Shard Barrage draws them)
+  if (mv.orbitRunes) for (let i = 0; i < 4; i++) { const an = f.mf * 0.4 + i * Math.PI / 2, r = 40 + f.mf * 3; out.push(box(f.x + Math.cos(an) * r, f.y + 90 - Math.sin(an) * r * 0.5, 14, 14)); } // (Orbit Burst's four runes, as drawn)
   return out.length ? out : null;
 }
 // Kuro's Iai Slash dashes at 32 px/frame through the opponent — far more than the blade's own reach in one frame —
@@ -574,7 +576,7 @@ function checkHits(a, o) {
   let hb = mv.kunaiBox ? kunaiBox(a) : mv.limbJoint ? limbBox(a, mv) : boxOf(a, meleeBox(a, mv.hitbox));
   let parts = null;
   if (a.key === 'staff' && a.pose && mv.spinStaff && mv.limbJoint) { parts = staffBoxes(a, mv).concat([hb]); hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) })); } // (a kick with the staff twirling: both the foot and the staff hit)
-  else if (a.key === 'psychic' && (parts = lyraParts(a, mv))) hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) }));
+  else if (a.key === 'psychic' && (parts = lyraParts(a, mv, o))) hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) }));
   else if (a.key === 'staff' && a.pose && !/kick|Kick/.test((mv.pose || '') + ' ' + (mv.label || ''))) { parts = staffBoxes(a, mv); hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) })); }
   if (mv.iai || mv.sweepBox) hb = iaiSweepBox(a, mv, hb); // a tight box on the limb itself, swept along its own path so a fast or diagonal motion can't tunnel past someone between two frames (mv.sweepBox: any other move whose tracked limb moves fast enough to need the same thing — Vanish Drop Kick's diagonal arc, say)
   if (floodOwner(a)) hb = { ...hb, x0: -200, x1: W + 200 }; // the flood carries the kappa's every blow: it reaches them anywhere on the stage // Mei: the staff hits along its front half, out to the tip — not at her fists

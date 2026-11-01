@@ -263,11 +263,11 @@ Object.assign(STRINGS.psychic, {
         drawCrystal(x, y, 40, 1, rot);
       } else fxLighter(() => { ctx.fillStyle = `rgba(255,240,255,${0.7 * fade})`; ctx.beginPath(); ctx.arc(tx, ty, 70 * (1.4 - fade * 0.4), 0, Math.PI * 2); ctx.fill(); }); } },
   jSpin: LCR('Trinity Burst', { kind: 'k', str: 1, crystals: 3, gap: 4, cdmg: [12, 12, 34], jugVy: 5, kdEnd: true, kdVx: 6, kdVy: -6, csize: 30, recovery: 16, startup: 9 }), // a giant crystal crashes down on them
-  aKunai: AK('Shard Barrage', 'airPsyBoth', { hitbox: [5,140,0,135],
-    drawFX(f, o) { const S = f.move.startup; if (!o || f.mf < S || f.mf > S + 9) return; const k = (f.mf - S) / 9;
-      for (let i = 0; i < 3; i++) { const x = lerp(f.x + f.facing * 30, o.x, Math.min(1, k * 1.4 - i * 0.15)), y = lerp(GROUND - f.y - 100, GROUND - o.y - 70, Math.min(1, k * 1.4 - i * 0.15)) + (i - 1) * 12;
+  aKunai: AK('Shard Barrage', 'airPsyBoth', { hitbox: [5,140,0,135], shardsTo: true,
+    drawFX(f, o) { const S = f.move.startup; if (!o || f.mf < S - 3 || f.mf > S + 9) return; const k = (f.mf - S + 3) / 9; // (thrown during the wind-up, so they're arriving as it can hit)
+      for (let i = 0; i < 3; i++) { const x = lerp(f.x + f.facing * 30, o.x, clamp(k * 2.2 - i * 0.15, 0, 1)), y = lerp(GROUND - f.y - 100, GROUND - o.y - 70, clamp(k * 2.2 - i * 0.15, 0, 1)) + (i - 1) * 12; // (as fast as its hitbox: see lyraParts)
         ctx.fillStyle = 'rgba(220,240,255,.95)'; ctx.beginPath(); ctx.moveTo(x + f.facing * 12, y); ctx.lineTo(x, y - 5); ctx.lineTo(x - f.facing * 8, y); ctx.lineTo(x, y + 5); ctx.closePath(); ctx.fill(); } } }),
-  aSpin: SAF('Orbit Burst', 'airPsyBoth', { hitbox: [-40,140,0,150], // runes orbit her, then burst outward
+  aSpin: SAF('Orbit Burst', 'airPsyBoth', { hitbox: [-40,140,0,150], orbitRunes: true, // runes orbit her, then burst outward
     drawFX(f) { if (f.mf > 16) return; for (let i = 0; i < 4; i++) { const an = f.mf * 0.4 + i * Math.PI / 2, r = 40 + f.mf * 3; drawPsyFist(f.x + Math.cos(an) * r, GROUND - f.y - 90 + Math.sin(an) * r * 0.5, 0.35, 1, 1 - f.mf / 17, an); } } }),
 });
 Object.assign(STRINGS.paladin, {

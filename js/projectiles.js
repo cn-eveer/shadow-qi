@@ -233,8 +233,8 @@ function lyraCrystals(f, o, mf) { // each juggle hit: crystals form above them a
         parts.push({ type: 'crystal', x: cx, y: GROUND - o.y - 260 - k * 10, vx: o.vx * 0.5, vy: (190 + k * 10) / 6, r, life: 7, max: 7, rot: (k - (n - 1) / 2) * 0.12 }); } // ...and the crystal falls out of it
     }
     if (mf === hitF && near) {
-      const last = k === n - 1, cy = GROUND - o.y - 70 * o.ch.scale;
-      columnHit(f, o, { dmg: mv.cdmg[Math.min(k, mv.cdmg.length - 1)], stun: 22, bstun: 10, push: 0.3, juggle: true, jugVy: last ? (mv.lastJug || mv.jugVy) : mv.jugVy, relaunch: !!(last && mv.relaunch), hitstop: last ? 9 : 4, label: mv.label,
+      const last = k === n - 1, cy = GROUND - o.y - 70 * o.ch.scale, wy = o.y + 70 * o.ch.scale, R = mv.runes ? 34 + r * 0.6 : r, cx = o.x + (k - (n - 1) / 2) * 14; // (where this crystal / rune circle comes down on them)
+      columnHit(f, o, { box: { x0: cx - R, x1: cx + R, y0: Math.max(0, wy - (mv.runes ? R : r * 1.7)), y1: wy + (mv.runes ? R : r * 1.7) }, dmg: mv.cdmg[Math.min(k, mv.cdmg.length - 1)], stun: 22, bstun: 10, push: 0.3, juggle: true, jugVy: last ? (mv.lastJug || mv.jugVy) : mv.jugVy, relaunch: !!(last && mv.relaunch), hitstop: last ? 9 : 4, label: mv.label,
         ...(last && mv.kdEnd ? { kd: true, kdVx: mv.kdVx || 6, kdVy: mv.kdVy != null ? mv.kdVy : -6, juggle: false } : {}) });
       if (mv.runes) { parts.push({ type: 'ring', x: o.x, y: cy, r: 8, vr: last ? 7 : 5, life: 12, max: 12, col: '255,190,245' }); for (let i = 0; i < 6; i++) { const an = i * Math.PI / 3; parts.push({ type: 'spark', x: o.x, y: cy, vx: Math.cos(an) * 5, vy: Math.sin(an) * 5, life: 12, max: 12, col: '255,200,250' }); } }
       else crystalShatter(o.x, cy, last);
@@ -331,7 +331,9 @@ const caughtIn = o => o.state === 'knock' && o.juggle; // already juggled in a c
 const jumpedOver = (o, h = 60) => o.y > h && !caughtIn(o); // a free opponent this high has jumped over a ranged attack aimed along the ground
 function columnHit(f, o, h) { // a hit that lands wherever they are (supers, floods, pillars)
   const hu = hurtbox(o, true); if (!hu) return;
-  const hb = { x0: o.x - 20, x1: o.x + 20, y0: 0, y1: h.colH || 400 }; /* (colH: a low column, like Riptide's) */
+  const cy = o.y + 70 * o.ch.scale, hb = h.box || (f.key === 'psychic' ? { x0: o.x - 40, x1: o.x + 40, y0: Math.max(0, cy - 55), y1: cy + 55 } : { x0: o.x - 20, x1: o.x + 20, y0: 0, y1: h.colH || 400 }); /* (colH: a low column, like Riptide's. Lyra: the magic closing round them, not a column to the sky) */
+  (game.dbgRays = game.dbgRays || []).push({ boxes: [hb], t: game.frame }); // (shown in training's hitbox view)
+  if (!overlap(hb, hu)) return;
   applyHit(f, o, { type: 'mid', chip: true, proj: true, str: h.launch || h.kd ? 2 : 1, hitstop: 4, gdrain: 6, ...h }, Math.sign(o.x - f.x) || f.facing, hb, hu);
 }
 // the salaryman's possession: the angel or the devil takes him over for ten seconds
