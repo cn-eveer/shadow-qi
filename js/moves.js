@@ -27,6 +27,7 @@ function stretchReach(mv, k) { // Lyra: every attack reaches further (the glyphs
   return mv;
 }
 function normalMove(ch, kind, str, stance) {
+  if (ch.noNormal && ch.noNormal.includes(stance + kind + str)) return null; // (a normal this fighter doesn't have: Lyra has no ↓ + U)
   const mv = normalMoveBase(ch, kind, str, stance);
   const nl = mv && ch.normalLook && ch.normalLook[stance + kind + str]; if (nl) Object.assign(mv, nl);
   const sst = STRINGS[ch.lookKey || ch.key]; if (mv && sst && sst.$start && stance === 's' && str === 0 && sst.$start[kind]) mv.chain = sst.$start[kind];
@@ -997,7 +998,10 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { if (mf === 4) spawnLift(f, o, false); } };
     case 'forceWave': return { id, label: 'Spirit Fist', startup: 10, active: 9, recovery: 18, wind: 'psyW', pose: 'psyPush', giantFist: [135, 105, 1.15],
       hitbox: [30,175,30,170], multi: 3, interval: 3, dmg: 18, lastDmg: 30, stun: 18, bstun: 10, push: 2, lastPush: 12, kd: true, kdVx: 10, kdVy: 6, type: 'mid', hitstop: 5, chip: true, gdrain: 8,
-      onFrame(f, o, mf) { if (mf === 10) sfx('palm'); } };
+      onFrame(f, o, mf) { if (mf === 10) sfx('palm');
+        const mv = f.move, k = mf - mv.startup; if (k < 0 || k > mv.active) return; // the fist flies out to them (as far as 230), then stays on them for the rest of its hits — its hitbox is the fist itself
+        if (k === 0) mv.fistTo = clamp((o.x - f.x) * f.facing / f.ch.scale, 55, 230);
+        mv.giantFist = [lerp(55, mv.fistTo, Math.min(1, k / 3)), ...mv.giantFist.slice(1)]; } };
     case 'orbBurst': return { id, label: 'Orb Burst', startup: 12, active: 12, recovery: 18, wind: 'psyCast', pose: 'psyBoth',
       onFrame(f, o, mf) { // every orb (or one from her hand, if she has none) fires a ray at them
         const n = Math.max(1, Math.min(5, orbCount(f)));

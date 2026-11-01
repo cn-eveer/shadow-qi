@@ -200,7 +200,8 @@ function tryAttack(f, o, inp, noLight) { // (noLight: anything but a light attac
     startMove(f, jm, jm.str); return true;
   }
   if (noLight && str === 0) return false;
-  startMove(f, normalMove(f.ch, isP ? 'p' : 'k', str, inp.down ? 'c' : 's'), str);
+  const nm = normalMove(f.ch, isP ? 'p' : 'k', str, inp.down ? 'c' : 's'); if (!nm) return false;
+  startMove(f, nm, str);
   return true;
 }
 function startJump(f, inp) {
@@ -326,6 +327,7 @@ function runMove(f, o, inp) {
     }
   }
   if (mv.onFrame) mv.onFrame(f, o, f.mf);
+  if (f.key === 'psychic' && (mv.air || mv.jug || (o.state === 'knock' && o.juggle)) && f.mf <= mv.startup + (mv.active || 0)) lyraAim(f, o, mv); // (her air and juggle spells form on them)
   if (mv.claw && f.mf === mv.startup + 1) clawSwipe(f, mv.claw, o); // the kappa's claws leave three slashes in the air
   if (f.move !== mv) return;
   if (f.mf >= mv.startup + mv.active + mv.recovery && !(f.guardLagUntil > game.frame && (!mv.normal || mv.fiveEnder) && f.y <= 0)) endMove(f); // (a guarded technique: still stuck until its opening is over)

@@ -55,6 +55,13 @@ function lyraTip(f) { // where the crystal on Lyra's staff is right now (screen 
   const cx = J.h1[0] + ux * 113, cy = J.h1[1] + uy * 113;
   return [f.x + (f.animDX || 0) + f.facing * s * cx, GROUND - f.y - (f.ch.hover ? hoverOf(f) : 0) - s * (cy + hip)];
 }
+// a ray's hitbox: small boxes all along it, from where it starts to where it ends (screen coords in, world boxes out); kept a few frames for the training overlay
+function rayBoxes(sx, sy, tx, ty) {
+  const n = Math.max(2, Math.ceil(Math.hypot(tx - sx, ty - sy) / 18)), out = [];
+  for (let i = 0; i <= n; i++) { const x = sx + (tx - sx) * i / n, y = GROUND - (sy + (ty - sy) * i / n); out.push({ x0: x - 10, x1: x + 10, y0: Math.max(0, y - 10), y1: y + 10 }); }
+  (game.dbgRays = game.dbgRays || []).push({ boxes: out, t: game.frame });
+  return out;
+}
 function tripleRay(f, o) {
   const reach = 430, inRange = Math.abs(o.x - f.x) <= reach, hu = inRange ? hurtbox(o, true) : null;
   sfx('zap');
@@ -62,8 +69,8 @@ function tripleRay(f, o) {
     const tip = lyraTip(f), sx = tip[0], sy = tip[1] + (k - 1) * 4; // (all three out of the crystal on her staff)
     const oy = jumpedOver(o) ? 0 : o.y, tx = inRange ? o.x : f.x + f.facing * reach, ty = GROUND - oy - (55 + k * 32) * o.ch.scale; // (aimed where they stand: jump over the rays)
     parts.push({ type: 'ray', x: sx, y: sy, x1: tx, y1: ty, life: 14, max: 14, col: '210,190,255', w: 1.3 });
-    if (!hu || jumpedOver(o)) continue;
-    const hb = { x0: tx - 10, x1: tx + 10, y0: GROUND - ty - 10, y1: GROUND - ty + 10 };
+    const hb = hu && rayBoxes(sx, sy, tx, ty).find(b => overlap(b, hu)); // (only where the ray actually passes: a ray over someone crouched misses)
+    if (!hb || jumpedOver(o)) continue;
     applyHit(f, o, { dmg: k === 2 ? 24 : 14, stun: 18, bstun: 10, push: 1, type: 'mid', chip: true, hitstop: k === 2 ? 8 : 3, proj: true, str: 1, gdrain: 8, juggle: true, jugVy: 5,
       stunT: k === 2 ? 62 : undefined, stunKind: 'psy', label: 'Triple Ray' }, Math.sign(o.x - f.x) || f.facing, hb, hu);
   }
@@ -101,8 +108,8 @@ function burstRay(f, o, i, n) { // Orb Burst: a ray from an orb (or her hand) st
   parts.push({ type: 'ray', x: pos[0], y: pos[1], x1: tx, y1: ty, life: 12, max: 12 });
   sfx('zap');
   if (f.orbCD && f.orbCD[i] != null) f.orbCD[i] = Math.max(f.orbCD[i], 60);
-  if (!hu || jumpedOver(o)) return;
-  const hb = { x0: tx - 10, x1: tx + 10, y0: GROUND - ty - 10, y1: GROUND - ty + 10 };
+  const hb = hu && rayBoxes(pos[0], pos[1], tx, ty).find(b => overlap(b, hu)); // (only where the ray actually passes)
+  if (!hb || jumpedOver(o)) return;
   applyHit(f, o, { dmg: orbCount(f) ? 16 : 30, stun: 16, bstun: 8, push: 1, type: 'mid', chip: true, hitstop: 4, proj: true, str: 1, gdrain: 4, juggle: true, jugVy: 5, label: 'Orb Ray' }, Math.sign(o.x - f.x) || f.facing, hb, hu);
 }
 // Great Sage Pillar: a giant staff crashes down on them
@@ -237,12 +244,20 @@ function lyraCrystals(f, o, mf) { // each juggle hit: crystals form above them a
   }
 }
 // Lyra's runes appear right where the opponent stands, out to a long range (further than Jesse's guns)
+// her spells in the air or in a juggle: the crystal fist / giant fist forms on them, wherever they've been carried — within reach of where it
+// would be (up to 170 ahead, 90 above or below) — so it can be tight around the magic and still find them
+function lyraAim(f, o, mv) {
+  const s = f.ch.scale, dx = (o.x - f.x) * f.facing / s, dy = (o.y + 60 * o.ch.scale - f.y) / s;
+  for (const key of ['psyFist', 'giantFist']) { const p = mv[key]; if (!p) continue;
+    if (!mv.aim0) mv.aim0 = {}; if (!mv.aim0[key]) mv.aim0[key] = [p[0], p[1]];
+    const [x0, y0] = mv.aim0[key]; mv[key] = [clamp(dx, 30, Math.max(170, x0)), clamp(dy, y0 - 90, y0 + 90), ...p.slice(2)]; }
+}
 function lyraReach(f, o, maxD, minD) {
   const mv = f.move, s = f.ch.scale, ahead = (o.x - f.x) * f.facing / s, base = mv.psyFist ? mv.psyFist[0] : mv.floorGlyph != null ? mv.floorGlyph : mv.groundBurst;
   if (base == null) return;
   const gol = o.golem; let at = ahead; // (Hohen out of her range, his golem in it: the spell goes for the golem)
   if (gol && !gol.broken && !gol.hidden && ahead > maxD) { const ga = (gol.x - f.x) * f.facing / s; if (ga >= 0 && ga <= maxD) at = ga; }
-  const d = clamp(at, minD, maxD), shift = d - base;
+  const d = clamp(at, Math.min(minD, 45), maxD), shift = d - base; // (someone right up close: the spell lands on them, not past them — its hitbox is only the magic itself)
   if (mv.psyFist) mv.psyFist = [d, ...mv.psyFist.slice(1)];
   if (mv.floorGlyph) mv.floorGlyph = d; else if (mv.groundBurst) mv.groundBurst = d;
   if (mv.hitbox) mv.hitbox = [mv.hitbox[0] + shift, mv.hitbox[1] + shift, mv.hitbox[2], mv.hitbox[3]];
