@@ -92,7 +92,7 @@ const TECH_TIER = {
   // Tetsu (Rising Fist: his uppercut comes out without a tell, but it's punished hard if guarded)
   qiBlast: 'mod', tripleQi: 'mod', staffThrow: 'mod', staffWhirl: 'mod', pushParry: 'fast', kickParry: 'fast', parryShove: 'fast', parryKick: 'fast', duckUpper: 'mod', meteorFist: 'heavy', qiSweep: 'heavy', shoulder: 'mod', qiOrb: 'fast', qiParry: 'fast', stomp: 'heavy', tornado: 'heavy', risingFist: 'heavy',
   // Mei
-  extendStaff: 'fast', vaultSmash: 'heavy', sweepStaff: 'mod', poleKick: 'mod', windmill: 'mod', cloudLeap: 'heavy', somersault: 'heavy', feint: 'fast',
+  extendStaff: 'fast', vaultSmash: 'heavy', sweepStaff: 'mod', poleKick: 'mod', windmill: 'mod', cloudLeap: 'heavy', vaultBack: 'heavy', feint: 'fast',
   // Lyra
   phantomFist: 'fast', crushFist: 'heavy', psyLift: 'heavy', forceWave: 'mod', orbBurst: 'mod', tripleRay: 'mod', orbStrong: 'mod', orbLong: 'mod',
   // Aldric

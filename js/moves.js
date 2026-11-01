@@ -96,7 +96,7 @@ function heavyFX(f, mv) {
 const POUNCE_MAX = 384, RIP_REACH = 380, RIP_PULL = 440; // the kappa's Pounce leaps this far at most; Riptide drags them this far at most (half the stage), and drags them this far at most
 const KURO_REC = { cloneStrike: 8, shadowCharge: 14, counterVanish: 12, swordSlash: 18, ambushBehind: 16, ambushLeap: 20, ambushSlide: 16, ambushKick: 18, // Shadow Charge and its follow-ups can be punished
   teleKick: 7, teleSlide: 9, teleSpin: 12, flame: 10, fireballs: 1, vanishDrop: 10, vanishSlide: 6, jFire: 10, jRain: 8, jClone: 8, jIai: 15, jVanishHeel: 9, shadowArmy: 22 };
-const SLOW_SPECIALS = { staff: new Set(['extendStaff', 'vaultSmash', 'sweepStaff', 'poleKick', 'windmill', 'cloudLeap', 'somersault', 'feint']),
+const SLOW_SPECIALS = { staff: new Set(['extendStaff', 'vaultSmash', 'sweepStaff', 'poleKick', 'windmill', 'cloudLeap', 'vaultBack', 'feint']),
   psychic: new Set(['phantomFist', 'crushFist', 'psyLift', 'forceWave', 'orbBurst', 'tripleRay', 'orbStrong', 'orbLong']) };
 // Tetsu's standing techniques drive forward while they wind up (speed per technique)
 const TETSU_STEP = { qiBlast: 4, qiOrb: 4, stomp: 4, qiParry: 3, qiCannon: 3 };
@@ -439,12 +439,26 @@ function specialMoveBase(id) {
         else if (mf <= 44) { const e = (mf - 30) / 14; f.x = lerp(f.dive.x0, f.dive.tx, e); f.y = Math.max(0, 220 * (1 - e)); }
         if (mf === 44) { f.y = 0; dustAt(f.x, true); game.shake = Math.max(game.shake, 4); }
       } };
-    case 'somersault': return { id, label: 'Somersault Kick', startup: 4, active: 10, recovery: 99, untilLand: true, landT: 6, wind: 'crouch', pose: 'flipKick',
-      hitbox: [-10,90,40,190], dmg: 70, stun: 20, bstun: 16, push: 3, launch: true, launchVy: 13, type: 'mid', hitstop: 10, gdrain: 8,
-      limbJoint: 'f1', limbReach: 24, limbBack: 24, limbUp: 24, limbDown: 24, sweepBox: true, // (the box is on the kicking foot as it goes round with her, from the take-off: not a fixed box beside her)
-      trail: { cx: 0, cy: 90, r: 90, a0: -80, a1: 120, col: '255,205,110' },
-      onStart(f) { f.invul = 6; },
-      onFrame(f, o, mf) { if (mf === 4) { f.vy = 11; f.y = 0.5; f.vx = f.facing * 0.6; f.flipT = 22; f.flipMax = 22; sfx('rise'); } } };
+    case 'vaultBack': return { id, label: 'Back Vault Smash', startup: 14, active: 10, recovery: 16, wind: 'vault', pose: 'staffSlamAir', manualY: true, noPush: true, selfMove: true, // ← ← + J: Pole Vault Smash backwards — she plants the staff, vaults back away from them and brings it down on them as she goes
+      hitbox: [-10,200,-20,130], dmg: 58, stun: 20, bstun: 14, push: 3, launch: true, launchVy: 12, type: 'mid', hitstop: 11, gdrain: 12, // (hitbox: the fallback for other systems; the real one is the staff)
+      staffExt: 30, staffFront: true, hitFrom: 7,
+      trail: { cx: 20, cy: 90, r: 120, a0: 110, a1: -30, col: '255,205,110' },
+      poseFn(f, mf) { // the staff planted upright, then brought down in front of her through the end of the wind-up and the active frames (evenly), held there to the landing
+        const mv = f.move, su = mv.startup, L = su + 10; if (mf > L + 2) return null;
+        if (mf <= 4) return lerpPose(f.prevPose, POSES.vault, easeOutQ(mf / 4));
+        if (mf <= su + 4) return lerpPose(POSES.vault, POSES.staffSlamAir, (mf - 4) / su);
+        return POSES.staffSlamAir;
+      },
+      onStart(f, o) {
+        const side = Math.sign(o.x - f.x) || f.facing; f.facing = side;
+        f.leap = { x0: f.x, tx: clamp(f.x - side * 120, WALL_L, WALL_R) }; sfx('rise');
+      },
+      onFrame(f, o, mf) { // vaults back off the planted staff, swinging it down on them
+        if (f.hitConnected && o.juggle && Math.abs(o.x - f.x) > 80) o.vx = Math.sign(f.x - o.x) * clamp((Math.abs(o.x - f.x) - 80) / 12, 1, 9); // (the staff drags them along after her, so the juggle can follow)
+        f.vx = 0; const L = f.move.startup + 10;
+        if (mf <= L) { const e = mf / L; f.x = lerp(f.leap.x0, f.leap.tx, e); f.y = 120 * Math.sin(Math.PI * e); }
+        if (mf === L) { f.y = 0; dustAt(f.x, true); sfx('land'); }
+      } };
     case 'feint': return { id, label: 'Monkey Feint', startup: 22, active: 6, recovery: 16, wind: 'crouch', pose: 'thrust', staffExt: 60, selfMove: true, speedFx: true,
       hitbox: [20,220,70,125], dmg: 52, stun: 20, bstun: 12, push: 6, type: 'mid', hitstop: 9, gdrain: 10,
       poseFn(f, mf) { return mf <= 12 ? POSES.tuck : null; },

@@ -506,7 +506,7 @@ const LABEL_JA = {
   "Sliding Dogeza": "滑り土下座",
   "Snap Kick": "鋭い蹴り",
   "Soaring Staff": "舞い上がる棍",
-  "Somersault Kick": "宙返り蹴り",
+  "Back Vault Smash": "後ろ棒高跳び叩き",
   "Soul Drain": "魂吸い",
   "Spilled Coffee": "こぼれたコーヒー",
   "Spin Kick": "回転蹴り",
