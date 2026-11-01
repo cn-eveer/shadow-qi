@@ -164,6 +164,7 @@ function hurtbox(d, juggle, low) {
   const s = d.ch.scale;
   let h = 135;
   const crouching = d.state === 'crouch' || (d.state === 'blockstun' && d.cguard) || (d.state === 'hitstun' && d.crouchHit) || (atkMv && d.move.crouch);
+  if (crouching && !atkMv && d.pose) return poseHurtbox(d); // (crouched — guarding low, or hit there — he leans well forward of the old fixed box: fit it to the body he's actually drawn as)
   if (crouching) h = 95;
   if (d.state === 'land') h = 110;
   if (d.y > 0 || d.state === 'knock') h = 118;

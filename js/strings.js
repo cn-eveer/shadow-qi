@@ -647,6 +647,17 @@ function projBox(p) {
   return { x0: Math.min(p.x, p.x - back) - p.r, x1: Math.max(p.x, p.x - back) + p.r, y0: p.y - p.r, y1: p.y + p.r };
 }
 // simple projectiles (plates, water, bubbles, bullets, dynamite, business cards, feathers, halos, hellfire)
+// a parry in its active frames sends a travelling projectile straight back at whoever threw it (Lyra's magic still can't be parried)
+function parryReflect(tgt, p) {
+  const mv = tgt.state === 'attack' && tgt.move;
+  if (!mv || !mv.parry || tgt.mf <= mv.startup || tgt.mf > mv.startup + mv.active || !p.owner || p.owner.key === 'psychic' || p.reflected) return false;
+  const dir = Math.sign(p.vx) || p.dir || 0; if (mv.frontOnly && dir !== -tgt.facing) return false;
+  p.owner = tgt; p.vx = -p.vx || tgt.facing * 8; p.vy = -(p.vy || 0) * 0.5; p.dir = -(p.dir || dir || 1); p.boomerang = 0; p.ft = 999; p.hold = false; p.reflected = true; p.n = 0; p.life = Math.max(p.life || 0, 40);
+  if (p.h) p.h = { ...p.h, label: (p.h.label || '') + ' (reflected)' };
+  sparks(p.x, GROUND - (p.y || 80), 'block'); sfx('block'); popText(tgt.x, GROUND - 170, 'PARRY!', '125,235,255'); popText(tgt.x, GROUND - 195, 'REFLECT!', '150,215,255');
+  game.freeze = Math.max(game.freeze, 6);
+  return true;
+}
 const PJ = new Set(['spikes', 'puddle', 'skidcase', 'brimstone', 'pen', 'stapler', 'mug', 'plate', 'dish', 'crescent', 'water', 'bubble', 'bullet', 'dyna', 'card', 'feather', 'haloP', 'hellfire', 'stone', 'core', 'trap']);
 function spawnPJ(f, type, o) {
   const p = Object.assign({ id: ++serial, type, owner: f, dir: f.facing, x: f.x + f.facing * 60, y: 100, vx: f.facing * 10, vy: 0, g: 0, life: 60, r: 14, hits: 1, interval: 8, n: 0, last: -99, t: 0, spin: 0 }, o);
@@ -691,6 +702,7 @@ function pjUpdate(p) {
     if (overlap(hb, fb)) { p.owner = tgt; p.vx = -p.vx || tgt.facing * 8; p.vy = -p.vy * 0.5; p.dir = -p.dir; p.boomerang = 0; p.reflected = true; p.n = 0; p.life = Math.max(p.life, 40); if (p.h) p.h = { ...p.h, label: (p.h.label || '') + ' (reflected)' };
       popText(tgt.x, GROUND - 160, 'REFLECT!', '150,215,255'); sparks(p.x, GROUND - p.y, 'block'); sfx('block'); return; }
   }
+  if (hu && overlap(hb, hu) && parryReflect(tgt, p)) return;
   if (hu && overlap(hb, hu)) {
     if (p.explode) { pjExplode(p); p.dead = true; return; }
     const pr = applyHit(own, tgt, { type: 'mid', chip: true, proj: true, str: 1, hitstop: 5, ...p.h }, Math.sign(p.vx) || p.dir, hb, hu);
@@ -933,6 +945,7 @@ function updateProjs() {
     }
     if (hu) {
       const hb = projBox(p);
+      if (overlap(hb, hu) && ['qi', 'homing', 'shuriken', 'orb', 'wave'].includes(p.type) && parryReflect(tgt, p)) continue;
       if (overlap(hb, hu)) {
         const pr = applyHit(p.owner, tgt, { dmg: p.dmg, stun: p.stun, bstun: p.bstun, push: p.push, kd: !!p.kd, type: 'mid', chip: !!p.chip, hitstop: p.hitstop,
           proj: true, str: p.kd ? 2 : 1, superHit: !!p.superHit, gMul: p.gMul, low: !!p.lowHit, overhead: !!p.overhead, kdVx: p.kdVx, kdVy: p.kdVy, jugVy: p.jugVy, fixedLift: !!p.fixedLift, launch: !!p.launch, launchVy: p.launchVy, bounce: !!p.bounce, stunT: p.stunT, stunKind: p.stunKind, gdrain: p.type === 'shuriken' || p.type === 'homing' ? 5 : p.juggle ? 4 : 8,
