@@ -66,9 +66,9 @@ const CHARS = {
     },
     heavy: {
       p: { label: 'Qi Palm', startup: 10, active: 4, recovery: 19, hitbox: [20,118,106,130], wind: 'palmW', pose: 'palm', lunge: [3, 11, 5], push: 10, gdrain: 22, burst: [80, 108], bodyHurt: true,
-        limbJoint: 'h1', limbReach: 55, limbBack: 12, limbUp: 16, limbDown: 16 }, // a compact box on the striking palm
+        limbJoint: 'h1', limbReach: 70, limbBack: 12, limbUp: 16, limbDown: 16 }, // a compact box on the striking palm
       k: { label: 'Axe Kick', startup: 6, active: 11, recovery: 18, hitbox: [20,104,0,150], wind: 'axeW', pose: 'axe', lunge: [3, 11, 5.5], cpLaunch: true, launchVy: 13, kd: true, stomp: [56, 0], // active/recovery here are overwritten by the brawler frames table's 'K' entry at runtime (moveFrames) — kept in sync with it so this object stays an accurate picture of what actually plays
-        limbJoint: 'f1', limbReach: 48, limbBack: 14, limbUp: 10, limbDown: 10, // a compact box on the kicking foot, longer reach, shorter height
+        limbJoint: 'f1', limbReach: 60, limbBack: 14, limbUp: 10, limbDown: 10, // a compact box on the kicking foot, longer reach, shorter height
         poseFn(f, mf) { // the leg lifts up near his own head first, holds there a beat, then comes down slowly through the rest of the window — a real chop, not a snap
           const mv = f.move, total = mv.startup + mv.active; if (mf >= total) return null;
           const k = mf / total, hold = 0.25;

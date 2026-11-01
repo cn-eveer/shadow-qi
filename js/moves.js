@@ -1028,7 +1028,7 @@ function specialMoveBase(id) {
       hitbox: [30,175,30,250], dmg: 50, kd: true, kdVx: 14, kdVy: 9, type: 'mid', hitstop: 13, gdrain: 10 };
     // ----- Tetsu -----
     case 'meteorFist': return { id, label: 'Meteor Fist', pre: 6, startup: 22, active: 10, recovery: 18, wind: 'meteorW', pose: 'meteorPunch', fx: 'comet', manualY: true, noPush: true, selfMove: true, aura: true, bodyHurt: true,
-      limbJoint: 'h1', limbReach: 62, limbBack: 34, limbUp: 10, limbDown: 14, sweepBox: true, // a box on the slamming fist, longer reach, lower and more compact — the slam, not a tall guess
+      limbJoint: 'h1', limbReach: 75, limbBack: 34, limbUp: 10, limbDown: 14, sweepBox: true, // a box on the slamming fist, longer reach, lower and more compact — the slam, not a tall guess
       hitbox: [-10,80,-20,90], dmg: 62, stun: 20, bstun: 14, push: 3, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 11, gdrain: 12,
       onStart(f, o) {
         const side = Math.sign(o.x - f.x) || f.facing; f.facing = side; f.mfOrigDist = Math.abs(o.x - f.x); // the real gap, before the leap moves him: a short hop for someone close, not the same tall arc every time
@@ -1046,7 +1046,7 @@ function specialMoveBase(id) {
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
       onFrame(f, o, mf) { if (mf > 4 && mf <= 22 && !f.hitConnected && Math.abs(o.x - f.x) > 50) { f.vx = f.facing * 11; if (mf % 2 === 0) dustAt(f.x, false); } else f.vx *= 0.6; } };
     case 'shoulder': return { id, label: 'Shoulder Charge', pre: 6, startup: 12, active: 8, recovery: 22, wind: 'crouch', pose: 'shoulder', selfMove: true, speedFx: true, bodyHurt: true,
-      hitbox: [10,112,40,120], dmg: 70, stun: 20, bstun: 12, push: 3, kd: true, kdVx: 10, kdVy: 6, type: 'mid', hitstop: 12, gdrain: 14, // (reach extended well past his own hurtbox's leading edge during the charge — it shouldn't be possible for him to be more exposed than his own shoulder is threatening)
+      hitbox: [10,130,40,120], dmg: 70, stun: 20, bstun: 12, push: 3, kd: true, kdVx: 10, kdVy: 6, type: 'mid', hitstop: 12, gdrain: 14, // (reach extended well past his own hurtbox's leading edge during the charge — it shouldn't be possible for him to be more exposed than his own shoulder is threatening)
       onFrame(f, o, mf) { if (mf > 3 && mf <= f.move.startup + f.move.active && !f.hitConnected && Math.abs(o.x - f.x) > 52) f.vx = f.facing * 13; else f.vx *= 0.6; } }; // (charges in from about a third of the screen)
     case 'qiOrb': return { id, label: 'Qi Orb', pre: 12, startup: 14, active: 2, recovery: 18, wind: 'blastW', pose: 'blast', proj: 'orb', limit: 1, aura: true,
       onFrame(f, o, mf) { if (mf === 14) spawnQiOrb(f); } };
@@ -1065,7 +1065,7 @@ function specialMoveBase(id) {
     case 'stomp': return { id, label: 'Earth Stomp', low: true, projInvul: [0, 32], pre: 7, startup: 12, active: 2, recovery: 18, wind: 'stompW', pose: 'stompDown', proj: 'wave', limit: 1, // (low: its shockwave runs along the floor)
       onFrame(f, o, mf) { if (mf === 12) { spawnWave(f); dustAt(f.x + f.facing * 40, true); cracks(f.x + f.facing * 22); game.shake = Math.max(game.shake, 4); sfx('land'); } } };
     case 'tornado': return { id, label: 'Cyclone Lariat', projInvul: [1, 34], pre: 7, startup: 12, active: 21, recovery: 12, wind: 'lariatW', pose: 'lariat', fx: 'cyclone', manualY: true, noPush: true, selfMove: true, spin: [13, 33], bodyHurt: true,
-      hitbox: [-20,100,70,145], multi: 3, interval: 5, dmg: 22, lastDmg: 34, stun: 18, bstun: 10, push: 1.5, lastPush: 3, launch: true, launchVy: 12, type: 'mid', hitstop: 6, gdrain: 10, // raised off the floor: the lariat is a swinging arm at chest/head height, not something that should also catch a low crouch
+      hitbox: [-20,120,70,145], multi: 3, interval: 5, dmg: 22, lastDmg: 34, stun: 18, bstun: 10, push: 1.5, lastPush: 3, launch: true, launchVy: 12, type: 'mid', hitstop: 6, gdrain: 10, // raised off the floor: the lariat is a swinging arm at chest/head height, not something that should also catch a low crouch
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
       onFrame(f, o, mf) { // a small backstep, then a jumping spinning lariat forward
         if (mf <= 6) { f.vx = -f.facing * 3; f.y = 0; } else if (mf <= 8) f.vx = 0;
@@ -1106,7 +1106,7 @@ function specialMoveBase(id) {
         else if (mf <= 26) { f.y = Math.max(f.y, f.y + (o.y + 10 - f.y) * 0.3); f.x = clamp(o.x - f.facing * 30, WALL_L, WALL_R); } // keep level with them as they rise
       } };
     case 'duckUpper': return { id, label: 'Crouching Upper', pre: 6, startup: 11, active: 10, recovery: 18, wind: 'crouch', pose: 'uppercut', selfMove: true, speedFx: true, aura: true, burst: [60, 170], bodyHurt: true, // → → + I: ducks in low and drives an uppercut up through them
-      limbJoint: 'h1', limbReach: 55, limbBack: 16, limbUp: 38, limbDown: 38, // a more centered box on the fist itself (was heavily up-biased, so it already covered the top before he'd risen) — now it genuinely climbs with him
+      limbJoint: 'h1', limbReach: 68, limbBack: 16, limbUp: 38, limbDown: 38, // a more centered box on the fist itself (was heavily up-biased, so it already covered the top before he'd risen) — now it genuinely climbs with him
       poseFn(f, mf) { // holds the deeper crouch longer (and the fist cocked at mid-height, not yet thrown) before the rise plays out, so the attack reads as coming up from the middle rather than already being up there
         const mv = f.move, total = mv.startup + mv.active; if (mf >= total) return null;
         const k = Math.min(1, mf / total);
@@ -1121,7 +1121,7 @@ function specialMoveBase(id) {
     case 'qiBlast': return { id, label: 'Qi Blast', pre: 8, startup: 13, active: 2, recovery: 22, wind: 'blastW', pose: 'blast', proj: 'qi', limit: 1, aura: true,
       onFrame(f, o, mf) { if (mf === 13) spawnQi(f); } };
     case 'risingFist': return { id, label: 'Rising Fist', startup: 3, active: 14, recovery: 99, untilLand: true, landT: 12, wind: 'uppercutW', pose: 'dragonFist', spin: [4, 11], fx: 'helix', aura: true, bodyHurt: true,
-      limbJoint: 'h1', limbReach: 63, limbBack: 14, limbUp: 30, limbDown: 90, // a box on the rising fist — tall, since the pose itself stretches his arm (and so his hipUp) a long way up: this still moves with him, not a fixed guess; extra reach keeps it ahead of his own hurtbox through the whole active window
+      limbJoint: 'h1', limbReach: 75, limbBack: 14, limbUp: 30, limbDown: 90, // a box on the rising fist — tall, since the pose itself stretches his arm (and so his hipUp) a long way up: this still moves with him, not a fixed guess; extra reach keeps it ahead of his own hurtbox through the whole active window
       hitbox: [0,52,40,170], dmg: 85, stun: 20, bstun: 16, push: 4, launch: true, launchVy: 14, type: 'mid', hitstop: 10, chip: true, gdrain: 8,
       onStart(f) { f.invul = 5; },
       onFrame(f, o, mf) {
