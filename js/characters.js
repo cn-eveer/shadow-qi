@@ -46,7 +46,7 @@ const CHARS = {
     frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
       U: { su: 6, act: 6, rec: 9, blk: -4 }, dU: { su: 6, act: 6, rec: 9, blk: -4 }, J: { su: 6 }, dJ: { su: 10, act: 6, blk: -10 },
       I: { su: 12, rec: 11, blk: -8, set: { cpLaunch: true, launchVy: 13 } }, // (a counter or a punish launches: a combo)
-      K: { su: 14, act: 7, rec: 22, blk: -14, set: { launchVy: 14.5 } }, // (a counter launches a little higher: the follow-up comes later after the longer recovery)
+      K: { su: 14, act: 11, rec: 18, blk: -14, set: { launchVy: 14.5 } }, // (a counter launches a little higher: the follow-up comes later after the longer recovery) // 4 frames moved from recovery into active so the chop's descent has more real time to play out — same act+rec total (29), so on-hit advantage (computed off that sum) is unchanged, and blk is its own fixed number either way
       dK: { su: 12, act: 8, blk: -12, set: { launch: false, kd: true, kdVx: 3, kdVy: 5, cpLaunch: true, launchVy: 13 } }, // (sweeps them off their feet; a counter or a punish launches)
       risingFist: { su: 14, act: 18, blk: -18 },
       meteorFist: { su: 18, act: 20, blk: -18, set: { cutOnHit: true, launch: false, bounce: false, kd: true, kdVx: 16, kdVy: 9, cpLaunch: true, launchVy: 12, guardPush: 16, gdrain: 32, chip: true, hitbox: [-10,80,28,110] } }, // (a mid: the fists come down at body height) // (guarded: shoves them far back and tears at the guard)
@@ -67,10 +67,10 @@ const CHARS = {
     heavy: {
       p: { label: 'Qi Palm', startup: 10, active: 4, recovery: 19, hitbox: [20,118,106,130], wind: 'palmW', pose: 'palm', lunge: [3, 11, 5], push: 10, gdrain: 22, burst: [80, 108], bodyHurt: true,
         limbJoint: 'h1', limbReach: 55, limbBack: 12, limbUp: 16, limbDown: 16 }, // a compact box on the striking palm
-      k: { label: 'Axe Kick', startup: 6, active: 8, recovery: 19, hitbox: [20,104,0,150], wind: 'axeW', pose: 'axe', lunge: [3, 11, 5.5], cpLaunch: true, launchVy: 13, kd: true, stomp: [56, 0], // same startup+active total as before (14), just shifted earlier so the active window opens sooner
+      k: { label: 'Axe Kick', startup: 6, active: 11, recovery: 18, hitbox: [20,104,0,150], wind: 'axeW', pose: 'axe', lunge: [3, 11, 5.5], cpLaunch: true, launchVy: 13, kd: true, stomp: [56, 0], // active/recovery here are overwritten by the brawler frames table's 'K' entry at runtime (moveFrames) — kept in sync with it so this object stays an accurate picture of what actually plays
         limbJoint: 'f1', limbReach: 48, limbBack: 14, limbUp: 10, limbDown: 10, // a compact box on the kicking foot, longer reach, shorter height
-        poseFn(f, mf) { // the leg lifts up near his own head first, holds there a beat, then comes down slowly through the rest of the window — a real chop, not a snap. Stretched out well past the active window on purpose: the hit can still only land during startup..active (unchanged), but the leg keeps finishing its slow descent through recovery instead of snapping to the final pose the instant the hit window closes
-          const mv = f.move, total = mv.startup + mv.active + 4; if (mf >= total) return null;
+        poseFn(f, mf) { // the leg lifts up near his own head first, holds there a beat, then comes down slowly through the rest of the window — a real chop, not a snap
+          const mv = f.move, total = mv.startup + mv.active; if (mf >= total) return null;
           const k = mf / total, hold = 0.25;
           if (k < hold) return lerpPose(f.prevPose, POSES.axeW, easeOutQ(Math.min(1, k / hold)));
           const d = Math.min(1, (k - hold) / (1 - hold));
