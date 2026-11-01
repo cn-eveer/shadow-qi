@@ -6,7 +6,8 @@
 // Where Mei's staff is, in pose space: both hands on it, held near the back end with the long end out front — or, with her hands
 // close together, held at the middle along her forearm. Between the two it blends (it used to switch outright at a 14px hand gap,
 // so a swing whose hands drifted across it snapped the staff round and back). drawStaff and the hitbox both read this.
-function staffLine(J, ext, spinAngle) {
+function staffLine(J, ext, spinAngle, flat) {
+  if (spinAngle != null && flat) { const c = Math.cos(spinAngle), n = Math.sin(spinAngle); return [[J.h1[0] - c * 92, J.h1[1] + n * 3], [J.h1[0] + c * (92 + ext), J.h1[1] - n * 3], c < 0 ? -1 : 1, 0]; } // (spun flat along the floor: round her hand, seen side-on)
   if (spinAngle != null) { const ux = Math.cos(spinAngle), uy = Math.sin(spinAngle); return [[J.h1[0] - ux * 92, J.h1[1] - uy * 92], [J.h1[0] + ux * (92 + ext), J.h1[1] + uy * (92 + ext)], ux, uy]; }
   const hx = J.h1[0] - J.h2[0], hy = J.h1[1] - J.h2[1], L = Math.hypot(hx, hy), fx = J.h1[0] - J.e1[0], fy = J.h1[1] - J.e1[1], F = Math.hypot(fx, fy) || 1;
   const w = clamp((L - 12) / 3, 0, 1); let ux = fx / F * (1 - w) + (L ? hx / L : 0) * w, uy = fy / F * (1 - w) + (L ? hy / L : 0) * w; const U = Math.hypot(ux, uy);
@@ -14,17 +15,21 @@ function staffLine(J, ext, spinAngle) {
   const back = 92 + (34 - 92) * w, front = 92 + (150 - 92) * w, c0 = [J.h1[0] + (J.h2[0] - J.h1[0]) * w, J.h1[1] + (J.h2[1] - J.h1[1]) * w];
   return [[c0[0] - ux * back, c0[1] - uy * back], [J.h1[0] + ux * (front + ext), J.h1[1] + uy * (front + ext)], ux, uy];
 }
-const staffSpinAt = (f, mv) => f.mf * 0.7 * f.facing; // a twirling staff's angle: 0.7 rad a frame, as it always spun
+const staffSpinAt = (f, mv) => f.mf * 0.7 * f.facing;
+// hit checks run before this frame's pose is set (updatePose), so a box read off f.pose is a frame behind what's drawn. For Mei's moves that
+// author their own motion (poseFn: a pure function of the frame), use the pose being drawn this frame, so the hitbox is on the staff you see.
+const livePose = f => (f.key === 'staff' && f.state === 'attack' && f.move && f.move.poseFn && !(f.pre > 0) && f.move.poseFn(f, f.mf)) || f.pose; // a twirling staff's angle: 0.7 rad a frame, as it always spun
 function staffSeg(f, mv) {
-  const J = solve(f.pose), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, k = f.mf - mv.startup;
+  const J = solve(livePose(f)), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, k = f.mf - mv.startup;
   const ext = mv.staffExt ? mv.staffExt * (k <= 0 ? 0 : k <= 3 ? k / 3 : k <= mv.active ? 1 : Math.max(0, 1 - (k - mv.active) / 6)) : 0; // (as drawn: see drawFighter)
   const spin = mv.spinStaff && f.mf > Math.max(1, mv.startup - 4) ? staffSpinAt(f, mv) : null;
-  const [a, b] = staffLine(J, ext, spin), W = p => [f.x + (f.animDX || 0) + d * s * p[0], f.y + s * (p[1] + hu)];
+  let [a, b] = staffLine(J, ext, spin, mv.floorSpin); if (mv.staffFront && spin == null) a = J.h1; // (staffFront: only the striking end, hand to tip — a low poke's hitbox stays low)
+  const W = p => [f.x + (f.animDX || 0) + d * s * p[0], f.y + s * (p[1] + hu)];
   return [W(a), W(b)]; // (the whole staff as drawn, butt end to tip)
 }
 function staffBoxes(f, mv) {
-  if (mv.spinStaff && f.mf > Math.max(1, mv.startup - 4)) { // twirling: the staff is a blur all the way round her hand — a disc of small boxes out to its length, not a rectangle
-    const J = solve(f.pose), s = f.ch.scale, hu = f.hipUp || 0, c = [f.x + (f.animDX || 0) + f.facing * s * J.h1[0], f.y + s * (J.h1[1] + hu)], r = 14 * s, out = [];
+  if (mv.spinStaff && !mv.floorSpin && f.mf > Math.max(1, mv.startup - 4)) { // twirling: the staff is a blur all the way round her hand — a disc of small boxes out to its length, not a rectangle
+    const J = solve(livePose(f)), s = f.ch.scale, hu = f.hipUp || 0, c = [f.x + (f.animDX || 0) + f.facing * s * J.h1[0], f.y + s * (J.h1[1] + hu)], r = 14 * s, out = [];
     for (const R of [0, 32, 62, 92]) for (let k = 0; k < (R ? Math.round(R / 8) : 1); k++) { const an = k / Math.round(R / 8 || 1) * Math.PI * 2, x = c[0] + Math.cos(an) * R * s, y = c[1] + Math.sin(an) * R * s; out.push({ x0: x - r, x1: x + r, y0: Math.max(0, y - r), y1: y + r }); }
     return out;
   }
@@ -58,7 +63,8 @@ function kunaiBox(f) {
 // instead of a box fixed to his position: read straight off his live pose, so it travels exactly as the limb does, frame by
 // frame, through the wind-up and the strike (mv.hitbox is left alone: other systems — CPU reads, height labels, step-in — still use it)
 function limbBox(f, mv) {
-  const J = solve(f.pose), s = f.ch.scale, j = J[mv.limbJoint], hu = f.hipUp || 0;
+  const J = solve(livePose(f)), s = f.ch.scale, hu = f.hipUp || 0; let j = J[mv.limbJoint];
+  if (f.flipT > 0) { const r = -(1 - f.flipT / (f.flipMax || 20)) * Math.PI * 2, c = Math.cos(r), n = Math.sin(r); j = [j[0] * c - j[1] * n, j[0] * n + j[1] * c]; } // (mid-somersault: turned about the hip with the body, the way drawFighter draws it)
   const x = f.x + (f.animDX || 0) + f.facing * s * j[0], y = Math.max(0, f.y + s * (j[1] + hu));
   const reach = mv.limbReach || 40, back = mv.limbBack != null ? mv.limbBack : 15, up = mv.limbUp || 20, down = mv.limbDown != null ? mv.limbDown : 20;
   return f.facing > 0 ? { x0: x - back, x1: x + reach, y0: Math.max(0, y - down), y1: y + up }
@@ -556,7 +562,8 @@ function checkHits(a, o) {
   if (a.hitCount > 0 && a.mf - a.lastHitMf < (mv.interval || 99)) return;
   let hb = mv.kunaiBox ? kunaiBox(a) : mv.limbJoint ? limbBox(a, mv) : boxOf(a, meleeBox(a, mv.hitbox));
   let parts = null;
-  if (a.key === 'staff' && a.pose && !/kick|Kick/.test((mv.pose || '') + ' ' + (mv.label || ''))) { parts = staffBoxes(a, mv); hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) })); }
+  if (a.key === 'staff' && a.pose && mv.spinStaff && mv.limbJoint) { parts = staffBoxes(a, mv).concat([hb]); hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) })); } // (a kick with the staff twirling: both the foot and the staff hit)
+  else if (a.key === 'staff' && a.pose && !/kick|Kick/.test((mv.pose || '') + ' ' + (mv.label || ''))) { parts = staffBoxes(a, mv); hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) })); }
   if (mv.iai || mv.sweepBox) hb = iaiSweepBox(a, mv, hb); // a tight box on the limb itself, swept along its own path so a fast or diagonal motion can't tunnel past someone between two frames (mv.sweepBox: any other move whose tracked limb moves fast enough to need the same thing — Vanish Drop Kick's diagonal arc, say)
   if (floodOwner(a)) hb = { ...hb, x0: -200, x1: W + 200 }; // the flood carries the kappa's every blow: it reaches them anywhere on the stage // Mei: the staff hits along its front half, out to the tip — not at her fists
   mv.dbgBox = hb; mv.dbgParts = parts; mv.dbgBoxMf = a.mf; // training's H overlay reads this back, so it draws exactly the box just computed here — never a separate, possibly stale recomputation (iaiSweepBox in particular keeps its own frame-to-frame state, which a second call would corrupt)

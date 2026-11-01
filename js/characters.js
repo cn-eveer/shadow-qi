@@ -108,7 +108,13 @@ const CHARS = {
       windmill: { su: 18, blk: -16 }, cloudLeap: { su: 21, act: 20, blk: -18 }, somersault: { su: 14, blk: -14 }, feint: { su: 18, blk: -8 },
     },
     heavy: {
-      p: { label: 'Staff Sweep', startup: 10, active: 5, recovery: 18, hitbox: [10,250,50,150], wind: 'staffSwingW', pose: 'staffSwing', lunge: [3, 9, 1], /* (a long sweep: she hardly steps in) */ hitstop: 10, spinWind: true,
+      p: { label: 'Staff Sweep', startup: 10, active: 5, recovery: 18, hitbox: [10,250,50,150], wind: 'staffSwingW', pose: 'staffSwing', lunge: [3, 9, 1], /* (a long sweep: she hardly steps in) */ hitstop: 10,
+        hitFrom: 5, staffFront: true, // (the staff — its striking half, hand to tip — is live from the moment the swing starts coming round, not only at the end of it)
+        poseFn(f, mf) { // raised high behind her, then swung round over and forward to level, spread evenly across the whole wind-up and active frames — so the swing (and the hitbox on the staff) can be followed, not one snap
+          const mv = f.move, end = mv.startup + mv.active; if (mf > end + 4) return null;
+          if (mf <= 3) return lerpPose(f.prevPose, POSES.staffHighW, easeOutQ(mf / 3));
+          return mf <= end ? lerpPose(POSES.staffHighW, POSES.thrust, (mf - 3) / (end - 3)) : POSES.thrust; // (an even swing: the same distance each frame)
+        },
         trail: { cx: 20, cy: 100, r: 120, a0: 120, a1: -20, col: '255,205,110' } },
       k: { label: 'Round Swing', startup: 11, active: 8, recovery: 18, hitbox: [-150,195,20,170], wind: 'staffSwingW', pose: 'staffWhirl', lunge: [3, 9, 1], cpLaunch: true, launchVy: 13, kd: true, kdVx: 10,
         spin: [11, 19], spinStaff: true, trail: { cx: 0, cy: 95, r: 150, a0: -170, a1: 170, col: '255,205,110' } },
@@ -118,7 +124,7 @@ const CHARS = {
       cp1: { label: 'Rising Staff', wind: 'crouch', pose: 'staffRise', trail: { cx: 20, cy: 90, r: 110, a0: -40, a1: 100, col: '255,205,110' },
         poseFn(f, mf) { // the staff dropped low in front through the wind-up, then swept up through them across the active frames — not already up behind her before they start
           const mv = f.move, su = mv.startup, end = su + mv.active; if (mf > end + 4) return null;
-          const mid = lerpPose(POSES.staffSweep, POSES.staffRise, 0.5); // (angled up in front: where it is as the active frames start)
+          const mid = lerpPose(POSES.staffSweep, POSES.staffRise, 0.42); // (angled up in front: where it is as the active frames start)
           if (mf <= 7) return lerpPose(f.prevPose, POSES.staffSweep, easeOutQ(mf / 7));
           if (mf <= su) return lerpPose(POSES.staffSweep, mid, easeInOutQ((mf - 7) / (su - 7)));
           if (mf <= end) return lerpPose(mid, POSES.staffRise, (mf - su) / (end - su)); // (an even sweep: the same distance each frame)
@@ -126,8 +132,8 @@ const CHARS = {
         } },
       jp0: { label: 'Air Staff Poke', wind: 'jump', pose: 'airStaff' },
       sk0: { label: 'Low Thrust', wind: 'staffHighW', pose: 'staffLowThrust', staffExt: 30, hitbox: [20,165,0,60], trail: { cx: 20, cy: 85, r: 125, a0: 60, a1: -35, col: '255,205,110' } },
-      ck0: { label: 'Crouch Staff Poke', wind: 'crouch', pose: 'staffLowCrouch', hitbox: [20,150,0,30] },
-      ck1: { label: 'Staff Floor Sweep', wind: 'crouch', pose: 'staffSweep', spinStaff: true, hitbox: [20,195,0,30] },
+      ck0: { label: 'Crouch Staff Poke', wind: 'staffFloorPoke', pose: 'staffFloorPoke', staffFront: true, hitbox: [20,150,0,30] }, // (the staff held level along the floor and slid out at their feet: only low)
+      ck1: { label: 'Staff Floor Sweep', wind: 'staffFloorPoke', pose: 'staffFloorPoke', spinStaff: true, floorSpin: true, hitbox: [20,195,0,30] }, // (crouched low, the staff spun flat along the floor round her hand: only low)
       jk0: { label: 'Air Staff Low Swing', wind: 'jump', pose: 'airStaffDown', hitbox: [10,135,0,60] },
       jk1: { label: 'Air Staff Whirl', wind: 'jump', pose: 'airStaffWhirl', spinStaff: true, hitbox: [-40,145,0,90] },
       jp1: { label: 'Falling Staff', wind: 'slamWAir', pose: 'airStaffDown', launch: true, launchVy: 10, bounce: true, hitbox: [0,145,-10,110], spinWind: true,

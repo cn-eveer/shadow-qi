@@ -107,7 +107,7 @@ function drawBrawler(J, C, o = {}) {
 }
 // the staff: from beyond the back hand, through the front hand and on past it; gold caps on both ends
 function drawStaff(J, C, o) {
-  const [a, b, ux, uy] = staffLine(J, o.staffExt || 0, o.staffSpin); // (held near the back end, or at the middle when her hands are close / it's twirling: see staffLine)
+  const [a, b, ux, uy] = staffLine(J, o.staffExt || 0, o.staffSpin, o.floorSpin); // (held near the back end, or at the middle when her hands are close / it's twirling: see staffLine)
   seg(a, b, 5.2, C.staffB); seg(a, b, 3.6, C.staff);
   seg(a, [a[0] + ux * 9, a[1] + uy * 9], 6, C.cap); seg([b[0] - ux * 9, b[1] - uy * 9], b, 6, C.cap);
   if (o.staffExt) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; seg([b[0] - ux * 16, b[1] - uy * 16], b, 9, 'rgba(255,215,120,.45)'); ctx.restore(); }
@@ -879,7 +879,7 @@ function drawFighter(f) {
   let rot = f.state === 'roll' ? -(f.st / 24) * Math.PI * 2 * f.rollDir * f.facing : f.state === 'broll' ? (Math.max(0, f.st - 4) / 20) * Math.PI * 2 : 0;
   if (f.flipT > 0) rot = -(1 - f.flipT / (f.flipMax || 20)) * Math.PI * 2; // somersault
   if (mv && mv.speedFx && f.mf > mv.startup - 6 && f.mf <= mv.startup + mv.active) // afterimages on fast techniques
-    for (let k = 3; k >= 1; k--) drawBody(f.key, f.pose, f.x - (f.vx || f.facing * 4) * k * 1.6, GROUND - f.y, f.facing, f.hipUp, { scale: f.ch.scale, alpha: 0.1 * (4 - k), tint: GHOST_TINT[f.key], staffExt, staffSpin, sword });
+    for (let k = 3; k >= 1; k--) drawBody(f.key, f.pose, f.x - (f.vx || f.facing * 4) * k * 1.6, GROUND - f.y, f.facing, f.hipUp, { scale: f.ch.scale, alpha: 0.1 * (4 - k), tint: GHOST_TINT[f.key], staffExt, staffSpin, floorSpin: !!(mv && mv.floorSpin), sword });
   const dance = f.state === 'stunned' && f.stunKind === 'dance' ? Math.abs(Math.sin(f.st * 0.4)) * 20 : 0; // made to dance by the gunslinger
   const gunOut = f.key !== 'gunman' || f.state === 'attack' || (f.gunOutT || 0) > 0 || f.state === 'win' || (showOn() && game.phaseT - (f.side ? 8 : 0) < 92);
   if (f.ch.possess === 'double') { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const r0 = 105 + Math.sin(globalT * 0.15) * 5; // the field around him: half holy light, half hellfire
@@ -892,7 +892,7 @@ function drawFighter(f) {
     ctx.strokeStyle = `rgba(220,240,255,${0.5 + 0.3 * Math.sin(globalT * 0.6)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(f.x, GROUND - 4, 40, 9, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); } // getting up: invincible — a pale glow and a blinking body
   if (f.state === 'win') { drawWinFX(f); const ws = winStaffSpin(f); if (ws != null) staffSpin = ws; } // victory.js
   if (f.golem) drawGolem(f);
-  drawBody(f.key, f.pose, f.x + (f.animDX || 0), GROUND - f.y - dance - (f.ch.hover ? hoverOf(f) : 0), f.facing, f.hipUp, { scale: f.ch.scale, armor: f.golem ? armorOf(f) : 0, praying: !!(mv && mv.pose === 'saKneelPray'), hideMini: f.state === 'attack' && f.move ? (f.move.toDouble ? 'both' : f.move.id === 'smAngel' ? 'angel' : f.move.id === 'smDevil' ? 'devil' : null) : null, gunOut, rot, sx: (turn === null ? 1 : Math.cos(2 * Math.PI * turn)) * tailSx, flash: f.flash > 3 || (wakeInv && Math.floor(globalT / 3) % 2 === 0), aura, blade, sword, speed: Math.abs(f.vx), alpha: blink ? 0.6 : 1, staffExt, staffSpin, alt: f.alt, shieldSpin: !!(mv && mv.shieldSpin), aegisRing: !!(mv && mv.aegisRing), bladeHalo: !!(mv && mv.bladeHalo), shieldOut: !!f.shieldOut, staffOut: !!f.staffOut, possess: f.ch.possess, plateOut: !!f.plateOut, face: f.state, edgeA: excalAura(f, mv), wrist: f.state === 'charge' ? 0 : mv ? (mv.wrist != null ? mv.wrist : 0.25) : 0.6 });
+  drawBody(f.key, f.pose, f.x + (f.animDX || 0), GROUND - f.y - dance - (f.ch.hover ? hoverOf(f) : 0), f.facing, f.hipUp, { scale: f.ch.scale, armor: f.golem ? armorOf(f) : 0, praying: !!(mv && mv.pose === 'saKneelPray'), hideMini: f.state === 'attack' && f.move ? (f.move.toDouble ? 'both' : f.move.id === 'smAngel' ? 'angel' : f.move.id === 'smDevil' ? 'devil' : null) : null, gunOut, rot, sx: (turn === null ? 1 : Math.cos(2 * Math.PI * turn)) * tailSx, flash: f.flash > 3 || (wakeInv && Math.floor(globalT / 3) % 2 === 0), aura, blade, sword, speed: Math.abs(f.vx), alpha: blink ? 0.6 : 1, staffExt, staffSpin, floorSpin: !!(mv && mv.floorSpin), alt: f.alt, shieldSpin: !!(mv && mv.shieldSpin), aegisRing: !!(mv && mv.aegisRing), bladeHalo: !!(mv && mv.bladeHalo), shieldOut: !!f.shieldOut, staffOut: !!f.staffOut, possess: f.ch.possess, plateOut: !!f.plateOut, face: f.state, edgeA: excalAura(f, mv), wrist: f.state === 'charge' ? 0 : mv ? (mv.wrist != null ? mv.wrist : 0.25) : 0.6 });
   const fx = () => { // (mirror match: the second fighter's effects in another hue — the body keeps its own palette)
   const prevOwner = FX_OWNER; FX_OWNER = f;
   if (f.brands > 0) drawBrands(f);

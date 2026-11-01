@@ -350,7 +350,7 @@ function specialMoveBase(id) {
         if (mf <= 32) { const e = mf / 32; f.x = lerp(f.leap.x0, f.leap.tx, e); f.y = 175 * Math.sin(Math.PI * e); }
         if (mf === 32) { f.y = 0; dustAt(f.x + f.facing * 60, true); parts.push({ type: 'ering', x: f.x + f.facing * 70, y: GROUND, r: 8, vr: 7, life: 14, max: 14, col: '255,205,110' }); game.shake = Math.max(game.shake, 5); sfx('land'); }
       } };
-    case 'sweepStaff': return { id, label: 'Sweeping Staff', startup: 9, active: 14, recovery: 16, wind: 'crouch', pose: 'staffSweep', selfMove: true, speedFx: true, spinStaff: true,
+    case 'sweepStaff': return { id, label: 'Sweeping Staff', startup: 9, active: 14, recovery: 16, wind: 'staffFloorPoke', pose: 'staffFloorPoke', selfMove: true, speedFx: true, spinStaff: true, floorSpin: true, // (crouched low, the staff spun flat along the floor: only low)
       hitbox: [0,230,0,44], low: true, dmg: 46, stun: 20, bstun: 14, push: 2, launch: true, launchVy: 11, type: 'mid', hitstop: 8, gdrain: 8, // (a long sweep: she slides in less)
       rushTag: true, rushOpen: true, follow: { from: 8, to: 30, at: 22, opts: { lp: 'srPoke', hp: 'srVault', lk: 'srSweep2', hk: 'srSlam' } },
       trail: { cx: 40, cy: 18, r: 90, a0: -70, a1: 40, col: '255,205,110' },
@@ -360,8 +360,18 @@ function specialMoveBase(id) {
         if (f.hitConnected && f.hookFor !== f.serial && o.juggle) { f.hookFor = f.serial; o.vx = Math.sign(f.x - o.x) * clamp((Math.abs(o.x - f.x) - 70) / 30, 0, 4); } // the staff hooks them in toward him
       } };
     // Monkey Staff Rush: → → + K opens a string that keeps going whether it hits or is guarded; each part leads to others
-    case 'poleKick': return { id, label: 'Pole Spin Kick', startup: 10, active: 12, recovery: 18, wind: 'thrustW', pose: 'poleKick', spin: [10, 22], selfMove: true, spinStaff: true,
+    case 'poleKick': return { id, label: 'Pole Spin Kick', startup: 10, active: 12, recovery: 18, wind: 'thrustW', pose: 'poleKick', selfMove: true, spinStaff: true, // (no body turn: the kicks themselves are animated (poseFn), so the foot drawn is where its box is)
       hitbox: [10,180,40,160], multi: 2, interval: 6, dmg: 26, lastDmg: 32, stun: 22, bstun: 14, push: 2, lastPush: 3, type: 'mid', hitstop: 8, gdrain: 10,
+      limbJoint: 'f1', limbReach: 30, limbBack: 20, limbUp: 22, limbDown: 22, sweepBox: true, hitFrom: 5, // (the box is on the kicking foot, from the moment the kick starts out — not a big fixed box beside her)
+      poseFn(f, mf) { // knee chambered through the wind-up, the leg snapped out (first kick), drawn back a little, then out again (second) and held — spread over the whole move so the foot (and its box) can be followed
+        const mv = f.move, su = mv.startup, end = su + mv.active; if (mf > end + 3) return null;
+        const kick = POSES.poleKick, chamber = { ...kick, l1u: 85, l1l: -20 }, half = lerpPose(kick, chamber, 0.55);
+        if (mf <= 5) return lerpPose(f.prevPose, chamber, easeOutQ(mf / 5));
+        if (mf <= su + 1) return lerpPose(chamber, kick, easeInOutQ((mf - 5) / (su - 4)));
+        if (mf <= su + 4) return lerpPose(kick, half, easeInOutQ((mf - su - 1) / 3));
+        if (mf <= su + 7) return lerpPose(half, kick, easeInOutQ((mf - su - 4) / 3));
+        return kick;
+      },
       trail: { cx: 0, cy: 80, r: 100, a0: -60, a1: 60, col: '255,205,110' },
       rushTag: true, rushOpen: true, follow: { from: 8, to: 30, at: 23, opts: { lp: 'mrThrust', hp: 'mrCrash', lk: 'mrSweep', hk: 'mrFinish' } },
       onFrame(f, o, mf) { if (mf > 6 && mf <= 16 && Math.abs(o.x - f.x) > 150) f.vx = f.facing * 2; else f.vx *= 0.7; if (mf === 10) sfx('swing'); } }; // (barely steps in: the staff reaches)
@@ -431,6 +441,7 @@ function specialMoveBase(id) {
       } };
     case 'somersault': return { id, label: 'Somersault Kick', startup: 4, active: 10, recovery: 99, untilLand: true, landT: 6, wind: 'crouch', pose: 'flipKick',
       hitbox: [-10,90,40,190], dmg: 70, stun: 20, bstun: 16, push: 3, launch: true, launchVy: 13, type: 'mid', hitstop: 10, gdrain: 8,
+      limbJoint: 'f1', limbReach: 24, limbBack: 24, limbUp: 24, limbDown: 24, sweepBox: true, // (the box is on the kicking foot as it goes round with her, from the take-off: not a fixed box beside her)
       trail: { cx: 0, cy: 90, r: 90, a0: -80, a1: 120, col: '255,205,110' },
       onStart(f) { f.invul = 6; },
       onFrame(f, o, mf) { if (mf === 4) { f.vy = 11; f.y = 0.5; f.vx = f.facing * 0.6; f.flipT = 22; f.flipMax = 22; sfx('rise'); } } };
