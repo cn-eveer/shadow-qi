@@ -546,8 +546,11 @@ LOOKS.staff = {
   jUpper: { label: 'Pole Upper', pose: 'staffRise' },
   jRise: { label: 'Soaring Staff', pose: 'staffRise', blade: false, aura: false, trail: { cx: 20, cy: 90, r: 120, a0: -40, a1: 100, col: GOLD } },
   jSpin: { label: 'Staff Whirl', pose: 'staffWhirl', spinStaff: true, trail: { cx: 0, cy: 90, r: 120, a0: -60, a1: 60, col: GOLD } },
-  aPalm: { label: 'Air Staff Jab', pose: 'airStaff', hitbox: [5,150,5,130] },
-  aElbow: { label: 'Air Staff Swing', pose: 'airStaffSwing', spinWind: true, hitbox: [5,150,5,130] },
+  aPalm: { label: 'Air Staff Jab', pose: 'airStaffJab', hitbox: [5,150,5,130], staffExt: 15 }, // (a jab driven steeply down at them from above — she's over them in a juggle — sliding out a little as Staff Thrust's does)
+  aElbow: { label: 'Air Staff Swing', pose: 'airStaffSwing', spinWind: true, hitbox: [5,150,5,130],
+    poseFn: (f, mf) => { const mv = f.move, su = mv.startup, end = su + mv.active; if (mf > end + 3) return null; // raised through the wind-up, then swung down through them across the active frames (it used to hold the staff upright the whole time)
+      if (mf <= 1) return lerpPose(f.prevPose, POSES.airStaffSwing, mf);
+      return mf <= end ? lerpPose(POSES.airStaffSwing, POSES.airStaffJab, easeOutQ((mf - 1) / Math.max(1, end - 1))) : POSES.airStaffJab; } },
   aKunai: { label: 'Staff Flurry', blade: false, hitbox: [5,160,0,135], trail: { cx: 20, cy: 100, r: 110, a0: 70, a1: -40, col: GOLD }, poseFn: (f, mf) => (mf > 4 && mf <= 13) ? (Math.floor((mf - 5) / 3) % 2 ? POSES.airStaffSwing : POSES.airStaff) : null },
   aSpin: { label: 'Air Staff Whirl', pose: 'airStaffWhirl', spinStaff: true, spin: null, hitbox: [-60,170,0,140], trail: { cx: 0, cy: 80, r: 120, a0: -60, a1: 60, col: GOLD } },
   aMeteor: { label: 'Staff Meteor', pose: 'airStaffDown', trail: { cx: 20, cy: 40, r: 100, a0: 160, a1: 260, col: GOLD } },

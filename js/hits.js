@@ -1,20 +1,37 @@
 'use strict';
 /* ================= hit detection ================= */
-// Mei's staff: where it actually is this frame (the same geometry the drawing uses: held near the back end, the long end out front).
-// The hit area runs along the staff from her front hand out to the tip (and covers where it swept since the last frame).
-function staffTipBox(f, mv, hb0) {
-  if (!f.pose || mv.spinStaff || /kick|Kick/.test(mv.pose || '') || /kick|Kick/.test(mv.label || '')) return hb0; // (twirls and kicks keep their own hit areas)
-  const J = solve(f.pose), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0;
-  let dx = J.h1[0] - J.h2[0], dy = J.h1[1] - J.h2[1], L = Math.hypot(dx, dy);
-  if (L < 14) { dx = J.h1[0] - J.e1[0]; dy = J.h1[1] - J.e1[1]; L = Math.hypot(dx, dy) || 1; }
-  const ux = dx / L, uy = dy / L, len = 150 + (mv.staffExt || 0);
-  const W = (lx, ly) => [f.x + (f.animDX || 0) + d * s * lx, f.y + s * (ly + hu)]; // pose space → world (x, height above the floor)
-  const p0 = W(J.h1[0], J.h1[1]), p1 = W(J.h1[0] + ux * len, J.h1[1] + uy * len), pad = 20;
-  const box = { x0: Math.min(p0[0], p1[0]) - pad, x1: Math.max(p0[0], p1[0]) + pad, y0: Math.max(0, Math.min(p0[1], p1[1]) - pad), y1: Math.max(p0[1], p1[1]) + pad };
-  const prev = mv.tipBox && mv.tipBoxMf === f.mf - 1 ? mv.tipBox : null; mv.tipBox = box; mv.tipBoxMf = f.mf;
-  const U = (p, q) => q ? { x0: Math.min(p.x0, q.x0), x1: Math.max(p.x1, q.x1), y0: Math.min(p.y0, q.y0), y1: Math.max(p.y1, q.y1) } : p;
-  let out = U(box, prev); // (a fast swing: the whole stretch it swept)
-  if (mv.launch || mv.jug || mv.air || f.y > 0 || /rise|Rise|Up\b|up\b|Upper|Cudgel|Swing/.test((mv.pose || '') + ' ' + (mv.label || ''))) out = U(out, hb0); // (rising swings and juggle hits scoop up close to her too)
+// Mei: the hitbox is the staff itself — a chain of small boxes along the whole of it, butt end to tip, laid exactly
+// where drawStaff puts it (the same stretch on Extending Staff), plus the in-between positions since last frame so a fast swing
+// can't pass someone without touching them. Overlap is tested box by box, so only the stick hits, not the rectangle around it.
+// Where Mei's staff is, in pose space: both hands on it, held near the back end with the long end out front — or, with her hands
+// close together, held at the middle along her forearm. Between the two it blends (it used to switch outright at a 14px hand gap,
+// so a swing whose hands drifted across it snapped the staff round and back). drawStaff and the hitbox both read this.
+function staffLine(J, ext, spinAngle) {
+  if (spinAngle != null) { const ux = Math.cos(spinAngle), uy = Math.sin(spinAngle); return [[J.h1[0] - ux * 92, J.h1[1] - uy * 92], [J.h1[0] + ux * (92 + ext), J.h1[1] + uy * (92 + ext)], ux, uy]; }
+  const hx = J.h1[0] - J.h2[0], hy = J.h1[1] - J.h2[1], L = Math.hypot(hx, hy), fx = J.h1[0] - J.e1[0], fy = J.h1[1] - J.e1[1], F = Math.hypot(fx, fy) || 1;
+  const w = clamp((L - 12) / 3, 0, 1); let ux = fx / F * (1 - w) + (L ? hx / L : 0) * w, uy = fy / F * (1 - w) + (L ? hy / L : 0) * w; const U = Math.hypot(ux, uy);
+  if (U < 0.2) { ux = fx / F; uy = fy / F; } else { ux /= U; uy /= U; }
+  const back = 92 + (34 - 92) * w, front = 92 + (150 - 92) * w, c0 = [J.h1[0] + (J.h2[0] - J.h1[0]) * w, J.h1[1] + (J.h2[1] - J.h1[1]) * w];
+  return [[c0[0] - ux * back, c0[1] - uy * back], [J.h1[0] + ux * (front + ext), J.h1[1] + uy * (front + ext)], ux, uy];
+}
+const staffSpinAt = (f, mv) => f.mf * 0.7 * f.facing; // a twirling staff's angle: 0.7 rad a frame, as it always spun
+function staffSeg(f, mv) {
+  const J = solve(f.pose), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, k = f.mf - mv.startup;
+  const ext = mv.staffExt ? mv.staffExt * (k <= 0 ? 0 : k <= 3 ? k / 3 : k <= mv.active ? 1 : Math.max(0, 1 - (k - mv.active) / 6)) : 0; // (as drawn: see drawFighter)
+  const spin = mv.spinStaff && f.mf > Math.max(1, mv.startup - 4) ? staffSpinAt(f, mv) : null;
+  const [a, b] = staffLine(J, ext, spin), W = p => [f.x + (f.animDX || 0) + d * s * p[0], f.y + s * (p[1] + hu)];
+  return [W(a), W(b)]; // (the whole staff as drawn, butt end to tip)
+}
+function staffBoxes(f, mv) {
+  if (mv.spinStaff && f.mf > Math.max(1, mv.startup - 4)) { // twirling: the staff is a blur all the way round her hand — a disc of small boxes out to its length, not a rectangle
+    const J = solve(f.pose), s = f.ch.scale, hu = f.hipUp || 0, c = [f.x + (f.animDX || 0) + f.facing * s * J.h1[0], f.y + s * (J.h1[1] + hu)], r = 14 * s, out = [];
+    for (const R of [0, 32, 62, 92]) for (let k = 0; k < (R ? Math.round(R / 8) : 1); k++) { const an = k / Math.round(R / 8 || 1) * Math.PI * 2, x = c[0] + Math.cos(an) * R * s, y = c[1] + Math.sin(an) * R * s; out.push({ x0: x - r, x1: x + r, y0: Math.max(0, y - r), y1: y + r }); }
+    return out;
+  }
+  const seg = staffSeg(f, mv), prev = mv.stSeg && mv.stSegMf === f.mf - 1 ? mv.stSeg : null; mv.stSeg = seg; mv.stSegMf = f.mf;
+  const r = 14 * f.ch.scale, out = [], L = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+  const segs = prev ? [0.34, 0.67, 1].map(t => [L(prev[0], seg[0], t), L(prev[1], seg[1], t)]) : [seg];
+  for (const [a, b] of segs) for (let i = 0; i <= 8; i++) { const p = L(a, b, i / 8); out.push({ x0: p[0] - r, x1: p[0] + r, y0: Math.max(0, p[1] - r), y1: p[1] + r }); }
   return out;
 }
 // Kuro's Iai Slash dashes at 32 px/frame through the opponent — far more than the blade's own reach in one frame —
@@ -191,7 +208,8 @@ function drawHitboxDebug() {
     if (f.mf <= (mv.hitFrom != null ? mv.hitFrom : mv.startup) || f.mf > mv.startup + mv.active) continue; // (only while it can actually hit: checkHits' own window)
     if (f.hitCount >= (mv.multi || 1)) continue; // (already landed everything it's going to: checkHits stops computing a box for it, so there's nothing current left to show)
     const hb = mv.dbgBoxMf === f.mf ? mv.dbgBox : boxOf(f, meleeBox(f, mv.hitbox)); // the exact box checkHits used this frame, not a recomputation (kunaiBox, limbBox, iaiSweepBox and the rest all live there — this just mirrors it)
-    drawHitBox(hb, '255,70,70', 0.3, 0.95);
+    if (mv.dbgBoxMf === f.mf && mv.dbgParts) for (const b of mv.dbgParts) drawHitBox(b, '255,70,70', 0.3, 0.95); // (Mei's staff: the boxes along the stick)
+    else drawHitBox(hb, '255,70,70', 0.3, 0.95);
   }
   for (const p of projs) { if (!p.dead) drawHitBox(projBox(p), '255,170,60', 0.24, 0.9); }
 }
@@ -537,16 +555,18 @@ function checkHits(a, o) {
   if (a.hitCount >= multi) return;
   if (a.hitCount > 0 && a.mf - a.lastHitMf < (mv.interval || 99)) return;
   let hb = mv.kunaiBox ? kunaiBox(a) : mv.limbJoint ? limbBox(a, mv) : boxOf(a, meleeBox(a, mv.hitbox));
-  if (a.key === 'staff') hb = staffTipBox(a, mv, hb);
+  let parts = null;
+  if (a.key === 'staff' && a.pose && !/kick|Kick/.test((mv.pose || '') + ' ' + (mv.label || ''))) { parts = staffBoxes(a, mv); hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) })); }
   if (mv.iai || mv.sweepBox) hb = iaiSweepBox(a, mv, hb); // a tight box on the limb itself, swept along its own path so a fast or diagonal motion can't tunnel past someone between two frames (mv.sweepBox: any other move whose tracked limb moves fast enough to need the same thing — Vanish Drop Kick's diagonal arc, say)
   if (floodOwner(a)) hb = { ...hb, x0: -200, x1: W + 200 }; // the flood carries the kappa's every blow: it reaches them anywhere on the stage // Mei: the staff hits along its front half, out to the tip — not at her fists
-  mv.dbgBox = hb; mv.dbgBoxMf = a.mf; // training's H overlay reads this back, so it draws exactly the box just computed here — never a separate, possibly stale recomputation (iaiSweepBox in particular keeps its own frame-to-frame state, which a second call would corrupt)
+  mv.dbgBox = hb; mv.dbgParts = parts; mv.dbgBoxMf = a.mf; // training's H overlay reads this back, so it draws exactly the box just computed here — never a separate, possibly stale recomputation (iaiSweepBox in particular keeps its own frame-to-frame state, which a second call would corrupt)
   if (hitDecoys(a, hb)) { // a guarding shadow soaked up this attack
     a.hitCount = multi; a.hitConnected = true; a.lastResult = 'block'; a.vx -= (Math.sign(o.x - a.x) || a.facing) * 2;
     return;
   }
   const hu = hurtbox(o, !!mv.juggle, !!mv.low);
-  if (!hu || !overlap(hb, hu)) {
+  const touch = hu && (parts ? parts.find(b => overlap(b, hu)) : overlap(hb, hu) && hb); // (Mei's staff: only the stick itself connects)
+  if (!touch) {
     if (hu && hb.x0 < hu.x1 && hb.x1 > hu.x0) mv.passed = hb; // (in reach, but over or under them)
     if (mv.passed && !a.hitConnected && a.mf === mv.startup + mv.active) showHeight(o, Math.sign(o.x - a.x) || a.facing, mv.passed, mv, true);
     return;
@@ -568,7 +588,7 @@ function checkHits(a, o) {
     hit.gbstun = remaining + 30;
     hit.bpush = mv.bpush;
   }
-  const res = applyHit(a, o, hit, Math.sign(o.x - a.x) || a.facing, hb, hu);
+  const res = applyHit(a, o, hit, Math.sign(o.x - a.x) || a.facing, touch, hu);
   if (res) { a.hitCount++; a.lastHitMf = a.mf; a.hitConnected = true; a.lastResult = res; }
   if (res && floodOwner(a) && Math.abs(o.x - a.x) > 140) { const n = Math.ceil(Math.abs(o.x - a.x) / 26); for (let i = 0; i < n; i++) { const k = i / n; parts.push({ type: 'aura', x: lerp(a.x, o.x, k), y: GROUND - lerp(a.y + 90, o.y + 90, k) + Math.sin(k * Math.PI) * -20, vx: 0, vy: -0.4, life: 12 + i % 4, max: 16, r: 4, col: '150,220,255' }); } } // (a jet of water carries the blow across)
   if (res === 'block' && !mv.super && !mv.guardStalled) { mv.guardStalled = true; mv.recovery += GUARD_STALL; a.recoilT = GUARD_STALL + 8; } // guarded: he's knocked off balance — a short stall every fighter shows, before he can act again

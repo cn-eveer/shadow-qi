@@ -107,12 +107,7 @@ function drawBrawler(J, C, o = {}) {
 }
 // the staff: from beyond the back hand, through the front hand and on past it; gold caps on both ends
 function drawStaff(J, C, o) {
-  let dx = J.h1[0] - J.h2[0], dy = J.h1[1] - J.h2[1], L = Math.hypot(dx, dy);
-  if (L < 14) { dx = J.h1[0] - J.e1[0]; dy = J.h1[1] - J.e1[1]; L = Math.hypot(dx, dy) || 1; }
-  let ux = dx / L, uy = dy / L;
-  if (o.staffSpin != null) { const an = o.staffSpin; ux = Math.cos(an); uy = Math.sin(an); }
-  const spin = o.staffSpin != null || L < 14, back = spin ? 92 : 34, front = spin ? 92 : 150, c0 = spin ? J.h1 : J.h2, c1 = J.h1; // held near the back end: a short end behind her hands, the long end out in front (twirling, it spins about the middle)
-  const a = [c0[0] - ux * back, c0[1] - uy * back], b = [c1[0] + ux * (front + (o.staffExt || 0)), c1[1] + uy * (front + (o.staffExt || 0))];
+  const [a, b, ux, uy] = staffLine(J, o.staffExt || 0, o.staffSpin); // (held near the back end, or at the middle when her hands are close / it's twirling: see staffLine)
   seg(a, b, 5.2, C.staffB); seg(a, b, 3.6, C.staff);
   seg(a, [a[0] + ux * 9, a[1] + uy * 9], 6, C.cap); seg([b[0] - ux * 9, b[1] - uy * 9], b, 6, C.cap);
   if (o.staffExt) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; seg([b[0] - ux * 16, b[1] - uy * 16], b, 9, 'rgba(255,215,120,.45)'); ctx.restore(); }
@@ -878,7 +873,7 @@ function drawFighter(f) {
   // Mei's staff: it can stretch out (Extending Staff) or spin like a windmill
   let staffExt = 0, staffSpin = null;
   if (mv && mv.staffExt) { const k = f.mf - mv.startup; staffExt = mv.staffExt * (k <= 0 ? 0 : k <= 3 ? k / 3 : k <= mv.active ? 1 : Math.max(0, 1 - (k - mv.active) / 6)); }
-  if (mv && mv.spinStaff && f.mf > Math.max(1, mv.startup - 4)) staffSpin = globalT * 0.7 * f.facing;
+  if (mv && mv.spinStaff && f.mf > Math.max(1, mv.startup - 4)) staffSpin = staffSpinAt(f, mv); // (by the move's own frame, so the hitbox can follow it)
   if (mv && mv.spinWind && f.mf <= mv.startup) staffSpin = globalT * 0.9 * f.facing; // twirls the staff to wind up
   if (f.key === 'staff' && (f.state === 'stand' || f.state === 'jump' && f.dj) && (globalT + f.side * 97) % 220 < 34) staffSpin = globalT * 0.55 * f.facing; // twirls it now and then
   let rot = f.state === 'roll' ? -(f.st / 24) * Math.PI * 2 * f.rollDir * f.facing : f.state === 'broll' ? (Math.max(0, f.st - 4) / 20) * Math.PI * 2 : 0;

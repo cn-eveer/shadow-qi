@@ -228,6 +228,7 @@ const POSES = {
   staffRise: P(-8, 170,176, 142,170, 42,10, -28,-44),
   staffWhirl: P(4, 92,92, -92,-92, 40,8, -40,-14),
   airStaff: P(16, 100,92, 72,82, 100,15, 60,-35),
+  airStaffJab: P(30, 45,30, 25,60, 100,15, 60,-35), // Mei's air jab: the staff driven steeply down at them from above (about 60° down)
   airStaffSwing: P(24, 120,70, 90,60, 100,15, 60,-35),
   airStaffWhirl: P(8, 92,92, -92,-92, 100,15, 60,-35),
   airStaffDown: P(40, 54,32, 34,22, 70,-15, 25,-50),

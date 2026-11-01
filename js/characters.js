@@ -115,7 +115,15 @@ const CHARS = {
     },
     normalLook: {
       sp0: { label: 'Staff Thrust', wind: 'thrustW', pose: 'thrust', staffExt: 40, hitbox: [20,175,92,128] },
-      cp1: { label: 'Rising Staff', wind: 'crouch', pose: 'staffRise', trail: { cx: 20, cy: 90, r: 110, a0: -40, a1: 100, col: '255,205,110' } },
+      cp1: { label: 'Rising Staff', wind: 'crouch', pose: 'staffRise', trail: { cx: 20, cy: 90, r: 110, a0: -40, a1: 100, col: '255,205,110' },
+        poseFn(f, mf) { // the staff dropped low in front through the wind-up, then swept up through them across the active frames — not already up behind her before they start
+          const mv = f.move, su = mv.startup, end = su + mv.active; if (mf > end + 4) return null;
+          const mid = lerpPose(POSES.staffSweep, POSES.staffRise, 0.5); // (angled up in front: where it is as the active frames start)
+          if (mf <= 7) return lerpPose(f.prevPose, POSES.staffSweep, easeOutQ(mf / 7));
+          if (mf <= su) return lerpPose(POSES.staffSweep, mid, easeInOutQ((mf - 7) / (su - 7)));
+          if (mf <= end) return lerpPose(mid, POSES.staffRise, (mf - su) / (end - su)); // (an even sweep: the same distance each frame)
+          return POSES.staffRise; // (held a moment at the top before the recovery takes over, so it doesn't snap)
+        } },
       jp0: { label: 'Air Staff Poke', wind: 'jump', pose: 'airStaff' },
       sk0: { label: 'Low Thrust', wind: 'staffHighW', pose: 'staffLowThrust', staffExt: 30, hitbox: [20,165,0,60], trail: { cx: 20, cy: 85, r: 125, a0: 60, a1: -35, col: '255,205,110' } },
       ck0: { label: 'Crouch Staff Poke', wind: 'crouch', pose: 'staffLowCrouch', hitbox: [20,150,0,30] },
