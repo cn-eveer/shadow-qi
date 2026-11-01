@@ -1028,7 +1028,7 @@ function specialMoveBase(id) {
       hitbox: [30,175,30,250], dmg: 50, kd: true, kdVx: 14, kdVy: 9, type: 'mid', hitstop: 13, gdrain: 10 };
     // ----- Tetsu -----
     case 'meteorFist': return { id, label: 'Meteor Fist', pre: 6, startup: 16, active: 10, recovery: 18, wind: 'meteorW', pose: 'meteorPunch', fx: 'comet', manualY: true, noPush: true, selfMove: true, aura: true, bodyHurt: true,
-      limbJoint: 'h1', limbReach: 40, limbBack: 34, limbUp: 24, limbDown: 28, sweepBox: true, hitFrom: 14, // (dangerous from the top of the jump: the fist is already coming down)
+      limbJoint: 'h1', limbReach: 40, limbBack: 34, limbUp: 24, limbDown: 28, sweepBox: true, hitFrom: 2, // (dangerous from the top of the jump: the fist is already coming down)
       // a box on the slamming fist, longer reach, lower and more compact — the slam, not a tall guess
       hitbox: [-10,80,-20,90], dmg: 62, stun: 20, bstun: 14, push: 3, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 11, gdrain: 12,
       onStart(f, o) {
@@ -1037,8 +1037,9 @@ function specialMoveBase(id) {
       },
       poseFn(f, mf) { // fist raised on the way up, then brought down through the whole descent, so the box on it travels smoothly instead of appearing at the bottom
         const mv = f.move, down = mv.startup; // (down by the time it's officially active: a short hop still has to beat whatever they're starting)
-        if (mf <= 5) return lerpPose(f.prevPose, POSES.meteorW, easeOutQ(mf / 5));
-        if (mf <= down) return lerpPose(POSES.meteorW, POSES.meteorPunch, easeInOutQ((mf - 5) / (down - 5)));
+        const up = { ...POSES.meteorW, a1u: 132, a1l: 162 }; // (raised high but out in front, not swung back behind his head: the hand is the hitbox from the start, and it never trails his own body)
+        if (mf <= 5) return lerpPose(f.prevPose, up, easeOutQ(mf / 5));
+        if (mf <= down) return lerpPose(up, POSES.meteorPunch, easeInOutQ((mf - 5) / (down - 5)));
         return mf <= mv.startup + mv.active ? POSES.meteorPunch : null;
       },
       onFrame(f, o, mf) { // leap in and slam both fists down
