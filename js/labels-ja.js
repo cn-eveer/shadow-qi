@@ -576,7 +576,7 @@ const LABEL_JA = {
   "Thunder Palms": "雷掌",
   "Trap Stone": "罠の石",
   "Trinity Burst": "三位一体の炸裂",
-  "Triple Qi Blast": "三連気弾",
+  "Swift Qi Blast": "疾風気弾",
   "Triple Ray": "三連光線",
   "Tsuppari Rush": "つっぱり連打",
   "Turnaround Kick": "ターンキック",

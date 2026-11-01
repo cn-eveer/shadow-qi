@@ -1142,8 +1142,8 @@ function specialMoveBase(id) {
         if (mf <= 16 && f.hitCount === 1) f.lastHitMf = Math.max(f.lastHitMf, 16); // (the uppercut can't land before the fist starts rising: frame 19 on)
         if (mf <= f.move.startup + 4 && !f.hitConnected && Math.abs(o.x - f.x) > 60) { f.vx = f.facing * 9; if (mf % 2 === 0) dustAt(f.x, false); } else f.vx *= 0.6;
       } };
-    case 'tripleQi': return { id, label: 'Triple Qi Blast', pre: 8, startup: 13, active: 2, recovery: 22, wind: 'blastW', pose: 'blast', proj: 'qi', limit: 1, aura: true, // ← → + I: three blasts at once, each a little faster than the last — they arrive one after another
-      onFrame(f, o, mf) { if (mf === 13) for (const sp of [5, 7, 9.5]) { spawnQi(f); Object.assign(projs[projs.length - 1], { vx: f.facing * sp, dmg: 32, stun: 16, bstun: 12, push: 2.5 }); } } };
+    case 'tripleQi': return { id, label: 'Swift Qi Blast', pre: 8, startup: 13, active: 2, recovery: 22, wind: 'blastW', pose: 'blast', proj: 'qi', limit: 1, aura: true, // ← → + I: one qi blast, out a little sooner than ← → + U's and flying much faster
+      onFrame(f, o, mf) { if (mf === 13) { spawnQi(f); projs[projs.length - 1].vx = f.facing * 11; } } };
     case 'qiBlast': return { id, label: 'Qi Blast', pre: 8, startup: 13, active: 2, recovery: 22, wind: 'blastW', pose: 'blast', proj: 'qi', limit: 1, aura: true,
       onFrame(f, o, mf) { if (mf === 13) spawnQi(f); } };
     case 'risingFist': return { id, label: 'Rising Fist', startup: 3, active: 14, recovery: 99, untilLand: true, landT: 12, wind: 'uppercutW', pose: 'dragonFist', spin: [4, 11], fx: 'helix', aura: true, bodyHurt: true,
