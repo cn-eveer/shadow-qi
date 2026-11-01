@@ -441,7 +441,7 @@ function specialMoveBase(id) {
       } };
     case 'vaultBack': return { id, label: 'Back Vault Smash', startup: 14, active: 10, recovery: 16, wind: 'vault', pose: 'staffSlamAir', manualY: true, noPush: true, selfMove: true, // ← ← + J: Pole Vault Smash backwards — she plants the staff, vaults back away from them and brings it down on them as she goes
       hitbox: [-10,200,-20,130], dmg: 58, stun: 20, bstun: 14, push: 3, launch: true, launchVy: 12, type: 'mid', hitstop: 11, gdrain: 12, // (hitbox: the fallback for other systems; the real one is the staff)
-      staffExt: 30, staffFront: true, hitFrom: 7,
+      staffExt: 50, staffFront: true, hitFrom: 7,
       trail: { cx: 20, cy: 90, r: 120, a0: 110, a1: -30, col: '255,205,110' },
       poseFn(f, mf) { // the staff planted upright, then brought down in front of her through the end of the wind-up and the active frames (evenly), held there to the landing
         const mv = f.move, su = mv.startup, L = su + 10; if (mf > L + 2) return null;
@@ -456,7 +456,7 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { // vaults back off the planted staff, swinging it down on them
         if (f.hitConnected && o.juggle && Math.abs(o.x - f.x) > 80) o.vx = Math.sign(f.x - o.x) * clamp((Math.abs(o.x - f.x) - 80) / 12, 1, 9); // (the staff drags them along after her, so the juggle can follow)
         f.vx = 0; const L = f.move.startup + 10;
-        if (mf <= L) { const e = mf / L; f.x = lerp(f.leap.x0, f.leap.tx, e); f.y = 120 * Math.sin(Math.PI * e); }
+        if (mf <= L) { const e = mf / L; f.x = lerp(f.leap.x0, f.leap.tx, e); f.y = 175 * Math.sin(Math.PI * e); } // (as high as Pole Vault Smash)
         if (mf === L) { f.y = 0; dustAt(f.x, true); sfx('land'); }
       } };
     case 'feint': return { id, label: 'Monkey Feint', startup: 22, active: 6, recovery: 16, wind: 'crouch', pose: 'thrust', staffExt: 60, selfMove: true, speedFx: true,
