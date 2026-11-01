@@ -187,7 +187,7 @@ function drawHitboxDebug() {
   for (const f of fighters) { if (f.hidden) continue; drawHitBox(hurtbox(f, !!f.juggle, true), '90,180,255', 0.16, 0.85); }
   for (const f of fighters) {
     const mv = f.state === 'attack' && f.move; if (!mv || !mv.hitbox) continue;
-    if (f.mf <= mv.startup || f.mf > mv.startup + mv.active) continue; // (only while it can actually hit: checkHits' own window)
+    if (f.mf <= (mv.hitFrom != null ? mv.hitFrom : mv.startup) || f.mf > mv.startup + mv.active) continue; // (only while it can actually hit: checkHits' own window)
     if (f.hitCount >= (mv.multi || 1)) continue; // (already landed everything it's going to: checkHits stops computing a box for it, so there's nothing current left to show)
     const hb = mv.dbgBoxMf === f.mf ? mv.dbgBox : boxOf(f, meleeBox(f, mv.hitbox)); // the exact box checkHits used this frame, not a recomputation (kunaiBox, limbBox, iaiSweepBox and the rest all live there — this just mirrors it)
     drawHitBox(hb, '255,70,70', 0.3, 0.95);
@@ -531,7 +531,7 @@ function hitDecoys(a, hb) {
 function checkHits(a, o) {
   if (a.state !== 'attack' || !a.move || !a.move.hitbox) return;
   const mv = a.move;
-  if (a.mf <= mv.startup || a.mf > mv.startup + mv.active) return;
+  if (a.mf <= (mv.hitFrom != null ? mv.hitFrom : mv.startup) || a.mf > mv.startup + mv.active) return; // (hitFrom: a blow that's already dangerous before its official active frames — Meteor Fist's fist on the way down)
   const multi = mv.multi || 1;
   if (a.hitCount >= multi) return;
   if (a.hitCount > 0 && a.mf - a.lastHitMf < (mv.interval || 99)) return;
