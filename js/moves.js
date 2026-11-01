@@ -254,8 +254,12 @@ function specialMoveBase(id) {
       trail: { cx: 5, cy: 62, r: 72, a0: 110, a1: -20, col: '190,150,255' }, noPush: true, selfMove: true,
       hitbox: [-30,55,0,40], dmg: 60, stun: 20, bstun: 14, push: 4, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 10, gdrain: 12, // (hitbox: the fallback for other systems; the real one below is the kicking leg)
       limbJoint: 'f1', limbReach: 55, limbBack: 28, limbUp: 18, limbDown: 18, sweepBox: true, // the box rides the leg itself, swept along its own path: the foot crosses the whole stage diagonally fast enough that a single frame's box can pass clean by someone without ever overlapping them; extra reach also keeps it ahead of his own hurtbox right as he swings into the dive
-      poseFn(f, mf) { return mf <= 20 ? POSES.crouch : mf <= 36 ? POSES.axeW : null; },
-      speedHold(f) { return f.mf >= 21; }, // techSpeed only compresses the backward retreat (mf 0-20); the leap and dive itself plays at its own, normal pace instead of partly racing through at 5.5x — the leg coming down should read frame by frame, not blur past
+      poseFn(f, mf) { // the leg is raised through the leap, then comes down gradually across the whole dive — the generic system would snap it to the strike pose on the first active frame, jerking the foot's hitbox forward
+        if (mf <= 20) return POSES.crouch;
+        if (mf <= 36) return POSES.axeW;
+        if (mf <= 57) return lerpPose(POSES.axeW, POSES.axe, easeInOutQ((mf - 36) / 21));
+        return null;
+      },
 
       onFrame(f, o, mf) {
         if (mf === 1) f.vdOrigDist = Math.abs(o.x - f.x); // the real distance to them, before the backward retreat (which can by itself put him most of a leap's width away) — the arc height is scaled off this, not off how far the leap itself ends up travelling
