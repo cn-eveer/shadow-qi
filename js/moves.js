@@ -1050,10 +1050,11 @@ function specialMoveBase(id) {
       } };
     case 'qiSweep': return { id, label: 'Qi Sweep', pre: 7, startup: 8, active: 14, recovery: 16, wind: 'scoopW', pose: 'scoop', selfMove: true, aura: true, speedFx: true, bodyHurt: true, hurtSkip: 'h1', // (his own hurtbox doesn't reach out to the scooping hand's own tip — that's his attack's reach, not a reason to be that exposed)
       trail: { cx: 30, cy: 20, r: 62, a0: -75, a1: 65, col: '125,235,255' },
-      hitbox: [30,105,0,36], low: true, dmg: 48, stun: 20, bstun: 10, push: 2, launch: true, launchVy: 11, type: 'mid', hitstop: 8, gdrain: 8, // (longer reach: 70 -> 95 -> 99, the practical ceiling — any further connects from far enough away that the launched opponent clears the engine's 130-unit air-juggle-continuation range, so his own U follow-up whiffs)
+      hitFrom: 4, hitbox: [30,105,0,36], low: true, dmg: 48, stun: 20, bstun: 10, push: 2, launch: true, launchVy: 11, type: 'mid', hitstop: 8, gdrain: 8, // (longer reach: 70 -> 95 -> 99, the practical ceiling — any further connects from far enough away that the launched opponent clears the engine's 130-unit air-juggle-continuation range, so his own U follow-up whiffs)
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
       onFrame(f, o, mf) { if (mf > 4 && mf <= 22 && !f.hitConnected && Math.abs(o.x - f.x) > 50) { f.vx = f.facing * 11; if (mf % 2 === 0) dustAt(f.x, false); } else if (f.hitConnected && mf <= 30 && Math.abs(o.x - f.x) > 80) f.vx = f.facing * 8; /* (scooped from further out: he slides on in under them, so the juggle is still in reach) */ else f.vx *= 0.6; } };
     case 'shoulder': return { id, label: 'Shoulder Charge', pre: 6, startup: 12, active: 8, recovery: 22, wind: 'crouch', pose: 'shoulder', selfMove: true, speedFx: true, bodyHurt: true,
+      hitFrom: 3, // (the shoulder is dangerous from the moment he starts charging, not only at the end of it)
       hitbox: [10,105,40,120], dmg: 70, stun: 20, bstun: 12, push: 3, kd: true, kdVx: 10, kdVy: 6, type: 'mid', hitstop: 12, gdrain: 14, // (reach extended well past his own hurtbox's leading edge during the charge — it shouldn't be possible for him to be more exposed than his own shoulder is threatening)
       onFrame(f, o, mf) { if (mf > 3 && mf <= f.move.startup + f.move.active && !f.hitConnected && Math.abs(o.x - f.x) > 52) f.vx = f.facing * 13; else f.vx *= 0.6; } }; // (charges in from about a third of the screen)
     case 'qiOrb': return { id, label: 'Qi Orb', pre: 12, startup: 14, active: 2, recovery: 18, wind: 'blastW', pose: 'blast', proj: 'orb', limit: 1, aura: true,
@@ -1073,7 +1074,7 @@ function specialMoveBase(id) {
     case 'stomp': return { id, label: 'Earth Stomp', low: true, projInvul: [0, 32], pre: 7, startup: 12, active: 2, recovery: 18, wind: 'stompW', pose: 'stompDown', proj: 'wave', limit: 1, // (low: its shockwave runs along the floor)
       onFrame(f, o, mf) { if (mf === 12) { spawnWave(f); dustAt(f.x + f.facing * 40, true); cracks(f.x + f.facing * 22); game.shake = Math.max(game.shake, 4); sfx('land'); } } };
     case 'tornado': return { id, label: 'Cyclone Lariat', projInvul: [1, 34], pre: 7, startup: 12, active: 21, recovery: 12, wind: 'lariatW', pose: 'lariat', fx: 'cyclone', manualY: true, noPush: true, selfMove: true, spin: [13, 33], bodyHurt: true,
-      hitbox: [20,80,70,145], multi: 3, interval: 5, dmg: 22, lastDmg: 34, stun: 18, bstun: 10, push: 1.5, lastPush: 3, launch: true, launchVy: 12, type: 'mid', hitstop: 6, gdrain: 10, // raised off the floor: the lariat is a swinging arm at chest/head height, not something that should also catch a low crouch
+      hitFrom: 8, hitbox: [20,80,70,145], multi: 3, interval: 5, dmg: 22, lastDmg: 34, stun: 18, bstun: 10, push: 1.5, lastPush: 3, launch: true, launchVy: 12, type: 'mid', hitstop: 6, gdrain: 10, // raised off the floor: the lariat is a swinging arm at chest/head height, not something that should also catch a low crouch
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
       onFrame(f, o, mf) { // a small backstep, then a jumping spinning lariat forward
         if (mf <= 6) { f.vx = -f.facing * 3; f.y = 0; } else if (mf <= 8) f.vx = 0;
@@ -1124,7 +1125,7 @@ function specialMoveBase(id) {
         if (mf <= 26) return lerpPose(POSES.cUpper, POSES.uppercut, easeInOutQ((mf - 19) / 7));
         return POSES.uppercut;
       },
-      hitbox: [10,95,30,180], multi: 2, interval: 3, dmg: 26, lastDmg: 46, stun: 22, bstun: 14, push: 0.5, lastPush: 4, launch: true, launchVy: 13.5, type: 'mid', hitstop: 9, gdrain: 14, // (the punch holds them in place for the uppercut, and the uppercut launches: a combo)
+      hitFrom: 8, hitbox: [10,95,30,180], multi: 2, interval: 3, dmg: 26, lastDmg: 46, stun: 22, bstun: 14, push: 0.5, lastPush: 4, launch: true, launchVy: 13.5, type: 'mid', hitstop: 9, gdrain: 14, // (the punch holds them in place for the uppercut, and the uppercut launches: a combo)
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
       onFrame(f, o, mf) {
         if (mf > 16 && f.hitCount === 0) f.hitCount = 1; // (the punch only counts while it's out; past it, whatever lands is the uppercut)
