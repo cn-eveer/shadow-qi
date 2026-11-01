@@ -247,9 +247,7 @@ function excalAura(f, mv) { // how strongly the Excalibur aura shows on Aldric's
   return on * off;
 }
 function drawGreatsword(J, C, o) {
-  const th = Math.atan2(J.h1[1] - J.e1[1], J.h1[0] - J.e1[0]) + (o.wrist != null ? o.wrist : 0.6); // held at a raised wrist angle, not hanging off the forearm
-  let ux = Math.cos(th), uy = Math.sin(th);
-  if (o.staffSpin != null) { ux = Math.cos(o.staffSpin); uy = Math.sin(o.staffSpin); }
+  const [ux, uy] = swordDir(J, o.wrist, o.staffSpin); // (held at a raised wrist angle, not hanging off the forearm; or whirling — the hitbox reads the same)
   const nx = -uy, ny = ux, h = J.h1, len = 104 + (o.staffExt || 0);
   const at = k => [h[0] + ux * k, h[1] + uy * k];
   seg(at(-16), at(8), 5, C.grip); dot(at(-18), 4.2, C.trim);                                      // grip and pommel

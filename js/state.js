@@ -107,6 +107,7 @@ function resolveSpecial(f, o, inp) {
 }
 function startMove(f, mv, str, keepBuffer) {
   f.prevPose = { ...f.pose };
+  if (f.key === 'paladin' && mv && mv.hitbox && !mv.poseFn && !mv.parry && !mv.held && !mv.super && mv.startup < 900 && mv.pose) { mv.poseFn = aldricSwing; if (mv.hitFrom == null) mv.hitFrom = Math.max(1, mv.startup - 3); } // (Aldric: an even swing, live from early on — see aldricSwing)
   f.move = mv; f.mf = 0; f.str = str; f.hitCount = 0; f.lastHitMf = -99; f.hitConnected = false; f.serial = ++serial; f.armorHits = 0;
   f.shadow = false; f.followQ = null; f.lastResult = null; f.chainQ = null; f.shadowRun = false;
   if (f.ctrl.consume && !keepBuffer) f.ctrl.consume();

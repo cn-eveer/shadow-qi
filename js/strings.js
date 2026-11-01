@@ -273,7 +273,7 @@ Object.assign(STRINGS.psychic, {
 Object.assign(STRINGS.paladin, {
   jRise: JR('Ascension', 'pBashW', 'pShieldUp', { hitbox: [10,140,45,260],
     onFrame: (f, o, mf) => { if (mf === f.move.startup) { parts.push({ type: 'lbeam', x: o.x, w: 30, life: 14, max: 14 }); for (let i = 0; i < 5; i++) parts.push({ type: 'spark', x: o.x + rnd(-20, 20), y: GROUND - o.y - rnd(20, 120), vx: 0, vy: -rnd(2, 3), life: 18, max: 18, col: '235,245,255' }); sfx('orb'); } } }),
-  jSpin: SJF('Cross of Judgement', 'pCleaveW', 'pCleave', { hitbox: [10,190,0,300], startup: 7, kdVx: 12,
+  jSpin: SJF('Cross of Judgement', 'pCleaveW', 'pCleave', { hitbox: [10,190,0,300], startup: 7, hitFrom: 3, kdVx: 12, /* (live from the top of the swing: they're high up) */
     onFrame: (f, o, mf) => { if (mf === f.move.startup + 1) { const [x, y] = atO(o); for (const rot of [Math.PI / 4, -Math.PI / 4]) parts.push({ type: 'slashx', x, y, r: 56, life: 14, max: 14, col: '190,225,255', rot }); } } }),
   aKunai: AK('Blade Halo Flurry', 'pAir', { hitbox: [5,155,0,135],
     drawFX(f) { const S = f.move.startup; if (f.mf < S || f.mf > S + 9) return; fxLighter(() => { ctx.strokeStyle = 'rgba(190,225,255,.7)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(f.x, GROUND - f.y - 90, 110, -0.9 + f.mf * 0.3, -0.1 + f.mf * 0.3); ctx.stroke(); }); } }),

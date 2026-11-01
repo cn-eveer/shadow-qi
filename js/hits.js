@@ -18,7 +18,7 @@ function staffLine(J, ext, spinAngle, flat) {
 const staffSpinAt = (f, mv) => f.mf * 0.7 * f.facing;
 // hit checks run before this frame's pose is set (updatePose), so a box read off f.pose is a frame behind what's drawn. For Mei's moves that
 // author their own motion (poseFn: a pure function of the frame), use the pose being drawn this frame, so the hitbox is on the staff you see.
-const livePose = f => (f.key === 'staff' && f.state === 'attack' && f.move && f.move.poseFn && !(f.pre > 0) && f.move.poseFn(f, f.mf)) || f.pose; // a twirling staff's angle: 0.7 rad a frame, as it always spun
+const livePose = f => ((f.key === 'staff' || f.key === 'paladin') && f.state === 'attack' && f.move && f.move.poseFn && !(f.pre > 0) && f.move.poseFn(f, f.mf)) || f.pose; // a twirling staff's angle: 0.7 rad a frame, as it always spun
 function staffSeg(f, mv) {
   const J = solve(livePose(f)), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, k = f.mf - mv.startup;
   const ext = mv.staffExt ? mv.staffExt * (k <= 0 ? 0 : k <= 3 ? k / 3 : k <= mv.active ? 1 : Math.max(0, 1 - (k - mv.active) / 6)) : 0; // (as drawn: see drawFighter)
@@ -50,6 +50,37 @@ function lyraParts(f, mv, o) {
   if (mv.shardsTo && o) { const k = (f.mf - mv.startup + 3) / 9; for (let i = 0; i < 3; i++) { const t = clamp(k * 2.2 - i * 0.15, 0, 1), x = lerp(f.x + d * 30, o.x, t), y = lerp(f.y + 100, o.y + 70, t) - (i - 1) * 12; out.push(box(x, y, 14, 9)); } } // (the three shards, where Shard Barrage draws them)
   if (mv.orbitRunes) for (let i = 0; i < 4; i++) { const an = f.mf * 0.4 + i * Math.PI / 2, r = 40 + f.mf * 3; out.push(box(f.x + Math.cos(an) * r, f.y + 90 - Math.sin(an) * r * 0.5, 14, 14)); } // (Orbit Burst's four runes, as drawn)
   return out.length ? out : null;
+}
+// Aldric's greatsword: the angle it's held at — along his forearm, raised at the wrist (or whirling). drawGreatsword and the hitbox both read this.
+function swordDir(J, wrist, spinAngle) {
+  if (spinAngle != null) return [Math.cos(spinAngle), Math.sin(spinAngle)];
+  const th = Math.atan2(J.h1[1] - J.e1[1], J.h1[0] - J.e1[0]) + (wrist != null ? wrist : 0.6); return [Math.cos(th), Math.sin(th)];
+}
+// Aldric: the hitbox is what he hits with — the sword (a chain of small boxes from the pommel to the tip, plus where it swept since the last
+// frame), the shield on a shield blow, a knee or foot on a knee or a kick — read off the pose drawn this frame
+function aldricParts(f, mv) {
+  const J = solve(livePose(f)), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, W = p => [f.x + (f.animDX || 0) + d * s * p[0], f.y + s * (p[1] + hu)];
+  const tag = (mv.label || '') + ' ' + (mv.pose || ''), r = 12 * s, sq = (p, hw, hh) => ({ x0: p[0] - hw, x1: p[0] + hw, y0: Math.max(0, p[1] - hh), y1: p[1] + hh });
+  if (/Knee|Kick/.test(tag)) { const p = W(/Knee/.test(tag) ? J.k1 : J.f1); return [sq(p, 22 * s, 22 * s)]; }
+  if (/Punch|Elbow/.test(tag)) return [sq(W(J.h1), 20 * s, 20 * s)]; // (a punch: his fist)
+  if (/Pommel/.test(tag)) { const [ux, uy] = swordDir(J, mv.wrist != null ? mv.wrist : 0.25, null); return [sq(W([J.h1[0] - ux * 18, J.h1[1] - uy * 18]), 22 * s, 22 * s), sq(W(J.h1), 18 * s, 18 * s)]; } // (the pommel and his sword hand, not the blade)
+  const shield = /Shield|Bash|Aegis|Rampart/.test(tag) ? (c => [{ x0: c[0] - 20 * s, x1: c[0] + 20 * s, y0: Math.max(0, c[1] - 40 * s), y1: c[1] + 30 * s }])(W([J.h2[0] + 6, J.h2[1] - 6])) : []; // (a shield blow: the shield too, as drawn on his back arm)
+  const k = f.mf - mv.startup, ext = mv.staffExt ? mv.staffExt * (k <= 0 ? 0 : k <= 3 ? k / 3 : k <= mv.active ? 1 : Math.max(0, 1 - (k - mv.active) / 6)) : 0;
+  const spin = mv.spinStaff && f.mf > Math.max(1, mv.startup - 4) ? staffSpinAt(f, mv) : null, len = 104 + ext;
+  if (spin != null) { const c = W(J.h1), out = []; for (const R of [0, 40, 80, 12 + len]) for (let i = 0; i < (R ? Math.round(R / 8) : 1); i++) { const an = i / Math.round(R / 8 || 1) * Math.PI * 2; out.push(sq([c[0] + Math.cos(an) * R * s, c[1] + Math.sin(an) * R * s], r, r)); } return out; } // (whirling: a blur all the way round his hand)
+  const [ux, uy] = swordDir(J, mv.wrist != null ? mv.wrist : 0.25, null), seg = [W([J.h1[0] - ux * 16, J.h1[1] - uy * 16]), W([J.h1[0] + ux * (12 + len), J.h1[1] + uy * (12 + len)])];
+  const prev = mv.swSeg && mv.swSegMf === f.mf - 1 ? mv.swSeg : null; mv.swSeg = seg; mv.swSegMf = f.mf;
+  const L = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t], segs = prev ? [0.34, 0.67, 1].map(t => [L(prev[0], seg[0], t), L(prev[1], seg[1], t)]) : [seg], out = [];
+  for (const [a, b] of segs) for (let i = 0; i <= 6; i++) out.push(sq(L(a, b, i / 6), r, r));
+  return out.concat(shield);
+}
+// Aldric's blows that don't author their own motion: the wind-up pose into the strike pose, spread evenly across the wind-up and the active
+// frames (the generic strike snaps into the pose just before they start), with the sword live from early in the swing
+function aldricSwing(f, mf) {
+  const mv = f.move, su = mv.startup, end = su + (mv.active || 0), r = Math.max(2, Math.round(su * 0.35)); if (mf > end + 3) return null;
+  const Wp = POSES[mv.wind] || POSES.idle, Ap = POSES[mv.pose] || POSES.idle;
+  if (mf <= r) return lerpPose(f.prevPose, Wp, easeOutQ(mf / r));
+  return mf <= end ? lerpPose(Wp, Ap, (mf - r) / Math.max(1, end - r)) : Ap; // (even: the same distance each frame)
 }
 // Kuro's Iai Slash dashes at 32 px/frame through the opponent — far more than the blade's own reach in one frame —
 // so its hitbox also covers whatever ground it swept since the last frame, the same way Mei's staff-tip box does:
@@ -576,6 +607,7 @@ function checkHits(a, o) {
   let hb = mv.kunaiBox ? kunaiBox(a) : mv.limbJoint ? limbBox(a, mv) : boxOf(a, meleeBox(a, mv.hitbox));
   let parts = null;
   if (a.key === 'staff' && a.pose && mv.spinStaff && mv.limbJoint) { parts = staffBoxes(a, mv).concat([hb]); hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) })); } // (a kick with the staff twirling: both the foot and the staff hit)
+  else if (a.key === 'paladin' && a.pose && !mv.super) { parts = aldricParts(a, mv); hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) })); }
   else if (a.key === 'psychic' && (parts = lyraParts(a, mv, o))) hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) }));
   else if (a.key === 'staff' && a.pose && !/kick|Kick/.test((mv.pose || '') + ' ' + (mv.label || ''))) { parts = staffBoxes(a, mv); hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) })); }
   if (mv.iai || mv.sweepBox) hb = iaiSweepBox(a, mv, hb); // a tight box on the limb itself, swept along its own path so a fast or diagonal motion can't tunnel past someone between two frames (mv.sweepBox: any other move whose tracked limb moves fast enough to need the same thing — Vanish Drop Kick's diagonal arc, say)

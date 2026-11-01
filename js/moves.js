@@ -500,6 +500,12 @@ function specialMoveBase(id) {
     // → → + J: Crouching Slash. He drops low and rushes at them — four tenths of the stage at most — with a downward slash at their legs that bounces them
     case 'plWindmill': return { id, label: 'Crouching Slash', startup: 16, active: 6, recovery: 26, wind: 'crouch', pose: 'pLowCut', selfMove: true, maxTravel: W * 0.4, speedFx: true,
       hitbox: [10,200,0,205], dmg: 42, stun: 22, bstun: 16, push: 2, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 13, gdrain: 22,
+      hitFrom: 13, poseFn(f, mf) { // low through the dash, then the cut comes up off the floor and rises overhead across the active frames — so it carries someone in the air too, with the blade, not a tall box
+        const mv = f.move, su = mv.startup, end = su + mv.active; if (mf > end + 4) return null;
+        if (mf <= 5) return lerpPose(f.prevPose, POSES.crouch, easeOutQ(mf / 5));
+        if (mf <= su - 2) return lerpPose(POSES.crouch, POSES.pLowCut, easeInOutQ((mf - 5) / (su - 7)));
+        return mf <= end ? lerpPose(POSES.pLowCut, POSES.pCleaveW, (mf - su + 2) / (end - su + 2)) : POSES.pCleaveW; // (an even rise)
+      },
       onStart(f) { f.cs = { x0: f.x }; },
       onFrame(f, o, mf) {
         const mv = f.move, run = Math.abs(f.x - f.cs.x0), room = W * 0.4 - run;
