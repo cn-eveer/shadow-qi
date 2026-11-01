@@ -69,9 +69,9 @@ const CHARS = {
         limbJoint: 'h1', limbReach: 55, limbBack: 12, limbUp: 16, limbDown: 16 }, // a compact box on the striking palm
       k: { label: 'Axe Kick', startup: 6, active: 8, recovery: 19, hitbox: [20,104,0,150], wind: 'axeW', pose: 'axe', lunge: [3, 11, 5.5], cpLaunch: true, launchVy: 13, kd: true, stomp: [56, 0], // same startup+active total as before (14), just shifted earlier so the active window opens sooner
         limbJoint: 'f1', limbReach: 48, limbBack: 14, limbUp: 10, limbDown: 10, // a compact box on the kicking foot, longer reach, shorter height
-        poseFn(f, mf) { // the leg lifts up near his own head first, holds there a beat, then comes down smoothly through the rest of the window — a real chop, not a snap — while still coming down through the active frames instead of arriving early
-          const mv = f.move, total = mv.startup + mv.active; if (mf >= total) return null;
-          const k = mf / total, hold = 0.3;
+        poseFn(f, mf) { // the leg lifts up near his own head first, holds there a beat, then comes down slowly through the rest of the window — a real chop, not a snap. Stretched out well past the active window on purpose: the hit can still only land during startup..active (unchanged), but the leg keeps finishing its slow descent through recovery instead of snapping to the final pose the instant the hit window closes
+          const mv = f.move, total = mv.startup + mv.active + 4; if (mf >= total) return null;
+          const k = mf / total, hold = 0.25;
           if (k < hold) return lerpPose(f.prevPose, POSES.axeW, easeOutQ(Math.min(1, k / hold)));
           const d = Math.min(1, (k - hold) / (1 - hold));
           return lerpPose(POSES.axeW, POSES.axe, d * d); // slow to start, picking up speed into the chop
