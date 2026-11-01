@@ -650,7 +650,7 @@ function projBox(p) {
 // a parry in its active frames sends a travelling projectile straight back at whoever threw it (Lyra's magic still can't be parried)
 function parryReflect(tgt, p) {
   const mv = tgt.state === 'attack' && tgt.move;
-  if (!mv || !mv.parry || tgt.mf <= mv.startup || tgt.mf > mv.startup + mv.active || !p.owner || p.owner.key === 'psychic' || p.reflected) return false;
+  if (!mv || !mv.parry || mv.projStun || tgt.mf <= mv.startup || tgt.mf > mv.startup + mv.active || !p.owner || p.owner.key === 'psychic' || p.reflected) return false;
   const dir = Math.sign(p.vx) || p.dir || 0; if (mv.frontOnly && dir !== -tgt.facing) return false;
   p.owner = tgt; p.vx = -p.vx || tgt.facing * 8; p.vy = -(p.vy || 0) * 0.5; p.dir = -(p.dir || dir || 1); p.boomerang = 0; p.ft = 999; p.hold = false; p.reflected = true; p.n = 0; p.life = Math.max(p.life || 0, 40);
   if (p.h) p.h = { ...p.h, label: (p.h.label || '') + ' (reflected)' };

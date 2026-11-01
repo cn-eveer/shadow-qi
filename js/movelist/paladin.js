@@ -13,7 +13,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <h3>Held techniques (hold the button)</h3>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>Rampart Charge<small>Hold → → + U: he digs in, lowers the shield and builds into a raging charge, red light streaming off the shield. Front attacks and projectiles bounce off. It runs four tenths of the stage at most; let go, or crash into them, for the Rampart Slam that flattens them.</small></td><td class="cmd">→ → + U (hold)</td></tr>
+          <tr><td>Rampart Charge<small>Hold → → + U: he digs in, lowers the shield and builds into a raging charge, red light streaming off the shield. Front attacks and projectiles bounce off. It runs four tenths of the stage at most; the shield hits all through the run: crash into them and the Rampart Slam lands right there, or let go for it.</small></td><td class="cmd">→ → + U (hold)</td></tr>
         </tbody>
       </table></div>
       <h3>Heavy techniques</h3>
@@ -23,17 +23,17 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Heavy Thrust<small>He steps in with a thrust that pushes them away.</small></td><td class="cmd">K</td></tr>
           <tr><td>Judgement Thrust<small>A slow, deliberate wind-up, then a lunging thrust across a third of the stage that lifts them for a juggle.</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>Crouching Slash<small>He drops low and rushes up to four tenths of the stage, slashing down at their legs. A bounce: it hits the body as well as the legs.</small></td><td class="cmd">→ → + J</td></tr>
-          <tr><td>Crusader Leap<small>A heavy, slow leap of four tenths of the stage at most; he crashes down sword-first and the impact rolls out to both sides. Bounces them, and even hits them while they lie on the floor.</small></td><td class="cmd">→ → + K</td></tr>
+          <tr><td>Crusader Leap<small>A heavy, slow leap of four tenths of the stage at most; the sword is live all the way, swinging down through the fall, and he crashes down sword-first with an impact that rolls out to both sides. Bounces them, and even hits them while they lie on the floor.</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>Rising Shield<small>Up close: heaves the shield upward and launches them.</small></td><td class="cmd">↓ + I</td></tr>
         </tbody>
       </table></div>
       <h3>Parry and protect</h3>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>Push Parry<small>A short, sharp shield guard that works from the 5th frame. Parry an attack from the front and he shoves them far away, unhurt. Short window, slow to recover. Projectiles are not parried (they hit him), and neither is Lyra’s magic.</small></td><td class="cmd">← ← + U</td></tr>
+          <tr><td>Push Parry<small>A short, sharp shield guard that works from the 5th frame. Parry an attack from the front and he shoves them far away, unhurt. Short window, slow to recover. It also stops projectiles and spells from the front (Jesse’s shots and Lyra’s magic too) and leaves whoever sent them stunned.</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>Riposte Parry<small>The same quick parry, but he answers with a sword riposte that hurts them and knocks them away. A little slower to recover.</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>Aegis<small>A sphere of light closes around him and stops everything, from the front, from behind and from above, where a parry only works from the front. It takes a moment to cast (hit him then for a counter hit), then it stays up for four seconds — no holding — and he moves, jumps and attacks freely inside it. Hits only do a quarter of their damage but take a big bite out of his guard meter, which also drains while it’s up; if it runs out his guard breaks. When it ends, his guard meter drops to half and comes back slowly.</small></td><td class="cmd">← ← + J</td></tr>
-          <tr><td>Rising Parry<small>A slower parry that works from the 8th frame. Parry an attack from the front and he strikes up under them: it launches, and the combo begins.</small></td><td class="cmd">← ← + K</td></tr>
+          <tr><td>Rising Parry<small>A slower parry that works from the 8th frame. Parry an attack from the front and he strikes up under them: it launches, and the combo begins. Projectiles and spells from the front (Jesse’s and Lyra’s too) are stopped, and whoever sent them is stunned.</small></td><td class="cmd">← ← + K</td></tr>
           <tr class="super"><td>Super: Sanctuary<small>He plants the sword, wings of light open, and a dome of light swells around him. Caught inside, they are held and burned again and again while his health and guard come back; then the dome bursts. He is invincible while it opens. Needs a full MP meter.</small></td><td class="cmd">U + J</td></tr>
         </tbody>
       </table></div>
@@ -66,7 +66,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <h3>押し続ける技（ボタン長押し）</h3>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>城壁突撃<small>→→+Uを押し続ける：踏ん張って盾を下げ、怒りの突進へと加速し、盾から赤い光がほとばしる。正面の攻撃と飛び道具は弾く。最長で画面の4/10まで進み、離すかぶつかると城壁の一撃で叩き伏せる。</small></td><td class="cmd">→ → + U（長押し）</td></tr>
+          <tr><td>城壁突撃<small>→→+Uを押し続ける：踏ん張って盾を下げ、怒りの突進へと加速し、盾から赤い光がほとばしる。正面の攻撃と飛び道具は弾く。最長で画面の4/10まで進み、突進中も盾に当たり判定があり、ぶつかったその場で城壁の一撃が決まる（離しても出る）。</small></td><td class="cmd">→ → + U（長押し）</td></tr>
         </tbody>
       </table></div>
       <h3>重い技</h3>
@@ -76,17 +76,17 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>大突き<small>踏み込んで突き、相手を押し出す。</small></td><td class="cmd">K</td></tr>
           <tr><td>裁きの突き<small>ゆっくりと重い溜めから、画面の三分の一を突き抜ける突きで浮かせる。</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>しゃがみ斬り<small>低く構えて画面の4/10まで突進し、足元へ斬り下ろす。バウンド技：脚だけでなく胴にも当たる。</small></td><td class="cmd">→ → + J</td></tr>
-          <tr><td>聖戦の跳躍<small>画面の4/10までの重くゆっくりした跳躍。剣ごと落下し、衝撃が左右に広がる。相手をバウンドさせ、倒れている相手にも当たる。</small></td><td class="cmd">→ → + K</td></tr>
+          <tr><td>聖戦の跳躍<small>画面の4/10までの重くゆっくりした跳躍。跳躍中も剣に当たり判定があり、落ちながら振り下ろし、剣ごと落下して衝撃が左右に広がる。相手をバウンドさせ、倒れている相手にも当たる。</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>盾上げ<small>至近距離で盾を振り上げて打ち上げる。</small></td><td class="cmd">↓ + I</td></tr>
         </tbody>
       </table></div>
       <h3>受け流し・守り</h3>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>押し返し<small>5フレ目から効く、短く鋭い盾の構え。正面の攻撃を受け流すと、盾で遠くへ突き放す（ダメージなし）。持続は短く、戻りは遅い。飛び道具とライラの魔法は受け流せず、そのまま当たる。</small></td><td class="cmd">← ← + U</td></tr>
+          <tr><td>押し返し<small>5フレ目から効く、短く鋭い盾の構え。正面の攻撃を受け流すと、盾で遠くへ突き放す（ダメージなし）。持続は短く、戻りは遅い。正面からの飛び道具や魔法（ジェシーの弾、ライラの魔法も）も受け止め、撃った相手をスタンさせる。</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>リポスト受け流し<small>同じ素早い受け流しから、剣のリポストでダメージを与えて吹き飛ばす。戻りはやや遅い。</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>イージス<small>光の球が体を包み、正面・背後・上からのすべての攻撃を止める（受け流しは正面のみ）。発動に少し時間がかかり（その間に攻撃されるとカウンター）、そのあと4秒間、押し続けなくても張り続けられ、張ったまま自由に動き、ジャンプし、攻撃もできる。攻撃のダメージは4分の1だけ通り、ガードゲージが削られ、尽きるとガードブレイク。終わるとガードゲージは半分になり、ゆっくり回復する。</small></td><td class="cmd">← ← + J</td></tr>
-          <tr><td>突き上げ受け流し<small>8フレ目から効く、やや遅い受け流し。正面の攻撃を受け流すと、下から突き上げて浮かせ、そのまま連続技へ。</small></td><td class="cmd">← ← + K</td></tr>
+          <tr><td>突き上げ受け流し<small>8フレ目から効く、やや遅い受け流し。正面の攻撃を受け流すと、下から突き上げて浮かせ、そのまま連続技へ。正面からの飛び道具や魔法（ジェシーの弾、ライラの魔法も）も受け止め、撃った相手をスタンさせる。</small></td><td class="cmd">← ← + K</td></tr>
           <tr class="super"><td>超必殺技：聖域<small>剣を突き立てると光の翼が開き、光のドームが広がる。中に捕らわれた相手は何度も焼かれ、その間に体力とガードが回復し、最後にドームが弾ける。ドームが開くまでは無敵。MP満タンが必要。</small></td><td class="cmd">U + J</td></tr>
         </tbody>
       </table></div>

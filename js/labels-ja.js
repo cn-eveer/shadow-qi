@@ -382,6 +382,7 @@ const LABEL_JA = {
   "Pole Vault Smash": "棒高跳び叩き",
   "Pommel Smash": "柄打ち",
   "Pommel Strike": "柄打ち",
+  "Shield Punch": "盾突き",
   "Pommel Strike 2": "柄打ち2",
   "Pommel, Bash": "柄、盾打ち",
   "Pommel, Cut": "柄、斬り",

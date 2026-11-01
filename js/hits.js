@@ -61,10 +61,11 @@ function swordDir(J, wrist, spinAngle) {
 function aldricParts(f, mv) {
   const J = solve(livePose(f)), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, W = p => [f.x + (f.animDX || 0) + d * s * p[0], f.y + s * (p[1] + hu)];
   const tag = (mv.label || '') + ' ' + (mv.pose || ''), r = 12 * s, sq = (p, hw, hh) => ({ x0: p[0] - hw, x1: p[0] + hw, y0: Math.max(0, p[1] - hh), y1: p[1] + hh });
+  const shield = /Shield|Bash|Aegis|Rampart/.test(tag) ? (c => [{ x0: c[0] - 20 * s, x1: c[0] + 20 * s, y0: Math.max(0, c[1] - 40 * s), y1: c[1] + 30 * s }])(W([J.h2[0] + 6, J.h2[1] - 6])) : []; // (a shield blow: the shield too, as drawn on his back arm)
+  if (/pShieldPunch|Rampart/.test(tag)) return shield; // (the sword held back: only the shield hits — U, and the Rampart Charge and Slam)
   if (/Knee|Kick/.test(tag)) { const p = W(/Knee/.test(tag) ? J.k1 : J.f1); return [sq(p, 22 * s, 22 * s)]; }
   if (/Punch|Elbow/.test(tag)) return [sq(W(J.h1), 20 * s, 20 * s)]; // (a punch: his fist)
   if (/Pommel/.test(tag)) { const [ux, uy] = swordDir(J, mv.wrist != null ? mv.wrist : 0.25, null); return [sq(W([J.h1[0] - ux * 18, J.h1[1] - uy * 18]), 22 * s, 22 * s), sq(W(J.h1), 18 * s, 18 * s)]; } // (the pommel and his sword hand, not the blade)
-  const shield = /Shield|Bash|Aegis|Rampart/.test(tag) ? (c => [{ x0: c[0] - 20 * s, x1: c[0] + 20 * s, y0: Math.max(0, c[1] - 40 * s), y1: c[1] + 30 * s }])(W([J.h2[0] + 6, J.h2[1] - 6])) : []; // (a shield blow: the shield too, as drawn on his back arm)
   const k = f.mf - mv.startup, ext = mv.staffExt ? mv.staffExt * (k <= 0 ? 0 : k <= 3 ? k / 3 : k <= mv.active ? 1 : Math.max(0, 1 - (k - mv.active) / 6)) : 0;
   const spin = mv.spinStaff && f.mf > Math.max(1, mv.startup - 4) ? staffSpinAt(f, mv) : null, len = 104 + ext;
   if (spin != null) { const c = W(J.h1), out = []; for (const R of [0, 40, 80, 12 + len]) for (let i = 0; i < (R ? Math.round(R / 8) : 1); i++) { const an = i / Math.round(R / 8 || 1) * Math.PI * 2; out.push(sq([c[0] + Math.cos(an) * R * s, c[1] + Math.sin(an) * R * s], r, r)); } return out; } // (whirling: a blur all the way round his hand)
@@ -415,7 +416,7 @@ function applyHit(a, d, h, side, hb, hu) {
     sparks(cx, cy, 'block'); sfx('block'); if (!d.passT || game.frame - d.passT > 12) { d.passT = game.frame; popText(d.x, GROUND - d.y - 180, 'SHIELD', '255,225,140'); }
     game.freeze = Math.max(game.freeze, 3); return 'block';
   }
-  if (d.state === 'attack' && d.move && d.move.parry && d.mf > d.move.startup && d.mf <= d.move.startup + d.move.active && !(d.move.frontOnly && side !== -d.facing) && !(h.proj && d.move.noProjParry) && a.key !== 'psychic') { parryCounter(d, a, h); return null; } // (noProjParry: Tetsu's and Aldric's parries answer blows, not projectiles; Lyra's magic can't be parried at all)
+  if (d.state === 'attack' && d.move && d.move.parry && d.mf > d.move.startup && d.mf <= d.move.startup + d.move.active && !(d.move.frontOnly && side !== -d.facing) && !(h.proj && d.move.noProjParry) && (a.key !== 'psychic' || d.move.projStun)) { parryCounter(d, a, h); return null; } // (noProjParry: Tetsu's parries and Aldric's Riposte Parry answer blows, not projectiles; Lyra's magic can't be parried — except by Aldric's Push and Rising Parries, projStun, which stun whoever shot or cast it)
   if (d.state === 'down') { // ground hit: a low attack on a downed opponent
     const dmg = Math.max(1, Math.round(h.dmg * 0.6));
     d.hp = Math.max(game.training ? 1 : 0, d.hp - dmg); d.otgUsed = true; d.flash = 7;

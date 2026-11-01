@@ -194,7 +194,7 @@ const CHARS = {
         onFrame: (f, o, mf) => { if (mf <= f.move.startup) f.vx = f.facing * 4; else f.vx *= 0.6; } }, // (a pushing thrust: he steps in with it)
     },
     normalLook: {
-      sp0: { label: 'Pommel Strike', wind: 'pBashW', pose: 'pSlash', hitbox: [20,150,85,140] },
+      sp0: { label: 'Shield Punch', wind: 'pShieldPunchW', pose: 'pShieldPunch', hitbox: [20,150,85,140] },
       cp1: { label: 'Rising Shield', wind: 'pQuake', pose: 'pShieldUp', hitbox: [10,135,40,200] },
       sk0: { label: 'Low Cut', wind: 'pThrustW', pose: 'pLowCut', hitbox: [20,165,0,50] },
       ck0: { label: 'Crouch Sword Poke', wind: 'crouch', pose: 'pLowCut', hitbox: [20,150,0,32] },

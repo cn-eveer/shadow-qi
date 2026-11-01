@@ -197,6 +197,8 @@ const POSES = {
   pThrust: P(22, 90,92, 58,84, 62,10, -52,-72),
   pBashW: P(-10, 40,82, 18,46, 30,6, -30,-12),
   pBash: P(24, 30,64, 96,96, 56,6, -45,-30),
+  pShieldPunchW: P(-8, -20,150, 40,60, 30,6, -30,-12), // (U: the shield drawn in, the sword raised back out of the way)
+  pShieldPunch: P(20, -30,160, 96,96, 52,6, -42,-26),
   pRiseW: P(34, 30,10, 70,92, 70,-25, 20,-60),
   pRise: P(-6, 168,176, 64,92, 32,0, -10,-40),
   pLowCut: P(42, 78,40, 62,92, 85,-15, 20,-90),

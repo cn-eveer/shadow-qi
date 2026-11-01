@@ -432,10 +432,18 @@ function spawnAegis(f) {
 function parryCounter(d, a, h) {
   sparks(d.x + d.facing * 30, GROUND - 100, 'block'); sfx('block'); popText(d.x, GROUND - 170, 'PARRY!', '125,235,255');
   game.freeze = Math.max(game.freeze, 10);
+  if (d.move.projStun && (h.proj || a.key === 'psychic')) { parryStun(d, a); return; } // (Aldric's Push and Rising Parries: a shot or a spell turned on the shield leaves whoever cast it stunned)
   if (h.proj) return; // projectiles are just absorbed
   d.facing = Math.sign(a.x - d.x) || d.facing;
   const dry = d.move.parryIntoDry && d.ch.ammo && !(d.ammo > 0 && !(d.reloadT > 0)); // (Jesse with no bullets: the shove instead of the shot)
   startMove(d, specialMove((dry ? d.move.parryIntoDry : d.move.parryInto) || 'parryStrike'), 1, true); d.invul = 8;
+}
+function parryStun(d, a) {
+  if (d.move.stunDone || a.ko) return; d.move.stunDone = true; // (once per parry: a burst of bullets doesn't keep restarting it)
+  for (const p of projs) if (p.owner === a && !p.dead && PJ.has(p.type) && p.type !== 'trap' && Math.sign(d.x - p.x) === Math.sign(p.vx)) { p.dead = true; if (p.boomerang) a.plateOut = false; sparks(p.x, GROUND - (p.y || 80), 'block'); } // (the rest of the volley still on its way to him shatters too)
+  a.move = null; a.vx = 0; setState(a, 'stunned'); a.stunT = 80; a.stunKind = 'holy'; a.st0 = ++serial;
+  parts.push({ type: 'lbeam', x: a.x, w: 30, life: 16, max: 16 }); popText(a.x, GROUND - a.y - 185, 'STUNNED!', '255,170,90'); sfx('orb');
+  game.freeze = Math.max(game.freeze, 12);
 }
 function spawnRain(f, o, idx) { // lightning balls drop straight down onto a juggled opponent
   projs.push({ id: ++serial, type: 'rain', owner: f, idx, x: o.x + (idx - 1) * 14, y: Math.min(o.y + 200, 420), vx: 0, vy: -11, r: 14,

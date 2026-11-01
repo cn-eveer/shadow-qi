@@ -474,9 +474,11 @@ function specialMoveBase(id) {
     // let go, or crash into them, for the Rampart Slam that sends them flying
     case 'plRampart': return { id, label: 'Rampart Charge', startup: 999, active: 6, recovery: 22, wind: 'pBashW', pose: 'pBash', selfMove: true, maxTravel: W * 0.4, held: true, rage: true, // (armor: hits hurt him but don't stop the charge)
       hitbox: [10,130,20,175], dmg: 80, fullDmg: true, stun: 26, bstun: 18, push: 4, bpush: 10, kd: true, kdVx: 6, kdVy: 9, type: 'mid', hitstop: 14, gdrain: 30,
+      hitFrom: 10, // (the shield hits all through the run, not only in the slam: crash into them and it lands right there)
       poseFn: (f, mf) => (!f.move.fired && mf > 10) ? POSES.pDash : null,
       onFrame(f, o, mf) {
         const mv = f.move;
+        if (!mv.fired && f.hitConnected) { mv.fired = true; mv.startup = mf - 1; mv.label = 'Rampart Slam'; sfx('hitH'); game.shake = Math.max(game.shake, 5); } // (it struck them on the run: the slam, there)
         if (!mv.fired) {
           if (mf <= 10) { f.vx = 0; if (mf === 2) sfx('charge'); return; } // digs in and lowers the shield
           f.vx = f.facing * Math.min(8, (mf - 10) * 0.55); mv.speedFx = f.vx * f.facing > 5;
@@ -515,16 +517,20 @@ function specialMoveBase(id) {
       } };
     // → → + K: Crusader Leap. A heavy, slow leap (four tenths of the stage at most); he crashes down sword-first and the impact rolls out to both sides (it even hits them lying down)
     case 'plLeap': return { id, label: 'Crusader Leap', startup: 30, active: 5, recovery: 28, wind: 'pCleaveW', pose: 'pPlant', manualY: true, noPush: true, selfMove: true,
-      hitbox: [-120,175,0,80], low: true, dmg: 70, fullDmg: true, stun: 24, bstun: 16, push: 3, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 13, gdrain: 24,
+      hitbox: [-120,175,0,80], low: true, hitFrom: 6,
+      poseFn: (f, mf) => mf > 40 ? null : mf <= 8 ? lerpPose(f.prevPose, POSES.pCleaveW, easeOutQ(mf / 8)) : mf <= 30 ? lerpPose(POSES.pCleaveW, POSES.pPlant, (mf - 8) / 22) : POSES.pPlant, // (up on take-off, then the sword comes down and forward evenly through the whole fall, leading him onto them)
+      dmg: 70, fullDmg: true, stun: 24, bstun: 16, push: 3, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 13, gdrain: 24,
       onStart(f, o) { const sg = Math.sign(o.x - f.x) || f.facing; f.lp = { x0: f.x, tx: clamp(f.x + sg * Math.min(Math.abs(o.x - f.x - sg * 30), W * 0.4), WALL_L, WALL_R) }; sfx('rise'); }, // (a leap of four tenths of the stage at most: from further away it falls short)
       onFrame(f, o, mf) {
-        f.vx = 0;
+        f.vx = 0; f.move.low = mf >= 30; // (the sword is live all through the leap — on the way it hits like any blow; only the landing is low)
+        if (f.hitConnected && !f.move.earlyCut && f.lastHitMf <= 30) { f.move.earlyCut = true; f.move.recovery -= 31 - f.lastHitMf; } // (it struck on the way down: he's free as soon after the hit as from a landing hit, so the juggle still follows)
         if (mf <= 30) { const e = mf / 30; f.x = lerp(f.lp.x0, f.lp.tx, e); f.y = 150 * Math.sin(Math.PI * e); }
         if (mf === 30) { f.y = 0; for (const dx of [-90, -40, 40, 90]) parts.push({ type: 'ring', x: f.x + dx, y: GROUND - 10, r: 6, vr: 6, life: 14, max: 14, col: '190,225,255' });
           parts.push({ type: 'lbeam', x: f.x + f.facing * 30, w: 30, life: 10, max: 10 }); dustAt(f.x, true); cracks(f.x + f.facing * 30); game.shake = Math.max(game.shake, 9); sfx('hitH'); }
       } };
-    // ← ← + U: Push Parry. Parries from the 5th frame; a parried blow gets a shield shove that sends them away (no damage). Short window, long recovery
-    case 'plParryRise': return { id, label: 'Push Parry', startup: 4, active: 10, recovery: 26, noProjParry: true, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plShove', fx: 'ward' };
+    // ← ← + U: Push Parry. Parries from the 5th frame; a parried blow gets a shield shove that sends them away (no damage). Short window, long recovery.
+    // A projectile or a spell from the front (Lyra's and Jesse's too) is stopped, and whoever sent it is stunned (← ← + K the same)
+    case 'plParryRise': return { id, label: 'Push Parry', startup: 4, active: 10, recovery: 26, projStun: true, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plShove', fx: 'ward' };
     case 'plShove': return { id, label: 'Shield Shove', startup: 2, active: 3, recovery: 14, wind: 'pBashW', pose: 'pBash', hitbox: null, burst: [80, 110],
       onStart(f, o) { const side = Math.sign(o.x - f.x) || f.facing; if (o.state !== 'ko') { setState(o, 'blockstun'); o.stun = 14; o.move = null; o.vx = side * 30; } sfx('palm'); game.shake = Math.max(game.shake, 3); } }; // (pushed far back, unhurt)
     // ← ← + I: Riposte Parry. Parries from the 5th frame and answers with a sword riposte that hurts and knocks them away
@@ -533,7 +539,7 @@ function specialMoveBase(id) {
       hitbox: [20,210,70,150], dmg: 64, stun: 22, bstun: 12, push: 6, kd: true, kdVx: 15, kdVy: 7, type: 'mid', hitstop: 14, gdrain: 10,
       onFrame(f, o, mf) { if (mf <= 5 && Math.abs(o.x - f.x) > 70) f.vx = f.facing * 12; else f.vx *= 0.5; if (mf === 4) sfx('slash'); } };
     // ← ← + K: Rising Parry. Parries from the 8th frame and strikes up under them: it launches, and the combo begins
-    case 'plPray': return { id, label: 'Rising Parry', startup: 7, active: 10, recovery: 34, noProjParry: true, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plRiseStrike', fx: 'ward' };
+    case 'plPray': return { id, label: 'Rising Parry', startup: 7, active: 10, recovery: 34, projStun: true, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plRiseStrike', fx: 'ward' };
     case 'plRiseStrike': return { id, label: 'Rising Strike', startup: 4, active: 5, recovery: 18, wind: 'pCleaveW', pose: 'pShieldUp', selfMove: true, speedFx: true, noGrace: true,
       hitbox: [10,160,30,225], dmg: 46, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 14, type: 'mid', hitstop: 12, gdrain: 10,
       onFrame(f, o, mf) { if (mf <= 4 && Math.abs(o.x - f.x) > 70) f.vx = f.facing * 10; else f.vx *= 0.5; if (mf === 4) { parts.push({ type: 'lbeam', x: f.x + f.facing * 80, w: 34, life: 16, max: 16 }); sfx('orb'); } } };
