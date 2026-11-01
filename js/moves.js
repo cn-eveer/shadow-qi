@@ -208,7 +208,7 @@ function specialMoveBase(id) {
     case 'teleKick': return { id, label: 'Sky Drop Kick', startup: 28, active: 14, recovery: 16, blockAdv: -21, wind: 'seal', pose: 'diveKick', manualY: true, noPush: true, selfMove: true,
       bodyHurt: true, // (fitted to his actual silhouette, hanging in the air and falling — no narrower than he really is: the whole point of the longer hang is that he's genuinely open there)
       hitbox: [-10,52,-12,50], dmg: 58, stun: 24, bstun: 14, push: 2, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 9, gdrain: 10,
-      limbJoint: 'f1', limbReach: 35, limbBack: 10, limbUp: 18, limbDown: 18, // (the box travels with the falling kick)
+      limbJoint: 'f1', limbReach: 35, limbBack: 10, limbUp: 6, limbDown: 18, // (the box travels with the falling kick, and doesn't reach up past the foot)
       follow: { from: 18, to: 56, at: 43, opts: { lk: 'teleSlide', hk: 'teleSpin' } },
       poseFn(f, mf) { return mf > 6 && mf <= 28 ? POSES.jump : null; },
       speedHold: f => f.mf > 14, // (sped up only for the vanish itself; once he's back in view, he hangs and falls at his own pace — long enough now for a real anti-air)
@@ -219,11 +219,13 @@ function specialMoveBase(id) {
         if (mf === 14) {
           // reappear above the opponent, then drop through them and land behind
           const side = Math.sign(o.x - f.x) || f.facing;
-          f.tele = { x1: clamp(o.x - side * 30, WALL_L, WALL_R), x2: clamp(o.x + side * 55, WALL_L, WALL_R) };
-          f.x = f.tele.x1; f.y = 175; f.facing = side; f.hidden = false; f.invul = 0; puff(f.x, f.y + 60); // (seen again: hittable from here — an anti-air can catch the drop)
+          const up = o.y > 30 || (o.state === 'knock' && o.juggle); // (they're in the air — a juggle: drop on them from above as before)
+          f.move.limbUp = up ? 18 : 6;
+          f.tele = up ? { x1: clamp(o.x - side * 30, WALL_L, WALL_R), x2: clamp(o.x + side * 55, WALL_L, WALL_R), h: 175 } : { x1: clamp(o.x - side * 105, WALL_L, WALL_R), x2: clamp(o.x - side * 25, WALL_L, WALL_R), h: 120 }; // (on the ground: out in front of them, diving forward into their front — not dropping on their head and crossing over)
+          f.x = f.tele.x1; f.y = f.tele.h; f.facing = side; f.hidden = false; f.invul = 0; puff(f.x, f.y + 60); // (seen again: hittable from here — an anti-air can catch the drop)
         }
-        if (mf > 14 && mf <= 28) f.y = 175 + Math.sin((mf - 14) * 0.5) * 3; // a longer hang so the opponent can react — and beat him, if they have an air technique of their own
-        if (mf > 28 && mf <= 42) { const e = (mf - 28) / 14; f.x = lerp(f.tele.x1, f.tele.x2, e); f.y = 175 * (1 - e); }
+        if (mf > 14 && mf <= 28) f.y = f.tele.h + Math.sin((mf - 14) * 0.5) * 3; // a longer hang so the opponent can react — and beat him, if they have an air technique of their own
+        if (mf > 28 && mf <= 42) { const e = (mf - 28) / 14; f.x = lerp(f.tele.x1, f.tele.x2, e); f.y = f.tele.h * (1 - e); }
         if (mf === 42) { f.y = 0; dustAt(f.x, false); }
       } };
     case 'teleSlide': return { id, label: 'Drop Slide', startup: 3, active: 16, recovery: 14, blockAdv: -16, wind: 'crouch', pose: 'slideKick', selfMove: true,
@@ -1050,7 +1052,13 @@ function specialMoveBase(id) {
       } };
     case 'qiSweep': return { id, label: 'Qi Sweep', pre: 7, startup: 8, active: 14, recovery: 16, wind: 'scoopW', pose: 'scoop', selfMove: true, aura: true, speedFx: true, bodyHurt: true, hurtSkip: 'h1', // (his own hurtbox doesn't reach out to the scooping hand's own tip — that's his attack's reach, not a reason to be that exposed)
       trail: { cx: 30, cy: 20, r: 62, a0: -75, a1: 65, col: '125,235,255' },
-      hitFrom: 4, hitbox: [30,105,0,36], low: true, dmg: 48, stun: 20, bstun: 10, push: 2, launch: true, launchVy: 11, type: 'mid', hitstop: 8, gdrain: 8, // (longer reach: 70 -> 95 -> 99, the practical ceiling — any further connects from far enough away that the launched opponent clears the engine's 130-unit air-juggle-continuation range, so his own U follow-up whiffs)
+      hitFrom: 4, hitbox: [30,105,0,36], low: true,
+      poseFn(f, mf) { // the same scoop, crouched much lower (head about 30 lower): the wind-up through the lunge, then the scoop up through them
+        const mv = f.move, su = mv.startup; if (mf >= su + mv.active) return null;
+        const W = { ...POSES.scoopW, t: 68, l1u: 95, l1l: -25, l2u: -85, l2l: -120 }, S = { ...POSES.scoop, t: 60, l1u: 95, l1l: -25, l2u: -85, l2l: -120 };
+        if (mf <= su) return lerpPose(f.prevPose, W, easeOutQ(Math.min(1, mf / Math.max(1, su))));
+        return lerpPose(W, S, easeInOutQ(Math.min(1, (mf - su) / 6)));
+      }, dmg: 48, stun: 20, bstun: 10, push: 2, launch: true, launchVy: 11, type: 'mid', hitstop: 8, gdrain: 8, // (longer reach: 70 -> 95 -> 99, the practical ceiling — any further connects from far enough away that the launched opponent clears the engine's 130-unit air-juggle-continuation range, so his own U follow-up whiffs)
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
       onFrame(f, o, mf) { if (mf > 4 && mf <= 22 && !f.hitConnected && Math.abs(o.x - f.x) > 50) { f.vx = f.facing * 11; if (mf % 2 === 0) dustAt(f.x, false); } else if (f.hitConnected && mf <= 30 && Math.abs(o.x - f.x) > 80) f.vx = f.facing * 8; /* (scooped from further out: he slides on in under them, so the juggle is still in reach) */ else f.vx *= 0.6; } };
     case 'shoulder': return { id, label: 'Shoulder Charge', pre: 6, startup: 12, active: 8, recovery: 22, wind: 'crouch', pose: 'shoulder', selfMove: true, speedFx: true, bodyHurt: true,
@@ -1061,10 +1069,10 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { if (mf === 14) spawnQiOrb(f); } };
     case 'qiParry': return { id, label: 'Qi Parry', startup: 7, active: 22, recovery: 20, wind: 'charge', pose: 'parryStance', parry: true, aura: true, fx: 'ward',
       onFrame(f, o, mf) { if (mf > 7 && mf <= 29 && mf % 3 === 0) auraParticle(f); } };
-    case 'pushParry': return { id, label: 'Push Parry', startup: 4, active: 10, recovery: 26, noProjParry: true, wind: 'charge', pose: 'parryStance', parry: true, parryInto: 'parryShove', aura: true, fx: 'ward', // ← ← + U: parries from the 5th frame; a parried blow gets a shove that sends them away (no damage)
-      onFrame(f, o, mf) { if (mf > 4 && mf <= 14 && mf % 3 === 0) auraParticle(f); } };
-    case 'kickParry': return { id, label: 'Kick Parry', startup: 4, active: 10, recovery: 32, noProjParry: true, wind: 'charge', pose: 'parryStance', parry: true, parryInto: 'parryKick', aura: true, fx: 'ward', // ← ← + I: the same, but he answers with a kick
-      onFrame(f, o, mf) { if (mf > 4 && mf <= 14 && mf % 3 === 0) auraParticle(f); } };
+    case 'pushParry': return { id, label: 'Push Parry', startup: 4, active: 14, recovery: 26, noProjParry: true, wind: 'charge', pose: 'parryStance', parry: true, parryInto: 'parryShove', aura: true, fx: 'ward', // ← ← + U: parries from the 5th frame; a parried blow gets a shove that sends them away (no damage)
+      onFrame(f, o, mf) { if (mf > 4 && mf <= 18 && mf % 3 === 0) auraParticle(f); } };
+    case 'kickParry': return { id, label: 'Kick Parry', startup: 4, active: 14, recovery: 32, noProjParry: true, wind: 'charge', pose: 'parryStance', parry: true, parryInto: 'parryKick', aura: true, fx: 'ward', // ← ← + I: the same, but he answers with a kick
+      onFrame(f, o, mf) { if (mf > 4 && mf <= 18 && mf % 3 === 0) auraParticle(f); } };
     case 'parryShove': return { id, label: 'Qi Shove', startup: 2, active: 3, recovery: 14, wind: 'palmW', pose: 'blast', hitbox: null, aura: true, burst: [80, 110],
       onStart(f, o) { const side = Math.sign(o.x - f.x) || f.facing; if (o.state !== 'ko') { setState(o, 'blockstun'); o.stun = 14; o.move = null; o.vx = side * 30; } sfx('qi'); game.shake = Math.max(game.shake, 3); } }; // (pushed far back, unhurt: back to neutral at a distance)
     case 'parryKick': return { id, label: 'Counter Kick', startup: 4, active: 4, recovery: 18, wind: 'kickW', pose: 'midKick', hitbox: [10,115,50,135],
@@ -1118,11 +1126,13 @@ function specialMoveBase(id) {
       limbJoint: 'h1', limbReach: 50, limbBack: 16, limbUp: 38, limbDown: 38, // a more centered box on the fist itself (was heavily up-biased, so it already covered the top before he'd risen) — now it genuinely climbs with him
       poseFn(f, mf) { // two blows: a straight punch at mid height out of the dash, then the fist drops back low and the uppercut drives up through them
         const mv = f.move; if (mf >= mv.startup + mv.active) return null;
-        if (mf <= 8) return POSES.crouch;
-        if (mf <= 13) return lerpPose(POSES.crouch, POSES.cPunch, easeOutQ((mf - 8) / 5));
-        if (mf <= 14) return POSES.cPunch;
-        if (mf <= 19) return lerpPose(POSES.cPunch, POSES.cUpper, easeInOutQ((mf - 14) / 5)); // (the fist drawn back down gradually, not snapped)
-        if (mf <= 26) return lerpPose(POSES.cUpper, POSES.uppercut, easeInOutQ((mf - 19) / 7));
+        const low = { l1u: 100, l1l: -40, l2u: 40, l2l: -120 }; // (ducked much lower than his ordinary crouch: head about 20 lower)
+        const duck = { ...POSES.crouch, t: 55, ...low }, punch = { ...POSES.cPunch, t: 55, ...low }, cock = { ...POSES.cUpper, t: 25, ...low };
+        if (mf <= 8) return duck;
+        if (mf <= 13) return lerpPose(duck, punch, easeOutQ((mf - 8) / 5));
+        if (mf <= 14) return punch;
+        if (mf <= 19) return lerpPose(punch, cock, easeInOutQ((mf - 14) / 5)); // (the fist drawn back down gradually, not snapped)
+        if (mf <= 26) return lerpPose(cock, POSES.uppercut, easeInOutQ((mf - 19) / 7));
         return POSES.uppercut;
       },
       hitFrom: 8, hitbox: [10,95,30,180], multi: 2, interval: 3, dmg: 26, lastDmg: 46, stun: 22, bstun: 14, push: 0.5, lastPush: 4, launch: true, launchVy: 13.5, type: 'mid', hitstop: 9, gdrain: 14, // (the punch holds them in place for the uppercut, and the uppercut launches: a combo)
