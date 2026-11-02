@@ -4,6 +4,16 @@
 // version.json on the server says which version is live. When the two differ, the player is asked to reload without the
 // browser's cache, or to erase the site's saved data and reload.
 const RELEASES = [ // notes: a string, or { g: 'group', items: [...] } (groups nest)
+  { v: '1.5.1', date: '2026-11-02', notes: [
+    { g: '技表', items: [
+      'ホーエン・カッパ・テツ・ジェシー・田中の技表を1.5.0の内容に更新（カッパの↓+U・↓+J・↓+K、田中の二重憑依の時間など）',
+      'トレーニングの説明にHキー（当たり判定の表示）を追加',
+    ] },
+    { g: '田中', items: [
+      '天使：←←+J・←←↓+Jの目の光線でダメージが出ない不具合を修正',
+      '天使：←←↓+Jは近くの相手にも足元へ当たり、二重憑依の光線も普通の大きさの相手に当たるように',
+    ] },
+  ] },
   { v: '1.5.0', date: '2026-11-02', notes: [
     { g: 'システム', items: [
       '全キャラの当たり判定を見た目どおりに：武器・手足・魔法そのものが当たり、振りに沿って滑らかに動く。やられ判定も体の形に合わせた',

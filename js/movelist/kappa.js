@@ -14,6 +14,9 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Sumo Toss<small>J: grabs them (18F) and swings them over his head to the floor. They are held for twenty-four frames: press I + U together in that time and the throw is broken.</small></td><td class="keys"><kbd>J</kbd></td></tr>
           <tr><td>Whirlpool Toss<small>K: grabs them (18F) and throws them high over his head for a juggle. They are held for twenty-four frames: press J + K together in that time and the throw is broken (the string-ending throw too).</small></td><td class="keys"><kbd>K</kbd></td></tr>
           <tr><td>Upward Rake<small>Up close: rakes upward and lifts them. (U, ↓ + I is the low version: a low launcher.)</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>Dive Jab<small>He dives in head-first and swims along the floor, flat and low: a low, and most high attacks pass over him.</small></td><td class="cmd">↓ + U</td></tr>
+          <tr><td>Belly Dive<small>The same floor dive, swimming further.</small></td><td class="cmd">↓ + J</td></tr>
+          <tr><td>Swimming Dive<small>The longest floor dive: it knocks them down.</small></td><td class="cmd">↓ + K</td></tr>
           <tr><td>Plate Throw<small>The dish on his head flies out spinning and comes back (he’s bald until it does).</small></td><td class="cmd">→ → + U</td></tr>
           <tr><td>Water Cannon<small>A jet of water from his beak, reaching about two fifths of the stage: eleven hits that push them away. Parried, the jet stops.</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>Pounce<small>Leaps on them like a wild animal (four tenths of the stage at most), latches on, rakes five times, then kicks off them into the air. Armor: hits don’t stop him.</small></td><td class="cmd">→ → + J</td></tr>
@@ -49,6 +52,9 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>相撲投げ<small>J：つかんで（18F）頭越しに床へ投げる。つかまれた相手は24フレーム動けず、その間にI＋Uを同時押しすると投げを外せる。</small></td><td class="keys"><kbd>J</kbd></td></tr>
           <tr><td>渦巻き投げ<small>K：つかんで（18F）頭越しに高く投げ上げ、空中追撃へ。つかまれた相手は24フレーム動けず、その間にJ＋Kを同時押しすると投げを外せる（連携の締めの投げも同じ）。</small></td><td class="keys"><kbd>K</kbd></td></tr>
           <tr><td>爪かき上げ<small>至近距離で上へかき上げて浮かせる。（U、↓+Iは下段版：下段の打ち上げ。）</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>ダイブ突き<small>頭から飛び込み、床を泳ぐように低く進む。下段で、上段はほぼ当たらない。</small></td><td class="cmd">↓ + U</td></tr>
+          <tr><td>腹ばいダイブ<small>同じ床ダイブで、さらに遠くまで泳ぐ。</small></td><td class="cmd">↓ + J</td></tr>
+          <tr><td>泳ぎダイブ<small>最も遠くまで届く床ダイブ。ダウンを奪う。</small></td><td class="cmd">↓ + K</td></tr>
           <tr><td>皿投げ<small>頭の皿が回転して飛び、戻ってくる（戻るまで頭はつるつる）。</small></td><td class="cmd">→ → + U</td></tr>
           <tr><td>水鉄砲<small>くちばしから水を噴射。画面の約5分の2まで届く。11ヒットで押し出す。受け流されると噴射が止まる。</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>飛びかかり<small>野生の獣のように飛びかかって（最大で画面の4/10）しがみつき、5回引っかいてから蹴り上げる。アーマー：攻撃を受けても止まらない。</small></td><td class="cmd">→ → + J</td></tr>
