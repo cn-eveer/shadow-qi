@@ -199,8 +199,8 @@ function trainingUpkeep() {
   for (const f of fighters) {
     const hurt = f.state === 'hitstun' || f.state === 'knock' || f.state === 'down' || f.state === 'getup' || f.state === 'roll' || f.state === 'slashed' || f.state === 'recover' || f.state === 'blockstun' || f.state === 'gbreak';
     f.calm = hurt ? 0 : f.calm + 1;
-    if (f.calm > 50 && f.hp < 1000 && !(f.healT > 0)) f.hp = 1000;
-    if (f.side === 0 && game.mpFull && f.state !== 'attack' && f.meter < 100) f.meter = 100;
+    if (f.calm > 40 && f.hp < 1000 && !(f.healT > 0)) f.hp = Math.min(1000, f.hp + 10); // health comes back naturally once they're left alone (0 to full in under two seconds)
+    if (game.mpFull && f.state !== 'attack' && f.meter < 100) f.meter = Math.min(100, f.meter + 0.5); // and MP fills steadily for both (0 to full in about three seconds; M turns it off)
   }
   updateTrack();
 }
