@@ -181,6 +181,13 @@ function moveFrames(f, mv) {
   if (f.ch.recPlus && mv.recovery < 90) { mv.recovery += f.ch.recPlus; mv.recPlusAmt = f.ch.recPlus; } // (a fighter who's slower to recover: a miss or a guard costs more — the guard number stays as set; a hit that launches or knocks down gives it back, see applyHit)
   if (e.blk != null) { mv.blockAdv = e.blk; mv.noGuardLag = true; f.lastMoveTech = false; } // (its own guard number: no extra off-balance on top)
 }
+// Aldric can parry straight out of his guard: ← ← + U / I / K comes out while he's guarding, even in blockstun or just after his own attack
+const GUARD_PARRIES = new Set(['plParryRise', 'plParryStun', 'plPray']);
+function guardParry(f, o, inp) {
+  if (f.key !== 'paladin' || !inp.btn || !inp.bb) return false;
+  const sid = resolveSpecial(f, o, inp); if (!GUARD_PARRIES.has(sid)) return false;
+  startMove(f, specialMove(sid), STR[inp.btn[0]]); return true;
+}
 function tryAttack(f, o, inp, noLight) { // (noLight: anything but a light attack — a string can't start itself over)
   if (!inp.btn) return false;
   const str = STR[inp.btn[0]], isP = inp.btn[1] === 'p';
@@ -404,6 +411,7 @@ function update(f, o, inp) {
       if (f.st % 7 === 0) ambientFX(f);
       f.facing = toward; f.combo = 0;
       if (f.atkCD <= 0 && tryAttack(f, o, inp)) break; // (a technique with ↑ held is tried before jumping)
+      if (guardParry(f, o, inp)) break;
       if (inp.dashTap === 1 && !f.ch.noDash) { setState(f, 'dash'); sfx('swing'); break; } // (Hohen can't dash or back dash)
       if (inp.dashTap === -1 && !f.ch.noDash) { setState(f, 'bdash'); sfx('swing'); break; }
       if (inp.up) { startJump(f, inp); break; }
@@ -458,7 +466,7 @@ function update(f, o, inp) {
       f.facing = toward; f.vx = 0;
       if (f.st >= (f.ch.recoverT || 12)) setState(f, inp.down ? 'crouch' : 'stand');
       break;
-    case 'blockstun': if (f.st >= f.stun) { setState(f, inp.down ? 'crouch' : 'guard'); f.settleT = 10; } break;
+    case 'blockstun': if (guardParry(f, o, inp)) break; if (f.st >= f.stun) { setState(f, inp.down ? 'crouch' : 'guard'); f.settleT = 10; } break;
     case 'down': // lie on the ground a while; tap ← or → to roll away instead of standing up in place
       if (f.ko) break;
       if (f.st >= 18 && inp.tap) { setState(f, 'roll'); f.rollDir = inp.tap; sfx('land'); }

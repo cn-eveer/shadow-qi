@@ -531,16 +531,16 @@ function specialMoveBase(id) {
       } };
     // ← ← + U: Push Parry. Parries from the 5th frame; a parried blow gets a shield shove that sends them away (no damage). Short window, long recovery.
     // A projectile or a spell from the front (Lyra's and Jesse's too) is stopped, and whoever sent it is stunned (← ← + K the same)
-    case 'plParryRise': return { id, label: 'Push Parry', startup: 4, active: 14, recovery: 26, projStun: true, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plShove', fx: 'ward' };
+    case 'plParryRise': return { id, label: 'Push Parry', startup: 4, active: 14, recovery: 14, projStun: true, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plShove', fx: 'ward' };
     case 'plShove': return { id, label: 'Shield Shove', startup: 2, active: 3, recovery: 14, wind: 'pShieldPunchW', pose: 'pShieldPunch', hitbox: null, burst: [80, 110],
       onStart(f, o) { const side = Math.sign(o.x - f.x) || f.facing; if (o.state !== 'ko') { setState(o, 'blockstun'); o.stun = 14; o.move = null; o.vx = side * 30; } sfx('palm'); game.shake = Math.max(game.shake, 3); } }; // (pushed far back, unhurt)
     // ← ← + I: Riposte Parry. Parries from the 5th frame and answers with a sword riposte that hurts and knocks them away
-    case 'plParryStun': return { id, label: 'Riposte Parry', startup: 4, active: 14, recovery: 32, projStun: true, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plRiposte', fx: 'ward' };
+    case 'plParryStun': return { id, label: 'Riposte Parry', startup: 4, active: 14, recovery: 18, projStun: true, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plRiposte', fx: 'ward' };
     case 'plRiposte': return { id, label: 'Riposte', startup: 4, active: 5, recovery: 18, wind: 'pThrustW', pose: 'pThrust', wrist: 0, selfMove: true, speedFx: true, noGrace: true, staffExt: 30,
       hitbox: [20,210,70,150], dmg: 64, stun: 22, bstun: 12, push: 6, kd: true, kdVx: 15, kdVy: 7, type: 'mid', hitstop: 14, gdrain: 10,
       onFrame(f, o, mf) { if (mf <= 5 && Math.abs(o.x - f.x) > 70) f.vx = f.facing * 12; else f.vx *= 0.5; if (mf === 4) sfx('slash'); } };
     // ← ← + K: Rising Parry. Parries from the 8th frame and strikes up under them: it launches, and the combo begins
-    case 'plPray': return { id, label: 'Rising Parry', startup: 7, active: 14, recovery: 34, projStun: true, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plRiseStrike', fx: 'ward' };
+    case 'plPray': return { id, label: 'Rising Parry', startup: 7, active: 14, recovery: 20, projStun: true, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plRiseStrike', fx: 'ward' };
     case 'plRiseStrike': return { id, label: 'Rising Strike', startup: 4, active: 5, recovery: 18, wind: 'pCleaveW', pose: 'pShieldUp', selfMove: true, speedFx: true, noGrace: true,
       hitbox: [10,160,30,225], dmg: 46, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 14, type: 'mid', hitstop: 12, gdrain: 10,
       onFrame(f, o, mf) { if (mf <= 4 && Math.abs(o.x - f.x) > 70) f.vx = f.facing * 10; else f.vx *= 0.5; if (mf === 4) { parts.push({ type: 'lbeam', x: f.x + f.facing * 80, w: 34, life: 16, max: 16 }); sfx('orb'); } } };
