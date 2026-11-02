@@ -21,7 +21,7 @@ const staffSpinAt = (f, mv) => f.mf * 0.7 * f.facing;
 const livePose = f => ((f.key === 'staff' || f.key === 'paladin') && f.state === 'attack' && f.move && f.move.poseFn && !(f.pre > 0) && f.move.poseFn(f, f.mf)) || f.pose; // a twirling staff's angle: 0.7 rad a frame, as it always spun
 function staffSeg(f, mv) {
   const J = solve(livePose(f)), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, k = f.mf - mv.startup;
-  const ext = mv.staffExt ? mv.staffExt * (k <= 0 ? 0 : k <= 3 ? k / 3 : k <= mv.active ? 1 : Math.max(0, 1 - (k - mv.active) / 6)) : 0; // (as drawn: see drawFighter)
+  const ext = staffExtAt(f, mv); // (as drawn: see drawFighter)
   const spin = mv.spinStaff && f.mf > Math.max(1, mv.startup - 4) ? staffSpinAt(f, mv) : null;
   let [a, b] = staffLine(J, ext, spin, mv.floorSpin); if (mv.staffFront && spin == null) a = J.h1; // (staffFront: only the striking end, hand to tip — a low poke's hitbox stays low)
   const W = p => [f.x + (f.animDX || 0) + d * s * p[0], f.y + s * (p[1] + hu)];
@@ -58,6 +58,13 @@ function swordDir(J, wrist, spinAngle) {
 }
 // Aldric: the hitbox is what he hits with — the sword (a chain of small boxes from the pommel to the tip, plus where it swept since the last
 // frame), the shield on a shield blow, a knee or foot on a knee or a kick — read off the pose drawn this frame
+// how far a blade of light (staffExt) reaches out beyond the weapon this frame: it grows over 3 frames from extFrom (the start of the
+// active frames unless the move says), stays out to the end of them, and fades over 6 — the drawing and the hitboxes all read this
+function staffExtAt(f, mv) {
+  if (!mv || !mv.staffExt) return 0;
+  const k = f.mf - (mv.extFrom != null ? mv.extFrom : mv.startup), on = mv.startup + mv.active - (mv.extFrom != null ? mv.extFrom : mv.startup);
+  return mv.staffExt * (k <= 0 ? 0 : k <= 3 ? k / 3 : k <= on ? 1 : Math.max(0, 1 - (k - on) / 6));
+}
 function aldricParts(f, mv) {
   const J = solve(livePose(f)), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, W = p => [f.x + (f.animDX || 0) + d * s * p[0], f.y + s * (p[1] + hu)];
   const tag = (mv.label || '') + ' ' + (mv.pose || ''), r = 12 * s, sq = (p, hw, hh) => ({ x0: p[0] - hw, x1: p[0] + hw, y0: Math.max(0, p[1] - hh), y1: p[1] + hh });
@@ -66,7 +73,7 @@ function aldricParts(f, mv) {
   if (/Knee|Kick/.test(tag)) { const p = W(/Knee/.test(tag) ? J.k1 : J.f1); return [sq(p, 22 * s, 22 * s)]; }
   if (/Punch|Elbow/.test(tag)) return [sq(W(J.h1), 20 * s, 20 * s)]; // (a punch: his fist)
   if (/Pommel/.test(tag)) { const [ux, uy] = swordDir(J, mv.wrist != null ? mv.wrist : 0.25, null); return [sq(W([J.h1[0] - ux * 18, J.h1[1] - uy * 18]), 22 * s, 22 * s), sq(W(J.h1), 18 * s, 18 * s)]; } // (the pommel and his sword hand, not the blade)
-  const k = f.mf - mv.startup, ext = mv.staffExt ? mv.staffExt * (k <= 0 ? 0 : k <= 3 ? k / 3 : k <= mv.active ? 1 : Math.max(0, 1 - (k - mv.active) / 6)) : 0;
+  const k = f.mf - mv.startup, ext = staffExtAt(f, mv);
   const spin = mv.spinStaff && f.mf > Math.max(1, mv.startup - 4) ? staffSpinAt(f, mv) : null, len = 104 + ext;
   if (spin != null) { const c = W(J.h1), out = []; for (const R of [0, 40, 80, 12 + len]) for (let i = 0; i < (R ? Math.round(R / 8) : 1); i++) { const an = i / Math.round(R / 8 || 1) * Math.PI * 2; out.push(sq([c[0] + Math.cos(an) * R * s, c[1] + Math.sin(an) * R * s], r, r)); } return out; } // (whirling: a blur all the way round his hand)
   const [ux, uy] = swordDir(J, mv.wrist != null ? mv.wrist : 0.25, null), seg = [W([J.h1[0] - ux * 16, J.h1[1] - uy * 16]), W([J.h1[0] + ux * (12 + len), J.h1[1] + uy * (12 + len)])];

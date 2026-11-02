@@ -500,18 +500,19 @@ function specialMoveBase(id) {
         if (mf === 19) { sfx('slash'); parts.push({ type: 'slashx', x: f.x + f.facing * 180, y: GROUND - 110, r: 30, life: 10, max: 10, col: '190,225,255', rot: Math.PI / 4 }); }
       } };
     // → → + J: Crouching Slash. He drops low and rushes at them — four tenths of the stage at most — with a downward slash at their legs that bounces them
-    case 'plWindmill': return { id, label: 'Crouching Slash', startup: 16, active: 6, recovery: 26, wind: 'crouch', pose: 'pLowCut', selfMove: true, maxTravel: W * 0.4, speedFx: true,
+    case 'plWindmill': return { id, label: 'Crouching Slash', startup: 16, active: 14, recovery: 26, wind: 'crouch', pose: 'pLowCut', selfMove: true, maxTravel: W * 0.4, speedFx: true, staffExt: 40, extFrom: 0, // (a long blade of light, out from the start of the dash: more reach, and 14 active frames)
       hitbox: [10,200,0,205], dmg: 42, stun: 22, bstun: 16, push: 2, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 13, gdrain: 22,
-      hitFrom: 13, poseFn(f, mf) { // low through the dash, then the cut comes up off the floor and rises overhead across the active frames — so it carries someone in the air too, with the blade, not a tall box
+      hitFrom: 1, poseFn(f, mf) { // (the blade is live from the first step of the dash) // low through the dash, then the cut comes up off the floor and rises overhead across the active frames — so it carries someone in the air too, with the blade, not a tall box
         const mv = f.move, su = mv.startup, end = su + mv.active; if (mf > end + 4) return null;
-        if (mf <= 5) return lerpPose(f.prevPose, POSES.crouch, easeOutQ(mf / 5));
-        if (mf <= su - 2) return lerpPose(POSES.crouch, POSES.pLowCut, easeInOutQ((mf - 5) / (su - 7)));
+        if (mf <= 4) return lerpPose(f.prevPose, POSES.pLowCut, easeOutQ(mf / 4)); // (straight into the low cut: the sword leads the dash along the floor)
+        if (mf <= su - 2) return POSES.pLowCut;
         return mf <= end ? lerpPose(POSES.pLowCut, POSES.pCleaveW, (mf - su + 2) / (end - su + 2)) : POSES.pCleaveW; // (an even rise)
       },
       onStart(f) { f.cs = { x0: f.x }; },
       onFrame(f, o, mf) {
         const mv = f.move, run = Math.abs(f.x - f.cs.x0), room = W * 0.4 - run;
         if (mf >= 1 && mf <= mv.startup + mv.active && room > 0 && Math.abs(o.x - f.x) > 90 && !f.hitConnected) { f.vx = f.facing * Math.min(18, room); if (mf % 3 === 0) dustAt(f.x - f.facing * 20, false); } else f.vx *= 0.5;
+        if (f.hitConnected && !mv.early) { mv.early = true; const h = f.lastHitMf; if (h < mv.startup) mv.startup = h - 1; mv.active = Math.min(mv.active, h + 5 - mv.startup); } // (it struck on the dash: the cut rises from there and ends as soon after the hit as one landing at the usual time)
         hitRecover(f, 8);
         if (mf === mv.startup) { sfx('slash'); parts.push({ type: 'slashx', x: f.x + f.facing * 120, y: GROUND - 26, r: 40, life: 12, max: 12, col: '190,225,255', rot: Math.PI / 4 }); }
       } };

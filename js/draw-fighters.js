@@ -870,7 +870,7 @@ function drawFighter(f) {
   if (mv && mv.rage && !mv.fired && f.mf > 10) drawRage(f);
   // Mei's staff: it can stretch out (Extending Staff) or spin like a windmill
   let staffExt = 0, staffSpin = null;
-  if (mv && mv.staffExt) { const k = f.mf - mv.startup; staffExt = mv.staffExt * (k <= 0 ? 0 : k <= 3 ? k / 3 : k <= mv.active ? 1 : Math.max(0, 1 - (k - mv.active) / 6)); }
+  if (mv && mv.staffExt) staffExt = staffExtAt(f, mv);
   if (mv && mv.spinStaff && f.mf > Math.max(1, mv.startup - 4)) staffSpin = staffSpinAt(f, mv); // (by the move's own frame, so the hitbox can follow it)
   if (mv && mv.spinWind && f.mf <= mv.startup) staffSpin = globalT * 0.9 * f.facing; // twirls the staff to wind up
   if (f.key === 'staff' && (f.state === 'stand' || f.state === 'jump' && f.dj) && (globalT + f.side * 97) % 220 < 34) staffSpin = globalT * 0.55 * f.facing; // twirls it now and then
