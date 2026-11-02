@@ -88,11 +88,12 @@ function tanakaParts(f, mv) {
   const sweep = (key, pts, r) => { const prev = mv[key] && mv[key + 'Mf'] === f.mf - 1 && mv[key].length === pts.length ? mv[key] : null; mv[key] = pts; mv[key + 'Mf'] = f.mf;
     const out = []; for (let i = 0; i < pts.length; i++) for (const t of prev ? [0.5, 1] : [1]) { const p = prev ? [prev[i][0] + (pts[i][0] - prev[i][0]) * t, prev[i][1] + (pts[i][1] - prev[i][1]) * t] : pts[i]; out.push({ x0: p[0] - r, x1: p[0] + r, y0: Math.max(0, p[1] - r), y1: p[1] + r }); } return out; };
   if (mv.id === 'smCoffee') { const out = []; for (let i = 0; i < 9; i++) { const k = (f.mf - 9 + i * 0.4) / 10; if (k < 0 || k > 1.1) continue; const x = f.x + d * 60 + d * k * 90, y = f.y + 115 + Math.sin(k * Math.PI) * 30 - i * 3; out.push({ x0: x - 10, x1: x + 10, y0: Math.max(0, y - 10), y1: y + 10 }); } return out.length ? out : [{ x0: f.x + d * 55, x1: f.x + d * 65, y0: f.y + 110, y1: f.y + 120 }]; } // (Hot Coffee: the splash itself, drop by drop, as drawn)
-  if (mv.id === 'sdTail') { const S = mv.startup, mf = f.mf, k = sdTailK(mv, mf), an = Math.PI * (1 - k), L = 150 * s, bx = f.x + d * 14 * s; // (Tail Sweep: its own tail, round along the floor — see its drawFX)
-    return sweep('tlPts', [0.6, 0.8, 1].map(u => [bx + Math.cos(an) * L * u * d, 12 + Math.sin(an) * 26 * u]), 14 * s); }
+  if (mv.id === 'sdChainB') { const L = Math.min(290, (f.mf - 10) * 60), x0 = f.x + d * 20 * s, y = f.y + 82 * s; return [0.25, 0.5, 0.75, 1].map(u => { const x = x0 + d * (L * u); return { x0: x - 14, x1: x + 14, y0: y - 14, y1: y + 14 }; }); } // (Hell Chain: along the chain as drawn, out to its spearhead)
+  if (mv.id === 'sdTail' || mv.id === 'sdFeintSweep') { const S = mv.startup, mf = f.mf, k = sdTailK(mv, mf), an = Math.PI * (1 - k), L = 150 * s, bx = f.x + d * 14 * s; // (Tail Sweep: its own tail, round along the floor — see its drawFX)
+    const J2 = solve(livePose(f)); return sweep('tlPts', [0.6, 0.8, 1].map(u => [bx + Math.cos(an) * L * u * d, 12 + Math.sin(an) * 26 * u]).concat(mv.id === 'sdFeintSweep' ? [W(J2.f1)] : []), 14 * s); } // (and, sliding in on the feint, his foot)
   if (mv.tail && !mv.jug) { // the tail: its tip on its arc this frame, and the outer half of the curve back to his rear
     const T = mv.tail, S = mv.tailS != null ? mv.tailS + 1 : mv.startup, end = S + (mv.tailS != null ? 3 : (mv.active || 4)), mf = f.mf;
-    const k = tailK(mv, mf, S, end), an = T.a0 + (T.a1 - T.a0) * k, L = T.len * s;
+    const k = tailK(mv, mf, S, end), an = mv.tailPath ? mv.tailPath(mf) : T.a0 + (T.a1 - T.a0) * k, L = T.len * s;
     const cx = f.x + d * 14 * s, cy = f.y + (T.h || 90) * s, tip = [cx + Math.cos(an) * L * d, cy + Math.sin(an) * L];
     const J = solve(f.pose), b = [f.x + (f.animDX || 0) + d * 14 * s, f.y + s * (J.hip[1] + (f.hipUp || 0)) - 4], c = [(b[0] + tip[0]) / 2 - d * 18, Math.max(b[1], tip[1]) + 26];
     const q = u => [(1 - u) * (1 - u) * b[0] + 2 * (1 - u) * u * c[0] + u * u * tip[0], (1 - u) * (1 - u) * b[1] + 2 * (1 - u) * u * c[1] + u * u * tip[1]];
@@ -207,9 +208,9 @@ const NO_TELL = new Set(['risingFist', 'smBow', 'saRayFly', 'saDive', 'smAngel',
 // pushed apart; if not, the throw lands. A string hit is broken by buttons pressed in the ten frames before it.
 const BREAK_BTN = { J: ['lp', 'hp'], K: ['lk', 'hk'], S: ['lp', 'hp', 'lk'] }, BREAK_WINDOW = 10, GRAB_WINDOW = 24;
 function throwBreak(a, d, h) {
-  const mv = a.move; if (a.key !== 'kappa' || !mv) return false;
+  const mv = a.move; if (!mv || (a.key !== 'kappa' && mv.id !== 'sdChainB')) return false; // (the kappa's throws and the devil's Hell Chain)
   if (mv.broken) return true; // (this one was already broken)
-  const need = h.grab ? (mv.normal && mv.kind === 'k' && mv.str === 0 ? BREAK_BTN.J : BREAK_BTN.K) : mv.inString && ['c2', 'c3', 'c4'].includes(mv.strKey) ? BREAK_BTN.S : null;
+  const need = h.grab ? (mv.id === 'sdChainB' ? BREAK_BTN.K : mv.normal && mv.kind === 'k' && mv.str === 0 ? BREAK_BTN.J : BREAK_BTN.K) : mv.inString && ['c2', 'c3', 'c4'].includes(mv.strKey) ? BREAK_BTN.S : null;
   if (!need || ['knock', 'down', 'getup', 'gbreak', 'stunned', 'slashed', 'attack', 'jump'].includes(d.state)) return false;
   const now = game.frame; if (h.grab && mv.grabT == null) { mv.grabT = now; d.caughtKind = /Sumo/.test(mv.label) ? 'sumo' : 'lift'; mv.active = Math.max(mv.active, a.mf - mv.startup + Math.ceil(GRAB_WINDOW * 1.25) + 2); /* (the hold is counted in game frames; under the flood his moves run a fifth faster) */ d.grabLock = GRAB_WINDOW; popText(d.x, GROUND - d.y - 185, L('GRABBED!', '掴まれた！'), '255,200,120'); }
   const from = h.grab ? mv.grabT - GRAB_WINDOW : now - BREAK_WINDOW, ts = need.map(b => d.btnEdge && d.btnEdge[b] != null ? d.btnEdge[b] : -99);

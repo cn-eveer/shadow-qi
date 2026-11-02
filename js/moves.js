@@ -844,19 +844,44 @@ function specialMoveBase(id) {
     case 'sdTailDrop': return { id, label: 'Tail Hammer', startup: 18, active: 6, recovery: 22, wind: 'sdIdle', pose: 'sArch', overhead: true, tail: { a0: 2.2, a1: -0.7, len: 185, h: 120 }, // ← ← ↑ + J: he turns his back, looks over his shoulder, and brings the tail down from overhead (guard it standing)
       hitbox: [30,190,0,220], dmg: 46, stun: 24, bstun: 14, push: 2, kd: true, kdVx: 3, kdVy: 6, type: 'mid', hitstop: 11, gdrain: 12,
       onFrame(f, o, mf) { if (mf === 2) popText(f.x, GROUND - 200, L('LOOK OUT—', '上だ——'), '255,90,70'); if (mf === 16) sfx('swing'); if (mf === 19) { cracks(f.x + f.facing * 150); game.shake = Math.max(game.shake, 5); parts.push({ type: 'ring', x: f.x + f.facing * 150, y: GROUND - 6, r: 10, vr: 8, life: 14, max: 14, col: '255,100,50' }); } } };
+    // ← ← ↓ + K / ← ← ↑ + K: the devil's feints — he calls one height and hits the other
+    case 'sdFeintSweep': return { id, label: 'Feint Sweep', startup: 20, active: 14, recovery: 20, wind: 'sdIdle', pose: 'slideKick', selfMove: true, bodyHurt: true, maxTravel: 320, // (a feint: he shouts to look out above and rears up — then drops into a long slide along the floor, the tail sweeping round at their ankles, like Kuro's sweep)
+      poseFn: (f, mf) => mf > 40 ? null : mf <= 10 ? lerpPose(f.prevPose, POSES.sArch, mf / 10) : mf <= 18 ? lerpPose(POSES.sArch, POSES.slideKick, (mf - 10) / 8) : POSES.slideKick, // he whirls round, back to them, and his great devil tail sweeps out across the floor at their ankles
+      hitbox: [-70,160,0,36], low: true, dmg: 38, stun: 22, bstun: 12, push: 3, kd: true, kdVx: 4, kdVy: 6, type: 'mid', hitstop: 8, gdrain: 10,
+      onFrame(f, o, mf) { if (mf === 2) popText(f.x, GROUND - 200, L('LOOK OUT ABOVE—', '上だ——'), '255,90,70'); if (mf >= 16 && mf <= 34 && Math.abs(o.x - f.x) > 60 && !f.hitConnected) f.vx = f.facing * 8; else if (mf > 16) f.vx *= 0.7; if (mf === 17) sfx('swing'); if (mf === 20) { cracks(f.x + f.facing * 70); parts.push({ type: 'ring', x: f.x, y: GROUND - 6, r: 20, vr: 9, life: 16, max: 16, col: '255,100,50' }); }
+        if (mf >= 19 && mf <= 34 && mf % 2 === 0) for (let i = 0; i < 3; i++) { const an = vrnd(0, Math.PI); parts.push({ type: 'aura', x: f.x + Math.cos(an) * 120, y: GROUND - 6, vx: 0, vy: -vrnd(1, 3), life: 18, max: 18, r: vrnd(3, 6), col: '255,120,50' }); } },
+      drawFX(f) { // the tail itself: big, thick, with a spade tip — it swings from behind him, round, and out along the floor in front, trailing fire
+        const S = f.move.startup, mf = f.mf; if (mf < 2 || mf > S + 16) return;
+        const s0 = f.ch.scale, J = solve(f.pose), bx = f.x + (f.animDX || 0) + f.facing * 14 * s0, by = GROUND - f.y - s0 * (J.hip[1] + f.hipUp) + 4; // from his rear
+        const k = sdTailK(f.move, mf), fade = mf > S + 10 ? 1 - (mf - S - 10) / 6 : 1;
+        const an = Math.PI * (1 - k), L = 150 * s0; // from behind him (π) round to straight in front (0)
+        const tip = [bx + Math.cos(an) * L * f.facing, GROUND - 12 - Math.sin(an) * 26], ctl = [bx + Math.cos(an + 0.5 * f.facing) * L * 0.5 * f.facing, by + 30];
+        ctx.save();
+        if (mf >= S) { ctx.globalCompositeOperation = 'lighter'; for (let i = 0; i < 10; i++) { const a2 = Math.PI * (1 - Math.max(0, k - i * 0.04)), x = bx + Math.cos(a2) * L * f.facing, y = GROUND - 12 - Math.sin(a2) * 26; ctx.fillStyle = `rgba(255,${100 + i * 12},50,${(0.55 - i * 0.05) * fade})`; ctx.beginPath(); ctx.arc(x, y, 12 - i, 0, Math.PI * 2); ctx.fill(); } ctx.globalCompositeOperation = 'source-over'; } // a trail of fire behind the tip
+        ctx.globalAlpha = fade; ctx.lineCap = 'round';
+        for (let i = 0; i < 16; i++) { const u0 = i / 16, u1 = (i + 1) / 16, q = (u, P0, P1, P2) => (1 - u) * (1 - u) * P0 + 2 * (1 - u) * u * P1 + u * u * P2;
+          ctx.strokeStyle = i % 2 ? '#7a1010' : '#941818'; ctx.lineWidth = 18 - u0 * 12; ctx.beginPath(); ctx.moveTo(q(u0, bx, ctl[0], tip[0]), q(u0, by, ctl[1], tip[1])); ctx.lineTo(q(u1, bx, ctl[0], tip[0]), q(u1, by, ctl[1], tip[1])); ctx.stroke(); } // the tail, thick at the base, tapering
+        const d = Math.atan2(tip[1] - ctl[1], tip[0] - ctl[0]); ctx.translate(tip[0], tip[1]); ctx.rotate(d);
+        ctx.fillStyle = '#b01c1c'; ctx.strokeStyle = '#ffb08a'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(32, 0); ctx.lineTo(0, -16); ctx.lineTo(7, 0); ctx.lineTo(0, 16); ctx.closePath(); ctx.fill(); ctx.stroke(); // the spade at its tip
+        ctx.restore(); } };
+    case 'sdFeintHammer': return { id, label: 'Feint Hammer', startup: 26, active: 6, recovery: 22, wind: 'crouch', pose: 'sArch', overhead: true, tail: { a0: 2.2, a1: -0.7, len: 185, h: 120 }, hitFrom: 25, // (a feint: he shouts to look out below and crouches, the tail swept low at their feet — then it whips up over the top and hammers down from above; live only on the way down)
+      tailPath: mf => mf <= 10 ? 2.4 + (-0.7 - 2.4) * (mf / 10) : mf <= 22 ? -0.7 + (2.2 + 0.7) * ((mf - 10) / 12) : 2.2 + (-0.7 - 2.2) * Math.min(1, (mf - 22) / 9),
+      poseFn: (f, mf) => mf > 40 ? null : mf <= 10 ? lerpPose(f.prevPose, POSES.crouch, mf / 10) : mf <= 22 ? lerpPose(POSES.crouch, POSES.sArch, (mf - 10) / 12) : POSES.sArch, // ← ← ↑ + J: he turns his back, looks over his shoulder, and brings the tail down from overhead (guard it standing)
+      hitbox: [30,190,0,220], dmg: 46, stun: 24, bstun: 14, push: 2, kd: true, kdVx: 3, kdVy: 6, type: 'mid', hitstop: 11, gdrain: 12,
+      onFrame(f, o, mf) { if (mf === 2) popText(f.x, GROUND - 200, L('DOWN BELOW—', '下だ——'), '255,90,70'); if (mf === 24) sfx('swing'); if (mf === 27) { cracks(f.x + f.facing * 150); game.shake = Math.max(game.shake, 5); parts.push({ type: 'ring', x: f.x + f.facing * 150, y: GROUND - 6, r: 10, vr: 8, life: 14, max: 14, col: '255,100,50' }); } } };
     case 'sdTailLash': return { id, label: 'Tail Lash', startup: 10, active: 6, recovery: 20, wind: 'sdIdle', pose: 'sdIdle', selfMove: true, tail: { a0: 2.5, a1: 0.1, len: 190, h: 100 }, // → → + J: a step in and a long lash of the tail
       hitbox: [30,220,50,140], dmg: 42, stun: 22, bstun: 12, push: 3, type: 'mid', hitstop: 9, gdrain: 10,
       onFrame(f, o, mf) { f.vx = mf <= 8 ? f.facing * 4 : f.vx * 0.6; if (mf === 9) sfx('swing'); } };
     case 'sdTailUpper': return { id, label: 'Tail Hook', startup: 9, active: 7, recovery: 24, wind: 'sdIdle', pose: 'sdIdle', bodyHurt: true, tail: { a0: -0.5, a1: 1.4, len: 170, h: 70 }, // → → + K: the tail scoops up under them and flings them into the air
       hitbox: [30,190,0,210], dmg: 48, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 13, type: 'mid', hitstop: 11, gdrain: 10, onFrame(f, o, mf) { if (mf === 8) sfx('rise'); } };
-    case 'sdChainB': return { id, label: 'Hell Chain', startup: 12, active: 6, recovery: 18, wind: 'sdIdle', pose: 'sdBeckon', // ← ← → + J: the chain lashes out from his belly, at waist height
-      hitbox: [40,290,20,150], dmg: 24, stun: 30, bstun: 12, push: 0, type: 'mid', hitstop: 8, gdrain: 8,
+    case 'sdChainB': return { id, label: 'Hell Chain', startup: 12, active: 6, recovery: 18, wind: 'sdIdle', pose: 'sdBeckon', grab: true, // ← ← → + J: the chain lashes out from his belly, at waist height — and catches them even guarding (a grab: J + K breaks it in time)
+      hitbox: [40,290,20,150], dmg: 24, stun: 30, bstun: 12, push: 0, type: 'mid', hitstop: 8, gdrain: 0,
       onFrame(f, o, mf) { const mv = f.move; f.vx = 0; if (mf === 12) sfx('throw');
         if (f.hitConnected && !mv.pulled) { mv.pulled = true; mv.pullT = 10; popText(o.x, GROUND - 200, L('GET OVER HERE!', 'こっちへ来い！'), '255,90,60'); }
         if (mv.pullT > 0) { mv.pullT--; o.vx = 0; o.kb = 0; o.x = lerp(o.x, clamp(f.x + f.facing * 70, WALL_L, WALL_R), 0.35); if (o.state === 'blockstun') o.bstun = Math.max(o.bstun || 0, 14); else o.stun = Math.max(o.stun, 22); }
         if (mv.pulled) hitRecover(f, 6); },
       drawFX(f, o) { const mv = f.move; if (f.mf < 10 || f.mf > 30) return; const s0 = f.ch.scale, x0 = f.x + f.facing * 20 * s0, y0 = GROUND - f.y - 82 * s0; // from his belly
-        const tip = mv.pulled && o ? o.x : f.x + f.facing * Math.min(290, (f.mf - 10) * 60), ty = mv.pulled && o ? GROUND - o.y - 80 : y0;
+        const held = o && (mv.pulled || (mv.grabT != null && !mv.broken)), tip = held ? o.x : f.x + f.facing * Math.min(290, (f.mf - 10) * 60), ty = held ? GROUND - o.y - 80 : y0; // (caught: the chain stays on them while they struggle)
         ctx.save(); ctx.strokeStyle = '#3a1a1a'; ctx.lineWidth = 15; ctx.lineCap = 'round'; ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(tip, ty); ctx.stroke(); ctx.setLineDash([]);
         ctx.strokeStyle = '#ff6a3a'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(tip, ty); ctx.stroke(); ctx.fillStyle = '#8a1414'; ctx.beginPath(); ctx.moveTo(tip + f.facing * 22, ty); ctx.lineTo(tip, ty - 14); ctx.lineTo(tip, ty + 14); ctx.closePath(); ctx.fill(); ctx.restore(); } };
     // ---- the angel: rays of light from his eyes ----

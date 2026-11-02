@@ -385,6 +385,8 @@ const LABEL_JA = {
   "Pommel Strike": "柄打ち",
   "Shield Punch": "盾突き",
   "Crouch Claw Jab": "しゃがみ爪突き",
+  "Feint Sweep": "フェイント払い",
+  "Feint Hammer": "フェイント叩き",
   "Golem Low Kick": "ゴーレムの下段蹴り",
   "Golem Sweep": "ゴーレムの足払い",
   "Great Stone": "大石",
