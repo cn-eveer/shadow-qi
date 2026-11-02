@@ -19,7 +19,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Stone Knuckle / Stone Throw <small>Mid. Up close he drives a stone held in his fist (no stone spent); further off he throws one.</small></td><td class="cmd">← → + U</td></tr>
           <tr><td>Stone Barrage <small>The third J of a string: two blows, the second knocks down.</small></td><td class="keys"><kbd>J</kbd> <kbd>J</kbd> <kbd>J</kbd></td></tr>
           <tr><td>Golem Sweep <small>Low. K orders the golem to sweep its arm along the floor and knock them down.</small></td><td class="keys"><kbd>K</kbd></td></tr>
-          <tr><td>Great Stone <small>Mid. One huge, slow stone that takes over half a full guard (a second one breaks it) and knocks them down. (K no longer charges.)</small></td><td class="cmd">← → + K</td></tr>
+          <tr><td>Great Stone <small>Mid. One huge, slow stone that takes over half a full guard (a second one breaks it) and knocks them down; he's free the moment it's thrown, plus on guard. (K no longer charges.)</small></td><td class="cmd">← → + K</td></tr>
           <tr><td>Crouching Stone <small>Thrown from a crouch at chest height: a top (stand to guard).</small></td><td class="cmd">↓ + J</td></tr>
           <tr><td>Crouching Golem Sweep <small>↓ + K: he stays crouched and orders the golem's low sweep (no stones).</small></td><td class="cmd">↓ + K</td></tr>
           <tr><td>Stone Lob <small>Mid + low (drops from above). It stuns.</small></td><td class="cmd">→ → + J</td></tr>
@@ -33,7 +33,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Golem Meteor <small>The golem leaps and slams them into the floor — the bounce.</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>Stone Comet <small>The finisher: one big glowing stone hurled down at them.</small></td><td class="keys"><kbd>K</kbd></td></tr>
           <tr><td><b>Magnum Opus</b> <small>Super (full MP): the golem bursts into stones that fly onto them and lock them in a shell of rock; he throws six glowing stones around them, and when the circle closes it erupts and blasts them up. Guard it.</small></td><td class="keys"><kbd>U</kbd> + <kbd>J</kbd></td></tr>
-          <tr><td><b>Golem Armour</b> <small>With the fusion gauge full (under his stones: it fills over thirty seconds, faster for every hit landed or taken). The golem comes apart and its pieces lock onto him one by one, boots to helmet. For twenty seconds he fights in it himself, hitting harder, taking less damage, his techniques armoured; then it crumbles and the golem rises again. In it, his commands are like Tetsu’s:</small></td><td class="cmd">← → + J + K</td></tr>
+          <tr><td><b>Golem Armour</b> <small>With the fusion gauge full (under his stones: it fills over thirty seconds, faster for every hit landed or taken). The golem comes apart and its pieces lock onto him one by one, boots to helmet. As the armour slams on, anyone standing close is left stunned. For twenty seconds he fights in it himself, hitting harder, taking less damage, his techniques armoured (J his stone-knuckle, K a boulder kick, ↓ + K a low rock sweep); then it crumbles and the golem rises again. In it, his commands are like Tetsu’s:</small></td><td class="cmd">← → + J + K</td></tr>
           <tr><td>· Stone fists <small>U U U U K, U U I (pillar upper, a launcher), U U K; in a juggle U U U, I, K (a burst of core light from his belly).</small></td><td class="keys"><kbd>U</kbd></td></tr>
           <tr><td>· Core Beam <small>The core in his belly fires a slow ball of light.</small></td><td class="cmd">→ → + U</td></tr>
           <tr><td>· Boulder Toss <small>Rocks pack into a boulder in his hands; he hurls it over in an arc and it crashes down on them (an overhead; bounces them). In a juggle: Boulder Crash, a boulder called down out of the sky onto them.</small></td><td class="cmd">→ → + I</td></tr>
@@ -80,7 +80,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>ゴーレムメテオ <small>跳び上がって床に叩きつける（バウンド）。</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>ストーンコメット <small>締め：大きな光る石を叩きつける。</small></td><td class="keys"><kbd>K</kbd></td></tr>
           <tr><td><b>大いなる錬成</b> <small>超必殺技（MP満タン）：ゴーレムが石に砕けて相手に飛びつき、岩の殻で閉じ込める。周りに光る石を6つ投げ、円が閉じると錬成陣が炸裂して打ち上げる。ガード可能。</small></td><td class="keys"><kbd>U</kbd> + <kbd>J</kbd></td></tr>
-          <tr><td><b>ゴーレムアーマー</b> <small>融合ゲージ満タンで（石の下のゲージ。30秒で溜まり、攻撃を当てても受けても早く溜まる）。ゴーレムが砕け、ブーツからヘルメットまで一つずつ博士に装着される。20秒間、博士自身が鎧で戦う——攻撃力が上がり、受けるダメージが減り、必殺技にアーマーが付く。その後鎧は崩れ、ゴーレムが復活する。鎧の間のコマンドはテツと同じ：</small></td><td class="cmd">← → + J + K</td></tr>
+          <tr><td><b>ゴーレムアーマー</b> <small>融合ゲージ満タンで（石の下のゲージ。アーマーが装着される瞬間、近くの相手はスタンする。J は石拳、K は岩の蹴り、↓＋K は低い岩払い。30秒で溜まり、攻撃を当てても受けても早く溜まる）。ゴーレムが砕け、ブーツからヘルメットまで一つずつ博士に装着される。20秒間、博士自身が鎧で戦う——攻撃力が上がり、受けるダメージが減り、必殺技にアーマーが付く。その後鎧は崩れ、ゴーレムが復活する。鎧の間のコマンドはテツと同じ：</small></td><td class="cmd">← → + J + K</td></tr>
           <tr><td>・石の拳 <small>U U U U K、U U I（石柱アッパー・浮かせ）、U U K。空中コンボはU U U、I、K（腹のコアから光の炸裂）。</small></td><td class="keys"><kbd>U</kbd></td></tr>
           <tr><td>・コアビーム <small>腹のコアからゆっくり進む光の玉。</small></td><td class="cmd">→ → + U</td></tr>
           <tr><td>・ボルダートス <small>岩が手に集まって大岩になり、弧を描いて投げ落とす（中下段・バウンド）。空中コンボ中は：空から大岩を呼び落とすボルダークラッシュ。</small></td><td class="cmd">→ → + I</td></tr>

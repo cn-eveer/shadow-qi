@@ -53,7 +53,7 @@ const conductIn = (f, mv, mf) => { // the doctor keeps conducting until the gole
 const holdMul = f => (f.golem && f.golem.hold ? 1.6 : 1); // (the golem is holding them: his blows hit harder)
 const nearO = (f, o) => Math.abs(o.x - f.x) <= 120 && o.y < 70; // close enough for the stone-knuckle
 function selfPunch(f, o, p) { // his own blow (the stone-knuckle)
-  const hb = boxOf(f, p.box), hu = hurtbox(o, false, !!p.low); if (!hu || !overlap(hb, hu)) return;
+  const hb = boxOf(f, p.box), hu = hurtbox(o, false, !!p.low); (game.dbgRays = game.dbgRays || []).push({ boxes: [hb], t: game.frame }); /* (training's hitbox view shows it) */ if (!hu || !overlap(hb, hu)) return;
   const res = applyHit(f, o, { type: 'mid', chip: false, proj: false, str: 0, gdrain: 2, label: 'Stone Knuckle', ...p }, Math.sign(o.x - f.x) || f.facing, hb, hu);
   if (res) { f.hitConnected = true; f.lastResult = res; }
 }
@@ -165,9 +165,9 @@ function bedrockBurst(f, o) { // the end of the Bedrock Stride: his stone skin b
 // his specials, his super and the fusion
 { const smb = specialMoveBase; specialMoveBase = function (id) {
   const order = (label, pose, fn) => ({ id, label, startup: 5, active: 2, recovery: 5, wind: 'idle', pose, hitbox: null, antiDone: true, onFrame: (f, o, mf) => { if (mf === f.move.startup) fn(f, o); conductIn(f, f.move, mf); } });
-  if (id === 'alKnuckleThrow') return { ...hStone('Stone Knuckle / Throw', DUET1), id, recovery: 1 }; // (no 硬直: he's free the moment it's thrown) // ← → + U: up close a stone-knuckle, from further off a thrown stone (what J used to be)
+  if (id === 'alKnuckleThrow') return { ...beat('Stone Knuckle / Throw', 'alThrow', null, { noSmear: true, wind: 'alThrowW', startup: 7, recovery: 1, near: { ...KNUCKLE, recovery: 1 }, also: (f, o) => hohenStone(f, o, { h: { noGuardLag: true } }), chain: DUET1, midHit: true }), id, noGuardLag: true }; // (no 硬直, close or far: he's free the moment it's out — and not minus on guard) // ← → + U: up close a stone-knuckle, from further off a thrown stone (what J used to be)
   if (id === 'alBigStone') return { id, noSmear: true, label: 'Great Stone', startup: 18, active: 2, recovery: 1, /* (no 硬直) */ wind: 'alThrowW', pose: 'alThrow', hitbox: null, // ← → + K: one great stone, slow to throw, that tears more than half out of a guard
-    onFrame: (f, o, mf) => { if (mf === f.move.startup) alchemistStone(f, o, 76, { k: 1.8, sp: 11, big: true, label: 'Great Stone', h: { gdrain: 45, gbstun: 60, push: 3, bpush: 5, kd: true, kdVx: 11, kdVy: 7 } }); } }; // (a full guard takes it, down to just under half: the second one breaks it)
+    onFrame: (f, o, mf) => { if (mf === f.move.startup) alchemistStone(f, o, 76, { k: 1.8, sp: 11, big: true, label: 'Great Stone', h: { gdrain: 45, gbstun: 60, push: 3, bpush: 5, kd: true, kdVx: 11, kdVy: 7, noGuardLag: true } }); }, noGuardLag: true }; // (a full guard takes it, down to just under half: the second one breaks it)
   if (id === 'alUpStone') return { id, noSmear: true, label: 'Stone Lob', startup: 10, active: 2, recovery: 16, wind: 'alThrowW', pose: 'alThrow', hitbox: null, overhead: true, onFrame: (f, o, mf) => { if (mf === f.move.startup) alchemistLob(f, o); } };
   if (id === 'alTrap') return { id, noSmear: true, label: 'Trap Stone', startup: 12, active: 2, recovery: 16, wind: 'alThrowW', pose: 'alThrowLow', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) alchemistTrap(f); } };
   if (id === 'alShield') return order('Order: Shield Bash', 'gTwin', f => golemOrder(f, 'shield'));
@@ -197,7 +197,7 @@ function bedrockBurst(f, o) { // the end of the Bedrock Stride: his stone skin b
   if (id === 'afQuake') return fused('stomp', { label: 'Quake Fist', wind: 'alOpus', pose: 'alThrowLow', proj: 'spikes', limit: 1, // ← ← + J: both fists into the floor: a line of rock spikes bursts along it (low)
     onFrame: (f, o, mf) => { if (mf === 12) { const d = f.facing; spawnPJ(f, 'spikes', { dir: d, x: f.x + d * 50, y: 14, vx: d * 7, life: 80, r: 16, w: 22, h: { dmg: 40, stun: 18, bstun: 10, push: 3, kd: true, kdVx: 2, kdVy: 4, low: true, hitstop: 7, chip: true, label: 'Quake Fist' } }); dustAt(f.x + f.facing * 40, true); cracks(f.x + f.facing * 22); game.shake = Math.max(game.shake, 5); sfx('break'); } } });
   // (none of these borrow Tetsu's movement: no spins, no leaps, no rising jumps — he stays planted and the stone does the moving)
-  const rockHit = (f, o, x, w, y1, h) => { const hu = hurtbox(o, true, !!h.low); if (!hu || Math.abs(o.x - x) > w) return; applyHit(f, o, { type: 'mid', chip: true, proj: true, str: 1, gdrain: 8, ...h }, Math.sign(o.x - f.x) || f.facing, { x0: x - w, x1: x + w, y0: 0, y1 }, hu); }; // (rock bursting out of the floor where it stands)
+  const rockHit = (f, o, x, w, y1, h) => { (game.dbgRays = game.dbgRays || []).push({ boxes: [{ x0: x - w, x1: x + w, y0: 0, y1 }], t: game.frame }); /* (training's hitbox view shows the rock) */ const hu = hurtbox(o, true, !!h.low); if (!hu || Math.abs(o.x - x) > w) return; applyHit(f, o, { type: 'mid', chip: true, proj: true, str: 1, gdrain: 8, ...h }, Math.sign(o.x - f.x) || f.facing, { x0: x - w, x1: x + w, y0: 0, y1 }, hu); }; // (rock bursting out of the floor where it stands)
   const erupt = (f, x, h, w) => { f.pillars.push({ x, t: 3, T: 22, h, w }); dustAt(x, true); cracks(x); sfx('break'); game.shake = Math.max(game.shake, 4); };
   const pdef = (label, ex) => ({ id, label, hitbox: null, type: 'mid', ...ex });
   if (id === 'afBoulder') return pdef('Boulder Toss', { pre: 6, startup: 22, active: 2, recovery: 20, wind: 'alOpus', pose: 'alThrow', // → → + I: rocks fly up into his hands and pack into a boulder; he hurls it over in an arc and it crashes down on them (the bounce)
@@ -282,6 +282,7 @@ function fuseFrame(f, o, mf) {
     sfx(i === ARMOR_PARTS.length - 1 ? 'hitH' : 'block'); parts.push({ type: 'ring', x: f.x, y, r: 5, vr: 3, life: 10, max: 10, col: '255,210,130' }); for (let k = 0; k < 4; k++) parts.push({ type: 'spark', x: f.x + rnd(-14, 14), y, vx: rnd(-3, 3), vy: rnd(-2, 2), life: 9, max: 9, col: '255,220,150' }); }
   if (mf === FUSE_IN[1]) { f.ch = FUSED_CH; f.fuseT = FUSE_T; f.fuse = null; game.shake = Math.max(game.shake, 10); game.freeze = Math.max(game.freeze, 4); sfx('bounce');
     popText(f.x, GROUND - 240, L('GOLEM ARMOUR!', 'ゴーレムアーマー！'), '255,215,140');
+    { const o = other(f); if (o && !o.ko && o.y < 60 && Math.abs(o.x - f.x) < 170 && !['down', 'knock', 'getup', 'stunned'].includes(o.state) && !(o.invul > 0)) { o.move = null; o.vx = 0; setState(o, 'stunned'); o.stunT = 60; o.stunKind = 'shock'; o.st0 = ++serial; popText(o.x, GROUND - 185, L('STUNNED!', 'スタン！'), '255,215,140'); } } // (the armour slamming on: anyone close is left stunned)
     parts.push({ type: 'ring', x: f.x, y: GROUND - 110, r: 12, vr: 9, life: 20, max: 20, col: '255,200,110' }, { type: 'ering', x: f.x, y: GROUND, r: 10, vr: 9, life: 18, max: 18, col: '255,210,130' });
     for (let i = 0; i < 18; i++) { const an = i * Math.PI / 9; parts.push({ type: 'spark', x: f.x, y: GROUND - 110, vx: Math.cos(an) * 7, vy: Math.sin(an) * 7, life: 18, max: 18, col: '255,210,130' }); } }
 }
@@ -717,7 +718,8 @@ STRINGS.alchemist = { // the duet strings (any mix of U and J, three presses, th
   t.jPalm.chain = { lp: 'jElbow', lk: 'jStone', hp: 'jRise', hk: 'jSpin' }; t.jElbow.chain = { lp: 'jUpper', lk: 'jStone', hp: 'jRise', hk: 'jSpin' }; t.jUpper.chain = { lk: 'jStone', hp: 'jRise', hk: 'jSpin' };
   t.jStone.chain = { lp: 'jUpper', hp: 'jRise', hk: 'jSpin' }; t.jRise.chain = { hk: 'jSpin' }; } // (in a juggle the golem and he trade off: U, J, U, I...)
 // in the golem armour: he fights in its stone himself
-const FUSED_LOOK = {}; for (const k of ['sk0', 'ck0', 'ck1', 'jk0', 'jk1', 'sk1']) FUSED_LOOK[k] = CHARS.alchemist.normalLook[k];
+const FUSED_LOOK = {}; for (const k of ['ck0', 'jk0', 'jk1']) FUSED_LOOK[k] = CHARS.alchemist.normalLook[k];
+Object.assign(FUSED_LOOK, { sk0: hStone('Stone Knuckle / Throw', DUET1), sk1: { label: 'Boulder Kick' }, ck1: { label: 'Rock Sweep' } }); // (in the armour the golem is part of him: J, K and ↓ + K are his own — the stone-knuckle, a boulder kick and a low sweep — not orders to a golem that isn't there)
 Object.assign(FUSED_LOOK, { sp0: { label: 'Stone Jab', advHit: 11, push: 2 }, cp0: { label: 'Low Stone Jab' }, sp1: { label: 'Stone Smash' }, cp1: { label: 'Stone Uppercut' }, jp0: { label: 'Air Stone Jab' }, jp1: { label: 'Air Stone Smash' } }); // (his own stone fists)
 const FUSED_CH = { ...CHARS.alchemist, fused: true, lookKey: 'alchemistFused', normalLook: FUSED_LOOK, dmgMul: 1.15 * 1.3, takeMul: 0.7, scale: 1.12, idle: 'alArmorIdle', walk: 2.0, back: 1.7, noDash: false, /* (in the golem armour he can dash and back dash) */ pDmg: 1.1,
   sp: { fP: 'afBeam', fPH: 'afBoulder', fK: 'afSlide', fKH: 'afShoulder', bP: 'afBoulderRoll', bPH: 'afWall', bK: 'afQuake', bKH: 'afCyclone', dP: 'afPillar' }, sup: 'afCannon', fuseSp: null }; // (Tetsu's commands, his own techniques)

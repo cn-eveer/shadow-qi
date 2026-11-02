@@ -238,7 +238,7 @@ function uReach(d) { // how far the defender's U reaches (Lyra and Jesse reach m
 function techGuardLag(a, d, h) {
   const five = a.state === 'attack' && a.move && a.move.fiveEnder && !a.move.noFiveLag && a.move.startup < 900; // (noFiveLag: an ender with its own block frames)
   if (a.state === 'attack' && a.move && a.move.super && a.move.startup < 900) { const left = a.move.startup + (a.move.active || 0) + a.move.recovery - a.mf, cap = (h.bstun || 10) + 8; if (left > cap) a.move.recovery = Math.max(2, a.move.recovery - (left - cap)); return; } // (supers are safe when guarded)
-  if ((!a.lastMoveTech && !five) || a.ko || (a.move && a.move.noGuardLag)) return;
+  if ((!a.lastMoveTech && !five) || a.ko || (a.move && a.move.noGuardLag) || h.noGuardLag) return; // (h.noGuardLag: a shot that isn't minus on guard — it can land after his move is over)
   const R = uReach(d), dist = Math.abs(a.x - d.x) + 30, travel = dist > R ? 16 + Math.ceil(Math.max(0, dist - R - 110) / 8) : 0; // (a dash in takes about 16 frames; the guard pushes them apart a little more)
   const tier = five ? 'heavy' : a.move && a.state === 'attack' && !a.move.normal ? techTier(a.move) : a.lastTechTier || 'mod'; // (the end of a five-hit string is punished hard)
   if (tier === 'fast') { // quick techniques are safe: if one would leave him open, he recovers sooner
