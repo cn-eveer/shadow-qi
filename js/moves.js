@@ -755,7 +755,7 @@ function specialMoveBase(id) {
     case 'smSlide': return { id, label: 'Wet Floor Slide', startup: 9, active: 14, recovery: 20, wind: 'crouch', pose: 'slideKick', selfMove: true, speedFx: true, crouch: true, bodyHurt: true, // (low the whole way, like Kuro's Vanish Slide: his hurtbox fitted to him crouched, then stretched out along the floor)
       // he sets down a "Caution: wet floor" sign... and promptly slips past it, feet first
       hitbox: [0,110,0,38], low: true, dmg: 40, stun: 22, bstun: 12, push: 2, kd: true, kdVx: 3, kdVy: 5, type: 'mid', hitstop: 8, gdrain: 10,
-      poseFn(f, mf) { return mf > 40 ? null : mf <= 4 ? lerpPose(f.prevPose, POSES.crouch, mf / 4) : mf <= 8 ? lerpPose(POSES.crouch, POSES.slideKick, (mf - 4) / 4) : POSES.slideKick; }, // crouches to set the sign down, and slips straight into the slide, feet first
+      poseFn(f, mf) { return mf > 40 ? null : mf <= 4 ? POSES.crouch : mf <= 8 ? lerpPose(POSES.crouch, POSES.slideKick, (mf - 4) / 4) : POSES.slideKick; }, // drops straight into a crouch to set the sign down (low at once, as Kuro's Vanish Slide), and slips into the slide, feet first
       onFrame(f, o, mf) { const mv = f.move;
         if (mf === 1) { mv.signX = f.x - f.facing * 34; popText(f.x, GROUND - 190, L('CAUTION: WET FLOOR', '足元注意：濡れています'), '255,215,60'); }
         if (mf === 6) { sfx('swing'); popText(f.x, GROUND - 160, L('WHOA—!', 'うわっ！'), '150,210,255'); }
