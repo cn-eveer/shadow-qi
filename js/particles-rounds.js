@@ -257,6 +257,7 @@ function step() {
   const ib = live ? b.ctrl.read(b, game.frame, a) : EMPTY;
   FX_OWNER = a; update(a, b, ia); FX_OWNER = b; update(b, a, ib); FX_OWNER = null;
   pushApart(a, b);
+  for (const f of fighters) if (f.golem) golemSeparate(f, other(f)); // (Hohen's golem and the opponent never stand inside each other)
   checkHits(a, b); checkHits(b, a);
   updateProjs(); FX_OWNER = null;
   fighters.forEach(updatePose);

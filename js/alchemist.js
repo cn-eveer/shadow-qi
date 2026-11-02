@@ -350,6 +350,7 @@ function golemPlace(f, o) { // while it holds them: they stay where the swap put
 }
 function golemSeize(f, o) { // the grab: if the golem was in front of him, it turns them round and the two trade places, so they're between it and him (not pulled in to him)
   const g = f.golem, near = Math.abs(g.x - f.x) < Math.abs(o.x - f.x) ? g.x : o.x, far = near === g.x ? o.x : g.x, away = Math.sign(near - f.x) || 1;
+  { const side = Math.sign(o.x - g.x) || Math.sign(o.x - f.x) || 1; if (Math.abs(o.x - g.x) < GOLEM_GAP) { o.x = clamp(g.x + side * GOLEM_GAP, WALL_L, WALL_R); if (Math.abs(o.x - g.x) < GOLEM_GAP) g.x = clamp(o.x - side * GOLEM_GAP, WALL_L, WALL_R); } } // (held at arm's length: never inside it)
   g.hold = { t: 180, c0: o.combo || 0, f0: game.frame, ox: o.x, gx: g.x }; /* (it holds them where they stand: no swapping places, no pulling) */ golemPlace(f, o); setState(o, 'stunned'); o.stunT = 184; o.stunKind = 'held'; o.stunUsed = true;
   popText(o.x, GROUND - 190, L('GRABBED!', '捕まえた！'), '255,215,140'); sfx('block'); game.shake = Math.max(game.shake, 3);
 }
@@ -469,6 +470,15 @@ function golemUpdate(f, o) {
 }
 const GOLEM_SPAN = 100; // two golems' middles never closer than this
 const GOLEM_GAP = 95; // how close the opponent can come to the golem's middle (its stone body and their own: never inside it): it's solid — they jump over it or break it, they don't walk through
+// after everyone has moved: the golem and the opponent never overlap on the ground — whoever is inside the other's space is put at its edge
+// (the opponent back to their own side; against a wall, the golem gives way). Only someone in the air passes over it.
+function golemSeparate(f, o) {
+  const g = f.golem; if (!g || g.broken || g.hidden || g.hold || o.ko || o.y > 40 || g.y > 0 || o.state === 'knock') return; // (someone launched and falling, and the golem's own leap, are mid-air: not standing in each other)
+  const gap = Math.abs(o.x - g.x); if (gap >= GOLEM_GAP) { g.oSide = Math.sign(o.x - g.x) || g.oSide; return; }
+  const side = g.oSide || Math.sign(o.x - g.x) || Math.sign(o.x - f.x) || 1, tx = g.x + side * GOLEM_GAP;
+  if (tx >= WALL_L && tx <= WALL_R) o.x = tx; else { o.x = clamp(tx, WALL_L, WALL_R); g.x = clamp(o.x - side * GOLEM_GAP, WALL_L, WALL_R); }
+  g.px = g.x; g.opx = o.x;
+}
 function golemBlock(f, o) { // the golem is solid, and nobody moves anybody: whoever walked into the other stops at its edge (no pushing the golem, no shoving them)
   const g = f.golem, gp = g.px == null ? g.x : g.px, op = g.opx == null ? o.x : g.opx; g.px = g.x; g.opx = o.x;
   if (g.broken || g.hidden || g.hold) return;
