@@ -4,6 +4,12 @@
 // version.json on the server says which version is live. When the two differ, the player is asked to reload without the
 // browser's cache, or to erase the site's saved data and reload.
 const RELEASES = [ // notes: a string, or { g: 'group', items: [...] } (groups nest)
+  { v: '1.5.2', date: '2026-11-03', notes: [
+    { g: '田中', items: [
+      '天使：回復量を半分に（1秒に10、I・Kが当たると6、ガードされると14）',
+      '二重憑依：アーマーを削除（どの攻撃でも止まり、打ち上げられる）。守りは受けるダメージ半分のみで、回復なし',
+    ] },
+  ] },
   { v: '1.5.1', date: '2026-11-02', notes: [
     { g: '技表', items: [
       'ホーエン・カッパ・テツ・ジェシー・田中の技表を1.5.0の内容に更新（カッパの↓+U・↓+J・↓+K、田中の二重憑依の時間など）',
