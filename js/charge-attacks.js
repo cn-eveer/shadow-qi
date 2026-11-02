@@ -23,28 +23,7 @@ function chargedHeavy(f, o, mf) {
   else { const lg = mv.tapLunge; if (mf <= mv.startup && Math.abs(o.x - f.x) > 80) f.vx = f.facing * (lg ? lg[2] : 3); else f.vx *= 0.6; }
 }
 function makeCharged(key, levels) { const h = CHARS[key].heavy.p; Object.assign(h, { held: true, tapStartup: h.startup, tapLunge: h.lunge, startup: 999, chargeLv: levels, onFrame: chargedHeavy }); }
-// Jesse's charge shots: hold the button and the gun gathers power — a medium shot at 0.4 s, a high shot at 0.9 s (it fires by itself at 1.4 s)
-const GUN_LV = [24, 54];
-function gunCharge(f, o, mf, fire) {
-  const mv = f.move;
-  if (!mv.fired) {
-    mv.chargeMarks = [[GUN_LV[0], 'Lv1'], [GUN_LV[1], 'MAX']];
-    f.vx *= 0.6; mv.lvl = mf >= GUN_LV[1] ? 2 : mf >= GUN_LV[0] ? 1 : 0;
-    if (GUN_LV.includes(mf)) { sfx('charge'); parts.push({ type: 'ring', x: f.x + f.facing * 70, y: GROUND - f.y - 118, r: 26 + mv.lvl * 8, vr: -1.6, life: 14, max: 14, col: '255,200,110' }); }
-    if (mv.lvl && mf % 2 === 0) { const an = rnd(0, Math.PI * 2), r = rnd(30, 60); parts.push({ type: 'spark', x: f.x + f.facing * 70 + Math.cos(an) * r, y: GROUND - f.y - 118 + Math.sin(an) * r, vx: -Math.cos(an) * r / 8, vy: -Math.sin(an) * r / 8, life: 8, max: 8, col: mv.lvl === 2 ? '255,170,80' : '255,220,140' }); }
-    if (!holding(f) || mf >= 84) { mv.fired = true; mv.startup = mv.lvl ? mf + 4 : Math.max(mf + 2, heavyTap(mv.tapStartup || 9)); mv.recovery = [18, 22, 28][mv.lvl]; fire(f, o, 'name'); } // (a tap fires at the normal speed)
-    return;
-  }
-  if (mf === mv.startup) fire(f, o, 'shoot');
-  if (mf > mv.startup) { f.vx *= 0.8; if (o.state === 'knock' && o.juggle) mv.recovery = Math.min(mv.recovery, 6); } // quick to follow a launch
-}
 function mf0(f) { return f.mf; }
-function twinCharge(f, o, mf) { return gunCharge(f, o, mf, (f, o, what) => { const L = f.move.lvl;
-  if (what === 'name') { f.move.label = ['Twin Shot', 'Charged Twin Shot', 'Thunder Shot'][L]; f.move.pose = L === 2 ? 'gRecoil' : 'gTwin'; return; }
-  if (L === 0) { shoot(f, { y: 122, dmg: 22, range: 290 }); shoot(f, { y: 116, dmg: 22, range: 290 }); return; } // (a tap: just the two shots)
-  const near = Math.abs(o.x - f.x) < 230; // up close the charged shots set up a combo
-  if (L === 1) { shoot(f, { y: 124, dmg: 34, push: near ? 1 : 4, stun: 30, range: 380, lvl: 1 }); shoot(f, { y: 120, dmg: 34, push: near ? 1 : 4, stun: 30, range: 380, lvl: 1 }); }
-  else shoot(f, { y: 128, dmg: 80, push: 6, range: 760, lvl: 2, pierce: true, stun: 26, ...(near ? { launch: true, launchVy: 12.5, jugVy: 11 } : { kd: true }) }); }); }
 // the kappa's throws: grab, then swing them over his head to the other side
 const kappaHolding = f => f.move.grabT != null && !f.move.broken && game.frame - f.move.grabT < GRAB_WINDOW;
 const kappaHold = (f, mf) => { if (!kappaHolding(f)) return null; const p = { ...POSES[/Sumo/.test(f.move.label) ? 'kSumoHold' : 'kLiftHold'] }, w = Math.sin(globalT * 0.6); p.t += w * 3; return p; }; // (holding them while they struggle: J a low sumo grip round the waist, K hoisting them up — not yet the toss)

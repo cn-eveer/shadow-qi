@@ -255,18 +255,18 @@ Object.assign(CHARS, {
     recPlus: 6, recRefund: true, // every attack recovers 6 frames slower on a miss or a guard; any hit that lands gives it back (see moveFrames)
     frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
       U: { su: 12, blk: -4 }, dU: { su: 12, blk: -4 }, J: { su: 10, blk: -4 }, dJ: { su: 10, blk: -4 },
-      I: { su: 16, blk: -12, held: true }, K: { su: 18, blk: -14 }, dI: { su: 16, blk: -16 }, dK: { su: 16, blk: -14 }, /* (held: his charge shots; the tap's start-up is its own) */
+      I: { su: 17, blk: -12 }, K: { su: 18, blk: -14 }, dI: { su: 16, blk: -16 }, dK: { su: 16, blk: -14 }, /* (held: his charge shots; the tap's start-up is its own) */
       $g2: { su: 12, blk: -6 }, $g3: { su: 15, blk: -6 }, $g4: { su: 18, blk: -6 }, $gF: { su: 18, blk: -18 }, $gL: { su: 16, blk: -16 }, $gE: { su: 20, blk: -12 }, // U, U … U×4 (12 / 15 / 18F) / U×4, K / U, I / U, K
       $gl2: { su: 12, blk: -6 }, $glE: { su: 18, blk: -16 },
       gnFan: { su: 20, blk: -16 }, gnQuick: { su: 12, blk: -8, held: true }, gnRoll: { su: 20, blk: -16 }, gnJumpShot: { su: 22, blk: -16 }, // (Quick Draw stays his fastest)
       gnDouble: { su: 28, blk: -20 }, gnDyna: { su: 21, blk: -16 }, gnDance: { su: 20, blk: -16 }, gnBackflip: { blk: -6 }, /* (the flip fires its shot at a fixed moment: 23F) */
     },
    heavy: { // no kicks: both heavies are gunshots at mid range
-      p: { label: 'Twin Shot', held: true, tapStartup: 9, startup: 999, active: 2, recovery: 20, hitbox: null, wind: 'gAim', pose: 'gTwin', onFrame: twinCharge },
+      p: { label: 'Twin Shot', startup: 9, active: 2, recovery: 20, hitbox: null, wind: 'gAim', pose: 'gTwin', onFrame: (f, o, mf) => { if (mf === f.move.startup) { shoot(f, { y: 122, dmg: 22, range: 360 }); shoot(f, { y: 116, dmg: 22, range: 360 }); } } }, // (I is no longer held to charge: just the two shots)
       k: { label: 'Heavy Shot', startup: 13, active: 2, recovery: 24, hitbox: null, wind: 'gAim', pose: 'gRecoil', onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 122, dmg: 50, big: true, kd: true, range: 300 }); } }, // (K is no longer held to charge: ← → + K is the double heavy shot)
     },
     normalLook: {
-      sp0: { label: 'Hip Shot', startup: 4, wind: 'gIdle', pose: 'gAim', hitbox: null, chain: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 118, dmg: 22, range: 270 }); } }, // (upper body: crouch and it passes over)
+      sp0: { label: 'Hip Shot', startup: 4, wind: 'gIdle', pose: 'gAim', hitbox: null, chain: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 118, dmg: 22, range: 340 }); } }, // (upper body: crouch and it passes over)
       cp0: { label: 'Low Shot', startup: 5, wind: 'crouch', pose: 'gLow', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 44, dmg: 20, low: true, range: 280 }); } }, // (↓ + U: a low shot, at knee height)
       cp1: { label: 'Sky Shot', startup: 6, wind: 'gLow', pose: 'gUp', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { x: f.x + f.facing * 34, y: 84, vx: 16, vy: 8, life: 14, dmg: 34, launch: true, launchVy: 12, jugVy: 11 }); } },
       sk0: { label: 'Low Shot', startup: 5, wind: 'crouch', pose: 'gLow', crouch: true, hitbox: null, chain: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 44, dmg: 22, low: true, range: 260 }); } }, // (he drops into a crouch and fires at knee height)

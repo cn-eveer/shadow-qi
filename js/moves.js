@@ -691,7 +691,7 @@ function specialMoveBase(id) {
         ctx.save(); ctx.strokeStyle = 'rgba(255,80,60,.95)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
         for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { ctx.beginPath(); ctx.moveTo(x + dx * r * 0.4, y + dy * r * 0.4); ctx.lineTo(x + dx * r * 1.3, y + dy * r * 1.3); ctx.stroke(); } ctx.restore(); } };
     // → → + J: Roll Shot. Rolls forward (can't be hit while rolling) and fires both guns
-    case 'gnRoll': return { id, label: 'Roll Shot', startup: 18, active: 2, recovery: 18, wind: 'gLow', pose: 'gTwin', selfMove: true, crouch: true,
+    case 'gnRoll': return { id, label: 'Roll Shot', startup: 18, active: 2, recovery: 18, wind: 'gLow', pose: 'gTwin', selfMove: true, crouch: true, bodyHurt: true, // (hurtbox fitted to him: low through the roll, full height once he's up to shoot)
       onStart(f) { f.invul = 14; },
       poseFn: (f, mf) => mf < 16 ? POSES.gLow : null,
       onFrame(f, o, mf) { if (mf <= 14) { f.vx = f.facing * 8; if (mf % 3 === 0) dustAt(f.x, false); } else f.vx *= 0.5; if (mf === 18) { shoot(f, { y: 122, dmg: 24 }); shoot(f, { y: 116, dmg: 24 }); } } };
