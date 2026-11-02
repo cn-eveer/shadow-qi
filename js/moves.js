@@ -690,10 +690,9 @@ function specialMoveBase(id) {
       drawFX(f, o) { const mv = f.move; if (!o || mv.fired || mf0(f) < 40) return; const x = o.x, y = GROUND - o.y - 100 * o.ch.scale, r = 26 + Math.max(0, 70 - f.mf) * 0.6;
         ctx.save(); ctx.strokeStyle = 'rgba(255,80,60,.95)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
         for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { ctx.beginPath(); ctx.moveTo(x + dx * r * 0.4, y + dy * r * 0.4); ctx.lineTo(x + dx * r * 1.3, y + dy * r * 1.3); ctx.stroke(); } ctx.restore(); } };
-    // → → + J: Roll Shot. Rolls forward (can't be hit while rolling) and fires both guns
+    // → → + J: Roll Shot. Slides in low along the floor, then springs up and fires both guns
     case 'gnRoll': return { id, label: 'Roll Shot', startup: 18, active: 2, recovery: 18, wind: 'gLow', pose: 'gTwin', selfMove: true, crouch: true, bodyHurt: true, // (hurtbox fitted to him: low through the roll, full height once he's up to shoot)
-      onStart(f) { f.invul = 14; },
-      poseFn: (f, mf) => mf < 16 ? POSES.gLow : null,
+      poseFn: (f, mf) => mf <= 2 ? lerpPose(f.prevPose, POSES.slideKick, mf / 2) : mf <= 14 ? POSES.slideKick : mf <= 17 ? lerpPose(POSES.slideKick, POSES.gTwin, (mf - 14) / 3) : null, // (a low slide along the floor like Kuro's Vanish Slide — his hurtbox lies low with him — then he springs up to fire; no invincibility: armor instead, like all his techniques)
       onFrame(f, o, mf) { if (mf <= 14) { f.vx = f.facing * 8; if (mf % 3 === 0) dustAt(f.x, false); } else f.vx *= 0.5; if (mf === 18) { shoot(f, { y: 122, dmg: 24 }); shoot(f, { y: 116, dmg: 24 }); } } };
     // → → + K: Jump Shot. Leaps forward and fires three shots down on them
     case 'gnJumpShot': return { id, label: 'Jump Shot', startup: 8, active: 26, recovery: 12, wind: 'jump', pose: 'gAirDown', manualY: true, noPush: true, selfMove: true,
@@ -714,7 +713,7 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { if (mf === 10) shoot(f, { y: 90, vx: 16, vy: -7, life: 36, dmg: 30, bounce: 1 }); } };
     // ← ← + J: Backflip Shot. Flips away (can't be hit at first) and shoots on the way
     case 'gnBackflip': return { id, label: 'Backflip Shot', startup: 6, active: 20, recovery: 10, wind: 'jump', pose: 'gAirDown', manualY: true, noPush: true, selfMove: true,
-      onStart(f) { f.invul = 12; f.bfx = f.x; },
+      onStart(f) { f.bfx = f.x; }, // (no invincibility: armor instead)
       onFrame(f, o, mf) { f.vx = 0; f.x = clamp(f.bfx - f.facing * 130 * Math.min(1, mf / 26), WALL_L, WALL_R); f.y = mf <= 26 ? 110 * Math.sin(Math.PI * mf / 26) : 0; f.flipT = mf < 18 ? 18 - mf : 0; f.flipMax = 18;
         if (mf === 16) shoot(f, { x: f.x + f.facing * 36, y: f.y + 80, vx: 18, vy: -6, life: 22, dmg: 26 }); } };
     // ← → + K: Double Heavy Shot. Two heavy shots one after the other: slow to come out and slow to recover (one bullet for both)

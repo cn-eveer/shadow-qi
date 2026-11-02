@@ -195,7 +195,7 @@ function throwBreak(a, d, h) {
   }
   return !!(h.grab && now - mv.grabT < GRAB_WINDOW); // (still inside the window: not thrown yet — the grab keeps the move live until then)
 }
-function hasArmor(f) { const mv = f.move; return !!mv && ((mv.armorDive && f.mf >= (mv.armorFrom || 24)) || (f.key === 'kappa' && (mv.id === 'kpPounce' || mv.id === 'kpFrenzy' || (mv.dashLeft > 0))) || (f.key === 'brawler' && mv.tArmor) || (f.ch.possess === 'angel' && mv.id === 'saAscend') || mv.id === 'plRampart' || mv.stoneSkin || (f.ch.fused && !mv.normal && !mv.super && techTier(mv) !== 'fast')); } // (Hohen's Bedrock Stride: stone skin; in the golem armour, his techniques have armour like Tetsu's)
+function hasArmor(f) { const mv = f.move; return !!mv && ((f.key === 'gunman' && /^gn/.test(mv.id || '') && !mv.super && !mv.parry) || (mv.armorDive && f.mf >= (mv.armorFrom || 24)) || (f.key === 'kappa' && (mv.id === 'kpPounce' || mv.id === 'kpFrenzy' || (mv.dashLeft > 0))) || (f.key === 'brawler' && mv.tArmor) || (f.ch.possess === 'angel' && mv.id === 'saAscend') || mv.id === 'plRampart' || mv.stoneSkin || (f.ch.fused && !mv.normal && !mv.super && techTier(mv) !== 'fast')); } // (Hohen's Bedrock Stride: stone skin; in the golem armour, his techniques have armour like Tetsu's)
 function techTier(mv) { return TECH_TIER[mv.id] || (mv.parry ? 'fast' : mv.launch ? 'heavy' : 'mod'); }
 const TELL = { mod: 14, heavy: 20 }; // frames of the tell before the wind-up: long enough that a jab pressed after it starts still lands first
 const U_REACH = {};
@@ -420,13 +420,13 @@ function applyHit(a, d, h, side, hb, hu) {
     return null;
   }
   if (throwBreak(a, d, h)) return null;
-  // armor: Tetsu during his moderate and heavy techniques (tell included), and Aldric's Rampart Charge — the hits land and hurt,
+  // armor: Tetsu and Jesse during their techniques (Tetsu's tell included; strong blows still stop them), and Aldric's Rampart Charge — the hits land and hurt,
   // but they don't stop him: the technique keeps going (no counter). They can only be punished afterwards.
   const dblArmor = d.ch.possess === 'double' && !h.grab && !h.superHit && !['knock', 'down', 'getup'].includes(d.state); // double possession: light hits can't stop him
   const kDash = d.key === 'kappa' && d.state === 'dash' && !h.grab && !h.superHit; // the kappa's dash has armor: hits land, but don't stop him
   const strong = !!(h.heavy || h.tech || h.launch || h.kd || (h.str || 0) >= 1); // (a heavy blow, a technique, a launcher, a knockdown)
   const supArmor = d.state === 'attack' && d.move && d.move.supArmor && d.mf <= d.move.startup && !h.grab && !h.superHit && !strong && Math.abs(a.x - d.x) < 220; // Tetsu's and Kuro's supers, before they come out: light hits from up close don't stop it (strong ones and anything from further away do)
-  if (supArmor || dblArmor || kDash || (d.state === 'attack' && d.move && !h.grab && !h.superHit && hasArmor(d) && !(d.key === 'brawler' && strong) && (d.pre > 0 || d.move.startup >= 900 || d.mf <= d.move.startup + (d.move.active || 0)))) {
+  if (supArmor || dblArmor || kDash || (d.state === 'attack' && d.move && !h.grab && !h.superHit && hasArmor(d) && !((d.key === 'brawler' || d.key === 'gunman') && strong) && (d.pre > 0 || d.move.startup >= 900 || d.mf <= d.move.startup + (d.move.active || 0)))) {
     const dmg = Math.max(1, Math.round(h.dmg * (supArmor ? 1 : 0.85))); // (the super's armor takes them in full: one that would finish him still does)
     if (d.hp - dmg > 0) {
       d.hp -= dmg; d.flash = 4; d.healT = 0;
