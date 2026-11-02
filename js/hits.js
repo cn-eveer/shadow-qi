@@ -185,7 +185,7 @@ function throwBreak(a, d, h) {
   if (mv.broken) return true; // (this one was already broken)
   const need = h.grab ? (mv.normal && mv.kind === 'k' && mv.str === 0 ? BREAK_BTN.J : BREAK_BTN.K) : mv.inString && ['c2', 'c3', 'c4'].includes(mv.strKey) ? BREAK_BTN.S : null;
   if (!need || ['knock', 'down', 'getup', 'gbreak', 'stunned', 'slashed', 'attack', 'jump'].includes(d.state)) return false;
-  const now = game.frame; if (h.grab && mv.grabT == null) { mv.grabT = now; mv.active = Math.max(mv.active, a.mf - mv.startup + Math.ceil(GRAB_WINDOW * 1.25) + 2); /* (the hold is counted in game frames; under the flood his moves run a fifth faster) */ d.grabLock = GRAB_WINDOW; popText(d.x, GROUND - d.y - 185, L('GRABBED!', '掴まれた！'), '255,200,120'); }
+  const now = game.frame; if (h.grab && mv.grabT == null) { mv.grabT = now; d.caughtKind = /Sumo/.test(mv.label) ? 'sumo' : 'lift'; mv.active = Math.max(mv.active, a.mf - mv.startup + Math.ceil(GRAB_WINDOW * 1.25) + 2); /* (the hold is counted in game frames; under the flood his moves run a fifth faster) */ d.grabLock = GRAB_WINDOW; popText(d.x, GROUND - d.y - 185, L('GRABBED!', '掴まれた！'), '255,200,120'); }
   const from = h.grab ? mv.grabT - GRAB_WINDOW : now - BREAK_WINDOW, ts = need.map(b => d.btnEdge && d.btnEdge[b] != null ? d.btnEdge[b] : -99);
   if (Math.min(...ts) >= from && Math.max(...ts) - Math.min(...ts) <= 5) {
     const side = Math.sign(d.x - a.x) || a.facing; mv.broken = true; d.grabLock = 0;

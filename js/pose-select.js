@@ -307,7 +307,7 @@ function followPose(A, W) { // over-extend a little past the strike
 function targetPose(f) {
   if (showOn() && f.state === 'stand' && SHOW[f.key]) return showPose(f, 'intro', game.phaseT - (f.side ? 8 : 0)); // the entrance
   if (f.state === 'win') return winPose(f); // victory.js
-  if (f.grabLock > 0) { const p = { ...POSES.caught }, w = Math.sin(globalT * 0.9); p.a1u += w * 14; p.a1l += w * 18; p.a2u -= w * 14; p.a2l -= w * 18; p.t += w * 3; return p; } // caught in a throw: struggling in the grip
+  if (f.grabLock > 0) { const p = { ...POSES[f.caughtKind === 'sumo' ? 'caughtSumo' : f.caughtKind === 'lift' ? 'caughtLift' : 'caught'] }, w = Math.sin(globalT * 0.9); p.a1u += w * 14; p.a1l += w * 18; p.a2u -= w * 14; p.a2l -= w * 18; p.t += w * 3; return p; } // caught in a throw: struggling in the grip
   switch (f.state) {
     case 'stand': return Math.abs(f.vx) > 0.1 ? walkPose(f) : idlePose(f.side * 1.7, f.key, f.ch);
     case 'crouch': { if (f.backHeld) return POSES.cguard; const c = POSES[f.ch.crouchPose || 'crouch']; if (Math.abs(f.vx) < 0.3) return c; const s = Math.sin(globalT * 0.35), p = { ...c }; p.l1u += s * 10; p.l2u -= s * 10; p.l1l -= Math.max(0, s) * 8; p.l2l -= Math.max(0, -s) * 8; p.t += 3; return p; } // (a low shuffle forward)

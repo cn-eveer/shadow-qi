@@ -46,10 +46,12 @@ function twinCharge(f, o, mf) { return gunCharge(f, o, mf, (f, o, what) => { con
   if (L === 1) { shoot(f, { y: 124, dmg: 34, push: near ? 1 : 4, stun: 30, range: 380, lvl: 1 }); shoot(f, { y: 120, dmg: 34, push: near ? 1 : 4, stun: 30, range: 380, lvl: 1 }); }
   else shoot(f, { y: 128, dmg: 80, push: 6, range: 760, lvl: 2, pierce: true, stun: 26, ...(near ? { launch: true, launchVy: 12.5, jugVy: 11 } : { kd: true }) }); }); }
 // the kappa's throws: grab, then swing them over his head to the other side
-const kappaHold = f => (f.move.grabT != null && !f.move.broken && game.frame - f.move.grabT < GRAB_WINDOW) ? POSES.kGrab : null; // (holding them while they struggle: his claws gripping, not yet the toss)
+const kappaHolding = f => f.move.grabT != null && !f.move.broken && game.frame - f.move.grabT < GRAB_WINDOW;
+const kappaHold = (f, mf) => { if (!kappaHolding(f)) return null; const p = { ...POSES[/Sumo/.test(f.move.label) ? 'kSumoHold' : 'kLiftHold'] }, w = Math.sin(globalT * 0.6); p.t += w * 3; return p; }; // (holding them while they struggle: J a low sumo grip round the waist, K hoisting them up — not yet the toss)
 function kappaToss(f, o, mf) {
   const mv = f.move;
   if (mf < mv.startup) f.vx = Math.abs(o.x - f.x) > 70 ? f.facing * 2 : 0; else f.vx *= 0.6;
+  if (kappaHolding(f) && !/Sumo/.test(mv.label) && mf % 3 === 0) { const an = mf * 0.5; parts.push({ type: 'aura', x: o.x + Math.cos(an) * 40, y: GROUND - o.y - 40 - (mf % 9) * 8, vx: -Math.sin(an) * 2, vy: -1.2, life: 14, max: 14, r: 4, col: '150,215,255' }); } // (the whirlpool grip: water swirling up round them)
   if (f.hitConnected && f.lastResult !== 'block' && !mv.tossed) {
     mv.tossed = true; o.x = clamp(f.x - f.facing * 64, WALL_L, WALL_R);
     dustAt(o.x, true); sfx('hitH'); game.shake = Math.max(game.shake, 5); popText(f.x, GROUND - 190, 'TOSS!', '150,215,255');

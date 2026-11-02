@@ -35,6 +35,8 @@ const POSES = {
   win: P(0, 170,178, -20,15, 12,0, -12,-4),
   dizzy: P(-10, -15,10, -35,-5, 20,4, -25,-10),
   caught: P(-20, 140,165, 120,150, 18,4, -26,-14), // (held in a throw: leaning back, arms flailing)
+  caughtSumo: P(38, 120,100, 110,90, 22,-6, -24,-30), // (held in the kappa's sumo grip: bent forward over him, pushing down on his shell)
+  caughtLift: P(-26, 150,175, 135,160, 40,30, 10,-20), // (hoisted in the whirlpool grip: leaning back, legs kicking, arms flailing)
   jabW: P(6, 30,130, 15,115, 25,5, -25,-10),
   jab: P(14, 88,90, 10,120, 28,6, -28,-12),
   straight: P(22, 90,90, -5,125, 32,8, -30,-14),
@@ -137,6 +139,8 @@ const POSES = {
   kPeckUp: P(-16, 40,90, 30,80, 30,-6, -30,-18),          // head thrown up, pecking at someone above him
   kClaw: P(24, 112,64, 40,90, 50,6, -44,-26),
   kGrab: P(18, 88,92, 84,90, 40,6, -40,-18),
+  kSumoHold: P(34, 70,95, 64,92, ...CL), // (J: the sumo grip — low, arms locked round their waist)
+  kLiftHold: P(-8, 150,165, 140,160, 40,6, -40,-18), // (K: hoisting them up, arms raised, about to swirl them away)
   kToss: P(-14, 170,176, 166,172, 30,4, -30,-10),
   kThrow: P(16, 104,100, -30,10, 42,4, -42,-14),
   kBlast: P(14, 90,90, 86,88, 40,6, -40,-18),
