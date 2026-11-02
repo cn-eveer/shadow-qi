@@ -31,9 +31,9 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <div class="scroll"><table>
         <tbody>
           <tr><td>Push Parry<small>A shield guard that works from the 5th frame and lasts 14 frames. Parry an attack from the front and he shoves them far away, unhurt. Quick back to guard if it misses, and it comes out even while he’s guarding a blow. It also stops projectiles and spells from the front (Jesse’s shots and Lyra’s magic too) and leaves whoever sent them stunned.</small></td><td class="cmd">← ← + U</td></tr>
-          <tr><td>Riposte Parry<small>The same quick parry, but he answers with a sword riposte that hurts them and knocks them away. Quick back to guard, and it comes out while guarding too. Projectiles and spells from the front (Jesse’s and Lyra’s too) are stopped, and whoever sent them is stunned.</small></td><td class="cmd">← ← + I</td></tr>
+          <tr><td>Riposte Parry<small>The same quick parry, but he answers with a sword riposte that hurts them and knocks them away. Quick back to guard. Projectiles and spells from the front (Jesse’s and Lyra’s too) are stopped, and whoever sent them is stunned.</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>Aegis<small>A sphere of light closes around him and stops everything, from the front, from behind and from above, where a parry only works from the front. It takes a moment to cast (hit him then for a counter hit), then it stays up for four seconds — no holding — and he moves, jumps and attacks freely inside it. It uses a quarter of his guard meter, no more: the four seconds use it all, and each hit (a quarter of its damage gets through) uses a little more, so a few heavy blows end it early. Afterwards his guard meter comes back slowly.</small></td><td class="cmd">← ← + J</td></tr>
-          <tr><td>Rising Parry<small>A slower parry that works from the 8th frame. Parry an attack from the front and he strikes up under them: it launches, and the combo begins. Quick back to guard, and it comes out while guarding too. Projectiles and spells from the front (Jesse’s and Lyra’s too) are stopped, and whoever sent them is stunned.</small></td><td class="cmd">← ← + K</td></tr>
+          <tr><td>Rising Parry<small>A low parry from the 8th frame: he crouches with the shield down by the floor. Parry a low attack from the front and he strikes up under them: it launches, and the combo begins. Mid attacks aren’t parried, and highs go over him. Quick back to guard. Projectiles and spells from the front (Jesse’s and Lyra’s too) are stopped, and whoever sent them is stunned.</small></td><td class="cmd">← ← + K</td></tr>
           <tr class="super"><td>Super: Sanctuary<small>He plants the sword, wings of light open, and a dome of light swells around him. Caught inside, they are held and burned again and again while his health and guard come back; then the dome bursts. He is invincible while it opens. Needs a full MP meter.</small></td><td class="cmd">U + J</td></tr>
         </tbody>
       </table></div>
@@ -41,7 +41,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <h3>9 samples</h3>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>1–6. Combos<small>1 Judgement Thrust. 2 Crouching Slash. 3 Crusader Leap. 4 Rising Parry. 5 Riposte Parry (knocks them away). 6 Rampart Charge from far away, then the Crusader Leap on them lying down. The juggles end with sword lift, shield lift, halo cleave (U, U, K).</small></td><td class="cmd">see note</td></tr>
+          <tr><td>1–6. Combos<small>1 Judgement Thrust. 2 Crouching Slash. 3 Crusader Leap. 4 Rising Parry (a low). 5 Riposte Parry (knocks them away). 6 Rampart Charge from far away, then the Crusader Leap on them lying down. The juggles end with sword lift, shield lift, halo cleave (U, U, K).</small></td><td class="cmd">see note</td></tr>
           <tr><td>7–9. Techniques<small>7 Aegis stopping an attack. 8 Sanctuary. 9 Push Parry.</small></td><td class="cmd"></td></tr>
         </tbody>
       </table></div>
@@ -84,9 +84,9 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <div class="scroll"><table>
         <tbody>
           <tr><td>押し返し<small>5フレ目から効く、盾の構え（持続14フレ）。正面の攻撃を受け流すと、盾で遠くへ突き放す（ダメージなし）。外しても素早くガードに戻れ、ガード中にも出せる。正面からの飛び道具や魔法（ジェシーの弾、ライラの魔法も）も受け止め、撃った相手をスタンさせる。</small></td><td class="cmd">← ← + U</td></tr>
-          <tr><td>リポスト受け流し<small>同じ素早い受け流しから、剣のリポストでダメージを与えて吹き飛ばす。素早くガードに戻れ、ガード中にも出せる。正面からの飛び道具や魔法（ジェシーの弾、ライラの魔法も）も受け止め、撃った相手をスタンさせる。</small></td><td class="cmd">← ← + I</td></tr>
+          <tr><td>リポスト受け流し<small>同じ素早い受け流しから、剣のリポストでダメージを与えて吹き飛ばす。素早くガードに戻れる。正面からの飛び道具や魔法（ジェシーの弾、ライラの魔法も）も受け止め、撃った相手をスタンさせる。</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>イージス<small>光の球が体を包み、正面・背後・上からのすべての攻撃を止める（受け流しは正面のみ）。発動に少し時間がかかり（その間に攻撃されるとカウンター）、そのあと4秒間、押し続けなくても張り続けられ、張ったまま自由に動き、ジャンプし、攻撃もできる。使うのはガードゲージの4分の1だけ：4秒間でそれを使い切り、攻撃を受けるたびに少し多く減る（ダメージは4分の1だけ通る）ので、重い攻撃を数回受けると早く消える。そのあとガードゲージはゆっくり回復する。</small></td><td class="cmd">← ← + J</td></tr>
-          <tr><td>突き上げ受け流し<small>8フレ目から効く、やや遅い受け流し。正面の攻撃を受け流すと、下から突き上げて浮かせ、そのまま連続技へ。素早くガードに戻れ、ガード中にも出せる。正面からの飛び道具や魔法（ジェシーの弾、ライラの魔法も）も受け止め、撃った相手をスタンさせる。</small></td><td class="cmd">← ← + K</td></tr>
+          <tr><td>突き上げ受け流し<small>8フレ目から効く下段受け流し：しゃがんで盾を床近くに構える。正面の下段攻撃を受け流すと、下から突き上げて浮かせ、そのまま連続技へ。中段は受け流せず、上段は頭上を抜ける。素早くガードに戻れる。正面からの飛び道具や魔法（ジェシーの弾、ライラの魔法も）も受け止め、撃った相手をスタンさせる。</small></td><td class="cmd">← ← + K</td></tr>
           <tr class="super"><td>超必殺技：聖域<small>剣を突き立てると光の翼が開き、光のドームが広がる。中に捕らわれた相手は何度も焼かれ、その間に体力とガードが回復し、最後にドームが弾ける。ドームが開くまでは無敵。MP満タンが必要。</small></td><td class="cmd">U + J</td></tr>
         </tbody>
       </table></div>

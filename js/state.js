@@ -181,8 +181,8 @@ function moveFrames(f, mv) {
   if (f.ch.recPlus && mv.recovery < 90) { mv.recovery += f.ch.recPlus; mv.recPlusAmt = f.ch.recPlus; } // (a fighter who's slower to recover: a miss or a guard costs more — the guard number stays as set; a hit that launches or knocks down gives it back, see applyHit)
   if (e.blk != null) { mv.blockAdv = e.blk; mv.noGuardLag = true; f.lastMoveTech = false; } // (its own guard number: no extra off-balance on top)
 }
-// Aldric can parry straight out of his guard: ← ← + U / I / K comes out while he's guarding, even in blockstun or just after his own attack
-const GUARD_PARRIES = new Set(['plParryRise', 'plParryStun', 'plPray']);
+// Aldric can parry straight out of his guard: ← ← + U (Push Parry) comes out while he's guarding, even in blockstun or just after his own attack
+const GUARD_PARRIES = new Set(['plParryRise']);
 function guardParry(f, o, inp) {
   if (f.key !== 'paladin' || !inp.btn || !inp.bb) return false;
   const sid = resolveSpecial(f, o, inp); if (!GUARD_PARRIES.has(sid)) return false;

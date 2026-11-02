@@ -202,6 +202,7 @@ const POSES = {
   pRampDash: P(30, -30,160, 94,94, 52,5, -45,-40), // (→ → + U's run: shield out in front, the sword up behind)
   pCrShieldW: P(26, -20,150, 40,60, ...CL), // (↓ + U: a crouching shield jab)
   pCrShield: P(34, -30,160, 92,92, ...CL),
+  pLowParry: P(30, -20,150, 50,20, ...CL), // (← ← + K: crouched, the shield down by the floor in front of his legs)
   pRiseW: P(34, 30,10, 70,92, 70,-25, 20,-60),
   pRise: P(-6, 168,176, 64,92, 32,0, -10,-40),
   pLowCut: P(42, 78,40, 62,92, 85,-15, 20,-90),

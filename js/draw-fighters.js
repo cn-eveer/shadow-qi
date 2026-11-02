@@ -641,7 +641,7 @@ function drawHeavyFX(f) {
     }
   }
   if (mv.fx === 'ward') { // the parry circle held in front of his palms
-    const cx = f.x + f.facing * 58 * s, cy = GROUND - f.y - 108 * s, r = 46 * s;
+    const cx = f.x + f.facing * 58 * s, cy = GROUND - f.y - (mv.lowParry ? 44 : 108) * s, r = (mv.lowParry ? 40 : 46) * s; // (Aldric's low parry: down by the floor, round his shield)
     ctx.strokeStyle = `rgba(${FC},${0.8 * fade})`; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.ellipse(cx, cy, r * 0.38, r, 0, 0, Math.PI * 2); ctx.stroke();
     ctx.setLineDash([7, 9]); ctx.lineDashOffset = -globalT * 1.6; ctx.lineWidth = 2;
