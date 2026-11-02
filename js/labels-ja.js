@@ -383,6 +383,7 @@ const LABEL_JA = {
   "Pommel Smash": "柄打ち",
   "Pommel Strike": "柄打ち",
   "Shield Punch": "盾突き",
+  "Crouch Shield Jab": "しゃがみ盾突き",
   "Pommel Strike 2": "柄打ち2",
   "Pommel, Bash": "柄、盾打ち",
   "Pommel, Cut": "柄、斬り",

@@ -69,7 +69,7 @@ function aldricParts(f, mv) {
   const J = solve(livePose(f)), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, W = p => [f.x + (f.animDX || 0) + d * s * p[0], f.y + s * (p[1] + hu)];
   const tag = (mv.label || '') + ' ' + (mv.pose || ''), r = 12 * s, sq = (p, hw, hh) => ({ x0: p[0] - hw, x1: p[0] + hw, y0: Math.max(0, p[1] - hh), y1: p[1] + hh });
   const shield = /Shield|Bash|Aegis|Rampart/.test(tag) ? (c => [{ x0: c[0] - 20 * s, x1: c[0] + 20 * s, y0: Math.max(0, c[1] - 40 * s), y1: c[1] + 30 * s }])(W([J.h2[0] + 6, J.h2[1] - 6])) : []; // (a shield blow: the shield too, as drawn on his back arm)
-  if (/pShieldPunch|Rampart/.test(tag)) return shield; // (the sword held back: only the shield hits — U, and the Rampart Charge and Slam)
+  if (/pShieldPunch|pCrShield|Rampart/.test(tag)) return shield; // (the sword held back: only the shield hits — U, ↓ + U, and the Rampart Charge and Slam)
   if (/Knee|Kick/.test(tag)) { const p = W(/Knee/.test(tag) ? J.k1 : J.f1); return [sq(p, 22 * s, 22 * s)]; }
   if (/Punch|Elbow/.test(tag)) return [sq(W(J.h1), 20 * s, 20 * s)]; // (a punch: his fist)
   if (/Pommel/.test(tag)) { const [ux, uy] = swordDir(J, mv.wrist != null ? mv.wrist : 0.25, null); return [sq(W([J.h1[0] - ux * 18, J.h1[1] - uy * 18]), 22 * s, 22 * s), sq(W(J.h1), 18 * s, 18 * s)]; } // (the pommel and his sword hand, not the blade)
@@ -413,7 +413,7 @@ function applyHit(a, d, h, side, hb, hu) {
     game.freeze = Math.max(game.freeze, 3); return null;
   }
   if (d.aegisT > 0 && !['hitstun', 'knock', 'down', 'getup', 'gbreak', 'stunned', 'slashed'].includes(d.state)) { // Aegis: from any side, at the cost of guard meter
-    d.guard -= (h.gdrain || 6) * 2.4 + (h.dmg || 0) * 0.35 + 6; d.guardIdle = 0; d.aegisHitT = game.frame; // (each hit tears a big piece out of the light: two to four hits break it)
+    d.guard -= ((h.gdrain || 6) * 2.4 + (h.dmg || 0) * 0.35 + 6) / 4; d.guardIdle = 0; d.aegisHitT = game.frame; // (each hit wears the light down: a quarter of what it used to, so it takes a long beating to break)
     d.hp = Math.max(1, d.hp - Math.ceil((h.dmg || 0) * 0.25)); // a quarter of the damage still gets through the light
     if (d.guard <= 0) { d.guard = 0; d.guardSlowT = 600; d.aegisT = 0; setState(d, 'gbreak'); d.stun = 50; d.move = null; popText(d.x, GROUND - d.y - 165, 'GUARD BREAK!', '255,120,130'); sparks(cx, cy, 'big'); sfx('break'); game.freeze = Math.max(game.freeze, 10); return 'block'; }
     sparks(cx, cy, 'block'); sfx('block'); if (!d.passT || game.frame - d.passT > 12) { d.passT = game.frame; popText(d.x, GROUND - d.y - 190, 'AEGIS', '190,225,255'); }
@@ -423,7 +423,7 @@ function applyHit(a, d, h, side, hb, hu) {
     sparks(cx, cy, 'block'); sfx('block'); if (!d.passT || game.frame - d.passT > 12) { d.passT = game.frame; popText(d.x, GROUND - d.y - 180, 'SHIELD', '255,225,140'); }
     game.freeze = Math.max(game.freeze, 3); return 'block';
   }
-  if (d.state === 'attack' && d.move && d.move.parry && d.mf > d.move.startup && d.mf <= d.move.startup + d.move.active && !(d.move.frontOnly && side !== -d.facing) && !(h.proj && d.move.noProjParry) && (a.key !== 'psychic' || d.move.projStun)) { parryCounter(d, a, h); return null; } // (noProjParry: Tetsu's parries and Aldric's Riposte Parry answer blows, not projectiles; Lyra's magic can't be parried — except by Aldric's Push and Rising Parries, projStun, which stun whoever shot or cast it)
+  if (d.state === 'attack' && d.move && d.move.parry && d.mf > d.move.startup && d.mf <= d.move.startup + d.move.active && !(d.move.frontOnly && side !== -d.facing) && !(h.proj && d.move.noProjParry) && (a.key !== 'psychic' || d.move.projStun)) { parryCounter(d, a, h); return null; } // (noProjParry: Tetsu's parries answer blows, not projectiles; Lyra's magic can't be parried — except by Aldric's parries, projStun, which stun whoever shot or cast it)
   if (d.state === 'down') { // ground hit: a low attack on a downed opponent
     const dmg = Math.max(1, Math.round(h.dmg * 0.6));
     d.hp = Math.max(game.training ? 1 : 0, d.hp - dmg); d.otgUsed = true; d.flash = 7;

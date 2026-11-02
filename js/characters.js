@@ -1,5 +1,6 @@
 'use strict';
 /* ================= characters ================= */
+const aldricStep = (a, b, sp) => (f, o, mf) => { if (mf >= a && mf <= b && Math.abs(o.x - f.x) > 70 && !f.hitConnected) f.vx = f.facing * sp; }; // Aldric's shield jabs: a step in behind the shield
 const CHARS = {
   ninja: {
     // frames: wind-up 2 shorter (light) / 4 shorter (heavy), hand signs 20% shorter (still long enough to jab him first); every attack out 3 frames longer; recovery 3 / 5 / 5 longer
@@ -176,7 +177,7 @@ const CHARS = {
     meterCol: ['#c04fd8', '#ffc3f4'], bannerCol: 'rgba(170,60,190,.88)', idle: 'idleL', chargePose: 'chargeL', winPose: 'winL', atkCD: 12, recoverT: 12, hitFx: 'ripple',
   },
   paladin: {
-    name: 'ALDRIC', title: 'Holy Paladin', nameJa: 'アルドリック', titleJa: '聖騎士', autoBlock: true, dmgMul: 1.08, guardDmgMul: 0.55, guardMul: 0.42, sturdy: true, jugDmg: 1.2, scale: 1.08, walk: 2.5, back: 1.9, jumpX: 3.0, jumpV: 14,
+    name: 'ALDRIC', title: 'Holy Paladin', nameJa: 'アルドリック', titleJa: '聖騎士', autoBlock: true, dmgMul: 1.08, guardDmgMul: 0.55, guardMul: 0.3, sturdy: true, jugDmg: 1.2, scale: 1.08, walk: 2.5, back: 1.9, jumpX: 3.0, jumpV: 14,
     pDmg: 1.05, kDmg: 1.0, pReach: 1.5, kReach: 1.3, chargeRate: 0.55, auraCol: '190,225,255', fxCol: '205,232,255',
     sp: { fP: 'plRampart', fPH: 'plJudgeThrust', fK: 'plWindmill', fKH: 'plLeap', bP: 'plParryRise', bPH: 'plParryStun', bK: 'plAegis', bKH: 'plPray' }, sup: 'plJudgement',
     frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
@@ -194,7 +195,8 @@ const CHARS = {
         onFrame: (f, o, mf) => { if (mf <= f.move.startup) f.vx = f.facing * 4; else f.vx *= 0.6; } }, // (a pushing thrust: he steps in with it)
     },
     normalLook: {
-      sp0: { label: 'Shield Punch', wind: 'pShieldPunchW', pose: 'pShieldPunch', hitbox: [20,150,85,140] },
+      sp0: { label: 'Shield Punch', wind: 'pShieldPunchW', pose: 'pShieldPunch', hitbox: [20,150,85,140], onFrame: aldricStep(2, 10, 7) }, // (he steps in behind the shield)
+      cp0: { label: 'Crouch Shield Jab', wind: 'pCrShieldW', pose: 'pCrShield', hitbox: [20,140,20,90], onFrame: aldricStep(2, 8, 4) },
       cp1: { label: 'Rising Shield', wind: 'pQuake', pose: 'pShieldUp', hitbox: [10,135,40,200] },
       sk0: { label: 'Low Cut', wind: 'pThrustW', pose: 'pLowCut', hitbox: [20,165,0,50] },
       ck0: { label: 'Crouch Sword Poke', wind: 'crouch', pose: 'pLowCut', hitbox: [20,150,0,32] },
