@@ -186,9 +186,12 @@ function drawTail(f, tip, fade, fire) { // the devil's tail: thick at the base, 
   ctx.fillStyle = '#b01c1c'; ctx.strokeStyle = '#ffb08a'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(32, 0); ctx.lineTo(0, -16); ctx.lineTo(7, 0); ctx.lineTo(0, 16); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.restore();
 }
+// how far along its arc a tail attack's tip is: a single swing goes round evenly from its first frame to its last (the same distance
+// every frame, so its hitbox moves smoothly and is live early in the sweep); a frenzy's quick strikes (tailS) keep their own snap
+function tailK(mv, mf, S, end) { if (mv.tailS != null) return mf < S ? 0.15 * mf / S : Math.min(1, 0.15 + 0.85 * (mf - S) / Math.max(1, end - S)); return clamp(mf / Math.max(1, end), 0, 1); }
 function tailArcFX(f, mv) { // a tail attack's tip travels along an arc (angles: 0 = straight ahead, π/2 = up, π = behind) from mv.tail.a0 to a1 as it strikes
   const T = mv.tail, S = mv.tailS != null ? mv.tailS + 1 : mv.startup, mf = f.mf, end = S + (mv.tailS != null ? 3 : (mv.active || 4)); if (mf < 1 || mf > end + 8) return; // (tailS: a frenzy of strikes, each its own quick sweep)
-  const k = mf < S ? 0.15 * mf / S : Math.min(1, 0.15 + 0.85 * (mf - S) / Math.max(1, end - S)), fade = mf > end ? 1 - (mf - end) / 8 : 1;
+  const k = tailK(mv, mf, S, end), fade = mf > end ? 1 - (mf - end) / 8 : 1;
   const an = T.a0 + (T.a1 - T.a0) * k, L = T.len * f.ch.scale, s0 = f.ch.scale, cx = f.x + f.facing * 14 * s0, cy = GROUND - f.y - (T.h || 90) * s0;
   const tip = [cx + Math.cos(an) * L * f.facing, cy - Math.sin(an) * L];
   if (mf >= S && mf <= end) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = 'rgba(255,110,60,.5)'; ctx.lineWidth = 10; ctx.beginPath(); for (let i = 0; i <= 8; i++) { const a2 = T.a0 + (T.a1 - T.a0) * Math.max(0, k - i * 0.05); const x = cx + Math.cos(a2) * L * f.facing, y = cy - Math.sin(a2) * L; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke(); ctx.restore(); } // a streak of fire behind the tip

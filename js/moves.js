@@ -801,14 +801,14 @@ function specialMoveBase(id) {
         ctx.restore(); } };
     case 'smTackle': return { id, label: 'Rush Hour Kick', startup: 14, active: 12, recovery: 20, wind: 'crouch', pose: 'jKickH', selfMove: true, speedFx: true, // → → + J: a sprint for the train — and a flying kick at the end of it
       hitbox: [10,120,40,150], dmg: 46, stun: 22, bstun: 16, push: 3, launch: true, launchVy: 11, type: 'mid', hitstop: 10, gdrain: 34, // (heavy on guard: it smashes through)
-      poseFn(f, mf) { return mf < 3 ? POSES.crouch : mf < 11 ? (mf % 4 < 2 ? POSES.dash : POSES.shoulder) : null; }, // crouch, sprint (arms pumping)... then the kick
+      hitFrom: 11, bodyHurt: true, poseFn(f, mf) { if (mf > 32) return null; if (mf <= 3) return lerpPose(f.prevPose, POSES.crouch, mf / 3); const run = lerpPose(POSES.dash, POSES.shoulder, (1 - Math.cos(Math.PI * (mf - 3) / 4)) / 2); return mf <= 9 ? run : mf <= 14 ? lerpPose(run, POSES.jKickH, (mf - 9) / 5) : POSES.jKickH; }, // crouch, sprint (arms pumping, evenly)... and the kick comes out of the run, live as it does
       onFrame(f, o, mf) { if (mf === 2) popText(f.x, GROUND - 190, L("I'M LATE!", '遅刻だ！'), '255,210,120');
         if (mf > 2 && mf <= 24 && !f.hitConnected && Math.abs(o.x - f.x) > 55) { f.vx = f.facing * (mf < 11 ? 9 : 12); if (mf % 2 === 0) parts.push({ type: 'smoke', x: f.x - f.facing * 20, y: GROUND - 6, vx: -f.facing, vy: -0.5, r: 5, vr: 0.3, life: 14, max: 14, col: '220,215,205' }); } else f.vx *= 0.6;
         if (mf >= 11 && mf <= 22) f.y = 34 * Math.sin(Math.PI * Math.min(1, (mf - 11) / 11)); else f.y = 0;
         if (f.hitConnected && f.lastResult === 'block' && !f.move.smashed) { f.move.smashed = true; game.shake = Math.max(game.shake, 5); parts.push({ type: 'ring', x: o.x, y: GROUND - 90, r: 10, vr: 7, life: 12, max: 12, col: '255,210,120' }); }
         hitRecover(f, 8); }, manualY: true };
     // → → + K: Sliding Dogeza. He throws himself flat in a full apology and slides across the floor on his belly: a low that launches
-    case 'smUpper': return { id, label: 'Sliding Dogeza', startup: 9, active: 14, recovery: 20, wind: 'crouch', pose: 'sDogeza', crouch: true, selfMove: true, speedFx: true,
+    case 'smUpper': return { id, label: 'Sliding Dogeza', startup: 9, active: 14, recovery: 20, wind: 'crouch', pose: 'sDogeza', crouch: true, selfMove: true, speedFx: true, bodyHurt: true, // (hurtbox fitted to him lying flat in the bow)
       hitbox: [0,120,0,38], low: true, dmg: 46, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 11, type: 'mid', hitstop: 9, gdrain: 10,
       onFrame(f, o, mf) { if (mf === 1) popText(f.x, GROUND - 170, L('I\'M SO SORRY!', '申し訳ございません！'), '230,230,240');
         if (mf > 4 && mf <= 24 && !f.hitConnected && Math.abs(o.x - f.x) > 45) { f.vx = f.facing * 12; if (mf % 2 === 0) parts.push({ type: 'smoke', x: f.x - f.facing * 20, y: GROUND - 6, vx: -f.facing, vy: -0.5, r: 5, vr: 0.3, life: 14, max: 14, col: '220,215,205' }); } else f.vx *= 0.6; } };
@@ -820,7 +820,7 @@ function specialMoveBase(id) {
         ctx.restore(); } };
     // ← ← + J: Dogeza Uppercut. He dashes in crouched, face to the floor in an apology... then springs up with an uppercut (mid height)
     case 'smBow': return { id, label: 'Dogeza Uppercut', startup: 16, active: 6, recovery: 20, wind: 'sDogeza', pose: 'uppercut', crouch: true, selfMove: true, speedFx: true,
-      poseFn: (f, mf) => mf < 12 ? POSES.sDogeza : null,
+      hitFrom: 10, poseFn: (f, mf) => mf > 30 ? null : mf <= 3 ? lerpPose(f.prevPose, POSES.sDogeza, mf / 3) : mf <= 9 ? POSES.sDogeza : mf <= 22 ? lerpPose(POSES.sDogeza, POSES.uppercut, (mf - 9) / 13) : POSES.uppercut, // (the bow, then he rises evenly into the uppercut — his fist live from the moment it leaves the floor)
       hitbox: [10,115,40,195], dmg: 48, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 13, type: 'mid', hitstop: 11, gdrain: 10, burst: [60, 170],
       onFrame(f, o, mf) { if (mf === 2) popText(f.x, GROUND - 170, L('I\'M SO SORRY!', '申し訳ございません！'), '230,230,240');
         if (mf > 2 && mf <= 14 && !f.hitConnected && Math.abs(o.x - f.x) > 50) { f.vx = f.facing * 10; if (mf % 2 === 0) parts.push({ type: 'smoke', x: f.x - f.facing * 20, y: GROUND - 6, vx: -f.facing, vy: -0.5, r: 4, vr: 0.3, life: 12, max: 12, col: '220,215,205' }); } else f.vx *= 0.6;
@@ -847,7 +847,7 @@ function specialMoveBase(id) {
     case 'sdTailLash': return { id, label: 'Tail Lash', startup: 10, active: 6, recovery: 20, wind: 'sdIdle', pose: 'sdIdle', selfMove: true, tail: { a0: 2.5, a1: 0.1, len: 190, h: 100 }, // → → + J: a step in and a long lash of the tail
       hitbox: [30,220,50,140], dmg: 42, stun: 22, bstun: 12, push: 3, type: 'mid', hitstop: 9, gdrain: 10,
       onFrame(f, o, mf) { f.vx = mf <= 8 ? f.facing * 4 : f.vx * 0.6; if (mf === 9) sfx('swing'); } };
-    case 'sdTailUpper': return { id, label: 'Tail Hook', startup: 9, active: 7, recovery: 24, wind: 'sdIdle', pose: 'sdIdle', tail: { a0: -0.5, a1: 1.4, len: 170, h: 70 }, // → → + K: the tail scoops up under them and flings them into the air
+    case 'sdTailUpper': return { id, label: 'Tail Hook', startup: 9, active: 7, recovery: 24, wind: 'sdIdle', pose: 'sdIdle', bodyHurt: true, tail: { a0: -0.5, a1: 1.4, len: 170, h: 70 }, // → → + K: the tail scoops up under them and flings them into the air
       hitbox: [30,190,0,210], dmg: 48, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 13, type: 'mid', hitstop: 11, gdrain: 10, onFrame(f, o, mf) { if (mf === 8) sfx('rise'); } };
     case 'sdChainB': return { id, label: 'Hell Chain', startup: 12, active: 6, recovery: 18, wind: 'sdIdle', pose: 'sdBeckon', // ← ← → + J: the chain lashes out from his belly, at waist height
       hitbox: [40,290,20,150], dmg: 24, stun: 30, bstun: 12, push: 0, type: 'mid', hitstop: 8, gdrain: 8,
@@ -894,7 +894,7 @@ function specialMoveBase(id) {
         if (mf === 7 || mf === 12) clawSwipe(f, [80, 110, mf === 7 ? 0.9 : -0.9, 54, '255,120,90']); } };
     case 'sdMaul': return { id, label: 'Savage Maul', startup: 6, active: 22, recovery: 16, wind: 'sdIdle', pose: 'kClawX', selfMove: true,
       hitbox: [10,130,30,160], multi: 5, interval: 4, dmg: 9, lastDmg: 26, stun: 18, bstun: 10, push: 0.8, lastPush: 8, kd: true, kdVx: 11, kdVy: 8, type: 'mid', hitstop: 4, gdrain: 6,
-      poseFn: (f, mf) => mf > 6 && mf <= 28 ? [POSES.kClawUp, POSES.kClawDown, POSES.kClawX][Math.floor(mf / 2) % 3] : null,
+      hitFrom: 3, poseFn: (f, mf) => mf <= 4 ? lerpPose(f.prevPose, POSES.kClawX, mf / 4) : mf <= 28 ? lerpPose(POSES.kClawX, POSES.kClawDown, (1 - Math.cos(Math.PI * (mf - 4) / 4)) / 2) : mf <= 32 ? lerpPose(POSES.kClawDown, POSES.sdIdle, (mf - 28) / 4) : null, // (an even raking, both claws, back and forth every 8 frames)
       onFrame(f, o, mf) { if (mf > 6 && mf <= 28 && Math.abs(o.x - f.x) > 70) f.vx = f.facing * 3; else f.vx *= 0.7; if (mf > 6 && mf <= 28 && mf % 4 === 3) clawSwipe(f, [85, 105 + (mf % 8 < 4 ? 20 : -15), (mf % 8 < 4 ? 1 : -1) * 0.9, 56, '255,120,90']); if (mf === 7) sfx('flame'); } };
     case 'sdBeckon': return { id, label: 'Beckon', startup: 3, active: 34, recovery: 16, wind: 'sdBeckon', pose: 'sdBeckon', parry: true, parryInto: 'sdBeckonMaul', fx: 'ward',
       onFrame(f, o, mf) { f.vx = 0; if (mf === 3) popText(f.x, GROUND - 200, L('COME HERE~', 'おいで～'), '255,120,90'); if (mf % 8 === 0) parts.push({ type: 'aura', x: f.x + f.facing * 60, y: GROUND - 120, vx: -f.facing, vy: -0.5, life: 14, max: 14, r: 4, col: '255,90,60' }); } };
@@ -921,10 +921,10 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { if (mf === 10) { sfx('orb'); for (const vy of [-1.5, 0, 1.5]) spawnPJ(f, 'feather', { x: f.x + f.facing * 50, y: 120, vx: f.facing * 12, vy, life: 50, r: 10, h: { dmg: 16, stun: 16, bstun: 8, push: 1.2, gdrain: 5, label: 'Feather Shot' } }); } } };
     case 'saHalo': return { id, label: 'Halo Throw', startup: 12, active: 2, recovery: 18, wind: 'charge', pose: 'blast', proj: 'haloP', limit: 1,
       onFrame(f, o, mf) { if (mf === 12) { sfx('throw'); spawnPJ(f, 'haloP', { x: f.x + f.facing * 30, y: 160, vx: f.facing * 12, life: 110, r: 18, hits: 2, interval: 14, boomerang: 24, h: { dmg: 28, stun: 20, bstun: 10, push: 2, gdrain: 8, juggle: true, jugVy: 6, label: 'Halo Throw' } }); } } };
-    case 'saGlide': return { id, label: 'Angel Glide', startup: 6, active: 20, recovery: 14, wind: 'jump', pose: 'blast', manualY: true, noPush: true, selfMove: true, speedFx: true, projInvul: [1, 26],
+    case 'saGlide': return { id, label: 'Angel Glide', startup: 6, active: 20, recovery: 14, wind: 'jump', pose: 'blast', manualY: true, noPush: true, selfMove: true, speedFx: true, bodyHurt: true, projInvul: [1, 26],
       hitbox: [0,130,30,160], dmg: 36, stun: 22, bstun: 12, push: 3, kd: true, kdVx: 8, kdVy: 8, type: 'mid', hitstop: 10, gdrain: 10,
       onFrame(f, o, mf) { f.vx = mf <= 26 && !f.hitConnected ? f.facing * 9 : f.hitConnected ? -f.facing * 7 : f.vx * 0.6; f.y = mf <= 26 ? 30 * Math.sin(Math.PI * mf / 26) : 0; if (mf % 3 === 0) parts.push({ type: 'spark', x: f.x - f.facing * 20, y: GROUND - f.y - 120, vx: -f.facing * 2, vy: 1, life: 14, max: 14, col: '255,250,230' }); } };
-    case 'saAscend': return { id, label: 'Holy Ascension', startup: 6, active: 10, recovery: 20, wind: 'uppercutW', pose: 'uppercut', manualY: true, noPush: true, selfMove: true, maxTravel: 300, // → → + K: he dashes in and rises with an uppercut of light — armor all the way
+    case 'saAscend': return { id, label: 'Holy Ascension', startup: 6, active: 10, recovery: 20, wind: 'uppercutW', pose: 'uppercut', manualY: true, noPush: true, selfMove: true, maxTravel: 300, bodyHurt: true, // → → + K: he dashes in and rises with an uppercut of light — armor all the way
       hitbox: [0,130,40,230], dmg: 52, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 13.5, type: 'mid', hitstop: 11, gdrain: 10,
       onFrame(f, o, mf) { if (mf <= 16 && !f.hitConnected && Math.abs(o.x - f.x) > 60) f.vx = f.facing * 11; else f.vx *= 0.5;
         f.y = mf <= 16 ? 120 * Math.sin(Math.PI / 2 * mf / 16) : Math.max(0, 120 - (mf - 16) * 9); if (mf === 6) sfx('rise'); if (mf % 2 === 0 && mf < 16) parts.push({ type: 'spark', x: f.x + rnd(-20, 20), y: GROUND - f.y - rnd(40, 160), vx: 0, vy: 2, life: 14, max: 14, col: '255,245,200' }); } };

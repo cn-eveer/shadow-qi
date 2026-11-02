@@ -89,17 +89,18 @@ function tanakaParts(f, mv) {
     const out = []; for (let i = 0; i < pts.length; i++) for (const t of prev ? [0.5, 1] : [1]) { const p = prev ? [prev[i][0] + (pts[i][0] - prev[i][0]) * t, prev[i][1] + (pts[i][1] - prev[i][1]) * t] : pts[i]; out.push({ x0: p[0] - r, x1: p[0] + r, y0: Math.max(0, p[1] - r), y1: p[1] + r }); } return out; };
   if (mv.tail && !mv.jug) { // the tail: its tip on its arc this frame, and the outer half of the curve back to his rear
     const T = mv.tail, S = mv.tailS != null ? mv.tailS + 1 : mv.startup, end = S + (mv.tailS != null ? 3 : (mv.active || 4)), mf = f.mf;
-    const k = mf < S ? 0.15 * mf / S : Math.min(1, 0.15 + 0.85 * (mf - S) / Math.max(1, end - S)), an = T.a0 + (T.a1 - T.a0) * k, L = T.len * s;
+    const k = tailK(mv, mf, S, end), an = T.a0 + (T.a1 - T.a0) * k, L = T.len * s;
     const cx = f.x + d * 14 * s, cy = f.y + (T.h || 90) * s, tip = [cx + Math.cos(an) * L * d, cy + Math.sin(an) * L];
     const J = solve(f.pose), b = [f.x + (f.animDX || 0) + d * 14 * s, f.y + s * (J.hip[1] + (f.hipUp || 0)) - 4], c = [(b[0] + tip[0]) / 2 - d * 18, Math.max(b[1], tip[1]) + 26];
     const q = u => [(1 - u) * (1 - u) * b[0] + 2 * (1 - u) * u * c[0] + u * u * tip[0], (1 - u) * (1 - u) * b[1] + 2 * (1 - u) * u * c[1] + u * u * tip[1]];
     return sweep('tlPts', [0.55, 0.7, 0.85, 1].map(q), 14 * s);
   }
-  if (mv.grab || mv.jug || (mv.air && mv.hover) || mv.longRange || /sDogeza|sArch|saPray|sdBeckon|blast|win|saKneel|sdIdle/.test(pose) || /Coffee|Tie|Paper/.test(lab)) return null; // (the coffee splash, the necktie and the paperwork are the blow, not his fist; the juggles keep their reach up into the air)
+  if (mv.grab || mv.jug || (mv.air && mv.hover) || mv.longRange || (/sDogeza|sArch|saPray|sdBeckon|blast|win|saKneel|sdIdle/.test(pose) && mv.id !== 'saGlide') || /Coffee|Tie|Paper/.test(lab)) return null; // (the coffee splash, the necktie and the paperwork are the blow, not his fist; the juggles keep their reach up into the air)
   const J = solve(livePose(f)), ext = (h, e, n) => { const dx = h[0] - e[0], dy = h[1] - e[1], L = Math.hypot(dx, dy) || 1; return [0, 0.5, 1].map(t => W([h[0] + dx / L * n * t, h[1] + dy / L * n * t])); };
-  if (/sCase/.test(pose) || /Briefcase|Case/.test(lab)) return sweep('tnPts', [W([J.h2[0] - 6, J.h2[1] - 13]), W([J.h2[0] + 6, J.h2[1] - 13])], 15 * s); // (the briefcase, hanging from his hand)
+  if (/Briefcase|Case/.test(lab)) { const dx = J.h1[0] - J.e1[0], dy = J.h1[1] - J.e1[1], L = Math.hypot(dx, dy) || 1; return sweep('tnPts', [8, 22].map(t => W([J.h1[0] + dx / L * t, J.h1[1] + dy / L * t])), 15 * s); } // (the briefcase, swung out in his front hand — see drawSalary)
+  if (mv.id === 'saGlide' || /Shove/.test(lab)) return sweep('tnPts', ext(J.h1, J.e1, 8).concat(ext(J.h2, J.e2, 8)), 13 * s); // (both palms: the glide, the shove)
   if (/[Kk]ick|sweep|slideKick|jKick/.test(pose) || /Kick|Sweep|Trip/.test(lab)) return sweep('tnPts', ext(J.f1, J.k1, 12), 13 * s); // (his foot)
-  return sweep('tnPts', ext(J.h1, J.e1, /kClaw/.test(pose) ? 22 : 10), 13 * s); // (his fist — or the devil's claws)
+  return sweep('tnPts', ext(J.h1, J.e1, /kClaw/.test(pose) ? 22 : 10).concat(pose === 'kClawX' ? ext(J.h2, J.e2, 22) : []), 13 * s); // (his fist — or the devil's claws, both when he rakes with both)
 }
 function aldricParts(f, mv) {
   const J = solve(livePose(f)), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, W = p => [f.x + (f.animDX || 0) + d * s * p[0], f.y + s * (p[1] + hu)];

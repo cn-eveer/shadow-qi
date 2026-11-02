@@ -105,9 +105,13 @@ function resolveSpecial(f, o, inp) {
   if (inp.down && isP && heavy) return f.ch.sp.dP || null; // ↓ + I
   return null;
 }
+// Tanaka's (and his spirits') heavy I and K and his → → / ← ← blows: live from early in the swing, as soon as it leaves the wind-up
+const TANAKA_EARLY = new Set(['smCase', 'saFist', 'saGlide']);
+const tanakaEarly = mv => TANAKA_EARLY.has(mv.id) || (mv.normal && mv.str === 1 && mv.stance === 's');
 function startMove(f, mv, str, keepBuffer) {
   f.prevPose = { ...f.pose };
-  if ((f.key === 'paladin' || ((f.key === 'kappa' || f.key === 'salary') && mv && !mv.grab && !(mv.manualY && f.key === 'kappa') && !mv.longRange && !mv.jug && !mv.tail)) && mv && mv.hitbox && !mv.poseFn && !mv.parry && !mv.held && !mv.super && mv.startup < 900 && mv.pose) { mv.poseFn = evenSwing; if (mv.hitFrom == null) mv.hitFrom = Math.max(1, mv.startup - (f.key === 'salary' && /uppercut/.test(mv.pose) ? 5 : 3)); } // (Tanaka's uppercuts: live a little earlier still, catching them on the way up through their body) // (Aldric: an even swing, live from early on — see aldricSwing)
+  if ((f.key === 'paladin' || ((f.key === 'kappa' || f.key === 'salary') && mv && !mv.grab && !(mv.manualY && f.key === 'kappa') && !mv.longRange && !mv.jug && !mv.tail)) && mv && mv.hitbox && !mv.poseFn && !mv.parry && !mv.held && !mv.super && mv.startup < 900 && mv.pose) { mv.poseFn = evenSwing; if (mv.hitFrom == null) mv.hitFrom = Math.max(1, f.key === 'salary' && tanakaEarly(mv) ? Math.round(mv.startup * 0.35) : mv.startup - (f.key === 'salary' && /uppercut/.test(mv.pose) ? 5 : 3)); }
+  if (f.key === 'salary' && mv && mv.tail && !mv.jug && mv.hitFrom == null && mv.startup < 900) mv.hitFrom = Math.max(1, Math.round(mv.startup * 0.4)); // (the devil's tail: live early in its even sweep) // (Tanaka's uppercuts: live a little earlier still, catching them on the way up through their body) // (Aldric: an even swing, live from early on — see aldricSwing)
   f.move = mv; f.mf = 0; f.str = str; f.hitCount = 0; f.lastHitMf = -99; f.hitConnected = false; f.serial = ++serial; f.armorHits = 0;
   f.shadow = false; f.followQ = null; f.lastResult = null; f.chainQ = null; f.shadowRun = false;
   if (f.ctrl.consume && !keepBuffer) f.ctrl.consume();
