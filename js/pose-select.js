@@ -168,7 +168,7 @@ function rayDraw(e, t, a) { // two beams of holy light from his eyes
 }
 function angelRay(id, label, aim) { // the angel's eye ray: aimed at the waist (mid) or the feet (low)
   const low = aim === 'low';
-  return { id, label, startup: 14, active: 6, recovery: 20, wind: 'saPray', pose: 'saPray', hitbox: low ? [30,380,0,44] : [30,420,80,140], low, dmg: low ? 30 : 34, stun: 22, bstun: 12, push: 2, type: 'mid', hitstop: 8, gdrain: 8,
+  return { id, label, startup: 14, active: 6, recovery: 20, wind: 'saPray', pose: 'saPray', hitFrom: 13, hitbox: low ? [30,380,0,44] : [30,420,80,140], low, // (live only once the beam is out: from the frame it's drawn) dmg: low ? 30 : 34, stun: 22, bstun: 12, push: 2, type: 'mid', hitstop: 8, gdrain: 8,
     onFrame(f, o, mf) { if (mf === 4) popText(f.x, GROUND - 200, L('BEHOLD!', '見よ！'), '255,235,170'); if (mf === 14) sfx('beam'); },
     drawFX(f) { const S = f.move.startup; if (f.mf < S - 6 || f.mf > S + 8) return; const e = eyePos(f), s0 = f.ch.scale;
       if (f.mf < S) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(255,245,200,${(f.mf - S + 6) / 6})`; ctx.beginPath(); ctx.arc(e[0], e[1], 5, 0, Math.PI * 2); ctx.fill(); ctx.restore(); return; } // his eyes light up first
