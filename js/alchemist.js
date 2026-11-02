@@ -94,7 +94,7 @@ const hStone = (label, chain) => beat(label, 'alThrow', null, { noSmear: true, w
   L.cp1 = beat('Golem Uppercut', 'gTwin', 'upper', { crouch: true });
   L.sk0 = beat('Golem Low Kick', 'gLow', 'lowj', { chain: DUET1 }); // J: the golem's low kick (his own stone-knuckle / throw is ← → + U now)
   L.ck0 = throwing('Crouching Stone Throw', (f, o) => alchemistStone(f, o, 92, {}), { pose: 'alThrowLow', crouch: true }); // (thrown from a crouch, at chest height: a top, no longer a low)
-  L.ck1 = throwing('Crouching Stone Volley', (f, o) => [0, 1, 2].forEach(i => alchemistStone(f, o, 92, { k: 0.7, sp: 9 + i * 1.6, fan: i, label: 'Stone Volley' })), { crouch: true, pose: 'alThrowLow' });
+  L.ck1 = beat('Golem Sweep', 'gLow', 'lowk', { crouch: true, wind: 'crouch' }); // ↓ + K: no more stones — crouched, he orders the golem's low sweep
   L.jk0 = throwing('Air Stone Throw', (f, o) => alchemistStone(f, o, 70, {}), { startup: 7 });
   L.jk1 = throwing('Air Stone Volley', (f, o) => alchemistVolley(f, o, 0, 1), { startup: 7 });
   L.sk1 = beat('Golem Sweep', 'gLow', 'lowk'); // K: the golem's heavy low sweep (K no longer charges a volley: the great stone is ← → + K)
