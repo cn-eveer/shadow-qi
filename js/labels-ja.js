@@ -392,6 +392,7 @@ const LABEL_JA = {
   "Golem Low Kick": "ゴーレムの下段蹴り",
   "Golem Sweep": "ゴーレムの足払い",
   "Great Stone": "大石",
+  "Heavy Stone": "重い石",
   "Dive Jab": "ダイブ突き",
   "Belly Dive": "腹ばいダイブ",
   "Swimming Dive": "泳ぎダイブ",
