@@ -15,9 +15,11 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Golem Grab <small>Can’t be guarded (jump it, or hit Hohen). It holds them up to three seconds, facing him, and lets go after four hits or a knockdown; then it can’t grab again for two and a half seconds. Held, they take more from his blows. Also a string finisher.</small></td><td class="keys"><kbd>I</kbd></td></tr>
           <tr><td>Golem Heave <small>While it holds them: it hoists them overhead and throws them up — a launcher.</small></td><td class="keys"><kbd>I</kbd> <small>(held)</small></td></tr>
           <tr><td>Golem Uppercut <small>Mid + low. A launcher; slow, and punishable when guarded.</small></td><td class="cmd">↓ + I</td></tr>
-          <tr><td>Stone Knuckle / Stone Throw <small>Mid. Up close he drives a stone held in his fist (no stone spent); further off he throws one.</small></td><td class="keys"><kbd>J</kbd></td></tr>
+          <tr><td>Golem Low Kick <small>Low. J orders the golem to kick at their ankles.</small></td><td class="keys"><kbd>J</kbd></td></tr>
+          <tr><td>Stone Knuckle / Stone Throw <small>Mid. Up close he drives a stone held in his fist (no stone spent); further off he throws one.</small></td><td class="cmd">← → + U</td></tr>
           <tr><td>Stone Barrage <small>The third J of a string: two blows, the second knocks down.</small></td><td class="keys"><kbd>J</kbd> <kbd>J</kbd> <kbd>J</kbd></td></tr>
-          <tr><td>Stone Volley <small>Mid. Three stones; the third knocks down. Hold K to charge three gauges: harder, faster stones that shove them back and wear down the guard — a full charge (MAX) breaks a full guard.</small></td><td class="keys"><kbd>K</kbd></td></tr>
+          <tr><td>Golem Sweep <small>Low. K orders the golem to sweep its arm along the floor and knock them down.</small></td><td class="keys"><kbd>K</kbd></td></tr>
+          <tr><td>Great Stone <small>Mid. One huge, slow stone that breaks a full guard and knocks them down. (K no longer charges.)</small></td><td class="cmd">← → + K</td></tr>
           <tr><td>Crouching Stones <small>Thrown from a crouch at chest height: a top (stand to guard). One stone, or three.</small></td><td class="cmd">↓ + J / ↓ + K</td></tr>
           <tr><td>Stone Lob <small>Mid + low (drops from above). It stuns.</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>Trap Stone <small>Set on the floor ahead; bursts when they step on it, or after six seconds. Six at most.</small></td><td class="cmd">→ → + K</td></tr>
@@ -59,9 +61,11 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>ゴーレムの掴み <small>ガード不能（ジャンプでかわすか、博士を攻撃）。最大3秒、博士の方へ向けて押さえ、4発当たるかダウンで離す。離した後2.5秒は掴めない。捕まえている間は博士の攻撃が強くなる。連続技の締めにも。</small></td><td class="keys"><kbd>I</kbd></td></tr>
           <tr><td>ゴーレムの持ち上げ <small>掴んでいる間に：頭上に持ち上げて投げ上げる（浮かせ技）。</small></td><td class="keys"><kbd>I</kbd> <small>（掴み中）</small></td></tr>
           <tr><td>ゴーレムアッパー <small>中下段。浮かせ技。遅く、ガードされると反撃を受ける。</small></td><td class="cmd">↓ + I</td></tr>
-          <tr><td>石拳・石投げ <small>中段。近くでは石を握った拳（石は減らない）、離れると石を投げる。</small></td><td class="keys"><kbd>J</kbd></td></tr>
+          <tr><td>ゴーレムの下段蹴り <small>下段。Jでゴーレムが足元を蹴る。</small></td><td class="keys"><kbd>J</kbd></td></tr>
+          <tr><td>石拳・石投げ <small>中段。近くでは石を握った拳（石は減らない）、離れると石を投げる。</small></td><td class="cmd">← → + U</td></tr>
           <tr><td>石の連打 <small>連続技の3回目のJ：2発、2発目でダウン。</small></td><td class="keys"><kbd>J</kbd> <kbd>J</kbd> <kbd>J</kbd></td></tr>
-          <tr><td>石の三連投げ <small>中段。石を3つ、3つ目でダウン。Kを長押しで3段階の溜め：石が強く速くなり、大きく押し飛ばし、ガードを大きく削る。最大溜め（MAX）は満タンのガードも崩す。</small></td><td class="keys"><kbd>K</kbd></td></tr>
+          <tr><td>ゴーレムの足払い <small>下段。Kでゴーレムが床沿いに腕を払い、ダウンを奪う。</small></td><td class="keys"><kbd>K</kbd></td></tr>
+          <tr><td>大石 <small>中段。大きくて遅い石を一つ投げる。満タンのガードも割り、ダウンを奪う。（Kの溜めは廃止。）</small></td><td class="cmd">← → + K</td></tr>
           <tr><td>しゃがみ投げの石 <small>しゃがんで胸の高さに投げる上段。立ちガードで防ぐ。1つ、または3つ。</small></td><td class="cmd">↓ + J / ↓ + K</td></tr>
           <tr><td>石の山なり投げ <small>中下段（上から落ちる）。気絶させる。</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>罠の石 <small>前方の床に置く。踏むか6秒で爆発。最大6個。</small></td><td class="cmd">→ → + K</td></tr>

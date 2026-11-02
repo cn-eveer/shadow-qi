@@ -1041,7 +1041,7 @@ function setupDemo(i) {
   resetPositions();
   const d = curDemos()[i], [a, b] = fighters;
   if (d.bMeter) b.meter = d.bMeter;
-  a.x = d.ax; b.x = d.bx; a.facing = 1; b.facing = -1; a.meter = 100; if (a.golem) { a.golem.x = d.gx != null ? d.gx : a.x + 70; a.fuseG = 100; } if (b.golem) b.golem.x = b.x + 70 * b.facing; // (Hohen's golem starts just ahead of him; his fusion gauge full)
+  a.x = d.ax; b.x = d.bx; a.facing = 1; b.facing = -1; a.meter = 100; if (a.golem) { a.golem.x = d.gx != null ? d.gx : a.x + 70; a.fuseG = 100; } if (b.golem) b.golem.x = b.x + (d.vs === 'self' ? -90 : 70) * b.facing; /* (a mirror match: the other golem starts behind its master — golems can't pass each other, so one in front would wall off the punish) */ // (Hohen's golem starts just ahead of him; his fusion gauge full)
   if (d.armored && a.golem) armourUp(a); // (Hohen's armour samples start with it already on)
   if (d.ahp) { a.hp = d.ahp; a.healT = 600; }
   fighters.forEach(updatePose);

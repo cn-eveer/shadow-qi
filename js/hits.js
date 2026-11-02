@@ -306,7 +306,7 @@ function drawHitBox(b, col, fillA, lineA) {
   ctx.strokeStyle = `rgba(${col},${lineA})`; ctx.lineWidth = 2; ctx.strokeRect(x, y, w, h); ctx.restore();
 }
 function drawHitboxDebug() {
-  for (const f of fighters) { if (f.hidden) continue; drawHitBox(hurtbox(f, !!f.juggle, true), '90,180,255', 0.16, 0.85); }
+  for (const f of fighters) { if (f.hidden) continue; drawHitBox(hurtbox(f, !!f.juggle, true), '90,180,255', 0.16, 0.85); if (f.golem && !f.golem.broken && !f.golem.hidden) drawHitBox(golemBox(f.golem), '90,180,255', 0.12, 0.7); } // (Hohen's golem: its own hurtbox)
   for (const f of fighters) {
     const mv = f.state === 'attack' && f.move; if (!mv || !mv.hitbox) continue;
     if (f.mf <= (mv.hitFrom != null ? mv.hitFrom : mv.startup) || f.mf > mv.startup + mv.active) continue; // (only while it can actually hit: checkHits' own window)
