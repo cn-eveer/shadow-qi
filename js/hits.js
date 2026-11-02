@@ -369,6 +369,7 @@ function showHeight(d, side, hb, h, miss) {
   parts.push({ type: 'htag', who: d, side, x: d.x + side * 34 * s, y: GROUND - clamp((Math.max(hb.y0, 0) + Math.min(hb.y1, d.y + 135 * s)) / 2, 14, 210), vx: 0, vy: -0.25, life: 70, max: 70,
     text: L(t[0], t[1]) + (miss ? L(' (miss)', '（空振り）') : ''), col: t[2] });
 }
+const GBREAK_EXTRA = 30, GBREAK_DMG = 1.3; // a guard break: stunned half a second longer than the blow's own guard-break time, and everything that lands on them meanwhile hurts 30% more
 function applyHit(a, d, h, side, hb, hu) {
   if (d.jugSpent && d.state === 'knock') return null; // the juggle limit was reached: nothing can pick them up again before they land (no infinite juggles)
   if (a.ch.dmgMul && h.dmg) h = { ...h, dmg: Math.round(h.dmg * a.ch.dmgMul) }; // a fighter-wide power boost (Mei, Lyra)
@@ -415,7 +416,7 @@ function applyHit(a, d, h, side, hb, hu) {
   if (d.aegisT > 0 && !['hitstun', 'knock', 'down', 'getup', 'gbreak', 'stunned', 'slashed'].includes(d.state)) { // Aegis: from any side, at the cost of guard meter
     d.guard -= ((h.gdrain || 6) * 2.4 + (h.dmg || 0) * 0.35 + 6) / 10; d.guardIdle = 0; d.aegisHitT = game.frame; // (each hit wears the light down a little: about three heavy blows use up its quarter of the meter)
     d.hp = Math.max(1, d.hp - Math.ceil((h.dmg || 0) * 0.25)); // a quarter of the damage still gets through the light
-    if (d.guard <= 0) { d.guard = 0; d.guardSlowT = 600; d.aegisT = 0; setState(d, 'gbreak'); d.stun = 50; d.move = null; popText(d.x, GROUND - d.y - 165, 'GUARD BREAK!', '255,120,130'); sparks(cx, cy, 'big'); sfx('break'); game.freeze = Math.max(game.freeze, 10); return 'block'; }
+    if (d.guard <= 0) { d.guard = 0; d.guardSlowT = 600; d.aegisT = 0; setState(d, 'gbreak'); d.stun = 50 + GBREAK_EXTRA; d.move = null; popText(d.x, GROUND - d.y - 165, 'GUARD BREAK!', '255,120,130'); sparks(cx, cy, 'big'); sfx('break'); game.freeze = Math.max(game.freeze, 10); return 'block'; }
     if (d.guard <= (d.aegisFloor || 0)) { d.aegisT = 0; aegisSpent(d); sparks(cx, cy, 'big'); sfx('break'); popText(d.x, GROUND - d.y - 190, 'AEGIS BROKEN', '190,225,255'); game.freeze = Math.max(game.freeze, 6); return 'block'; } // (its quarter of the meter is used up: the light shatters, but his own guard holds)
     sparks(cx, cy, 'block'); sfx('block'); if (!d.passT || game.frame - d.passT > 12) { d.passT = game.frame; popText(d.x, GROUND - d.y - 190, 'AEGIS', '190,225,255'); }
     game.freeze = Math.max(game.freeze, 3); return 'block';
@@ -463,7 +464,8 @@ function applyHit(a, d, h, side, hb, hu) {
     const pushB = (h.bpush != null ? h.bpush : (h.push || 1) * 0.9) * (h.rushTag ? 1 : a.ch.pushMul || 1); // (rush strings keep their own spacing)
     const big = guardBig(a, h); d.guard -= guardCost(a, d, h, big); d.guardIdle = 0;
     if (d.guard <= 0) {
-      d.guard = 0; setState(d, 'gbreak'); d.stun = h.gbstun || 45; d.vx = side * 3; d.move = null;
+      d.guard = 0; setState(d, 'gbreak'); d.stun = (h.gbstun || 45) + GBREAK_EXTRA; d.vx = side * 3; d.move = null;
+      if (h.dmg) { d.hp = Math.max(1, d.hp - Math.round(h.dmg * 0.5)); d.flash = 7; } // (the blow that breaks the guard goes half through)
       popText(d.x, GROUND - d.y - 165, 'GUARD BREAK!', '255,120,130');
       sparks(cx, cy, 'big'); sfx('break');
       game.freeze = Math.max(game.freeze, 10); game.shake = Math.max(game.shake, 7);
@@ -513,7 +515,7 @@ function applyHit(a, d, h, side, hb, hu) {
   // a quick jab (about 15 frames from start to finish) keeps 72%, a heavy blow (about 40) 93%, a big technique 95%
   const cm = a.move, frames = cm ? Math.min(cm.startup, 60) + (cm.active || 0) + Math.min(cm.recovery || 0, 60) : 30;
   const comboScale = d.combo > 1 && a.serial !== d.comboSerial && !h.fullDmg ? clamp(0.6 + frames / 120, 0.65, 0.95) : 1; // (a few big, separate heavy techniques keep it all)
-  let dmg = Math.max(1, Math.round(h.dmg * scale * riseScale * comboScale * (tech ? (airTech ? AIR_TECH : TECH_DMG) : 1) * (h.bounce && h.launch ? BOUNCE_DMG : 1) * (d.ch.takeMul || 1))); // (takeMul: a form that's harder to hurt — Hohen fused with his golem)
+  let dmg = Math.max(1, Math.round(h.dmg * scale * riseScale * comboScale * (tech ? (airTech ? AIR_TECH : TECH_DMG) : 1) * (h.bounce && h.launch ? BOUNCE_DMG : 1) * (d.ch.takeMul || 1) * (d.state === 'gbreak' ? GBREAK_DMG : 1))); // (takeMul: a form that's harder to hurt — Hohen fused with his golem)
   if (d.extendBonus && !isSup) { dmg += d.extendBonus; d.extendBonus = 0; popText(d.x, GROUND - d.y - 175, L('EXTENDED +', '追撃ボーナス +') + EXTEND_BONUS, '255,225,140'); } // (the second lift or bounce extends the combo: a one-time bonus)
   d.hp = Math.max(0, d.hp - dmg);
   if (a.y > 0 && a.state === 'attack' && a.move && a.move.air && d.juggle && !a.move.manualY && a.move.chain && Object.values(a.move.chain).some(Boolean)) a.vy = Math.max(a.vy, 3.2); // an air combo: hitting them keeps him hanging in the air a moment
