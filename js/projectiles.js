@@ -351,7 +351,7 @@ function prePossessTick(f, t) {
 }
 function startPossession(f, kind) {
   if ((kind === 'angel' && f.ch.possess === 'devil') || (kind === 'devil' && f.ch.possess === 'angel')) kind = 'double'; // the other one arrives while one already has him: both at once
-  f.ch = kind === 'angel' ? ANGEL_CH : kind === 'devil' ? DEVIL_CH : DOUBLE_CH; f.possT = kind === 'double' ? Math.round(POSSESS_T * 0.75) : POSSESS_T;
+  f.ch = kind === 'angel' ? ANGEL_CH : kind === 'devil' ? DEVIL_CH : DOUBLE_CH; f.possT = kind === 'double' ? (f.possT > 0 ? f.possT : Math.round(POSSESS_T * 0.75)) : POSSESS_T; // (the double possession doesn't start the clock again: it runs on what's left of the first one — and runs down twice as fast, see state.js)
   popText(f.x, GROUND - 200, kind === 'angel' ? L('ANGEL POSSESSION!', '天使憑依！') : kind === 'devil' ? L('DEVIL POSSESSION!', '悪魔憑依！') : L('DOUBLE POSSESSION!!', '二重憑依！！'), kind === 'angel' ? '255,230,150' : kind === 'devil' ? '255,90,70' : '255,170,220');
   if (kind === 'double') { game.shake = Math.max(game.shake, 10); for (let i = 0; i < 24; i++) { const an = i * Math.PI / 12; parts.push({ type: 'spark', x: f.x, y: GROUND - f.y - 110, vx: Math.cos(an) * 9, vy: Math.sin(an) * 9, life: 22, max: 22, col: i % 2 ? '255,240,190' : '255,90,70' }); } }
   for (let i = 0; i < 16; i++) { const an = i * Math.PI / 8; parts.push({ type: 'spark', x: f.x, y: GROUND - f.y - 110, vx: Math.cos(an) * 6, vy: Math.sin(an) * 6, life: 18, max: 18, col: kind === 'angel' ? '255,240,190' : '255,90,60' }); }

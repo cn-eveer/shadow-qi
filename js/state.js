@@ -387,7 +387,7 @@ function update(f, o, inp) {
     f.guard = Math.max(0, f.guard - AEGIS_COST / 240); f.guardIdle = 0;
     if (--f.aegisT <= 0 || f.guard <= (f.aegisFloor || 0) || f.ko) { f.aegisT = 0; aegisSpent(f); }
   }
-  if (f.possT > 0 && --f.possT === 0) endPossession(f);
+  if (f.possT > 0) { f.possT = Math.max(0, f.possT - (f.ch.possess === 'double' ? 2 : 1)); if (f.possT === 0) endPossession(f); } // (the double possession burns through its time twice as fast)
   if (f.ch.possess === 'double' && !f.ko) { const o2 = other(f); // a field of holy light and hellfire: anyone close is burned
     if (globalT % 3 === 0) { const an = globalT * 0.12; for (const sd of [0, Math.PI]) parts.push({ type: 'aura', x: f.x + Math.cos(an + sd) * 95, y: GROUND - f.y - 90 + Math.sin(an + sd) * 40, vx: 0, vy: -0.6, life: 16, max: 16, r: 5, col: sd ? '255,90,60' : '255,240,190' }); }
     if (o2 && !o2.ko && !(o2.invul > 0) && o2.state !== 'getup' && Math.abs(o2.x - f.x) < 115 && Math.abs(o2.y - f.y) < 140 && game.frame % 24 === 0) { o2.hp = Math.max(1, o2.hp - 10); o2.flash = 4; parts.push({ type: 'spark', x: o2.x, y: GROUND - o2.y - 90, vx: 0, vy: -2, life: 10, max: 10, col: '255,150,120' }); } }
