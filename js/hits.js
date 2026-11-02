@@ -18,7 +18,7 @@ function staffLine(J, ext, spinAngle, flat) {
 const staffSpinAt = (f, mv) => f.mf * 0.7 * f.facing;
 // hit checks run before this frame's pose is set (updatePose), so a box read off f.pose is a frame behind what's drawn. For Mei's moves that
 // author their own motion (poseFn: a pure function of the frame), use the pose being drawn this frame, so the hitbox is on the staff you see.
-const livePose = f => ((f.key === 'staff' || f.key === 'paladin') && f.state === 'attack' && f.move && f.move.poseFn && !(f.pre > 0) && f.move.poseFn(f, f.mf)) || f.pose; // a twirling staff's angle: 0.7 rad a frame, as it always spun
+const livePose = f => ((f.key === 'staff' || f.key === 'paladin' || f.key === 'kappa') && f.state === 'attack' && f.move && f.move.poseFn && !(f.pre > 0) && f.move.poseFn(f, f.mf)) || f.pose; // a twirling staff's angle: 0.7 rad a frame, as it always spun
 function staffSeg(f, mv) {
   const J = solve(livePose(f)), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, k = f.mf - mv.startup;
   const ext = staffExtAt(f, mv); // (as drawn: see drawFighter)
@@ -65,6 +65,22 @@ function staffExtAt(f, mv) {
   const k = f.mf - (mv.extFrom != null ? mv.extFrom : mv.startup), on = mv.startup + mv.active - (mv.extFrom != null ? mv.extFrom : mv.startup);
   return mv.staffExt * (k <= 0 ? 0 : k <= 3 ? k / 3 : k <= on ? 1 : Math.max(0, 1 - (k - on) / 6));
 }
+// the kappa: his claws are the hitbox — a short chain from the hand out past the claw tips (both hands when he rakes with both),
+// swept from where they were last frame so a fast swipe can't skip past someone; his body when he dives or slides belly-first;
+// the Water Cannon's jet only as far as it has reached
+function kappaParts(f, mv) {
+  const s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, W = p => [f.x + (f.animDX || 0) + d * s * p[0], f.y + s * (p[1] + hu)];
+  if (mv.longRange) { const L = Math.max(0, Math.min(680, (f.mf - mv.startup + 1) * 70)), x0 = f.x + d * 38 * s, y = f.y + 128 * s; return [{ x0: Math.min(x0, x0 + d * L), x1: Math.max(x0, x0 + d * L), y0: y - 30, y1: y + 18 }]; } // (as drawn: see its drawFX)
+  if (mv.grab || mv.jug || mv.pose === 'kBelly' || mv.pose === 'kCurl' || (mv.claw && mv.claw[5] === 'tgt')) return null; // (throws, the belly and shell moves, and the juggles — he hops up into them and the claws rake on them, where the slash is drawn — keep their own boxes)
+  const J = solve(livePose(f)), r = 13 * s;
+  if (/Peck|Bite/.test(mv.label || '') || /kPeck|kBite/.test(mv.pose || '')) { const c = W([J.head[0] + 6, J.head[1] + 4]); return [{ x0: c[0] - 18 * s, x1: c[0] + 18 * s, y0: Math.max(0, c[1] - 16 * s), y1: c[1] + 16 * s }]; } // (a peck or a bite: his beak)
+  const both = /kClawX|kPounce|kDive/.test(mv.pose || '');
+  const chain = (h, e) => { const dx = h[0] - e[0], dy = h[1] - e[1], L = Math.hypot(dx, dy) || 1; return [0, 0.5, 1].map(t => W([h[0] + dx / L * 22 * t, h[1] + dy / L * 22 * t])); }; // (hand to just past the claw tips)
+  const pts = chain(J.h1, J.e1).concat(both ? chain(J.h2, J.e2) : [], mv.air ? [W(J.f1), W(J.f2)] : [], mv.pose === 'kDive' ? [W(J.head)] : []); // (in the air he rakes with his clawed feet too)
+  const prev = mv.kpPts && mv.kpMf === f.mf - 1 && mv.kpPts.length === pts.length ? mv.kpPts : null; mv.kpPts = pts; mv.kpMf = f.mf;
+  const out = []; for (let i = 0; i < pts.length; i++) for (const t of prev ? [0.5, 1] : [1]) { const p = prev ? [prev[i][0] + (pts[i][0] - prev[i][0]) * t, prev[i][1] + (pts[i][1] - prev[i][1]) * t] : pts[i]; out.push({ x0: p[0] - r, x1: p[0] + r, y0: Math.max(0, p[1] - r), y1: p[1] + r }); }
+  return out;
+}
 function aldricParts(f, mv) {
   const J = solve(livePose(f)), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, W = p => [f.x + (f.animDX || 0) + d * s * p[0], f.y + s * (p[1] + hu)];
   const tag = (mv.label || '') + ' ' + (mv.pose || ''), r = 12 * s, sq = (p, hw, hh) => ({ x0: p[0] - hw, x1: p[0] + hw, y0: Math.max(0, p[1] - hh), y1: p[1] + hh });
@@ -82,9 +98,9 @@ function aldricParts(f, mv) {
   for (const [a, b] of segs) for (let i = 0; i <= 6; i++) out.push(sq(L(a, b, i / 6), r, r));
   return out.concat(shield);
 }
-// Aldric's blows that don't author their own motion: the wind-up pose into the strike pose, spread evenly across the wind-up and the active
-// frames (the generic strike snaps into the pose just before they start), with the sword live from early in the swing
-function aldricSwing(f, mf) {
+// Aldric's and the kappa's blows that don't author their own motion: the wind-up pose into the strike pose, spread evenly across the wind-up
+// and the active frames (the generic strike snaps into the pose just before they start), with the weapon live from early in the swing
+function evenSwing(f, mf) {
   const mv = f.move, su = mv.startup, end = su + (mv.active || 0), r = Math.max(2, Math.round(su * 0.35)); if (mf > end + 3) return null;
   const Wp = POSES[mv.wind] || POSES.idle, Ap = POSES[mv.pose] || POSES.idle;
   if (mf <= r) return lerpPose(f.prevPose, Wp, easeOutQ(mf / r));
@@ -216,7 +232,7 @@ function popTextOnce(f, t) { if (!f.airGuardT || game.frame - f.airGuardT > 20) 
 // already track the limb throwing the blow
 function poseHurtbox(d) {
   const J = solve(d.pose), s = d.ch.scale, dir = d.facing, hu = d.hipUp || 0;
-  const skip = d.move && (d.move.hurtSkip || d.move.limbJoint); // the limb actually throwing the blow: a counter shouldn't be able to snipe the very tip of his own outstretched fist or foot — the hitbox out there is his, not a reason to also widen his hurtbox (hurtSkip: for a move whose hitbox isn't itself limb-tracked, but which still reaches an arm or leg out far enough to need the same exclusion)
+  const skip = d.move && d.state === 'attack' && (d.move.hurtSkip || d.move.limbJoint || (d.key === 'kappa' ? 'h1' : null)); // the limb actually throwing the blow: a counter shouldn't be able to snipe the very tip of his own outstretched fist or foot — the hitbox out there is his, not a reason to also widen his hurtbox (hurtSkip: for a move whose hitbox isn't itself limb-tracked, but which still reaches an arm or leg out far enough to need the same exclusion)
   let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
   for (const k of ['hip', 'sh', 'head', 'e1', 'h1', 'e2', 'h2', 'k1', 'f1', 'k2', 'f2']) {
     if (k === skip) continue;
@@ -234,6 +250,9 @@ function hurtbox(d, juggle, low) {
   if (d.state === 'down') return (low && !d.otgUsed && d.st > 4) ? { x0: d.x - 58, x1: d.x + 58, y0: 0, y1: 28 } : null;
   if (d.state === 'knock' && (d.jugSpent || (!juggle && !d.juggle))) return null; // launched opponents can be hit by anything (until the juggle is spent)
   const atkMv = d.state === 'attack' && d.move;
+  if (d.key === 'kappa' && d.pose && d.state !== 'knock') { // (the kappa leans and hunches like an animal: fitted to the body he's drawn as, head and all —
+    const hb = poseHurtbox(d), low = d.state === 'crouch' || (d.state === 'blockstun' && d.cguard) || (d.state === 'hitstun' && d.crouchHit) || (atkMv && (d.move.crouch || d.move.low)) || /kBelly|kCurl|kCrouch/.test((atkMv && d.move.pose) || '');
+    if (!low && d.y <= 0) hb.y1 = Math.max(hb.y1, d.y + 135 * d.ch.scale); return hb; } // standing, still as tall as anyone, so a high still hits him; crouched, tucked down under his shell)
   if (atkMv && d.move.bodyHurt && d.pose) return poseHurtbox(d); // fitted to the body's own silhouette this frame, not a fixed box
   const s = d.ch.scale;
   let h = 135;
@@ -623,6 +642,7 @@ function checkHits(a, o) {
   let parts = null;
   if (a.key === 'staff' && a.pose && mv.spinStaff && mv.limbJoint) { parts = staffBoxes(a, mv).concat([hb]); hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) })); } // (a kick with the staff twirling: both the foot and the staff hit)
   else if (a.key === 'paladin' && a.pose && !mv.super) { parts = aldricParts(a, mv); hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) })); }
+  else if (a.key === 'kappa' && a.pose && !mv.super && (parts = kappaParts(a, mv))) hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) }));
   else if (a.key === 'psychic' && (parts = lyraParts(a, mv, o))) hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) }));
   else if (a.key === 'staff' && a.pose && !/kick|Kick/.test((mv.pose || '') + ' ' + (mv.label || ''))) { parts = staffBoxes(a, mv); hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) })); }
   if (mv.iai || mv.sweepBox) hb = iaiSweepBox(a, mv, hb); // a tight box on the limb itself, swept along its own path so a fast or diagonal motion can't tunnel past someone between two frames (mv.sweepBox: any other move whose tracked limb moves fast enough to need the same thing — Vanish Drop Kick's diagonal arc, say)
@@ -680,7 +700,7 @@ function fixAdv(a, d, h, r) {
     else mv.recovery = Math.max(1, mv.recovery + T - left);
     a.guardLagUntil = 0; a.guardLagNeed = 0; mv.lagLock = false;
   }
-  if (r === 'hit' && mv.cutOnHit && a.mf > mv.startup && a.hitCount >= (mv.multi || 1) - 1) mv.active = Math.max(0, a.mf - mv.startup); // (a long-lasting blow that has landed: it ends there, so the follow-up isn't late)
+  if (r === 'hit' && mv.cutOnHit && a.mf > (mv.hitFrom != null ? Math.min(mv.hitFrom, mv.startup) : mv.startup) && a.hitCount >= (mv.multi || 1) - 1) mv.active = Math.max(0, a.mf - mv.startup); // (a long-lasting blow that has landed: it ends there, so the follow-up isn't late)
   if (r === 'hit' && mv.hitAdv != null && d.state === 'hitstun') d.stun = Math.max(1, left + mv.hitAdv - (d.ch.recoverT || 12)) + (d.wasCounter ? counterStunOf(a) : 0); // (they act once their recovery after the hit-stun is over; a counter hit adds COUNTER_STUN)
 }
 { const core = applyHit; applyHit = function (a, d, h, side, hb, hu) { const r = core.apply(this, arguments); if (r === 'hit' || r === 'block') fixAdv(a, d, h, r); if (r === 'hit' && a.ch.hitPlus && d.state === 'hitstun') d.stun += a.ch.hitPlus; /* (a fighter whose hits all leave him further ahead: Tetsu) */ if (r === 'hit' && a.move && a.move.recPlusAmt && (!a.move.normal || d.state !== 'hitstun' || a.ch.recRefund)) { a.move.recovery -= a.move.recPlusAmt; a.move.recPlusAmt = 0; } /* (Mei's longer recovery: given back when a technique lands, or a hit launches or knocks down — the follow-up keeps its timing) */ if (a.ch.possess === 'angel' && a.move && a.move.normal && a.move.str === 1 && (r === 'hit' || r === 'block') && a.hp > 0) { const n = r === 'block' ? 28 : 12; a.hp = Math.min(1000, a.hp + n); a.healT = 60; popText(a.x, GROUND - a.y - 200, '+' + n, '255,240,190'); } /* (the angel's I and K heal him: more when they're guarded) */ if ((r === 'hit' || r === 'block' || r === 'armor') && a.fd) fdContact(a, r); if ((r === 'hit' || r === 'block') && a.sorbs && a.sorbs.length && !h.orbRay && game.frame - (a.orbT || -99) > 10) { a.orbT = game.frame; orbAssist(a, a.move || {}); } /* (Lyra's orbs fire when one of her attacks lands or is guarded: one volley per attack) */ return r; }; } // a move's own advantage; the training frame data

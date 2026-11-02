@@ -603,10 +603,11 @@ function specialMoveBase(id) {
         if (k === 36) { columnHit(f, o, { dmg: 26, stun: 22, bstun: 10, push: 2, launch: true, launchVy: 12, hitstop: 10, label: 'Pounce' }); mv.active = mf - mv.startup; mv.recovery = 10; f.vx = -f.facing * 5; }
       } };
     // → → + K: Claw Frenzy. A wild, screeching flurry of claws, every swipe leaving its marks
-    case 'kpFrenzy': return { id, label: 'Claw Frenzy', startup: 8, active: 52, recovery: 18, wind: 'kIdle', pose: 'kClawUp', selfMove: true,
+    case 'kpFrenzy': return { id, label: 'Claw Frenzy', startup: 8, active: 52, recovery: 18, wind: 'kIdle', pose: 'kClawX', selfMove: true,
       hitbox: [10,170,40,160], multi: 12, interval: 4, dmg: 7, lastDmg: 28, stun: 18, bstun: 10, push: 1, lastPush: 8, kd: true, kdVx: 9, kdVy: 8, type: 'mid', hitstop: 3, gdrain: 6, maxTravel: 300,
-      poseFn: (f, mf) => mf > 8 && mf <= 60 ? [POSES.kClawUp, POSES.kClawDown, POSES.kClawX][Math.floor(mf / 2) % 3] : null,
-      onFrame(f, o, mf) { if (mf > 8 && mf <= 60 && Math.abs(o.x - f.x) > 70) f.vx = f.facing * 4; else f.vx *= 0.7;
+      poseFn: (f, mf) => mf <= 4 ? lerpPose(f.prevPose, POSES.kClawX, easeOutQ(mf / 4)) : mf <= 60 ? lerpPose(POSES.kClawX, POSES.kClawDown, (1 - Math.cos(Math.PI * Math.max(0, mf - 4) / 4)) / 2) : mf <= 64 ? lerpPose(POSES.kClawDown, POSES.kIdle, (mf - 60) / 4) : null, // (an even rake, both claws crossing and raking down, back and forth every 8 frames: one swipe each way)
+      onFrame(f, o, mf) { if (mf > 8 && mf <= 60 && Math.abs(o.x - f.x) > 60) f.vx = f.facing * 6; else f.vx *= 0.7; // (he presses in, keeping them under his claws)
+       
         if (mf > 8 && mf <= 60 && mf % 4 === 1) clawSwipe(f, [110, 100 + (mf % 8 === 1 ? 20 : -10), (mf % 8 === 1 ? 1 : -1) * 0.9, 52]); if (mf === 9) sfx('vanish'); } };
     // → → + K (old): Tsuppari Rush. A flurry of sumo palm-claws
     case 'kpTsuppari': return { id, label: 'Tsuppari Rush', startup: 8, active: 24, recovery: 18, wind: 'kGrab', pose: 'kClaw', selfMove: true,

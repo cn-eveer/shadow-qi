@@ -127,8 +127,8 @@ const STRINGS = {
       onFrame: (f, o, mf) => { if (mf === 2) { parts.push({ type: 'wcol', x: f.x, w: 36, life: 16, max: 16, col: '150,215,255' }); sfx('flame'); } } },
     jSpin: SJF('Shell Cannonball', 'kCurl', 'kCurl', { hop: 'tgt', spin: [1, 12], hitbox: [-30,95,0,150], kdVx: 14, recovery: 14,
       onFrame: (f, o, mf) => { if (mf % 3 === 0 && mf < 14) parts.push({ type: 'aura', x: f.x - f.facing * 14, y: GROUND - f.y - 40, vx: -f.facing, vy: 0.5, life: 10, max: 10, r: 3, col: '150,215,255' }); } }),
-    aPalm: SA('p', 'Air Rake', 'kAirClaw', { claw: [70, 90, 0.8, 44] }), aElbow: SA('p', 'Air Peck', 'kBite'),
-    aKunai: SA('p', 'Air Claw Flurry', 'kAirClaw', { str: 1, startup: 4, active: 9, recovery: 8, multi: 3, interval: 3, dmg: 12, lastDmg: 20, jugVy: 3.5, claw: [70, 90, -0.8, 50] }),
+    aPalm: SA('p', 'Air Rake', 'kAirRake', { wind: 'kClawUp', /* (claws raised, raking down across the active frames: it catches someone above him or below) */ claw: [70, 90, 0.8, 44] }), aElbow: SA('p', 'Air Peck', 'kDivePeck'),
+    aKunai: SA('p', 'Air Claw Flurry', 'kAirRake', { str: 1, startup: 4, active: 9, recovery: 8, multi: 3, interval: 3, dmg: 12, lastDmg: 20, jugVy: 3.5, claw: [70, 90, -0.8, 50] }),
     aSpin: SAF('Air Shell Spin', 'kCurl', { spin: [1, 5] }),
   },
   gunman: { // Jesse: a string of shots, ending point-blank

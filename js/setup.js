@@ -140,10 +140,15 @@ const POSES = {
   kThrow: P(16, 104,100, -30,10, 42,4, -42,-14),
   kBlast: P(14, 90,90, 86,88, 40,6, -40,-18),
   kBelly: P(80, 95,95, 90,90, -80,-80, -90,-90),
+  kDive: P(84, 100,96, 96,92, -78,-84, -88,-92), // (↓ + U / J / K: diving in head-first, flat along the floor, claws out in front)
   kCurl: P(50, 30,160, 20,150, ...CL),
+  kCrouch: P(78, 40,120, 30,110, ...CL), // (the kappa's crouch: hunched right down under his shell, head tucked in)
   kEat: P(6, 150,40, 120,30, 32,2, -32,-10),
   kLowClaw: P(40, 80,40, 60,90, ...CL),
+  kLowJab: P(34, 96,86, 60,90, ...CL), // (↓ + U: crouched, a quick claw jab straight out at their middle)
   kAirClaw: P(10, 110,60, 60,80, 100,15, 60,-35),
+  kAirRake: P(24, 40,15, 60,80, 100,15, 60,-35), // (the kappa's jump-in claws: raking down in front of him, low enough to catch someone under him)
+  kDivePeck: P(105, 150,160, 140,150, -10,-40, -40,-70), // (Air Peck: tipped forward, the beak stabbing down in front of him)
   kWin: P(0, 176,178, 172,176, 22,3, -22,-8),
   // the gunslinger: two revolvers, no kicks
   gIdle: P(4, 52,70, 40,62, 30,4, -32,-12),

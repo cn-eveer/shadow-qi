@@ -1,5 +1,6 @@
 'use strict';
 /* ================= characters ================= */
+const kappaDive = (a, b, sp) => (f, o, mf) => { if (mf >= a && mf <= b && Math.abs(o.x - f.x) > 60 && !f.hitConnected) { f.vx = f.facing * sp; if (mf % 3 === 0) parts.push({ type: 'aura', x: f.x - f.facing * 20, y: GROUND - 6, vx: -f.facing, vy: -1, life: 10, max: 10, r: 3, col: '150,215,255' }); } }; // the kappa's floor dives: he swims along the ground at them
 const aldricStep = (a, b, sp) => (f, o, mf) => { if (mf >= a && mf <= b && Math.abs(o.x - f.x) > 70 && !f.hitConnected) f.vx = f.facing * sp; }; // Aldric's shield jabs: a step in behind the shield
 const CHARS = {
   ninja: {
@@ -235,15 +236,16 @@ Object.assign(CHARS, {
       sp1: { label: 'Rending Claws', claw: [95, 110, 0.9, 70] },
       cp1: { label: 'Upward Rake', wind: 'kClawDown', pose: 'kClawUp', hitbox: [10,135,40,195], claw: [60, 140, -1.3, 70] },
       sk0: { label: 'Sumo Toss', grab: true, wind: 'kGrab', pose: 'kToss', hitbox: [10,92,20,150], startup: 6, recovery: 22, dmg: 46, kd: true, kdVx: 6, kdVy: 9, chain: null, low: false, onFrame: kappaToss },
-      ck0: { label: 'Low Claw', wind: 'crouch', pose: 'kLowClaw', hitbox: [20,120,0,40], claw: [80, 30, 0.2, 40] },
-      ck1: { label: 'Ankle Rake', wind: 'crouch', pose: 'kLowClaw', hitbox: [20,150,0,30], claw: [95, 24, 0.1, 54] },
-      jk0: { label: 'Air Claw Drop', wind: 'jump', pose: 'kAirClaw', hitbox: [10,100,0,90], claw: [70, 70, 1.0, 50] },
-      jp0: { label: 'Air Rake', wind: 'jump', pose: 'kAirClaw', claw: [70, 90, 0.8, 44] },
+      cp0: { label: 'Dive Jab', wind: 'kCrouch', pose: 'kDive', low: true, hitbox: [20,110,0,34], bodyHurt: true, onFrame: kappaDive(2, 7, 6) }, // ↓ + U / J / K: he dives in head-first and swims along the floor, low, flat (his hurtbox lies flat with him), claws and beak first
+      ck0: { label: 'Belly Dive', wind: 'kCrouch', pose: 'kDive', low: true, hitbox: [20,120,0,34], bodyHurt: true, onFrame: kappaDive(2, 9, 8) },
+      ck1: { label: 'Swimming Dive', wind: 'kCrouch', pose: 'kDive', low: true, hitbox: [20,150,0,30], bodyHurt: true, cpLaunch: true, launchVy: 13, onFrame: kappaDive(2, 12, 9) }, // (like Kuro's sweep: knocks down, launches on a counter or a punish)
+      jk0: { label: 'Air Claw Drop', wind: 'kClawUp', pose: 'kAirRake', hitbox: [10,100,0,90], claw: [70, 70, 1.0, 50] },
+      jp0: { label: 'Air Rake', wind: 'kClawUp', pose: 'kAirRake', claw: [70, 90, 0.8, 44] },
       jp1: { label: 'Air Rending Claws', wind: 'jump', pose: 'kClawDown', claw: [80, 80, 0.9, 60] },
       jk1: { label: 'Water Drop', wind: 'jump', pose: 'kAirClaw', hitbox: [0,110,-10,80], onFrame: (f, o, mf) => { if (mf === 6) spawnPJ(f, 'water', { x: f.x + f.facing * 30, y: f.y + 60, vx: f.facing * 6, vy: -8, life: 30, r: 12, h: { dmg: 26, stun: 18, bstun: 10, push: 2, gdrain: 6, label: 'Water Drop', juggle: true, jugVy: 5 } }); } },
     },
     colors: { skin: '#6fc27a', skinB: '#4f9a5a', belly: '#f3e7a4', shell: '#4f8a3d', shellB: '#35652a', beak: '#f2b134', plate: '#f4f7fb', water: '#8fd3f4', hair: '#2f5d2a', claw: '#f6f0dc' },
-    meterCol: ['#3fb39a', '#b8f3ff'], bannerCol: 'rgba(40,150,130,.88)', idle: 'kIdle', chargePose: 'kEat', winPose: 'kWin', atkCD: 9, recoverT: 9, hitFx: 'claw',
+    crouchPose: 'kCrouch', meterCol: ['#3fb39a', '#b8f3ff'], bannerCol: 'rgba(40,150,130,.88)', idle: 'kIdle', chargePose: 'kEat', winPose: 'kWin', atkCD: 9, recoverT: 9, hitFx: 'claw',
   },
   gunman: {
     idle: 'gHolster', name: 'JESSE', title: 'Gunslinger', nameJa: 'ジェシー', titleJa: 'ガンマン', ammo: 15, dmgMul: 1.43, scale: 1.02, walk: 3.3, back: 2.9, jumpX: 4.4, jumpV: 17.5, jugDmg: 1.05,
