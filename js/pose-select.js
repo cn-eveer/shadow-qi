@@ -168,11 +168,14 @@ function rayDraw(e, t, a) { // two beams of holy light from his eyes
 }
 function angelRay(id, label, aim) { // the angel's eye ray: aimed at the waist (mid) or the feet (low)
   const low = aim === 'low';
-  return { id, label, startup: 14, active: 6, recovery: 20, wind: 'saPray', pose: 'saPray', hitFrom: 13, hitbox: low ? [30,380,0,44] : [30,420,80,140], low, // (live only once the beam is out: from the frame it's drawn) dmg: low ? 30 : 34, stun: 22, bstun: 12, push: 2, type: 'mid', hitstop: 8, gdrain: 8,
-    onFrame(f, o, mf) { if (mf === 4) popText(f.x, GROUND - 200, L('BEHOLD!', '見よ！'), '255,235,170'); if (mf === 14) sfx('beam'); },
+  return { id, label, startup: 14, active: 6, recovery: 20, wind: 'saPray', pose: 'saPray', hitFrom: 13, hitbox: low ? [30,380,0,44] : [30,420,80,140], low, dmg: low ? 30 : 34, stun: 22, bstun: 12, push: 2, type: 'mid', hitstop: 8, gdrain: 8, // (live only once the beam is out: from the frame it's drawn)
+    onFrame(f, o, mf) { if (mf === 4) popText(f.x, GROUND - 200, L('BEHOLD!', '見よ！'), '255,235,170'); if (mf === 14) sfx('beam');
+      if (mf === 12 && o) { const s0 = f.ch.scale; const e = eyePos(f), ey = GROUND - e[1], dx = Math.max(1, Math.abs(o.x - e[0]));
+        if (low) { f.move.rayL = Math.min(380 * s0, Math.max(60, Math.abs(o.x - f.x) + 30)); f.move.rayY = 18; }
+        else { let L = 420 * s0, ty = ey + (110 * o.ch.scale - ey) * L / dx; if (ty < 0) { L *= ey / (ey - ty); ty = 0; } f.move.rayL = L; f.move.rayY = ty; } } }, // (aimed at them as it fires: the low ray comes down at their feet however close they are, the waist-high one through their waist, even from the huge double)
     drawFX(f) { const S = f.move.startup; if (f.mf < S - 6 || f.mf > S + 8) return; const e = eyePos(f), s0 = f.ch.scale;
       if (f.mf < S) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(255,245,200,${(f.mf - S + 6) / 6})`; ctx.beginPath(); ctx.arc(e[0], e[1], 5, 0, Math.PI * 2); ctx.fill(); ctx.restore(); return; } // his eyes light up first
-      const L = low ? 380 : 420, tx = f.x + f.facing * L * s0, ty = low ? GROUND - 18 : GROUND - f.y - 110 * s0; rayDraw(e, [tx, ty], 1 - Math.max(0, f.mf - S - 4) / 5); } };
+      const mv = f.move, tx = f.x + f.facing * (mv.rayL || (low ? 380 : 420) * s0), ty = GROUND - (mv.rayY != null ? mv.rayY : low ? 18 : f.y + 110 * s0); rayDraw(e, [tx, ty], 1 - Math.max(0, f.mf - S - 4) / 5); } };
 }
 function drawTail(f, tip, fade, fire) { // the devil's tail: thick at the base, tapering, with a spade tip
   const s0 = f.ch.scale, J = solve(f.pose), bx = f.x + (f.animDX || 0) + f.facing * 14 * s0, by = GROUND - f.y - s0 * (J.hip[1] + f.hipUp) + 4; // from his rear: he has his back to them
