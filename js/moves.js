@@ -864,8 +864,8 @@ function specialMoveBase(id) {
         const d = Math.atan2(tip[1] - ctl[1], tip[0] - ctl[0]); ctx.translate(tip[0], tip[1]); ctx.rotate(d);
         ctx.fillStyle = '#b01c1c'; ctx.strokeStyle = '#ffb08a'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(32, 0); ctx.lineTo(0, -16); ctx.lineTo(7, 0); ctx.lineTo(0, 16); ctx.closePath(); ctx.fill(); ctx.stroke(); // the spade at its tip
         ctx.restore(); } };
-    case 'sdFeintHammer': return { id, label: 'Feint Hammer', startup: 26, active: 6, recovery: 22, wind: 'crouch', pose: 'sArch', overhead: true, tail: { a0: 2.2, a1: -0.7, len: 185, h: 120 }, hitFrom: 25, // (a feint: he shouts to look out below and crouches, the tail swept low at their feet — then it whips up over the top and hammers down from above; live only on the way down)
-      tailPath: mf => mf <= 10 ? 2.4 + (-0.7 - 2.4) * (mf / 10) : mf <= 22 ? -0.7 + (2.2 + 0.7) * ((mf - 10) / 12) : 2.2 + (-0.7 - 2.2) * Math.min(1, (mf - 22) / 9),
+    case 'sdFeintHammer': return { id, label: 'Feint Hammer', startup: 26, active: 6, recovery: 22, wind: 'crouch', pose: 'sArch', overhead: true, tail: { a0: 2.2, a1: -0.7, len: 185, h: 120 }, hitFrom: 25, // (a feint: he shouts to look out below and crouches, the tail swept low along the floor from behind him to their feet — then it whips up over the top and hammers down from above; live only on the way down)
+      tailPath: mf => mf <= 10 ? 3.54 + (5.58 - 3.54) * (mf / 10) : mf <= 22 ? -0.7 + (2.2 + 0.7) * ((mf - 10) / 12) : 2.2 + (-0.7 - 2.2) * Math.min(1, (mf - 22) / 9),
       poseFn: (f, mf) => mf > 40 ? null : mf <= 10 ? lerpPose(f.prevPose, POSES.crouch, mf / 10) : mf <= 22 ? lerpPose(POSES.crouch, POSES.sArch, (mf - 10) / 12) : POSES.sArch, // ← ← ↑ + J: he turns his back, looks over his shoulder, and brings the tail down from overhead (guard it standing)
       hitbox: [30,190,0,220], dmg: 46, stun: 24, bstun: 14, push: 2, kd: true, kdVx: 3, kdVy: 6, type: 'mid', hitstop: 11, gdrain: 12,
       onFrame(f, o, mf) { if (mf === 2) popText(f.x, GROUND - 200, L('DOWN BELOW—', '下だ——'), '255,90,70'); if (mf === 24) sfx('swing'); if (mf === 27) { cracks(f.x + f.facing * 150); game.shake = Math.max(game.shake, 5); parts.push({ type: 'ring', x: f.x + f.facing * 150, y: GROUND - 6, r: 10, vr: 8, life: 14, max: 14, col: '255,100,50' }); } } };
@@ -874,7 +874,8 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { f.vx = mf <= 8 ? f.facing * 4 : f.vx * 0.6; if (mf === 9) sfx('swing'); } };
     case 'sdTailUpper': return { id, label: 'Tail Hook', startup: 9, active: 7, recovery: 24, wind: 'sdIdle', pose: 'sdIdle', bodyHurt: true, tail: { a0: -0.5, a1: 1.4, len: 170, h: 70 }, // → → + K: the tail scoops up under them and flings them into the air
       hitbox: [30,190,0,210], dmg: 48, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 13, type: 'mid', hitstop: 11, gdrain: 10, onFrame(f, o, mf) { if (mf === 8) sfx('rise'); } };
-    case 'sdChainB': return { id, label: 'Hell Chain', startup: 12, active: 6, recovery: 18, wind: 'sdIdle', pose: 'sdBeckon', grab: true, // ← ← → + J: the chain lashes out from his belly, at waist height — and catches them even guarding (a grab: J + K breaks it in time)
+    case 'sdChainB': return { id, label: 'Hell Chain', startup: 12, active: 6, recovery: 18, wind: 'sdIdle', pose: 'sdBeckon', grab: true, noDmg: true, // (no damage: it only catches them and drags them in)
+      // ← ← → + J: the chain lashes out from his belly, at waist height — and catches them even guarding (a grab: J + K breaks it in time)
       hitbox: [40,290,20,150], dmg: 24, stun: 30, bstun: 12, push: 0, type: 'mid', hitstop: 8, gdrain: 0,
       onFrame(f, o, mf) { const mv = f.move; f.vx = 0; if (mf === 12) sfx('throw');
         if (f.hitConnected && !mv.pulled) { mv.pulled = true; mv.pullT = 10; popText(o.x, GROUND - 200, L('GET OVER HERE!', 'こっちへ来い！'), '255,90,60'); }
