@@ -11,8 +11,8 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <div class="scroll"><table>
         <tbody>
           <tr><td>Claw Swipe and Rending Claws<small>U: a downward claw swipe. I: both claws crossing in an X.</small></td><td class="keys"><kbd>U</kbd> <kbd>I</kbd></td></tr>
-          <tr><td>Sumo Toss<small>J: grabs them (18F) and swings them over his head to the floor. They are held for sixteen frames: press I + U together in that time and the throw is broken.</small></td><td class="keys"><kbd>J</kbd></td></tr>
-          <tr><td>Whirlpool Toss<small>K: grabs them (18F) and throws them high over his head for a juggle. They are held for sixteen frames: press J + K together in that time and the throw is broken (the string-ending throw too).</small></td><td class="keys"><kbd>K</kbd></td></tr>
+          <tr><td>Sumo Toss<small>J: grabs them (18F) and swings them over his head to the floor. They are held for twenty-four frames: press I + U together in that time and the throw is broken.</small></td><td class="keys"><kbd>J</kbd></td></tr>
+          <tr><td>Whirlpool Toss<small>K: grabs them (18F) and throws them high over his head for a juggle. They are held for twenty-four frames: press J + K together in that time and the throw is broken (the string-ending throw too).</small></td><td class="keys"><kbd>K</kbd></td></tr>
           <tr><td>Upward Rake<small>Up close: rakes upward and lifts them. (U, ↓ + I is the low version: a low launcher.)</small></td><td class="cmd">↓ + I</td></tr>
           <tr><td>Plate Throw<small>The dish on his head flies out spinning and comes back (he’s bald until it does).</small></td><td class="cmd">→ → + U</td></tr>
           <tr><td>Water Cannon<small>A jet of water from his beak, reaching about two fifths of the stage: eleven hits that push them away. Parried, the jet stops.</small></td><td class="cmd">→ → + I</td></tr>
@@ -46,8 +46,8 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <div class="scroll"><table>
         <tbody>
           <tr><td>爪払いと引き裂き爪<small>U：振り下ろす爪。I：両手の爪をX字に交差させる。</small></td><td class="keys"><kbd>U</kbd> <kbd>I</kbd></td></tr>
-          <tr><td>相撲投げ<small>J：つかんで（18F）頭越しに床へ投げる。つかまれた相手は16フレーム動けず、その間にI＋Uを同時押しすると投げを外せる。</small></td><td class="keys"><kbd>J</kbd></td></tr>
-          <tr><td>渦巻き投げ<small>K：つかんで（18F）頭越しに高く投げ上げ、空中追撃へ。つかまれた相手は16フレーム動けず、その間にJ＋Kを同時押しすると投げを外せる（連携の締めの投げも同じ）。</small></td><td class="keys"><kbd>K</kbd></td></tr>
+          <tr><td>相撲投げ<small>J：つかんで（18F）頭越しに床へ投げる。つかまれた相手は24フレーム動けず、その間にI＋Uを同時押しすると投げを外せる。</small></td><td class="keys"><kbd>J</kbd></td></tr>
+          <tr><td>渦巻き投げ<small>K：つかんで（18F）頭越しに高く投げ上げ、空中追撃へ。つかまれた相手は24フレーム動けず、その間にJ＋Kを同時押しすると投げを外せる（連携の締めの投げも同じ）。</small></td><td class="keys"><kbd>K</kbd></td></tr>
           <tr><td>爪かき上げ<small>至近距離で上へかき上げて浮かせる。（U、↓+Iは下段版：下段の打ち上げ。）</small></td><td class="cmd">↓ + I</td></tr>
           <tr><td>皿投げ<small>頭の皿が回転して飛び、戻ってくる（戻るまで頭はつるつる）。</small></td><td class="cmd">→ → + U</td></tr>
           <tr><td>水鉄砲<small>くちばしから水を噴射。画面の約5分の2まで届く。11ヒットで押し出す。受け流されると噴射が止まる。</small></td><td class="cmd">→ → + I</td></tr>

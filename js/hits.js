@@ -177,15 +177,15 @@ const TECH_TIER = {
 };
 const NO_TELL = new Set(['risingFist', 'smBow', 'saRayFly', 'saDive', 'smAngel', 'smDevil']); // (these have their own long lead-in)
 // Kappa's throws and U-string hits can be broken by the one they catch: I + U for the J throw, J + K for the K throw (and the string's), U + I + J for the U string.
-// The buttons are pressed together. A throw holds them for sixteen frames first (they can't move, only press): break it in time and nothing lands, the two are
+// The buttons are pressed together. A throw holds them for twenty-four frames first (they can't move, only press): break it in time and nothing lands, the two are
 // pushed apart; if not, the throw lands. A string hit is broken by buttons pressed in the ten frames before it.
-const BREAK_BTN = { J: ['lp', 'hp'], K: ['lk', 'hk'], S: ['lp', 'hp', 'lk'] }, BREAK_WINDOW = 10, GRAB_WINDOW = 16;
+const BREAK_BTN = { J: ['lp', 'hp'], K: ['lk', 'hk'], S: ['lp', 'hp', 'lk'] }, BREAK_WINDOW = 10, GRAB_WINDOW = 24;
 function throwBreak(a, d, h) {
   const mv = a.move; if (a.key !== 'kappa' || !mv) return false;
   if (mv.broken) return true; // (this one was already broken)
   const need = h.grab ? (mv.normal && mv.kind === 'k' && mv.str === 0 ? BREAK_BTN.J : BREAK_BTN.K) : mv.inString && ['c2', 'c3', 'c4'].includes(mv.strKey) ? BREAK_BTN.S : null;
   if (!need || ['knock', 'down', 'getup', 'gbreak', 'stunned', 'slashed', 'attack', 'jump'].includes(d.state)) return false;
-  const now = game.frame; if (h.grab && mv.grabT == null) { mv.grabT = now; d.grabLock = GRAB_WINDOW; popText(d.x, GROUND - d.y - 185, L('GRABBED!', '掴まれた！'), '255,200,120'); }
+  const now = game.frame; if (h.grab && mv.grabT == null) { mv.grabT = now; mv.active = Math.max(mv.active, a.mf - mv.startup + Math.ceil(GRAB_WINDOW * 1.25) + 2); /* (the hold is counted in game frames; under the flood his moves run a fifth faster) */ d.grabLock = GRAB_WINDOW; popText(d.x, GROUND - d.y - 185, L('GRABBED!', '掴まれた！'), '255,200,120'); }
   const from = h.grab ? mv.grabT - GRAB_WINDOW : now - BREAK_WINDOW, ts = need.map(b => d.btnEdge && d.btnEdge[b] != null ? d.btnEdge[b] : -99);
   if (Math.min(...ts) >= from && Math.max(...ts) - Math.min(...ts) <= 5) {
     const side = Math.sign(d.x - a.x) || a.facing; mv.broken = true; d.grabLock = 0;
@@ -193,7 +193,7 @@ function throwBreak(a, d, h) {
     a.kb = -side * 6; d.kb = side * 6; d.btnEdge = {};
     return true;
   }
-  return !!(h.grab && now - mv.grabT < GRAB_WINDOW); // (still inside the window: not thrown yet)
+  return !!(h.grab && now - mv.grabT < GRAB_WINDOW); // (still inside the window: not thrown yet — the grab keeps the move live until then)
 }
 function hasArmor(f) { const mv = f.move; return !!mv && ((mv.armorDive && f.mf >= (mv.armorFrom || 24)) || (f.key === 'kappa' && (mv.id === 'kpPounce' || mv.id === 'kpFrenzy' || (mv.dashLeft > 0))) || (f.key === 'brawler' && mv.tArmor) || (f.ch.possess === 'angel' && mv.id === 'saAscend') || mv.id === 'plRampart' || mv.stoneSkin || (f.ch.fused && !mv.normal && !mv.super && techTier(mv) !== 'fast')); } // (Hohen's Bedrock Stride: stone skin; in the golem armour, his techniques have armour like Tetsu's)
 function techTier(mv) { return TECH_TIER[mv.id] || (mv.parry ? 'fast' : mv.launch ? 'heavy' : 'mod'); }

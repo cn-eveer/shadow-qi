@@ -219,9 +219,9 @@ Object.assign(CHARS, {
     pDmg: 1.0, kDmg: 1.0, pReach: 1.1, kReach: 0.9, chargeRate: 0.62, auraCol: '120,220,200', fxCol: '140,215,255',
     sp: { fP: 'kpPlate', fPH: 'kpCannon', fK: 'kpPounce', fKH: 'kpFrenzy', bP: 'kpBubble', bPH: 'kpGeyser', bK: 'kpShell', bKH: 'kpRiptide' }, sup: 'kpFlood',
     frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
-      U: { su: 10, blk: -4 }, dU: { su: 10, blk: -4 }, dJ: { su: 10, blk: -4 }, J: { su: 18, act: 19 }, // (J and K are throws: unblockable, no guard number; sixteen more frames of 持続 so the one caught can break them)
-      I: { su: 16, blk: -12 }, K: { su: 18, act: 19 }, dI: { su: 16, blk: -16 }, dK: { su: 16, blk: -14 },
-      $c2: { su: 14, blk: -6 }, $c3: { su: 17, blk: -6 }, $c4: { su: 21, blk: -6 }, $cF: { su: 21, act: 20 }, $cUI: { su: 18, blk: -16 }, $cUK: { su: 18, blk: -16 }, // (U, U 14F / U×3 low 17F / U×4 low 21F; U, ↓ + I a low launcher, U, ↓ + K a low)
+      U: { su: 10, blk: -4 }, dU: { su: 10, blk: -4 }, dJ: { su: 10, blk: -4 }, J: { su: 18, act: 27 }, // (J and K are throws: unblockable, no guard number; twenty-four more frames of 持続 so the one caught can break them)
+      I: { su: 16, blk: -12 }, K: { su: 18, act: 27 }, dI: { su: 16, blk: -16 }, dK: { su: 16, blk: -14 },
+      $c2: { su: 14, blk: -6 }, $c3: { su: 17, blk: -6 }, $c4: { su: 21, blk: -6 }, $cF: { su: 21, act: 28 }, $cUI: { su: 18, blk: -16 }, $cUK: { su: 18, blk: -16 }, // (U, U 14F / U×3 low 17F / U×4 low 21F; U, ↓ + I a low launcher, U, ↓ + K a low)
        $cL: { su: 16, blk: -15 }, $cE: { su: 20, blk: -12 }, // U, U … U×4 / U×4, K (throw) / U, I / U, K
       $cl2: { su: 12, blk: -6 }, $clE: { su: 18, blk: -16 },
       kpPlate: { su: 16, blk: -6 }, kpCannon: { su: 20, blk: -16 }, kpPounce: { su: 22, blk: -16 }, kpFrenzy: { su: 20, blk: -16 },
