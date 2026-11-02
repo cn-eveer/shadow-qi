@@ -19,7 +19,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Stone Knuckle / Stone Throw <small>Mid. Up close he drives a stone held in his fist (no stone spent); further off he throws one.</small></td><td class="cmd">← → + U</td></tr>
           <tr><td>Stone Barrage <small>The third J of a string: two blows, the second knocks down.</small></td><td class="keys"><kbd>J</kbd> <kbd>J</kbd> <kbd>J</kbd></td></tr>
           <tr><td>Golem Sweep <small>Low. K orders the golem to sweep its arm along the floor and knock them down.</small></td><td class="keys"><kbd>K</kbd></td></tr>
-          <tr><td>Great Stone <small>Mid. One huge, slow stone that breaks a full guard and knocks them down. (K no longer charges.)</small></td><td class="cmd">← → + K</td></tr>
+          <tr><td>Great Stone <small>Mid. One huge, slow stone that takes over half a full guard (a second one breaks it) and knocks them down. (K no longer charges.)</small></td><td class="cmd">← → + K</td></tr>
           <tr><td>Crouching Stones <small>Thrown from a crouch at chest height: a top (stand to guard). One stone, or three.</small></td><td class="cmd">↓ + J / ↓ + K</td></tr>
           <tr><td>Stone Lob <small>Mid + low (drops from above). It stuns.</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>Trap Stone <small>Set on the floor ahead; bursts when they step on it, or after six seconds. Six at most.</small></td><td class="cmd">→ → + K</td></tr>
@@ -65,7 +65,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>石拳・石投げ <small>中段。近くでは石を握った拳（石は減らない）、離れると石を投げる。</small></td><td class="cmd">← → + U</td></tr>
           <tr><td>石の連打 <small>連続技の3回目のJ：2発、2発目でダウン。</small></td><td class="keys"><kbd>J</kbd> <kbd>J</kbd> <kbd>J</kbd></td></tr>
           <tr><td>ゴーレムの足払い <small>下段。Kでゴーレムが床沿いに腕を払い、ダウンを奪う。</small></td><td class="keys"><kbd>K</kbd></td></tr>
-          <tr><td>大石 <small>中段。大きくて遅い石を一つ投げる。満タンのガードも割り、ダウンを奪う。（Kの溜めは廃止。）</small></td><td class="cmd">← → + K</td></tr>
+          <tr><td>大石 <small>中段。大きくて遅い石を一つ投げる。満タンのガードの半分以上を削り（2発目で割れる）、ダウンを奪う。（Kの溜めは廃止。）</small></td><td class="cmd">← → + K</td></tr>
           <tr><td>しゃがみ投げの石 <small>しゃがんで胸の高さに投げる上段。立ちガードで防ぐ。1つ、または3つ。</small></td><td class="cmd">↓ + J / ↓ + K</td></tr>
           <tr><td>石の山なり投げ <small>中下段（上から落ちる）。気絶させる。</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>罠の石 <small>前方の床に置く。踏むか6秒で爆発。最大6個。</small></td><td class="cmd">→ → + K</td></tr>
