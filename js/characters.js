@@ -311,7 +311,7 @@ addLook(CHARS.ninja, { jp1: { label: 'Air Kunai Slash', pose: 'slash', blade: tr
     limbJoint: 'f1', limbReach: 70, limbBack: 15, limbUp: 15, limbDown: 15, sweepBox: true, bodyHurt: true } }); // ↓ + K, the Sweep: reaches further, and like the Crescent Kick it launches on a counter or a punish (a juggle), knocking down otherwise — a compact box on the leg itself, low and planted, no retreat of any kind, his own hurtbox fitted to the crouch
 addLook(CHARS.brawler, { jp1: { label: 'Air Hammer Fist', pose: 'tHammer', burst: [70, 70], aura: true },
   ck1: { ...CHARS.ninja.normalLook.ck1 } }); // ↓ + K: the same sweep as Kuro's — low, planted slide-kick silhouette, a compact box on the kicking leg, launching on a counter or punish (his own frame data stays)
-addLook(CHARS.salary, { jp1: { label: 'Air Briefcase Drop', pose: 'sCase' }, jk1: { label: 'Air Briefcase Swing', pose: 'sCase' }, ck1: { label: 'Briefcase Trip', wind: 'crouch', pose: 'sCase', hitbox: [20,120,0,40] } });
+addLook(CHARS.salary, { jp1: { label: 'Air Briefcase Drop', pose: 'sCase' }, jk1: { label: 'Air Briefcase Swing', pose: 'sCase' }, ck1: { label: 'Briefcase Trip', wind: 'crouch', pose: 'sCaseLow', hitbox: [20,120,0,40] } });
 for (const k in CHARS) CHARS[k].key = k;
 
 // ---------- charge attacks (hold I) ----------

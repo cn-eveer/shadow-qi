@@ -178,6 +178,7 @@ const POSES = {
   sdBeckon: P(18, 96,150, 40,90, 50,-30, -10,-50),             // a low crouch, one hand curling: come here...
   sSpring: P(-10, 160,170, 120,140, 10,0, -30,-60),
   sCase: P(20, 104,70, 40,70, 50,6, -44,-26),
+  sCaseLow: P(34, 40,70, 70,72, ...CL), // (↓ + K Briefcase Trip: crouched, the case swung low along the floor at their feet)
   // poses for each fighter's own combo strings
   kReverse: P(14, 60,140, 110,90, 40,4, -40,-14),
   kStepSlash: P(40, 100,70, 50,30, 70,-20, -30,-70),
