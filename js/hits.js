@@ -70,7 +70,7 @@ function staffExtAt(f, mv) {
 // the Water Cannon's jet only as far as it has reached
 function kappaParts(f, mv) {
   const s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, W = p => [f.x + (f.animDX || 0) + d * s * p[0], f.y + s * (p[1] + hu)];
-  if (mv.longRange) { const L = Math.max(0, Math.min(680, (f.mf - mv.startup + 1) * 70)), x0 = f.x + d * 38 * s, y = f.y + 128 * s; return [{ x0: Math.min(x0, x0 + d * L), x1: Math.max(x0, x0 + d * L), y0: y - 30, y1: y + 18 }]; } // (as drawn: see its drawFX)
+  if (mv.longRange) { const L = Math.max(0, Math.min(mv.jetLen || 680, (f.mf - mv.startup + 1) * 70)), x0 = f.x + d * 38 * s, y = f.y + 128 * s; return [{ x0: Math.min(x0, x0 + d * L), x1: Math.max(x0, x0 + d * L), y0: y - 30, y1: y + 18 }]; } // (as drawn: see its drawFX)
   if (mv.grab || mv.jug || mv.pose === 'kBelly' || mv.pose === 'kCurl' || (mv.claw && mv.claw[5] === 'tgt')) return null; // (throws, the belly and shell moves, and the juggles — he hops up into them and the claws rake on them, where the slash is drawn — keep their own boxes)
   const J = solve(livePose(f)), r = 13 * s;
   if (/Peck|Bite/.test(mv.label || '') || /kPeck|kBite/.test(mv.pose || '')) { const c = W([J.head[0] + 6, J.head[1] + 4]); return [{ x0: c[0] - 18 * s, x1: c[0] + 18 * s, y0: Math.max(0, c[1] - 16 * s), y1: c[1] + 16 * s }]; } // (a peck or a bite: his beak)
@@ -177,23 +177,23 @@ const TECH_TIER = {
 };
 const NO_TELL = new Set(['risingFist', 'smBow', 'saRayFly', 'saDive', 'smAngel', 'smDevil']); // (these have their own long lead-in)
 // Kappa's throws and U-string hits can be broken by the one they catch: I + U for the J throw, J + K for the K throw (and the string's), U + I + J for the U string.
-// The buttons are pressed together. A throw holds them for ten frames first (they can't move, only press): break it in time and nothing lands, the two are
+// The buttons are pressed together. A throw holds them for sixteen frames first (they can't move, only press): break it in time and nothing lands, the two are
 // pushed apart; if not, the throw lands. A string hit is broken by buttons pressed in the ten frames before it.
-const BREAK_BTN = { J: ['lp', 'hp'], K: ['lk', 'hk'], S: ['lp', 'hp', 'lk'] }, BREAK_WINDOW = 10;
+const BREAK_BTN = { J: ['lp', 'hp'], K: ['lk', 'hk'], S: ['lp', 'hp', 'lk'] }, BREAK_WINDOW = 10, GRAB_WINDOW = 16;
 function throwBreak(a, d, h) {
   const mv = a.move; if (a.key !== 'kappa' || !mv) return false;
   if (mv.broken) return true; // (this one was already broken)
   const need = h.grab ? (mv.normal && mv.kind === 'k' && mv.str === 0 ? BREAK_BTN.J : BREAK_BTN.K) : mv.inString && ['c2', 'c3', 'c4'].includes(mv.strKey) ? BREAK_BTN.S : null;
   if (!need || ['knock', 'down', 'getup', 'gbreak', 'stunned', 'slashed', 'attack', 'jump'].includes(d.state)) return false;
-  const now = game.frame; if (h.grab && mv.grabT == null) { mv.grabT = now; d.grabLock = BREAK_WINDOW; popText(d.x, GROUND - d.y - 185, L('GRABBED!', '掴まれた！'), '255,200,120'); }
-  const from = h.grab ? mv.grabT - BREAK_WINDOW : now - BREAK_WINDOW, ts = need.map(b => d.btnEdge && d.btnEdge[b] != null ? d.btnEdge[b] : -99);
+  const now = game.frame; if (h.grab && mv.grabT == null) { mv.grabT = now; d.grabLock = GRAB_WINDOW; popText(d.x, GROUND - d.y - 185, L('GRABBED!', '掴まれた！'), '255,200,120'); }
+  const from = h.grab ? mv.grabT - GRAB_WINDOW : now - BREAK_WINDOW, ts = need.map(b => d.btnEdge && d.btnEdge[b] != null ? d.btnEdge[b] : -99);
   if (Math.min(...ts) >= from && Math.max(...ts) - Math.min(...ts) <= 5) {
     const side = Math.sign(d.x - a.x) || a.facing; mv.broken = true; d.grabLock = 0;
     sparks(d.x - side * 24, GROUND - d.y - 100, 'block'); sfx('block'); popText(d.x, GROUND - d.y - 185, L('BREAK!', 'ブレイク！'), '255,235,140'); game.freeze = Math.max(game.freeze, 8);
     a.kb = -side * 6; d.kb = side * 6; d.btnEdge = {};
     return true;
   }
-  return !!(h.grab && now - mv.grabT < BREAK_WINDOW); // (still inside the window: not thrown yet)
+  return !!(h.grab && now - mv.grabT < GRAB_WINDOW); // (still inside the window: not thrown yet)
 }
 function hasArmor(f) { const mv = f.move; return !!mv && ((mv.armorDive && f.mf >= (mv.armorFrom || 24)) || (f.key === 'kappa' && (mv.id === 'kpPounce' || mv.id === 'kpFrenzy' || (mv.dashLeft > 0))) || (f.key === 'brawler' && mv.tArmor) || (f.ch.possess === 'angel' && mv.id === 'saAscend') || mv.id === 'plRampart' || mv.stoneSkin || (f.ch.fused && !mv.normal && !mv.super && techTier(mv) !== 'fast')); } // (Hohen's Bedrock Stride: stone skin; in the golem armour, his techniques have armour like Tetsu's)
 function techTier(mv) { return TECH_TIER[mv.id] || (mv.parry ? 'fast' : mv.launch ? 'heavy' : 'mod'); }
@@ -431,7 +431,8 @@ function applyHit(a, d, h, side, hb, hu) {
   }
   if (d.state === 'attack' && d.move && d.move.counterVanish && d.mf <= d.move.startup && !(d.pre > 0 && d.move.tellPre)) { counterVanish(d, a); return null; } // (his hand signs come first: hit him then and he can't vanish)
   if (h.grab && (d.y > 0 || d.state === 'knock' || d.state === 'down' || d.state === 'getup' || d.invul > 0)) return null; // throws only catch someone on their feet
-  if (d.state === 'attack' && d.move && d.move.deflect && d.mf >= d.move.deflect[0] && d.mf <= d.move.deflect[1]) { d.deflected = true; // Aldric's rotations: nothing gets through
+  if (d.state === 'attack' && d.move && d.move.deflect && d.mf >= d.move.deflect[0] && d.mf <= d.move.deflect[1]) { if (d.move.reflectAll && (a.key === 'psychic' || a.key === 'gunman')) parryStun(d, a); // (the kappa's shell: Lyra's magic and Jesse's shots leave them stunned)
+    d.deflected = true; // Aldric's rotations: nothing gets through
     sparks(cx, cy, 'block'); sfx('block'); if (!d.passT || game.frame - d.passT > 12) { d.passT = game.frame; popText(d.x, GROUND - d.y - 180, 'DEFLECT!', '255,225,140'); }
     game.freeze = Math.max(game.freeze, 3); return null;
   }

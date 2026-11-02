@@ -11,16 +11,16 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <div class="scroll"><table>
         <tbody>
           <tr><td>Claw Swipe and Rending Claws<small>U: a downward claw swipe. I: both claws crossing in an X.</small></td><td class="keys"><kbd>U</kbd> <kbd>I</kbd></td></tr>
-          <tr><td>Sumo Toss<small>J: grabs them (18F) and swings them over his head to the floor. They are held for ten frames: press I + U together in that time and the throw is broken.</small></td><td class="keys"><kbd>J</kbd></td></tr>
-          <tr><td>Whirlpool Toss<small>K: grabs them (18F) and throws them high over his head for a juggle. They are held for ten frames: press J + K together in that time and the throw is broken (the string-ending throw too).</small></td><td class="keys"><kbd>K</kbd></td></tr>
+          <tr><td>Sumo Toss<small>J: grabs them (18F) and swings them over his head to the floor. They are held for sixteen frames: press I + U together in that time and the throw is broken.</small></td><td class="keys"><kbd>J</kbd></td></tr>
+          <tr><td>Whirlpool Toss<small>K: grabs them (18F) and throws them high over his head for a juggle. They are held for sixteen frames: press J + K together in that time and the throw is broken (the string-ending throw too).</small></td><td class="keys"><kbd>K</kbd></td></tr>
           <tr><td>Upward Rake<small>Up close: rakes upward and lifts them. (U, ↓ + I is the low version: a low launcher.)</small></td><td class="cmd">↓ + I</td></tr>
           <tr><td>Plate Throw<small>The dish on his head flies out spinning and comes back (he’s bald until it does).</small></td><td class="cmd">→ → + U</td></tr>
-          <tr><td>Water Cannon<small>A long jet of water from his beak, reaching about two thirds of the stage: eleven hits that push them away, and it stays out a long time.</small></td><td class="cmd">→ → + I</td></tr>
+          <tr><td>Water Cannon<small>A jet of water from his beak, reaching about two fifths of the stage: eleven hits that push them away. Parried, the jet stops.</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>Pounce<small>Leaps on them like a wild animal (four tenths of the stage at most), latches on, rakes five times, then kicks off them into the air. Armor: hits don’t stop him.</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>Claw Frenzy<small>A wild, screeching flurry of claws, twelve hits, reaching further and lasting longer. Armor: hits don’t stop him.</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>Water Bubble<small>A lobbed bubble that bursts and leaves them dizzy and dripping (stunned).</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>Geyser<small>A column of water bursts up under them, wherever they are, and throws them high.</small></td><td class="cmd">← ← + I</td></tr>
-          <tr><td>Shell Guard<small>Pulls into his shell: everything bounces off, and if something did, he spins out of it.</small></td><td class="cmd">← ← + J</td></tr>
+          <tr><td>Shell Guard<small>Turns his back and pulls into his shell: blows bounce off, projectiles fly straight back at whoever threw them, and Lyra’s magic and Jesse’s shots leave them stunned. If something hit the shell, he spins out of it.</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>Riptide<small>A low wave: the water always rises up behind them, wherever they are, and rolls in toward him, carrying them toward him — half the stage at most, so from end to end they stop at half range — even if they guard. On a hit they arrive stunned: start his ground string. Jump the wave to escape.</small></td><td class="cmd">← ← + K</td></tr>
           <tr class="super"><td>Super: Great Flood<small>No direct hit: a great wave rolls in and the stage floods for ten seconds, the water a little above head height (a gauge under the timer shows the time left). The kappa swims — faster, ↑ strokes up (a little above a normal jump), ↓ dives — his attacks come out a fifth faster, <b>reach them anywhere on the stage</b> (the water carries every blow), and the water heals him (about 70 health). They wade: three-quarter speed, jumps a quarter slower, attacks a fifth slower to come out — recovery is untouched, so they can still get away and punish — and they slowly drown (about 90 health).</small></td><td class="cmd">U + J</td></tr>
         </tbody>
@@ -46,16 +46,16 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <div class="scroll"><table>
         <tbody>
           <tr><td>爪払いと引き裂き爪<small>U：振り下ろす爪。I：両手の爪をX字に交差させる。</small></td><td class="keys"><kbd>U</kbd> <kbd>I</kbd></td></tr>
-          <tr><td>相撲投げ<small>J：つかんで（18F）頭越しに床へ投げる。つかまれた相手は10フレーム動けず、その間にI＋Uを同時押しすると投げを外せる。</small></td><td class="keys"><kbd>J</kbd></td></tr>
-          <tr><td>渦巻き投げ<small>K：つかんで（18F）頭越しに高く投げ上げ、空中追撃へ。つかまれた相手は10フレーム動けず、その間にJ＋Kを同時押しすると投げを外せる（連携の締めの投げも同じ）。</small></td><td class="keys"><kbd>K</kbd></td></tr>
+          <tr><td>相撲投げ<small>J：つかんで（18F）頭越しに床へ投げる。つかまれた相手は16フレーム動けず、その間にI＋Uを同時押しすると投げを外せる。</small></td><td class="keys"><kbd>J</kbd></td></tr>
+          <tr><td>渦巻き投げ<small>K：つかんで（18F）頭越しに高く投げ上げ、空中追撃へ。つかまれた相手は16フレーム動けず、その間にJ＋Kを同時押しすると投げを外せる（連携の締めの投げも同じ）。</small></td><td class="keys"><kbd>K</kbd></td></tr>
           <tr><td>爪かき上げ<small>至近距離で上へかき上げて浮かせる。（U、↓+Iは下段版：下段の打ち上げ。）</small></td><td class="cmd">↓ + I</td></tr>
           <tr><td>皿投げ<small>頭の皿が回転して飛び、戻ってくる（戻るまで頭はつるつる）。</small></td><td class="cmd">→ → + U</td></tr>
-          <tr><td>水鉄砲<small>くちばしから長く水を噴射。画面の約3分の2まで届く。11ヒットで押し出し、出ている時間も長い。</small></td><td class="cmd">→ → + I</td></tr>
+          <tr><td>水鉄砲<small>くちばしから水を噴射。画面の約5分の2まで届く。11ヒットで押し出す。受け流されると噴射が止まる。</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>飛びかかり<small>野生の獣のように飛びかかって（最大で画面の4/10）しがみつき、5回引っかいてから蹴り上げる。アーマー：攻撃を受けても止まらない。</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>狂乱の爪<small>奇声とともに爪を振り乱す12連撃。リーチも持続も長くなった。アーマー：攻撃を受けても止まらない。</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>水玉<small>山なりの水玉。はじけると相手はずぶ濡れで目を回す（気絶）。</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>間欠泉<small>相手の足元から水柱が噴き上がり、高く打ち上げる。</small></td><td class="cmd">← ← + I</td></tr>
-          <tr><td>甲羅ガード<small>甲羅にこもる：すべて弾き、何かを弾いたら回転して飛び出す。</small></td><td class="cmd">← ← + J</td></tr>
+          <tr><td>甲羅ガード<small>背を向けて甲羅にこもる：打撃は弾き、飛び道具は撃った相手に跳ね返し、ライラの魔法とジェシーの弾は相手をスタンさせる。何かを弾いたら回転して飛び出す。</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>引き波<small>下段の波：相手がどこにいても背後から水がせり上がり、カッパの方へ押し寄せて引き寄せる（最大で画面の半分。端から端なら半分の距離で止まる。ガードしていても引き寄せる）。当たれば気絶したまま来るので、地上の連続技を始められる。波をジャンプすればかわせる。</small></td><td class="cmd">← ← + K</td></tr>
           <tr class="super"><td>超必殺技：大洪水<small>直接は当たらない：大波が押し寄せ、10秒間ステージが水没する（水面は頭の少し上。タイマーの下のゲージで残り時間がわかる）。カッパは泳いで速く動き（↑で上へ・普通のジャンプより少し高くまで、↓で潜る）、攻撃の出も5分の1速く、<b>攻撃はステージのどこにいても届く</b>（水が一撃を運ぶ）。水で体力も回復する（約70）。相手は水の中を歩くので、移動は4分の3、ジャンプは4分の1ゆっくり、攻撃の出も5分の1遅い（硬直は変わらないので回避も反撃もできる）。さらに溺れて体力が少しずつ減る（約90）。</small></td><td class="cmd">U + J</td></tr>
         </tbody>

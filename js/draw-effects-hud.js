@@ -131,7 +131,7 @@ function drawProjBase(p) {
     }
     ctx.restore();
   } else if (p.type === 'homing' || p.type === 'rain') {
-    const y = GROUND - p.y, rad = (22 + Math.sin(globalT * 0.7 + p.idx) * 2) * Math.min(1, p.t / 8);
+    const y = GROUND - p.y, rad = ((p.big ? p.r * 1.7 : 22) + Math.sin(globalT * 0.7 + p.idx) * 2) * Math.min(1, p.t / 8); // (the Thunder Ball drawn as big as it hits)
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
     const g = ctx.createRadialGradient(p.x, y, 1, p.x, y, rad + 1);
     if (p.qi) { g.addColorStop(0, 'rgba(240,255,255,.95)'); g.addColorStop(0.35, 'rgba(125,235,255,.85)'); g.addColorStop(1, 'rgba(40,160,255,0)'); }

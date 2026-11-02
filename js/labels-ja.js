@@ -315,6 +315,7 @@ const LABEL_JA = {
   "Light Punch": "軽パンチ",
   "Lightning Rain": "雷雨",
   "Lightning Volley": "雷の連射",
+  "Thunder Ball": "雷球",
   "Long Orb": "長オーブ",
   "Long Orbs": "長オーブ",
   "Low Claw": "下段爪",

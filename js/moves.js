@@ -245,11 +245,12 @@ function specialMoveBase(id) {
     case 'flame': return { id, label: 'Fire Breath', startup: 24, active: 32, recovery: 16, /* (a shorter stream: 32 + 3 active) */ blockAdv: -14, hitAdv: 10, wind: 'seal', pose: 'breath', proj: 'flame', limit: 1, slow: true, interruptChance: 0.4,
       poseFn(f, mf) { return mf <= 24 ? handSign(mf) : null; },
       onFrame(f, o, mf) { if (mf <= 24 && mf % 2 === 0) ember(f); if (mf === 25) spawnFlame(f); } };
-    case 'fireballs': return { id, label: 'Lightning Volley', startup: 34, active: 15, recovery: 1, noGuardLag: true, fixedFrames: true, /* (he's free once the last ball flies, frame 48: a projectile — no frameMod recovery added) */ wind: 'seal', pose: 'throw', proj: 'homing', limit: 1, slow: true, interruptChance: 0.4,
+    case 'fireballs': return { id, label: 'Thunder Ball', startup: 34, active: 15, recovery: 1, noGuardLag: true, fixedFrames: true, /* (he's free once the last ball flies, frame 48: a projectile — no frameMod recovery added) */ wind: 'seal', pose: 'throw', proj: 'homing', limit: 1, slow: true, interruptChance: 0.4,
       poseFn(f, mf) { return mf <= 34 ? handSign(mf) : null; },
       onFrame(f, o, mf) {
-        if (mf === 8 || mf === 16 || mf === 24) spawnOrb(f, (mf - 8) / 8);       // three lightning balls crackle into being overhead during the hand signs
-        if (mf === 36 || mf === 42 || mf === 48) launchOrb(f, (mf - 36) / 6);    // then fly at the opponent one after another
+        if (mf === 8) spawnOrb(f, 1, true);                                       // one great lightning ball crackles into being overhead during the hand signs, swelling as they go on
+        if (mf > 8 && mf <= 34) for (const p of projs) if (p.owner === f && p.type === 'homing' && p.hold) p.r = 13 + (mf - 8) * 0.8;
+        if (mf === 36) launchOrb(f, 1);                                           // then flies at the opponent
         if (mf <= 34 && mf % 2 === 0) crackle(f);
       } };
     case 'vanishDrop': return { id, label: 'Vanish Drop Kick', startup: 36, active: 22, recovery: 15, blockAdv: -16, /* (a longer fall: out longer in the air, where it can be punished) */ wind: 'crouch', pose: 'axe', manualY: true,
@@ -575,9 +576,9 @@ function specialMoveBase(id) {
         h: { dmg: 30, stun: 20, bstun: 10, push: 2, gdrain: 8, juggle: true, jugVy: 6, label: 'Plate Throw' } }); } } };
     // → → + I: Water Cannon. A jet of water from the beak, five quick hits that push them away
     case 'kpCannon': return { id, label: 'Water Cannon', startup: 14, active: 44, recovery: 18, wind: 'kGrab', pose: 'kBlast', longRange: true,
-      hitbox: [40,680,70,130], multi: 11, interval: 4, dmg: 6, lastDmg: 22, stun: 16, bstun: 10, push: 1.2, lastPush: 7, kd: true, kdVx: 9, kdVy: 6, type: 'mid', hitstop: 3, chip: true, gdrain: 6,
+      hitbox: [40,420,70,130], jetLen: 420, multi: 11, interval: 4, dmg: 6, lastDmg: 22, stun: 16, bstun: 10, push: 1.2, lastPush: 7, kd: true, kdVx: 9, kdVy: 6, type: 'mid', hitstop: 3, chip: true, gdrain: 6,
       onFrame(f, o, mf) { f.vx = 0; if (mf === 14) sfx('flame'); },
-      drawFX(f) { if (f.mf <= 13 || f.mf > 62) return; const s = f.ch.scale, x0 = f.x + f.facing * 38 * s, y0 = GROUND - f.y - 128 * s, L = Math.min(680, (f.mf - 13) * 70);
+      drawFX(f) { if (f.mf <= 13 || f.mf > 62) return; const s = f.ch.scale, x0 = f.x + f.facing * 38 * s, y0 = GROUND - f.y - 128 * s, L = Math.min(f.move.jetLen, (f.mf - 13) * 70);
         ctx.save(); ctx.globalCompositeOperation = 'lighter';
         for (let i = 0; i < 3; i++) { ctx.strokeStyle = `rgba(${i ? '170,225,255' : '230,248,255'},${0.55 - i * 0.12})`; ctx.lineWidth = 22 - i * 7; ctx.beginPath(); ctx.moveTo(x0, y0);
           for (let k = 1; k <= 8; k++) ctx.lineTo(x0 + f.facing * L * k / 8, y0 + Math.sin(globalT * 0.6 + k + i) * 4); ctx.stroke(); }
@@ -622,7 +623,8 @@ function specialMoveBase(id) {
     case 'kpGeyser': return { id, label: 'Geyser', startup: 18, active: 2, recovery: 22, wind: 'kGrab', pose: 'kToss',
       onFrame(f, o, mf) { f.vx = 0; if (mf === 8) { f.gx = clamp(o.x, f.x - 430, f.x + 430); parts.push({ type: 'ring', x: f.gx, y: GROUND - 4, r: 34, vr: -1.2, life: 12, max: 12, col: '150,215,255' }); sfx('charge'); }
         if (mf === 18) geyser(f, o, f.gx); } };
-    // ← ← + J: Shell Guard. Pulls into his shell: everything bounces off, and if something did, he spins out of it
+    // ← ← + J: Shell Guard. Turns his back and pulls into his shell: blows bounce off, projectiles fly back at whoever threw them,
+    // Lyra's spells and Jesse's shots leave them stunned — and if something hit the shell, he spins out of it
     // ← ← + K: Riptide. The water rises up BEHIND them and rolls in toward him, carrying them right up to him — guarding or not.
     // On a hit they arrive stunned in front of him, so his ground string follows. The answer to anyone who keeps their distance. Jump the wave and it passes under them
     case 'kpRiptide': return { id, label: 'Riptide', startup: 5, active: 40, recovery: 18, wind: 'kToss', pose: 'kBlast', hitbox: null,
@@ -647,10 +649,11 @@ function specialMoveBase(id) {
         ctx.lineTo(x1, GROUND); ctx.closePath(); ctx.fill();
         ctx.strokeStyle = 'rgba(235,250,255,.9)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x1 - d * 10, GROUND - 78 * k, 14 * k, d > 0 ? -Math.PI / 2 : Math.PI / 2, d > 0 ? Math.PI / 2 : Math.PI * 1.5, d < 0); ctx.stroke(); ctx.restore(); } };
     case 'kpShell': return { id, label: 'Shell Guard', startup: 3, active: 30, recovery: 14, wind: 'crouch', pose: 'kCurl', crouch: true, deflect: [2, 32], destroysProj: true, reflectAll: true,
-      onStart(f) { f.deflected = false; },
+      onStart(f, o) { f.deflected = false; f.facing = -(Math.sign(o.x - f.x) || f.facing); }, // (he turns his back on them: the shell takes it)
       onFrame(f, o, mf) { f.vx = 0; if (mf === 3) sfx('block'); if (f.deflected && mf > 6) { f.deflected = false; startMove(f, specialMove('kpShellSpin'), 1, true); } } };
     case 'kpShellSpin': return { id, label: 'Shell Spin', startup: 4, active: 20, recovery: 16, wind: 'kCurl', pose: 'kCurl', selfMove: true, crouch: true, spin: [4, 24],
       hitbox: [-40,110,0,90], multi: 4, interval: 5, dmg: 12, lastDmg: 26, stun: 18, bstun: 10, push: 1.5, lastPush: 8, kd: true, kdVx: 9, kdVy: 7, type: 'mid', hitstop: 4, gdrain: 8,
+      onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; }, // (round to face them again as he spins out)
       onFrame(f, o, mf) { if (mf > 4 && mf <= 24) f.vx = f.facing * 7; else f.vx *= 0.6; if (mf % 5 === 0) sfx('swing'); } };
     // ← ← + K: Cucumber Snack. Munches a cucumber and heals a little (hit him while he eats and it's a counter hit)
     case 'kpCucumber': return { id, label: 'Cucumber Snack', startup: 8, active: 30, recovery: 12, wind: 'kIdle', pose: 'kEat', heal: true,

@@ -433,8 +433,9 @@ function spawnAegis(f) {
 function parryCounter(d, a, h) {
   sparks(d.x + d.facing * 30, GROUND - 100, 'block'); sfx('block'); popText(d.x, GROUND - 170, 'PARRY!', '125,235,255');
   game.freeze = Math.max(game.freeze, 10);
-  if (d.move.projStun && (h.proj || a.key === 'psychic')) { parryStun(d, a); return; } // (Aldric's Push and Rising Parries: a shot or a spell turned on the shield leaves whoever cast it stunned)
+  if (d.move.projStun && a.key === 'psychic') { parryStun(d, a); return; } // (Aldric's parries: a projectile is sent straight back (parryReflect); Lyra's magic, which can't be, leaves her stunned)
   if (h.proj) return; // projectiles are just absorbed
+  if (a.state === 'attack' && a.move) { a.hitCount = a.move.multi || 1; a.move.active = Math.max(0, a.mf - a.move.startup); } // (a parried attack stops there: no more hits from it — Water Cannon's jet, a flurry)
   d.facing = Math.sign(a.x - d.x) || d.facing;
   const dry = d.move.parryIntoDry && d.ch.ammo && !(d.ammo > 0 && !(d.reloadT > 0)); // (Jesse with no bullets: the shove instead of the shot)
   startMove(d, specialMove((dry ? d.move.parryIntoDry : d.move.parryInto) || 'parryStrike'), 1, true); d.invul = 8;

@@ -617,17 +617,17 @@ function spawnFlame(f) {
 function orbHold(p) {
   const f = p.owner, s = f.ch.scale;
   p.x = f.x + f.facing * (-26 + p.idx * 26) * s;
-  p.y = f.y + (158 + (p.idx === 1 ? 16 : 0) + Math.sin(globalT * 0.2 + p.idx) * 3) * s;
+  p.y = f.y + (158 + (p.idx === 1 ? 16 : 0) + (p.big ? p.r : 0) + Math.sin(globalT * 0.2 + p.idx) * 3) * s; // (the great ball rises as it swells)
 }
-function spawnOrb(f, idx) {
-  const p = { id: ++serial, type: 'homing', owner: f, idx, hold: true, x: 0, y: 0, vx: 0, vy: 0, r: 13, dmg: 34, stun: 16, bstun: 10, push: 3, hitstop: 6,
+function spawnOrb(f, idx, big) { // (big: ← ← + I's one great Thunder Ball, which hits as hard as the three it replaced)
+  const p = { id: ++serial, type: 'homing', owner: f, idx, hold: true, big: !!big, x: 0, y: 0, vx: 0, vy: 0, r: 13, dmg: big ? 80 : 34, stun: big ? 22 : 16, bstun: big ? 14 : 10, push: big ? 5 : 3, hitstop: big ? 12 : 6,
     stunT: 70, stunKind: 'shock', life: 200, chip: true, air: true, dir: f.facing };
   orbHold(p); projs.push(p); sfx('zap');
 }
 function launchOrb(f, idx) {
   for (const p of projs) if (p.owner === f && p.type === 'homing' && p.hold && p.idx === idx) {
     const o = other(f), dx = o.x - p.x, dy = o.y + 70 - p.y, L = Math.hypot(dx, dy) || 1;
-    p.hold = false; p.vx = dx / L * 5; p.vy = dy / L * 5; p.dir = Math.sign(dx) || f.facing; sfx('throw');
+    const v = p.big ? 4 : 5; p.hold = false; p.vx = dx / L * v; p.vy = dy / L * v; p.dir = Math.sign(dx) || f.facing; sfx(p.big ? 'beam' : 'throw');
   }
 }
 function projBox(p) {
@@ -650,7 +650,7 @@ function projBox(p) {
 // a parry in its active frames sends a travelling projectile straight back at whoever threw it (Lyra's magic still can't be parried)
 function parryReflect(tgt, p) {
   const mv = tgt.state === 'attack' && tgt.move;
-  if (!mv || !mv.parry || mv.projStun || tgt.mf <= mv.startup || tgt.mf > mv.startup + mv.active || !p.owner || p.owner.key === 'psychic' || p.reflected) return false;
+  if (!mv || !mv.parry || tgt.mf <= mv.startup || tgt.mf > mv.startup + mv.active || !p.owner || p.owner.key === 'psychic' || p.reflected) return false;
   const dir = Math.sign(p.vx) || p.dir || 0; if (mv.frontOnly && dir !== -tgt.facing) return false;
   p.owner = tgt; p.vx = -p.vx || tgt.facing * 8; p.vy = -(p.vy || 0) * 0.5; p.dir = -(p.dir || dir || 1); p.boomerang = 0; p.ft = 999; p.hold = false; p.reflected = true; p.n = 0; p.life = Math.max(p.life || 0, 40);
   if (p.h) p.h = { ...p.h, label: (p.h.label || '') + ' (reflected)' };
@@ -699,7 +699,8 @@ function pjUpdate(p) {
   if (hu && !p.n && !p.passed && !overlap(hb, hu) && hb.x0 < hu.x1 && hb.x1 > hu.x0 && p.h) { p.passed = true; showHeight(tgt, Math.sign(p.vx) || p.dir, hb, p.h, true); } // (over or under them)
   if (tgt.state === 'attack' && tgt.move && tgt.move.reflectAll && tgt.mf > tgt.move.startup && tgt.mf <= tgt.move.startup + tgt.move.active && !p.reflected) { // the kappa's shell sends it straight back at them
     const fb = { x0: tgt.x - 70, x1: tgt.x + 70, y0: 0, y1: 170 };
-    if (overlap(hb, fb)) { p.owner = tgt; p.vx = -p.vx || tgt.facing * 8; p.vy = -p.vy * 0.5; p.dir = -p.dir; p.boomerang = 0; p.reflected = true; p.n = 0; p.life = Math.max(p.life, 40); if (p.h) p.h = { ...p.h, label: (p.h.label || '') + ' (reflected)' };
+    if (overlap(hb, fb) && p.owner.key === 'gunman') { p.dead = true; sparks(p.x, GROUND - p.y, 'block'); sfx('block'); parryStun(tgt, p.owner); return; } // (Jesse's shot: he's left stunned)
+    if (overlap(hb, fb)) { const back = Math.sign(p.owner.x - tgt.x) || -tgt.facing; p.owner = tgt; p.vx = -p.vx || back * 8; p.vy = -p.vy * 0.5; p.dir = -p.dir; p.boomerang = 0; p.reflected = true; p.n = 0; p.life = Math.max(p.life, 40); if (p.h) p.h = { ...p.h, label: (p.h.label || '') + ' (reflected)' };
       popText(tgt.x, GROUND - 160, 'REFLECT!', '150,215,255'); sparks(p.x, GROUND - p.y, 'block'); sfx('block'); return; }
   }
   if (hu && overlap(hb, hu) && parryReflect(tgt, p)) return;
@@ -938,14 +939,15 @@ function updateProjs() {
       }
     }
     if (tgt.state === 'attack' && tgt.move && tgt.move.destroysProj && tgt.mf > tgt.move.startup && tgt.mf <= tgt.move.startup + tgt.move.active && p.type !== 'beam' && p.type !== 'flame' && p.type !== 'pillar') {
-      const fb = { x0: tgt.x + (tgt.facing > 0 ? 0 : -140), x1: tgt.x + (tgt.facing > 0 ? 140 : 0), y0: 20, y1: 190 };
+      const fb = tgt.move.reflectAll ? { x0: tgt.x - 90, x1: tgt.x + 90, y0: 0, y1: 150 } : { x0: tgt.x + (tgt.facing > 0 ? 0 : -140), x1: tgt.x + (tgt.facing > 0 ? 140 : 0), y0: 20, y1: 190 }; // (the kappa's shell: all round him)
       if (overlap(projBox(p), fb)) {
-        if (tgt.move.reflectAll && PJ.has(p.type)) { p.owner = tgt; p.vx = -p.vx || tgt.facing * 8; p.vy = -p.vy * 0.5; p.dir = -p.dir; p.boomerang = 0; popText(tgt.x, GROUND - 180, 'REFLECT!', '150,215,255'); sfx('block'); continue; } // the kappa's shell sends it straight back
+        if (tgt.move.reflectAll && (p.owner.key === 'psychic' || p.owner.key === 'gunman')) { p.dead = true; sparks(p.x, GROUND - p.y, 'block'); sfx('block'); parryStun(tgt, p.owner); continue; } // (Lyra's magic, Jesse's shots: stunned)
+        if (tgt.move.reflectAll && p.type !== 'clone' && p.type !== 'decoy' && p.type !== 'guardShadow' && p.type !== 'staffBoom' && p.type !== 'aegis' && p.type !== 'trap') { const back = Math.sign(p.owner.x - tgt.x) || -tgt.facing; p.owner = tgt; p.reflected = true; p.vx = -p.vx || back * 8; p.vy = -p.vy * 0.5; p.dir = -p.dir; p.boomerang = 0; popText(tgt.x, GROUND - 180, 'REFLECT!', '150,215,255'); sfx('block'); continue; } // the kappa's shell sends it straight back
         p.dead = true; sparks(p.x, GROUND - p.y, 'clash'); sfx('block'); continue; } // the spinning staff swats it away
     }
     if (hu) {
       const hb = projBox(p);
-      if (overlap(hb, hu) && ['qi', 'homing', 'shuriken', 'orb', 'wave'].includes(p.type) && parryReflect(tgt, p)) continue;
+      if (overlap(hb, hu) && ['qi', 'homing', 'shuriken', 'orb'].includes(p.type) && parryReflect(tgt, p)) continue; // (Earth Stomp's wave isn't sent back: parried, it stops)
       if (overlap(hb, hu)) {
         const pr = applyHit(p.owner, tgt, { dmg: p.dmg, stun: p.stun, bstun: p.bstun, push: p.push, kd: !!p.kd, type: 'mid', chip: !!p.chip, hitstop: p.hitstop,
           proj: true, str: p.kd ? 2 : 1, superHit: !!p.superHit, gMul: p.gMul, low: !!p.lowHit, overhead: !!p.overhead, kdVx: p.kdVx, kdVy: p.kdVy, jugVy: p.jugVy, fixedLift: !!p.fixedLift, launch: !!p.launch, launchVy: p.launchVy, bounce: !!p.bounce, stunT: p.stunT, stunKind: p.stunKind, gdrain: p.type === 'shuriken' || p.type === 'homing' ? 5 : p.juggle ? 4 : 8,
