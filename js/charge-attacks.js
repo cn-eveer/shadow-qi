@@ -46,6 +46,7 @@ function twinCharge(f, o, mf) { return gunCharge(f, o, mf, (f, o, what) => { con
   if (L === 1) { shoot(f, { y: 124, dmg: 34, push: near ? 1 : 4, stun: 30, range: 380, lvl: 1 }); shoot(f, { y: 120, dmg: 34, push: near ? 1 : 4, stun: 30, range: 380, lvl: 1 }); }
   else shoot(f, { y: 128, dmg: 80, push: 6, range: 760, lvl: 2, pierce: true, stun: 26, ...(near ? { launch: true, launchVy: 12.5, jugVy: 11 } : { kd: true }) }); }); }
 // the kappa's throws: grab, then swing them over his head to the other side
+const kappaHold = f => (f.move.grabT != null && !f.move.broken && game.frame - f.move.grabT < GRAB_WINDOW) ? POSES.kGrab : null; // (holding them while they struggle: his claws gripping, not yet the toss)
 function kappaToss(f, o, mf) {
   const mv = f.move;
   if (mf < mv.startup) f.vx = Math.abs(o.x - f.x) > 70 ? f.facing * 2 : 0; else f.vx *= 0.6;

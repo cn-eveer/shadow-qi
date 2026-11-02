@@ -229,13 +229,13 @@ Object.assign(CHARS, {
     },
     heavy: { // no kicks: the K button grabs and throws
       p: { label: 'Rending Claws', startup: 10, active: 5, recovery: 18, hitbox: [10,150,40,160], wind: 'kClawUp', pose: 'kClawX', lunge: [3, 9, 4.5], hitstop: 11, claw: [95, 110, 0.9, 70] },
-      k: { label: 'Whirlpool Toss', grab: true, startup: 7, active: 3, recovery: 26, hitbox: [10,92,20,150], wind: 'kGrab', pose: 'kToss', dmg: 58, stun: 24, launch: true, launchVy: 13, hitstop: 12, gdrain: 0, onFrame: kappaToss },
+      k: { label: 'Whirlpool Toss', grab: true, startup: 7, active: 3, recovery: 26, hitbox: [10,92,20,150], wind: 'kGrab', pose: 'kToss', dmg: 58, stun: 24, launch: true, launchVy: 13, hitstop: 12, gdrain: 0, onFrame: kappaToss, poseFn: kappaHold },
     },
     normalLook: {
       sp0: { label: 'Claw Swipe', wind: 'kClawUp', pose: 'kClawDown', claw: [80, 100, 0.8, 44] },
       sp1: { label: 'Rending Claws', claw: [95, 110, 0.9, 70] },
       cp1: { label: 'Upward Rake', wind: 'kClawDown', pose: 'kClawUp', hitbox: [10,135,40,195], claw: [60, 140, -1.3, 70] },
-      sk0: { label: 'Sumo Toss', grab: true, wind: 'kGrab', pose: 'kToss', hitbox: [10,92,20,150], startup: 6, recovery: 22, dmg: 46, kd: true, kdVx: 6, kdVy: 9, chain: null, low: false, onFrame: kappaToss },
+      sk0: { label: 'Sumo Toss', grab: true, wind: 'kGrab', pose: 'kToss', hitbox: [10,92,20,150], startup: 6, recovery: 22, dmg: 46, kd: true, kdVx: 6, kdVy: 9, chain: null, low: false, onFrame: kappaToss, poseFn: kappaHold },
       cp0: { label: 'Dive Jab', wind: 'kCrouch', pose: 'kDive', low: true, hitbox: [20,110,0,34], bodyHurt: true, onFrame: kappaDive(2, 7, 6) }, // ↓ + U / J / K: he dives in head-first and swims along the floor, low, flat (his hurtbox lies flat with him), claws and beak first
       ck0: { label: 'Belly Dive', wind: 'kCrouch', pose: 'kDive', low: true, hitbox: [20,120,0,34], bodyHurt: true, onFrame: kappaDive(2, 9, 8) },
       ck1: { label: 'Swimming Dive', wind: 'kCrouch', pose: 'kDive', low: true, hitbox: [20,150,0,30], bodyHurt: true, cpLaunch: true, launchVy: 13, onFrame: kappaDive(2, 12, 9) }, // (like Kuro's sweep: knocks down, launches on a counter or a punish)

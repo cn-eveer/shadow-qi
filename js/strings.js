@@ -112,7 +112,7 @@ const STRINGS = {
     c2: SG('p', 'Backhand Claw', 'kClawDown', 'kClawUp', { claw: [80, 120, -0.8, 46], advHit: 11 }), // (advHit: it leads into the 17F ankle bite as a true combo)
     c3: SG('p', 'Ankle Bite', 'crouch', 'kLowClaw', { low: true, step: 4, hitbox: [20,105,0,40], claw: [80, 26, 0.2, 44], advHit: 15 }), // U, U, U: a low (advHit: it leads into the 21F tail sweep as a true combo)
     c4: SG('p', 'Tail Sweep', 'crouch', 'kBelly', { low: true, step: 6, hitbox: [0,135,0,40], dmg: 30, advHit: 15 }), // U, U, U, U: a low, the slowest
-    cF: SF('k', 'Whirlpool Toss', 'kGrab', 'kToss', { grab: true, kd: false, launch: true, launchVy: 13, hitbox: [10,95,20,150], dmg: 56, onFrame: kappaToss }),
+    cF: SF('k', 'Whirlpool Toss', 'kGrab', 'kToss', { grab: true, kd: false, launch: true, launchVy: 13, hitbox: [10,95,20,150], dmg: 56, onFrame: kappaToss, poseFn: kappaHold }),
     cL: SL('Upward Rake', 'kClawDown', 'kClawUp', { claw: [60, 140, -1.3, 70] }),
     cE: SF('p', 'Shell Slam', 'kCurl', 'kCurl', { spin: [2, 10], step: 7, hitbox: [10,100,0,110], dmg: 54 }),
     cl2: SG('k', 'Ankle Claw', 'crouch', 'kLowClaw', { low: true, hitbox: [20,110,0,40], claw: [80, 26, 0.2, 44] }),
