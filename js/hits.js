@@ -230,11 +230,11 @@ function popTextOnce(f, t) { if (!f.airGuardT || game.frame - f.airGuardT > 20) 
 // pose solve() already gives the drawing — instead of a box of fixed width and height centered on his feet: a sliding,
 // stretched-out or airborne silhouette covers different ground than a standing one, frame by frame, just as his hitboxes
 // already track the limb throwing the blow
-function poseHurtbox(d) {
+function poseHurtbox(d, bodyOnly) { // (bodyOnly: the torso, head and legs — not arms held out in front)
   const J = solve(d.pose), s = d.ch.scale, dir = d.facing, hu = d.hipUp || 0;
   const skip = d.move && d.state === 'attack' && (d.move.hurtSkip || d.move.limbJoint || (d.key === 'kappa' ? 'h1' : null)); // the limb actually throwing the blow: a counter shouldn't be able to snipe the very tip of his own outstretched fist or foot — the hitbox out there is his, not a reason to also widen his hurtbox (hurtSkip: for a move whose hitbox isn't itself limb-tracked, but which still reaches an arm or leg out far enough to need the same exclusion)
   let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-  for (const k of ['hip', 'sh', 'head', 'e1', 'h1', 'e2', 'h2', 'k1', 'f1', 'k2', 'f2']) {
+  for (const k of bodyOnly ? ['hip', 'sh', 'head', 'k1', 'f1', 'k2', 'f2'] : ['hip', 'sh', 'head', 'e1', 'h1', 'e2', 'h2', 'k1', 'f1', 'k2', 'f2']) {
     if (k === skip) continue;
     const j = J[k], wx = d.x + (d.animDX || 0) + dir * s * j[0], wy = d.y + s * (j[1] + hu);
     if (wx < x0) x0 = wx; if (wx > x1) x1 = wx;
@@ -251,7 +251,7 @@ function hurtbox(d, juggle, low) {
   if (d.state === 'knock' && (d.jugSpent || (!juggle && !d.juggle))) return null; // launched opponents can be hit by anything (until the juggle is spent)
   const atkMv = d.state === 'attack' && d.move;
   if (d.key === 'kappa' && d.pose && d.state !== 'knock') { // (the kappa leans and hunches like an animal: fitted to the body he's drawn as, head and all —
-    const hb = poseHurtbox(d), low = d.state === 'crouch' || (d.state === 'blockstun' && d.cguard) || (d.state === 'hitstun' && d.crouchHit) || (atkMv && (d.move.crouch || d.move.low)) || /kBelly|kCurl|kCrouch/.test((atkMv && d.move.pose) || '');
+    const hb = poseHurtbox(d, !atkMv), low = d.state === 'crouch' || (d.state === 'blockstun' && d.cguard) || (d.state === 'hitstun' && d.crouchHit) || (atkMv && (d.move.crouch || d.move.low)) || /kBelly|kCurl|kCrouch/.test((atkMv && d.move.pose) || '');
     if (!low && d.y <= 0) hb.y1 = Math.max(hb.y1, d.y + 135 * d.ch.scale); return hb; } // standing, still as tall as anyone, so a high still hits him; crouched, tucked down under his shell)
   if (atkMv && d.move.bodyHurt && d.pose) return poseHurtbox(d); // fitted to the body's own silhouette this frame, not a fixed box
   const s = d.ch.scale;
