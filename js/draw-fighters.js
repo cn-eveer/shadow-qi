@@ -788,7 +788,7 @@ function drawSanctuary(f) { // a dome of light over the planted sword
 }
 function drawAegis(f) { // a sphere of light around him: it fades as it runs out (time or guard meter, whichever is closer), flickers and cracks near the end, flashes when hit
   const mv = f.move, s = f.ch.scale, cx = f.x, cy = GROUND - f.y - 95 * s, R = 108 * s, t = globalT;
-  const left = Math.min(f.guard / 100, f.aegisT / 240); // how much is left
+  const left = Math.min((f.guard - (f.aegisFloor || 0)) / AEGIS_COST, f.aegisT / 240); // how much is left (of its quarter of the guard meter, or of its time)
   const low = left < 0.3, flick = low ? (Math.floor(t / (left < 0.15 ? 2 : 4)) % 2 ? 0.35 : 1) : 1, hitF = f.aegisHitT != null ? Math.max(0, 1 - (game.frame - f.aegisHitT) / 10) : 0;
   const k = (0.12 + 0.88 * left) * flick + hitF * 0.8;
   ctx.save(); ctx.globalCompositeOperation = 'lighter';

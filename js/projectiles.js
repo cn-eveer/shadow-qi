@@ -371,7 +371,8 @@ function drawPossessBar(f) { // the time left in the possession, over his head
   ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(x - 1, y - 1, 62, 7);
   ctx.fillStyle = angel ? '#ffd86b' : '#ff4a3a'; ctx.fillRect(x, y, 60 * k, 5);
 }
-function aegisSpent(f) { f.guard = Math.min(f.guard, 50); f.guardSlowT = 600; } // after the Aegis: half a guard meter, recovering slowly
+const AEGIS_COST = 25; // the Aegis lives on a quarter of the guard meter: its four seconds use it all, hits use it up sooner
+function aegisSpent(f) { f.guardSlowT = 600; } // after the Aegis: the guard meter comes back slowly
 // heavy techniques are slow to recover when they miss or are guarded, but quick to follow up when they land
 function hitRecover(f, n) { const mv = f.move; if (!mv.cut && f.hitConnected && f.lastResult !== 'block') { mv.cut = true; mv.recovery = Math.min(mv.recovery, n); } }
 const holding = f => { const mv = f.move; return mv.holdFor != null ? f.mf < mv.holdFor : !!(f.inp && f.inp.held && f.inp.held[mv.holdBtn]); };
