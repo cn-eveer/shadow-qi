@@ -18,7 +18,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Low Shot<small>J: a shot at their feet (hits low).</small></td><td class="keys"><kbd>J</kbd></td></tr>
           <tr><td>Heavy Shot<small>K: a big shot that knocks them down. (K is no longer held to charge.)</small></td><td class="keys"><kbd>K</kbd></td></tr>
           <tr><td>Double Heavy Shot<small>Two big shots one after the other, the second knocking them down. Slow to come out and slow to recover. One bullet for both.</small></td><td class="cmd">← → + K</td></tr>
-          <tr><td>Sky Shot<small>Fires upward at an angle and lifts them.</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>Sky Shot<small>Fires at the floor in front of him: the bullet ricochets up off it and lifts them, out to six tenths of the stage.</small></td><td class="cmd">↓ + I</td></tr>
           <tr><td>Air shots<small>J and K in the air shoot down at an angle.</small></td><td class="cmd">in the air</td></tr>
           <tr><td>Fan the Hammer<small>Six fast shots.</small></td><td class="cmd">→ → + U</td></tr>
           <tr><td>Quick Draw / Dead-Eye<small>Tap: one lightning-fast shot that staggers them. Hold: a crosshair locks on, then the Dead-Eye Shot pierces right across the stage.</small></td><td class="cmd">→ → + I</td></tr>
@@ -59,7 +59,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>ロウショット<small>J：足元を撃つ（下段）。</small></td><td class="keys"><kbd>J</kbd></td></tr>
           <tr><td>ヘビーショット<small>K：ダウンを奪う大きな一発。（Kの溜め撃ちは廃止。）</small></td><td class="keys"><kbd>K</kbd></td></tr>
           <tr><td>ダブルヘビーショット<small>大きな弾を続けて2発、2発目でダウン。出も戻りも遅い。弾は2発分でなく1発消費。</small></td><td class="cmd">← → + K</td></tr>
-          <tr><td>スカイショット<small>斜め上へ撃って浮かせる。</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>スカイショット<small>足元の床を撃ち、跳ね返った弾が斜め上へ飛んで浮かせる。画面の10分の6まで届く。</small></td><td class="cmd">↓ + I</td></tr>
           <tr><td>空中射撃<small>空中のJとKは斜め下へ撃つ。</small></td><td class="cmd">空中で</td></tr>
           <tr><td>ファニング<small>6連射。</small></td><td class="cmd">→ → + U</td></tr>
           <tr><td>早撃ち／デッドアイ<small>押すだけ：電光石火の一発でよろめかせる。押し続ける：照準が合い、画面を貫く「デッドアイショット」。</small></td><td class="cmd">→ → + I</td></tr>
