@@ -104,9 +104,11 @@ function tanakaParts(f, mv) {
   const J = solve(livePose(f)), ext = (h, e, n) => { const dx = h[0] - e[0], dy = h[1] - e[1], L = Math.hypot(dx, dy) || 1; return [0, 0.5, 1].map(t => W([h[0] + dx / L * n * t, h[1] + dy / L * n * t])); };
   if (/Briefcase|Case/.test(lab)) { const dx = J.h1[0] - J.e1[0], dy = J.h1[1] - J.e1[1], L = Math.hypot(dx, dy) || 1; return sweep('tnPts', [8, 22].map(t => W([J.h1[0] + dx / L * t, J.h1[1] + dy / L * t])), 15 * s); } // (the briefcase, swung out in his front hand — see drawSalary)
   if (mv.id === 'saGlide' || /Shove/.test(lab)) return sweep('tnPts', ext(J.h1, J.e1, 8).concat(ext(J.h2, J.e2, 8)), 13 * s); // (both palms: the glide, the shove)
-  if (/[Kk]ick|sweep|slideKick|jKick/.test(pose) || /Kick|Sweep|Trip/.test(lab)) return sweep('tnPts', ext(J.f1, J.k1, 12), 13 * s); // (his foot)
+  const out_ = (pts, lowOK) => pts.filter(p => (p[0] - f.x) * d > 12 * s && (lowOK || p[1] > f.y + 20 * s)); // (a fist or foot counts once it's out in front of his body — and a high blow's foot once it's off the floor)
+  if (/[Kk]ick|sweep|slideKick|jKick/.test(pose) || /Kick|Sweep|Trip/.test(lab)) { const b = sweep('tnPts', ext(J.f1, J.k1, 12), 13 * s), keep = b.filter(x => out_([[(x.x0 + x.x1) / 2, (x.y0 + x.y1) / 2]], mv.low || /slideKick|sweep/.test(pose)).length); return keep.length ? keep : [{ x0: -9999, x1: -9998, y0: -99, y1: -98 }]; } // (his foot)
   const burst = mv.burst && f.mf > mv.startup && f.mf <= mv.startup + (mv.active || 3) ? [(c => ({ x0: c[0] - 22 * s, x1: c[0] + 22 * s, y0: Math.max(0, c[1] - 22 * s), y1: c[1] + 22 * s }))([f.x + d * mv.burst[0] * s, f.y + mv.burst[1] * s])] : []; // (the angel's light bursting out past his fist: it's part of the blow)
-  return sweep('tnPts', ext(J.h1, J.e1, /kClaw/.test(pose) ? 22 : 10).concat(pose === 'kClawX' ? ext(J.h2, J.e2, 22) : []), 13 * s).concat(burst); // (his fist — or the devil's claws, both when he rakes with both)
+  const fist = sweep('tnPts', ext(J.h1, J.e1, /kClaw/.test(pose) ? 22 : 10).concat(pose === 'kClawX' ? ext(J.h2, J.e2, 22) : []), 13 * s).filter(x => out_([[(x.x0 + x.x1) / 2, (x.y0 + x.y1) / 2]], true).length).concat(burst);
+  return fist.length ? fist : [{ x0: -9999, x1: -9998, y0: -99, y1: -98 }]; // (his fist — or the devil's claws, both when he rakes with both — once it's out in front of him)
 }
 function aldricParts(f, mv) {
   const J = solve(livePose(f)), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, W = p => [f.x + (f.animDX || 0) + d * s * p[0], f.y + s * (p[1] + hu)];

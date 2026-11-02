@@ -386,6 +386,7 @@ const LABEL_JA = {
   "Shield Punch": "盾突き",
   "Crouch Claw Jab": "しゃがみ爪突き",
   "Feint Sweep": "フェイント払い",
+  "Halo Skim": "光輪投げ",
   "Feint Hammer": "フェイント叩き",
   "Golem Low Kick": "ゴーレムの下段蹴り",
   "Golem Sweep": "ゴーレムの足払い",

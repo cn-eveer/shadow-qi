@@ -364,7 +364,12 @@ Object.assign(DEVIL_CH, { normalLook: { // the devil's kicks are all tail now, a
   ck0: { label: 'Low Tail Flick', wind: 'sdIdle', pose: 'sdIdle', hitbox: [30,160,0,44], low: true, tail: { a0: 2.9, a1: -0.25, len: 150, h: 40 } },
   ck1: { label: 'Tail Trip', wind: 'sdIdle', pose: 'sdIdle', hitbox: [30,190,0,40], low: true, kd: true, tail: { a0: 3.0, a1: -0.3, len: 180, h: 36 } },
 } });
-ANGEL_CH.normalLook = { ...(CHARS.salary.normalLook || {}), jp1: { label: 'Air Light Fist', pose: 'blast', burst: [80, 90] }, sp0: { label: 'Light Jab', burst: [70, 120] }, ck1: { label: 'Feather Sweep', wind: 'crouch', pose: 'slideKick', hitbox: [20,120,0,34] }, jk1: { label: 'Air Wing Kick', pose: 'roundhouse' } };
+ANGEL_CH.normalLook = { ...(CHARS.salary.normalLook || {}),
+  cp0: { label: 'Feather Shot', startup: 6, active: 2, recovery: 14, wind: 'crouch', pose: 'blast', hitbox: null, crouch: true, // ↓ + U: the angel throws no pens — a feather of light, at the same height
+    onFrame: (f, o, mf) => { if (mf === f.move.startup) { sfx('orb'); spawnPJ(f, 'feather', { x: f.x + f.facing * 40, y: 62, vx: f.facing * 15, life: 40, r: 9, h: { dmg: 24, stun: 16, bstun: 8, push: 1.5, gdrain: 4, low: false, label: 'Feather Shot' } }); } } },
+  ck0: { label: 'Halo Skim', startup: 9, active: 2, recovery: 16, wind: 'crouch', pose: 'blast', hitbox: null, crouch: true, midHit: true, // ↓ + J: no stapler either — his halo, tossed in an arc at body height
+    onFrame: (f, o, mf) => { if (mf === f.move.startup) { sfx('throw'); spawnPJ(f, 'haloP', { x: f.x + f.facing * 36, y: 80, vx: f.facing * 8.5, vy: 6.5, g: 0.42, life: 70, r: 12, h: { dmg: 34, stun: 18, bstun: 10, push: 2, gdrain: 6, label: 'Halo Skim' } }); } } },
+  jp1: { label: 'Air Light Fist', pose: 'blast', burst: [80, 90] }, sp0: { label: 'Light Jab', burst: [70, 120] }, ck1: { label: 'Feather Sweep', wind: 'crouch', pose: 'slideKick', hitbox: [20,120,0,34] }, jk1: { label: 'Air Wing Kick', pose: 'roundhouse' } };
 DEVIL_CH.normalLook = { ...(CHARS.salary.normalLook || {}), ...(DEVIL_CH.normalLook || {}), jp1: { label: 'Air Hellclaw', pose: 'kClawDown', claw: [80, 80, 0.9, 60, '255,120,90'] }, sp0: { label: 'Devil Swipe', pose: 'kClawDown', claw: [70, 100, 0.8, 40, '255,120,90'] }, ck1: { label: 'Tail Sweep', wind: 'crouch', pose: 'slideKick', hitbox: [20,130,0,34] }, jk1: { label: 'Air Tail Lash', pose: 'roundhouse' } };
 DOUBLE_CH.normalLook = DEVIL_CH.normalLook; // (double possession fights with the devil's claws and tail too: it was copied from the devil before these were set)
 // second palette, used when both online players pick the same fighter
