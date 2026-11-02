@@ -22,7 +22,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Monkey Staff Rush<small>Opens with a pole spin kick, then keeps going whether it hits or is guarded. After each part press another button: U thrusts, J sweeps low, I hops into an overhead crash (bounces them on a hit), K ends with a spinning finish that knocks them away. Up to five parts in any order, ending with the finish; it wears down their guard fast. On a hit every part combos; once it is guarded, the J sweep winds up slowly and they can hit her before it.</small></td><td class="cmd">→ → + J, then U / I / J / K</td></tr>
           <tr><td>Staff Windmill<small>Spins the staff in front: four hits, and it swats projectiles out of the air.</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>Cloud Somersault<small>Somersaults up onto a cloud, hangs a moment, then dives at where they are.</small></td><td class="cmd">← ← + I</td></tr>
-          <tr><td>Somersault Kick<small>A flipping kick that launches; she can’t be hit at the very start.</small></td><td class="cmd">← ← + J</td></tr>
+          <tr><td>Back Vault Smash<small>Pole Vault Smash backwards: she plants the staff, vaults back away from them and brings it down on them as she goes, launching them and dragging them along after her. A little quicker than → → + I.</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>Monkey Feint<small>Flips back out of reach, then springs straight back in with a thrust.</small></td><td class="cmd">← ← + K</td></tr>
           <tr><td>Rising Staff<small>Up close: sweeps the staff upward and launches.</small></td><td class="cmd">↓ + I</td></tr>
           <tr class="super"><td>Super: Great Sage Pillar<small>A giant golden-banded staff crashes down on them with a wide shockwave, six hits. Up close the last hit bounces them back to Mei. Not invincible: until the pillar comes down, light hits from up close don't stop it (she still takes their full damage — enough of it finishes her), but heavy attacks, techniques and anything from further away do. Needs a full MP gauge.</small></td><td class="cmd">Punch + Kick</td></tr>
@@ -36,7 +36,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>1. Rising Staff<small>One juggle: ↓ + I, U, U, K. Two juggles: ↓ + I, U, U, I (Pinwheel Rise lifts them again), K.</small></td><td class="cmd">↓ + I</td></tr>
           <tr><td>2. Sweeping Staff<small>One juggle: → → + K, U, U. Two juggles: → → + K, I (Pinwheel Rise lifts them again), K.</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>3. Pole Vault Smash<small>One juggle: → → + I, U, U, K. Two juggles: → → + I, U, U, → → + I (Vault Spike bounces them again), U, K.</small></td><td class="cmd">→ → + I</td></tr>
-          <tr><td>4. Somersault Kick<small>One juggle: ← ← + J, U, U, K. Two juggles: ← ← + J, U, ← ← + I (Cloud Chase), U, ↓ + K (Staff Meteor), K.</small></td><td class="cmd">← ← + J</td></tr>
+          <tr><td>4. Back Vault Smash<small>One juggle: ← ← + J, U, U, K. Two juggles: ← ← + J, U, ← ← + I (Cloud Chase), U, ↓ + K (Staff Meteor), K.</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>5. Counter Round Swing<small>The round swing launches when it catches an attack starting up. One juggle: K, U, U, K. Two juggles: K, U, → → + I (Vault Spike bounces them again), K.</small></td><td class="cmd">K</td></tr>
           <tr><td>6. Jump-in Falling Staff<small>Jump toward them, I on the way down. One juggle: U, U, K. Two juggles: U, Punch + Kick (Great Sage Pillar up close), U, K.</small></td><td class="cmd">W ↗, I</td></tr>
           <tr><td>7. Max combo: lift, lift, bounce<small>↓ + I, U, U, I (Pinwheel Rise), → → + I (Vault Spike), U, U, K.</small></td><td class="cmd">↓ + I</td></tr>
@@ -65,7 +65,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>猿王連棍<small>棍を軸に回し蹴りから始まり、当たってもガードされても続く：U突き、J足払い、I飛び上がって叩き（ヒットでバウンド）、K回転のとどめ。最大5段。ガードを大きく削る。当たれば全段つながるが、ガードされるとJの足払いの出が遅くなり割り込まれる。</small></td><td class="cmd">→ → + J → U/I/J/K</td></tr>
           <tr><td>風車棍<small>前で棍を回して4ヒット。飛び道具を叩き落とす。</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>觔斗雲<small>宙返りで雲に乗り、少し止まってから相手の位置へ急降下。</small></td><td class="cmd">← ← + I</td></tr>
-          <tr><td>宙返り蹴り<small>打ち上げの宙返り蹴り。出始めは無敵。</small></td><td class="cmd">← ← + J</td></tr>
+          <tr><td>後ろ棒高跳び叩き<small>後ろ向きの棒高跳び叩き：棍を突いて後ろへ跳び、離れながら振り下ろして打ち上げ、引き寄せる。→ → + Iより少し速い。</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>猿のフェイント<small>後ろに宙返りして間合いを外し、すぐ突きで飛び込む。</small></td><td class="cmd">← ← + K</td></tr>
           <tr><td>昇り棍<small>至近距離で棍を振り上げて打ち上げ。</small></td><td class="cmd">↓ + I</td></tr>
           <tr class="super"><td>超必殺技：斉天大聖の柱<small>金の帯の巨大な棍が衝撃波とともに落ちてくる。6ヒット、広い範囲。至近距離なら手前にバウンド。無敵ではない：柱が落ちるまで、近くからの弱い攻撃では止まらない（ダメージはそのまま受け、体力が尽きればKO）が、強い攻撃・必殺技・離れた位置からの攻撃では止まる。MP満タンが必要。</small></td><td class="cmd">パンチ + キック</td></tr>
@@ -79,7 +79,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>1. 昇り棍<small>1回：↓+I、U、U、K。2回：↓+I、U、U、I（風車昇り）、K。</small></td><td class="cmd">↓ + I</td></tr>
           <tr><td>2. 足払い棍<small>1回：→→+K、U、U。2回：→→+K、I（風車昇り）、K。</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>3. 棒高跳び叩き<small>1回：→→+I、U、U、K。2回：→→+I、U、U、→→+I（もう一度バウンド）、U、K。</small></td><td class="cmd">→ → + I</td></tr>
-          <tr><td>4. 宙返り蹴り<small>1回：←←+J、U、U、K。2回：←←+J、U、←←+I（雲乗り）、U、↓+K、K。</small></td><td class="cmd">← ← + J</td></tr>
+          <tr><td>4. 後ろ棒高跳び叩き<small>1回：←←+J、U、U、K。2回：←←+J、U、←←+I（雲乗り）、U、↓+K、K。</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>5. カウンター大回転<small>1回：K、U、U、K。2回：K、U、→→+I（跳び叩き）、K。</small></td><td class="cmd">K</td></tr>
           <tr><td>6. 飛び込み落とし棍<small>相手に向かってジャンプし落ち際にI。1回：U、U、K。2回：U、P+K（至近の斉天大聖の柱）、U、K。</small></td><td class="cmd">W ↗ → I</td></tr>
           <tr><td>7. 最大コンボ：打ち上げ・打ち上げ・バウンド<small>↓+I、U、U、I（風車昇り）、→→+I（棒高跳び叩き）、U、U、K。</small></td><td class="cmd">↓ + I</td></tr>

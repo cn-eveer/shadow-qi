@@ -27,6 +27,7 @@ function stretchReach(mv, k) { // Lyra: every attack reaches further (the glyphs
   return mv;
 }
 function normalMove(ch, kind, str, stance) {
+  if (ch.noNormal && ch.noNormal.includes(stance + kind + str)) return null; // (a normal this fighter doesn't have: Lyra has no ↓ + U)
   const mv = normalMoveBase(ch, kind, str, stance);
   const nl = mv && ch.normalLook && ch.normalLook[stance + kind + str]; if (nl) Object.assign(mv, nl);
   const sst = STRINGS[ch.lookKey || ch.key]; if (mv && sst && sst.$start && stance === 's' && str === 0 && sst.$start[kind]) mv.chain = sst.$start[kind];
@@ -96,7 +97,7 @@ function heavyFX(f, mv) {
 const POUNCE_MAX = 384, RIP_REACH = 380, RIP_PULL = 440; // the kappa's Pounce leaps this far at most; Riptide drags them this far at most (half the stage), and drags them this far at most
 const KURO_REC = { cloneStrike: 8, shadowCharge: 14, counterVanish: 12, swordSlash: 18, ambushBehind: 16, ambushLeap: 20, ambushSlide: 16, ambushKick: 18, // Shadow Charge and its follow-ups can be punished
   teleKick: 7, teleSlide: 9, teleSpin: 12, flame: 10, fireballs: 1, vanishDrop: 10, vanishSlide: 6, jFire: 10, jRain: 8, jClone: 8, jIai: 15, jVanishHeel: 9, shadowArmy: 22 };
-const SLOW_SPECIALS = { staff: new Set(['extendStaff', 'vaultSmash', 'sweepStaff', 'poleKick', 'windmill', 'cloudLeap', 'somersault', 'feint']),
+const SLOW_SPECIALS = { staff: new Set(['extendStaff', 'vaultSmash', 'sweepStaff', 'poleKick', 'windmill', 'cloudLeap', 'vaultBack', 'feint']),
   psychic: new Set(['phantomFist', 'crushFist', 'psyLift', 'forceWave', 'orbBurst', 'tripleRay', 'orbStrong', 'orbLong']) };
 // Tetsu's standing techniques drive forward while they wind up (speed per technique)
 const TETSU_STEP = { qiBlast: 4, qiOrb: 4, stomp: 4, qiParry: 3, qiCannon: 3 };
@@ -113,17 +114,19 @@ function specialMove(id) {
 }
 function specialMoveBase(id) {
   switch (id) {
-    case 'cloneStrike': return { id, label: 'Shadow Clone', startup: 13, active: 6, recovery: 8, blockAdv: 0, noFmRec: true, noGuardLag: true, /* (the clone does the work: if it's guarded after he's recovered, he isn't caught off balance) */ /* (no recovery added by his frame tuning) */ wind: 'seal', pose: 'seal', proj: 'clone', limit: 1,
+    case 'cloneStrike': return { id, label: 'Shadow Clone', startup: 13, active: 6, recovery: 8, blockAdv: 0, noFmRec: true, noGuardLag: true, bodyHurt: true, /* (the clone does the work: if it's guarded after he's recovered, he isn't caught off balance) */ /* (no recovery added by his frame tuning) */ wind: 'seal', pose: 'seal', proj: 'clone', limit: 1,
       onFrame(f, o, mf) { if (mf === 12) spawnClone(f, false, 0); } };
     case 'shadowCharge': return { id, label: 'Shadow Charge Upper', startup: 46, active: 9, recovery: 16, blockAdv: -21, wind: 'seal', pose: 'uppercut', selfMove: true, counterVanish: true, slow: true, interruptChance: 0.2,
-      hitbox: [10,82,40,175], dmg: 45, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 13, type: 'mid', hitstop: 9, gdrain: 6,
+      bodyHurt: true, // (fitted to his actual silhouette, mid-dash and mid-rise)
+      hitbox: [10,92,45,165], dmg: 45, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 13, type: 'mid', hitstop: 9, gdrain: 6, // (the rising fist's own reach: longer, a little less tall)
+      limbJoint: 'h1', limbReach: 30, limbBack: 10, limbUp: 20, limbDown: 15, // (the hitbox itself travels with the fist, through the whole rising arc)
       trail: { cx: 15, cy: 90, r: 95, a0: -70, a1: 100, col: '190,150,255' },
       // the follow-ups are for when the kick is guarded or misses; on a hit you juggle with any attack instead
       follow: { from: 14, to: 66, at: 51, notOnHit: true, opts: { lp: 'ambushBehind', hp: 'ambushLeap', lk: 'ambushSlide', hk: 'ambushKick' } },
       poseFn(f, mf) {
         if (mf <= 12) return lerpPose(f.prevPose, POSES.seal, Math.min(1, mf / 5));
         if (mf <= 46) return f.chargeStop ? lerpPose(POSES.dash, POSES.uppercutW, Math.min(1, (mf - f.stopMf) / 4)) : POSES.dash;
-        if (mf <= 51) return lerpPose(POSES.uppercutW, POSES.uppercut, Math.min(1, (mf - 46) / 4)); // a smooth rising uppercut out of the dash
+        const total = f.move.startup + f.move.active; if (mf <= total) return lerpPose(POSES.uppercutW, POSES.uppercut, easeOutQ(Math.min(1, (mf - 46) / Math.max(1, total - 46)))); // a smooth rising uppercut out of the dash, still rising through the whole active window instead of arriving early and holding
         return null;
       },
       speedHold: f => f.mf > 12 && !f.chargeStop,
@@ -143,7 +146,9 @@ function specialMoveBase(id) {
       hitbox: [10,88,40,130], dmg: 62, stun: 20, bstun: 12, push: 2, stunT: 62, stunKind: 'shadow', type: 'mid', hitstop: 10, gdrain: 10,
       trail: { cx: 15, cy: 105, r: 72, a0: 70, a1: -30, col: '200,170,255' } };
     case 'swordSlash': return { id, label: 'Iai Slash', startup: 16, active: 12, recovery: 26, blockAdv: -20, /* (−18 measured: it cuts through) */ cpLaunch: true, launchVy: 13, wind: 'iaiStance', pose: 'iaiDash', sword: true, iai: true, slow: true, selfMove: true, noPush: true,
-      hitbox: [-60,60,30,130], dmg: 80, stun: 20, bstun: 12, push: 0, slash: true, type: 'mid', hitstop: 12, gdrain: 20,
+      bodyHurt: true, // (fitted to his actual silhouette through the dash)
+      hitbox: [-5,80,35,115], dmg: 80, stun: 20, bstun: 12, push: 0, slash: true, type: 'mid', hitstop: 12, gdrain: 20, // (the blade's own reach, longer and thinner — iaiSweepBox covers the 32 px/frame dash so it still can't pass through someone)
+      limbJoint: 'h1', limbReach: 65, limbBack: 10, limbUp: 22, limbDown: 22, // (the box travels with the sword hand; iaiSweepBox still unions it with last frame's)
       poseFn(f, mf) {
         if (mf <= 16) return lerpPose(f.prevPose, POSES.iaiStance, Math.min(1, mf / 6));
         if (mf <= 24) return POSES.iaiDash;
@@ -201,10 +206,13 @@ function specialMoveBase(id) {
       trail: { cx: 0, cy: 70, r: 86, a0: -60, a1: 40, col: '190,150,255' },
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; puff(f.x, 40); },
       onFrame(f, o, mf) { if (mf === 5) { dustAt(f.x, false); sfx('swing'); } if (mf === 18) sfx('slash'); } };
-    case 'teleKick': return { id, label: 'Sky Drop Kick', startup: 20, active: 14, recovery: 16, blockAdv: -21, wind: 'seal', pose: 'diveKick', manualY: true, noPush: true, selfMove: true,
+    case 'teleKick': return { id, label: 'Sky Drop Kick', startup: 28, active: 14, recovery: 16, blockAdv: -21, wind: 'seal', pose: 'diveKick', manualY: true, noPush: true, selfMove: true,
+      bodyHurt: true, // (fitted to his actual silhouette, hanging in the air and falling — no narrower than he really is: the whole point of the longer hang is that he's genuinely open there)
       hitbox: [-10,52,-12,50], dmg: 58, stun: 24, bstun: 14, push: 2, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 9, gdrain: 10,
-      follow: { from: 18, to: 48, at: 35, opts: { lk: 'teleSlide', hk: 'teleSpin' } },
-      poseFn(f, mf) { return mf > 6 && mf <= 20 ? POSES.jump : null; },
+      limbJoint: 'f1', limbReach: 35, limbBack: 10, limbUp: 6, limbDown: 18, // (the box travels with the falling kick, and doesn't reach up past the foot)
+      follow: { from: 18, to: 56, at: 43, opts: { lk: 'teleSlide', hk: 'teleSpin' } },
+      poseFn(f, mf) { return mf > 6 && mf <= 28 ? POSES.jump : null; },
+      speedHold: f => f.mf > 14, // (sped up only for the vanish itself; once he's back in view, he hangs and falls at his own pace — long enough now for a real anti-air)
       onStart(f) { f.invul = 6; },
       onFrame(f, o, mf) {
         f.vx = 0;
@@ -212,14 +220,17 @@ function specialMoveBase(id) {
         if (mf === 14) {
           // reappear above the opponent, then drop through them and land behind
           const side = Math.sign(o.x - f.x) || f.facing;
-          f.tele = { x1: clamp(o.x - side * 30, WALL_L, WALL_R), x2: clamp(o.x + side * 55, WALL_L, WALL_R) };
-          f.x = f.tele.x1; f.y = 175; f.facing = side; f.hidden = false; f.invul = 0; puff(f.x, f.y + 60); // (seen again: hittable from here — an anti-air can catch the drop)
+          const up = o.y > 30 || (o.state === 'knock' && o.juggle); // (they're in the air — a juggle: drop on them from above as before)
+          f.move.limbUp = up ? 18 : 6;
+          f.tele = up ? { x1: clamp(o.x - side * 30, WALL_L, WALL_R), x2: clamp(o.x + side * 55, WALL_L, WALL_R), h: 175 } : { x1: clamp(o.x - side * 105, WALL_L, WALL_R), x2: clamp(o.x - side * 25, WALL_L, WALL_R), h: 120 }; // (on the ground: out in front of them, diving forward into their front — not dropping on their head and crossing over)
+          f.x = f.tele.x1; f.y = f.tele.h; f.facing = side; f.hidden = false; f.invul = 0; puff(f.x, f.y + 60); // (seen again: hittable from here — an anti-air can catch the drop)
         }
-        if (mf > 14 && mf <= 20) f.y = 175 + Math.sin((mf - 14) * 0.5) * 3; // brief hang so the opponent can react
-        if (mf > 20 && mf <= 34) { const e = (mf - 20) / 14; f.x = lerp(f.tele.x1, f.tele.x2, e); f.y = 175 * (1 - e); }
-        if (mf === 34) { f.y = 0; dustAt(f.x, false); }
+        if (mf > 14 && mf <= 28) f.y = f.tele.h + Math.sin((mf - 14) * 0.5) * 3; // a longer hang so the opponent can react — and beat him, if they have an air technique of their own
+        if (mf > 28 && mf <= 42) { const e = (mf - 28) / 14; f.x = lerp(f.tele.x1, f.tele.x2, e); f.y = f.tele.h * (1 - e); }
+        if (mf === 42) { f.y = 0; dustAt(f.x, false); }
       } };
     case 'teleSlide': return { id, label: 'Drop Slide', startup: 3, active: 16, recovery: 14, blockAdv: -16, wind: 'crouch', pose: 'slideKick', selfMove: true,
+      bodyHurt: true, // (fitted to his actual silhouette: low and stretched out, the same as Vanish Slide, not the standing-height box it had no override for before)
       hitbox: [0,64,0,34], dmg: 48, stun: 18, bstun: 10, push: 2, kd: true, kdVx: 1.5, kdVy: 4, low: true, type: 'mid', hitstop: 7, gdrain: 6,
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
       onFrame(f, o, mf) {
@@ -234,18 +245,28 @@ function specialMoveBase(id) {
     case 'flame': return { id, label: 'Fire Breath', startup: 24, active: 32, recovery: 16, /* (a shorter stream: 32 + 3 active) */ blockAdv: -14, hitAdv: 10, wind: 'seal', pose: 'breath', proj: 'flame', limit: 1, slow: true, interruptChance: 0.4,
       poseFn(f, mf) { return mf <= 24 ? handSign(mf) : null; },
       onFrame(f, o, mf) { if (mf <= 24 && mf % 2 === 0) ember(f); if (mf === 25) spawnFlame(f); } };
-    case 'fireballs': return { id, label: 'Lightning Volley', startup: 34, active: 15, recovery: 1, noGuardLag: true, fixedFrames: true, /* (he's free once the last ball flies, frame 48: a projectile — no frameMod recovery added) */ wind: 'seal', pose: 'throw', proj: 'homing', limit: 1, slow: true, interruptChance: 0.4,
+    case 'fireballs': return { id, label: 'Thunder Ball', startup: 34, active: 15, recovery: 1, noGuardLag: true, fixedFrames: true, /* (he's free once the last ball flies, frame 48: a projectile — no frameMod recovery added) */ wind: 'seal', pose: 'throw', proj: 'homing', limit: 1, slow: true, interruptChance: 0.4,
       poseFn(f, mf) { return mf <= 34 ? handSign(mf) : null; },
       onFrame(f, o, mf) {
-        if (mf === 8 || mf === 16 || mf === 24) spawnOrb(f, (mf - 8) / 8);       // three lightning balls crackle into being overhead during the hand signs
-        if (mf === 36 || mf === 42 || mf === 48) launchOrb(f, (mf - 36) / 6);    // then fly at the opponent one after another
+        if (mf === 8) spawnOrb(f, 1, true);                                       // one great lightning ball crackles into being overhead during the hand signs, swelling as they go on
+        if (mf > 8 && mf <= 34) for (const p of projs) if (p.owner === f && p.type === 'homing' && p.hold) p.r = 13 + (mf - 8) * 0.8;
+        if (mf === 36) launchOrb(f, 1);                                           // then flies at the opponent
         if (mf <= 34 && mf % 2 === 0) crackle(f);
       } };
     case 'vanishDrop': return { id, label: 'Vanish Drop Kick', startup: 36, active: 22, recovery: 15, blockAdv: -16, /* (a longer fall: out longer in the air, where it can be punished) */ wind: 'crouch', pose: 'axe', manualY: true,
+      bodyHurt: true, // (fitted to his actual silhouette through the leap)
       trail: { cx: 5, cy: 62, r: 72, a0: 110, a1: -20, col: '190,150,255' }, noPush: true, selfMove: true,
-      hitbox: [-40,40,-20,60], dmg: 60, stun: 20, bstun: 14, push: 4, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 10, gdrain: 12,
-      poseFn(f, mf) { return mf <= 20 ? POSES.crouch : mf <= 36 ? POSES.axeW : null; },
+      hitbox: [-30,55,0,40], dmg: 60, stun: 20, bstun: 14, push: 4, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 10, gdrain: 12, // (hitbox: the fallback for other systems; the real one below is the kicking leg)
+      limbJoint: 'f1', limbReach: 55, limbBack: 28, limbUp: 18, limbDown: 18, sweepBox: true, // the box rides the leg itself, swept along its own path: the foot crosses the whole stage diagonally fast enough that a single frame's box can pass clean by someone without ever overlapping them; extra reach also keeps it ahead of his own hurtbox right as he swings into the dive
+      poseFn(f, mf) { // the leg is raised through the leap, then comes down gradually across the whole dive — the generic system would snap it to the strike pose on the first active frame, jerking the foot's hitbox forward
+        if (mf <= 20) return POSES.crouch;
+        if (mf <= 36) return POSES.axeW;
+        if (mf <= 57) return lerpPose(POSES.axeW, POSES.axe, easeInOutQ((mf - 36) / 21));
+        return null;
+      },
+
       onFrame(f, o, mf) {
+        if (mf === 1) f.vdOrigDist = Math.abs(o.x - f.x); // the real distance to them, before the backward retreat (which can by itself put him most of a leap's width away) — the arc height is scaled off this, not off how far the leap itself ends up travelling
         if (mf <= 20) { shadowRetreat(f, mf); return; }
         if (mf === 21) {
           const side = Math.sign(o.x - f.x) || f.facing;
@@ -253,12 +274,16 @@ function specialMoveBase(id) {
           const want = o.x + side * 65; // over the opponent, but never more than about a third of the stage
           f.leap = { x0: f.x, tx: clamp(f.x + side * Math.min(Math.abs(want - f.x), 230), WALL_L, WALL_R) };
         }
-        // a high arc (well above projectiles and beams) that passes over the opponent's head and lands behind them
-        if (mf > 21 && mf <= 57) { const e = (mf - 21) / 36; f.vx = 0; f.x = lerp(f.leap.x0, f.leap.tx, e); f.y = 215 * Math.sin(Math.PI * e); }
+        // a high arc (well above projectiles and beams) that passes over the opponent's head and lands behind them —
+        // shorter when he started close, the same way a real jump would be, so the foot still actually passes near
+        // someone close instead of sailing high over them on the same tall arc a longer leap needs
+        if (mf > 21 && mf <= 57) { const e = (mf - 21) / 36, peak = clamp((f.vdOrigDist || 230) * 1.3, 90, 215); f.vx = 0; f.x = lerp(f.leap.x0, f.leap.tx, e); f.y = peak * Math.sin(Math.PI * e); }
         if (mf === 57) { f.y = 0; dustAt(f.x, true); game.shake = Math.max(game.shake, 3); sfx('land'); }
       } };
-    case 'vanishSlide': return { id, label: 'Vanish Slide', startup: 20, active: 42, recovery: 8, blockAdv: -16, cpLaunch: true, wind: 'crouch', pose: 'slideKick', selfMove: true, noPush: true,
-      hitbox: [0,64,0,34], dmg: 52, stun: 30, bstun: 10, push: 0, kd: true, kdVx: 4, kdVy: 6, launchVy: 13, low: true, type: 'mid', hitstop: 6, gdrain: 6, // (knocks down; a counter or a punish launches: cpLaunch)
+    case 'vanishSlide': return { id, label: 'Vanish Slide', startup: 20, active: 42, recovery: 8, blockAdv: -16, cpLaunch: true, crouch: true, wind: 'crouch', pose: 'slideKick', selfMove: true, noPush: true, // (crouch: his hurtbox stays low the whole slide, not a standing-height one — he's flat on the ground)
+      bodyHurt: true, // (fitted to his actual silhouette through the slide — low and stretched out, not a fixed box)
+      maxTravel: 420, // (the 42 active frames at 10 px/frame can cover this much ground on their own — the default dash cap would otherwise freeze him mid-slide, well short of a far opponent, for the rest of his active frames)
+      hitbox: [0,112,0,22], dmg: 52, stun: 30, bstun: 10, push: 0, kd: true, kdVx: 4, kdVy: 6, launchVy: 13, low: true, type: 'mid', hitstop: 6, gdrain: 6, // (longer reach, matching how far the slide actually stretches him out — the hurtbox already covers that whole span)
       poseFn(f, mf) { return mf <= 20 ? POSES.crouch : null; },
       onFrame(f, o, mf) {
         if (mf <= 20) { shadowRetreat(f, mf); return; }
@@ -294,7 +319,9 @@ function specialMoveBase(id) {
         if (mf === 28) sfx('sheath');
       } };
     case 'jVanishHeel': return { id, label: 'Vanish Heel', startup: 12, active: 10, recovery: 14, wind: 'seal', pose: 'axe', manualY: true, noPush: true, selfMove: true,
-      hitbox: [-35,35,-30,60], dmg: 50, stun: 20, bstun: 14, push: 2, kd: true, kdVx: 1, kdVy: -8, type: 'mid', hitstop: 12, gdrain: 10,
+      bodyHurt: true, // (fitted to his actual silhouette on the way down)
+      hitbox: [-10,65,0,55], dmg: 50, stun: 20, bstun: 14, push: 2, kd: true, kdVx: 1, kdVy: -8, type: 'mid', hitstop: 12, gdrain: 10, // (the same reach as Vanish Drop Kick's own axe kick, not a box of his whole body)
+      limbJoint: 'f1', limbReach: 35, limbBack: 10, limbUp: 18, limbDown: 15, // (travels with the kicking foot)
       trail: { cx: 5, cy: 62, r: 72, a0: 110, a1: -20, col: '190,150,255' },
       poseFn(f, mf) { return mf <= 12 ? POSES.axeW : null; },
       onFrame(f, o, mf) {
@@ -325,7 +352,7 @@ function specialMoveBase(id) {
         if (mf <= 32) { const e = mf / 32; f.x = lerp(f.leap.x0, f.leap.tx, e); f.y = 175 * Math.sin(Math.PI * e); }
         if (mf === 32) { f.y = 0; dustAt(f.x + f.facing * 60, true); parts.push({ type: 'ering', x: f.x + f.facing * 70, y: GROUND, r: 8, vr: 7, life: 14, max: 14, col: '255,205,110' }); game.shake = Math.max(game.shake, 5); sfx('land'); }
       } };
-    case 'sweepStaff': return { id, label: 'Sweeping Staff', startup: 9, active: 14, recovery: 16, wind: 'crouch', pose: 'staffSweep', selfMove: true, speedFx: true, spinStaff: true,
+    case 'sweepStaff': return { id, label: 'Sweeping Staff', startup: 9, active: 14, recovery: 16, wind: 'staffFloorPoke', pose: 'staffFloorPoke', selfMove: true, speedFx: true, spinStaff: true, floorSpin: true, // (crouched low, the staff spun flat along the floor: only low)
       hitbox: [0,230,0,44], low: true, dmg: 46, stun: 20, bstun: 14, push: 2, launch: true, launchVy: 11, type: 'mid', hitstop: 8, gdrain: 8, // (a long sweep: she slides in less)
       rushTag: true, rushOpen: true, follow: { from: 8, to: 30, at: 22, opts: { lp: 'srPoke', hp: 'srVault', lk: 'srSweep2', hk: 'srSlam' } },
       trail: { cx: 40, cy: 18, r: 90, a0: -70, a1: 40, col: '255,205,110' },
@@ -335,8 +362,18 @@ function specialMoveBase(id) {
         if (f.hitConnected && f.hookFor !== f.serial && o.juggle) { f.hookFor = f.serial; o.vx = Math.sign(f.x - o.x) * clamp((Math.abs(o.x - f.x) - 70) / 30, 0, 4); } // the staff hooks them in toward him
       } };
     // Monkey Staff Rush: → → + K opens a string that keeps going whether it hits or is guarded; each part leads to others
-    case 'poleKick': return { id, label: 'Pole Spin Kick', startup: 10, active: 12, recovery: 18, wind: 'thrustW', pose: 'poleKick', spin: [10, 22], selfMove: true, spinStaff: true,
+    case 'poleKick': return { id, label: 'Pole Spin Kick', startup: 10, active: 12, recovery: 18, wind: 'thrustW', pose: 'poleKick', selfMove: true, spinStaff: true, // (no body turn: the kicks themselves are animated (poseFn), so the foot drawn is where its box is)
       hitbox: [10,180,40,160], multi: 2, interval: 6, dmg: 26, lastDmg: 32, stun: 22, bstun: 14, push: 2, lastPush: 3, type: 'mid', hitstop: 8, gdrain: 10,
+      limbJoint: 'f1', limbReach: 30, limbBack: 20, limbUp: 22, limbDown: 22, sweepBox: true, hitFrom: 5, // (the box is on the kicking foot, from the moment the kick starts out — not a big fixed box beside her)
+      poseFn(f, mf) { // knee chambered through the wind-up, the leg snapped out (first kick), drawn back a little, then out again (second) and held — spread over the whole move so the foot (and its box) can be followed
+        const mv = f.move, su = mv.startup, end = su + mv.active; if (mf > end + 3) return null;
+        const kick = POSES.poleKick, chamber = { ...kick, l1u: 85, l1l: -20 }, half = lerpPose(kick, chamber, 0.55);
+        if (mf <= 5) return lerpPose(f.prevPose, chamber, easeOutQ(mf / 5));
+        if (mf <= su + 1) return lerpPose(chamber, kick, easeInOutQ((mf - 5) / (su - 4)));
+        if (mf <= su + 4) return lerpPose(kick, half, easeInOutQ((mf - su - 1) / 3));
+        if (mf <= su + 7) return lerpPose(half, kick, easeInOutQ((mf - su - 4) / 3));
+        return kick;
+      },
       trail: { cx: 0, cy: 80, r: 100, a0: -60, a1: 60, col: '255,205,110' },
       rushTag: true, rushOpen: true, follow: { from: 8, to: 30, at: 23, opts: { lp: 'mrThrust', hp: 'mrCrash', lk: 'mrSweep', hk: 'mrFinish' } },
       onFrame(f, o, mf) { if (mf > 6 && mf <= 16 && Math.abs(o.x - f.x) > 150) f.vx = f.facing * 2; else f.vx *= 0.7; if (mf === 10) sfx('swing'); } }; // (barely steps in: the staff reaches)
@@ -404,11 +441,26 @@ function specialMoveBase(id) {
         else if (mf <= 44) { const e = (mf - 30) / 14; f.x = lerp(f.dive.x0, f.dive.tx, e); f.y = Math.max(0, 220 * (1 - e)); }
         if (mf === 44) { f.y = 0; dustAt(f.x, true); game.shake = Math.max(game.shake, 4); }
       } };
-    case 'somersault': return { id, label: 'Somersault Kick', startup: 4, active: 10, recovery: 99, untilLand: true, landT: 6, wind: 'crouch', pose: 'flipKick',
-      hitbox: [-10,90,40,190], dmg: 70, stun: 20, bstun: 16, push: 3, launch: true, launchVy: 13, type: 'mid', hitstop: 10, gdrain: 8,
-      trail: { cx: 0, cy: 90, r: 90, a0: -80, a1: 120, col: '255,205,110' },
-      onStart(f) { f.invul = 6; },
-      onFrame(f, o, mf) { if (mf === 4) { f.vy = 11; f.y = 0.5; f.vx = f.facing * 0.6; f.flipT = 22; f.flipMax = 22; sfx('rise'); } } };
+    case 'vaultBack': return { id, label: 'Back Vault Smash', startup: 14, active: 10, recovery: 16, wind: 'vault', pose: 'staffSlamAir', manualY: true, noPush: true, selfMove: true, // ← ← + J: Pole Vault Smash backwards — she plants the staff, vaults back away from them and brings it down on them as she goes
+      hitbox: [-10,200,-20,130], dmg: 58, stun: 20, bstun: 14, push: 3, launch: true, launchVy: 12, type: 'mid', hitstop: 11, gdrain: 12, // (hitbox: the fallback for other systems; the real one is the staff)
+      staffExt: 50, staffFront: true, hitFrom: 7,
+      trail: { cx: 20, cy: 90, r: 120, a0: 110, a1: -30, col: '255,205,110' },
+      poseFn(f, mf) { // the staff planted upright, then brought down in front of her through the end of the wind-up and the active frames (evenly), held there to the landing
+        const mv = f.move, su = mv.startup, L = su + 10; if (mf > L + 2) return null;
+        if (mf <= 4) return lerpPose(f.prevPose, POSES.vault, easeOutQ(mf / 4));
+        if (mf <= su + 4) return lerpPose(POSES.vault, POSES.staffSlamAir, (mf - 4) / su);
+        return POSES.staffSlamAir;
+      },
+      onStart(f, o) {
+        const side = Math.sign(o.x - f.x) || f.facing; f.facing = side;
+        f.leap = { x0: f.x, tx: clamp(f.x - side * 120, WALL_L, WALL_R) }; sfx('rise');
+      },
+      onFrame(f, o, mf) { // vaults back off the planted staff, swinging it down on them
+        if (f.hitConnected && o.juggle && Math.abs(o.x - f.x) > 80) o.vx = Math.sign(f.x - o.x) * clamp((Math.abs(o.x - f.x) - 80) / 12, 1, 9); // (the staff drags them along after her, so the juggle can follow)
+        f.vx = 0; const L = f.move.startup + 10;
+        if (mf <= L) { const e = mf / L; f.x = lerp(f.leap.x0, f.leap.tx, e); f.y = 175 * Math.sin(Math.PI * e); } // (as high as Pole Vault Smash)
+        if (mf === L) { f.y = 0; dustAt(f.x, true); sfx('land'); }
+      } };
     case 'feint': return { id, label: 'Monkey Feint', startup: 22, active: 6, recovery: 16, wind: 'crouch', pose: 'thrust', staffExt: 60, selfMove: true, speedFx: true,
       hitbox: [20,220,70,125], dmg: 52, stun: 20, bstun: 12, push: 6, type: 'mid', hitstop: 9, gdrain: 10,
       poseFn(f, mf) { return mf <= 12 ? POSES.tuck : null; },
@@ -421,11 +473,13 @@ function specialMoveBase(id) {
     // ---------- Aldric, the paladin: parry, heal, charge, protect ----------
     // → → + U: Rampart Charge. Hold U: he lowers the shield and builds into a raging charge (front attacks and projectiles bounce off);
     // let go, or crash into them, for the Rampart Slam that sends them flying
-    case 'plRampart': return { id, label: 'Rampart Charge', startup: 999, active: 6, recovery: 22, wind: 'pBashW', pose: 'pBash', selfMove: true, maxTravel: W * 0.4, held: true, rage: true, // (armor: hits hurt him but don't stop the charge)
+    case 'plRampart': return { id, label: 'Rampart Charge', startup: 999, active: 6, recovery: 22, wind: 'pShieldPunchW', pose: 'pShieldPunch', selfMove: true, maxTravel: W * 0.4, held: true, rage: true, // (armor: hits hurt him but don't stop the charge)
       hitbox: [10,130,20,175], dmg: 80, fullDmg: true, stun: 26, bstun: 18, push: 4, bpush: 10, kd: true, kdVx: 6, kdVy: 9, type: 'mid', hitstop: 14, gdrain: 30,
-      poseFn: (f, mf) => (!f.move.fired && mf > 10) ? POSES.pDash : null,
+      hitFrom: 10, // (the shield hits all through the run, not only in the slam: crash into them and it lands right there)
+      poseFn: (f, mf) => (!f.move.fired && mf > 10) ? POSES.pRampDash : null, // (the shield leads; the sword stays up behind him)
       onFrame(f, o, mf) {
         const mv = f.move;
+        if (!mv.fired && f.hitConnected) { mv.fired = true; mv.startup = mf - 1; mv.label = 'Rampart Slam'; sfx('hitH'); game.shake = Math.max(game.shake, 5); } // (it struck them on the run: the slam, there)
         if (!mv.fired) {
           if (mf <= 10) { f.vx = 0; if (mf === 2) sfx('charge'); return; } // digs in and lowers the shield
           f.vx = f.facing * Math.min(8, (mf - 10) * 0.55); mv.speedFx = f.vx * f.facing > 5;
@@ -447,36 +501,48 @@ function specialMoveBase(id) {
         if (mf === 19) { sfx('slash'); parts.push({ type: 'slashx', x: f.x + f.facing * 180, y: GROUND - 110, r: 30, life: 10, max: 10, col: '190,225,255', rot: Math.PI / 4 }); }
       } };
     // → → + J: Crouching Slash. He drops low and rushes at them — four tenths of the stage at most — with a downward slash at their legs that bounces them
-    case 'plWindmill': return { id, label: 'Crouching Slash', startup: 16, active: 6, recovery: 26, wind: 'crouch', pose: 'pLowCut', selfMove: true, maxTravel: W * 0.4, speedFx: true,
+    case 'plWindmill': return { id, label: 'Crouching Slash', startup: 16, active: 14, recovery: 26, wind: 'crouch', pose: 'pLowCut', selfMove: true, maxTravel: W * 0.4, speedFx: true, staffExt: 40, extFrom: 0, // (a long blade of light, out from the start of the dash: more reach, and 14 active frames)
       hitbox: [10,200,0,205], dmg: 42, stun: 22, bstun: 16, push: 2, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 13, gdrain: 22,
+      hitFrom: 1, poseFn(f, mf) { // (the blade is live from the first step of the dash) // low through the dash, then the cut comes up off the floor and rises overhead across the active frames — so it carries someone in the air too, with the blade, not a tall box
+        const mv = f.move, su = mv.startup, end = su + mv.active; if (mf > end + 4) return null;
+        if (mf <= 4) return lerpPose(f.prevPose, POSES.pLowCut, easeOutQ(mf / 4)); // (straight into the low cut: the sword leads the dash along the floor)
+        if (mf <= su - 2) return POSES.pLowCut;
+        return mf <= end ? lerpPose(POSES.pLowCut, POSES.pCleaveW, (mf - su + 2) / (end - su + 2)) : POSES.pCleaveW; // (an even rise)
+      },
       onStart(f) { f.cs = { x0: f.x }; },
       onFrame(f, o, mf) {
         const mv = f.move, run = Math.abs(f.x - f.cs.x0), room = W * 0.4 - run;
         if (mf >= 1 && mf <= mv.startup + mv.active && room > 0 && Math.abs(o.x - f.x) > 90 && !f.hitConnected) { f.vx = f.facing * Math.min(18, room); if (mf % 3 === 0) dustAt(f.x - f.facing * 20, false); } else f.vx *= 0.5;
+        if (f.hitConnected && !mv.early) { mv.early = true; const h = f.lastHitMf; if (h < mv.startup) mv.startup = h - 1; mv.active = Math.min(mv.active, h + 5 - mv.startup); } // (it struck on the dash: the cut rises from there and ends as soon after the hit as one landing at the usual time)
         hitRecover(f, 8);
         if (mf === mv.startup) { sfx('slash'); parts.push({ type: 'slashx', x: f.x + f.facing * 120, y: GROUND - 26, r: 40, life: 12, max: 12, col: '190,225,255', rot: Math.PI / 4 }); }
       } };
     // → → + K: Crusader Leap. A heavy, slow leap (four tenths of the stage at most); he crashes down sword-first and the impact rolls out to both sides (it even hits them lying down)
     case 'plLeap': return { id, label: 'Crusader Leap', startup: 30, active: 5, recovery: 28, wind: 'pCleaveW', pose: 'pPlant', manualY: true, noPush: true, selfMove: true,
-      hitbox: [-120,175,0,80], low: true, dmg: 70, fullDmg: true, stun: 24, bstun: 16, push: 3, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 13, gdrain: 24,
+      hitbox: [-120,175,0,80], low: true, hitFrom: 6,
+      poseFn: (f, mf) => mf > 40 ? null : mf <= 8 ? lerpPose(f.prevPose, POSES.pCleaveW, easeOutQ(mf / 8)) : mf <= 30 ? lerpPose(POSES.pCleaveW, POSES.pPlant, (mf - 8) / 22) : POSES.pPlant, // (up on take-off, then the sword comes down and forward evenly through the whole fall, leading him onto them)
+      dmg: 70, fullDmg: true, stun: 24, bstun: 16, push: 3, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 13, gdrain: 24,
       onStart(f, o) { const sg = Math.sign(o.x - f.x) || f.facing; f.lp = { x0: f.x, tx: clamp(f.x + sg * Math.min(Math.abs(o.x - f.x - sg * 30), W * 0.4), WALL_L, WALL_R) }; sfx('rise'); }, // (a leap of four tenths of the stage at most: from further away it falls short)
       onFrame(f, o, mf) {
-        f.vx = 0;
+        f.vx = 0; f.move.low = mf >= 30; // (the sword is live all through the leap — on the way it hits like any blow; only the landing is low)
+        if (f.hitConnected && !f.move.earlyCut && f.lastHitMf <= 30) { f.move.earlyCut = true; f.move.recovery -= 31 - f.lastHitMf; } // (it struck on the way down: he's free as soon after the hit as from a landing hit, so the juggle still follows)
         if (mf <= 30) { const e = mf / 30; f.x = lerp(f.lp.x0, f.lp.tx, e); f.y = 150 * Math.sin(Math.PI * e); }
         if (mf === 30) { f.y = 0; for (const dx of [-90, -40, 40, 90]) parts.push({ type: 'ring', x: f.x + dx, y: GROUND - 10, r: 6, vr: 6, life: 14, max: 14, col: '190,225,255' });
           parts.push({ type: 'lbeam', x: f.x + f.facing * 30, w: 30, life: 10, max: 10 }); dustAt(f.x, true); cracks(f.x + f.facing * 30); game.shake = Math.max(game.shake, 9); sfx('hitH'); }
       } };
-    // ← ← + U: Push Parry. Parries from the 5th frame; a parried blow gets a shield shove that sends them away (no damage). Short window, long recovery
-    case 'plParryRise': return { id, label: 'Push Parry', startup: 4, active: 10, recovery: 26, noProjParry: true, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plShove', fx: 'ward' };
-    case 'plShove': return { id, label: 'Shield Shove', startup: 2, active: 3, recovery: 14, wind: 'pBashW', pose: 'pBash', hitbox: null, burst: [80, 110],
+    // ← ← + U: Push Parry. Parries from the 5th frame; a parried blow gets a shield shove that sends them away (no damage). Short window, long recovery.
+    // A projectile or a spell from the front (Lyra's and Jesse's too) is stopped, and whoever sent it is stunned (← ← + K the same)
+    case 'plParryRise': return { id, label: 'Push Parry', startup: 4, active: 14, recovery: 14, projStun: true, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plShove', fx: 'ward' };
+    case 'plShove': return { id, label: 'Shield Shove', startup: 2, active: 3, recovery: 14, wind: 'pShieldPunchW', pose: 'pShieldPunch', hitbox: null, burst: [80, 110],
       onStart(f, o) { const side = Math.sign(o.x - f.x) || f.facing; if (o.state !== 'ko') { setState(o, 'blockstun'); o.stun = 14; o.move = null; o.vx = side * 30; } sfx('palm'); game.shake = Math.max(game.shake, 3); } }; // (pushed far back, unhurt)
     // ← ← + I: Riposte Parry. Parries from the 5th frame and answers with a sword riposte that hurts and knocks them away
-    case 'plParryStun': return { id, label: 'Riposte Parry', startup: 4, active: 10, recovery: 32, noProjParry: true, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plRiposte', fx: 'ward' };
+    case 'plParryStun': return { id, label: 'Riposte Parry', startup: 4, active: 14, recovery: 18, projStun: true, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plRiposte', fx: 'ward' };
     case 'plRiposte': return { id, label: 'Riposte', startup: 4, active: 5, recovery: 18, wind: 'pThrustW', pose: 'pThrust', wrist: 0, selfMove: true, speedFx: true, noGrace: true, staffExt: 30,
       hitbox: [20,210,70,150], dmg: 64, stun: 22, bstun: 12, push: 6, kd: true, kdVx: 15, kdVy: 7, type: 'mid', hitstop: 14, gdrain: 10,
       onFrame(f, o, mf) { if (mf <= 5 && Math.abs(o.x - f.x) > 70) f.vx = f.facing * 12; else f.vx *= 0.5; if (mf === 4) sfx('slash'); } };
-    // ← ← + K: Rising Parry. Parries from the 8th frame and strikes up under them: it launches, and the combo begins
-    case 'plPray': return { id, label: 'Rising Parry', startup: 7, active: 10, recovery: 34, noProjParry: true, wind: 'pCounter', pose: 'pCounter', parry: true, frontOnly: true, parryInto: 'plRiseStrike', fx: 'ward' };
+    // ← ← + K: Rising Parry. A low parry: he crouches with the shield by the floor, parries low attacks (and projectiles and spells) from the 8th frame
+    // and strikes up under them: it launches, and the combo begins. Mid and high attacks aren't parried (highs go over him)
+    case 'plPray': return { id, label: 'Rising Parry', startup: 7, active: 14, recovery: 20, projStun: true, lowParry: true, crouch: true, wind: 'pLowParry', pose: 'pLowParry', parry: true, frontOnly: true, parryInto: 'plRiseStrike', fx: 'ward' };
     case 'plRiseStrike': return { id, label: 'Rising Strike', startup: 4, active: 5, recovery: 18, wind: 'pCleaveW', pose: 'pShieldUp', selfMove: true, speedFx: true, noGrace: true,
       hitbox: [10,160,30,225], dmg: 46, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 14, type: 'mid', hitstop: 12, gdrain: 10,
       onFrame(f, o, mf) { if (mf <= 4 && Math.abs(o.x - f.x) > 70) f.vx = f.facing * 10; else f.vx *= 0.5; if (mf === 4) { parts.push({ type: 'lbeam', x: f.x + f.facing * 80, w: 34, life: 16, max: 16 }); sfx('orb'); } } };
@@ -488,7 +554,7 @@ function specialMoveBase(id) {
         f.vx = 0;
         if (mf === 3) sfx('charge');
         if (mf < 14 && mf % 3 === 0) parts.push({ type: 'ring', x: f.x, y: GROUND - f.y - 100, r: 70 - mf * 4, vr: -1, life: 6, max: 6, col: '190,225,255' }); // casting: the light gathers (hit him now: counter)
-        if (mf === 14) { sfx('orb'); if (!(f.aegisT > 0)) { f.aegisT = 240; f.aegisHitT = null; } } // (not again while it's up)
+        if (mf === 14) { sfx('orb'); if (!(f.aegisT > 0)) { f.aegisT = 240; f.aegisHitT = null; f.aegisFloor = Math.max(0, f.guard - AEGIS_COST); } } // (not again while it's up) (it may use a quarter of the guard meter, no more)
       } };
     // super: Sanctuary. He plants the sword and a dome of light swells around him: caught inside, they're held and burned
     // again and again while his guard refills and his wounds close, then the dome bursts
@@ -510,9 +576,9 @@ function specialMoveBase(id) {
         h: { dmg: 30, stun: 20, bstun: 10, push: 2, gdrain: 8, juggle: true, jugVy: 6, label: 'Plate Throw' } }); } } };
     // → → + I: Water Cannon. A jet of water from the beak, five quick hits that push them away
     case 'kpCannon': return { id, label: 'Water Cannon', startup: 14, active: 44, recovery: 18, wind: 'kGrab', pose: 'kBlast', longRange: true,
-      hitbox: [40,680,70,130], multi: 11, interval: 4, dmg: 6, lastDmg: 22, stun: 16, bstun: 10, push: 1.2, lastPush: 7, kd: true, kdVx: 9, kdVy: 6, type: 'mid', hitstop: 3, chip: true, gdrain: 6,
+      hitbox: [40,420,70,130], jetLen: 420, multi: 11, interval: 4, dmg: 6, lastDmg: 22, stun: 16, bstun: 10, push: 1.2, lastPush: 7, kd: true, kdVx: 9, kdVy: 6, type: 'mid', hitstop: 3, chip: true, gdrain: 6,
       onFrame(f, o, mf) { f.vx = 0; if (mf === 14) sfx('flame'); },
-      drawFX(f) { if (f.mf <= 13 || f.mf > 62) return; const s = f.ch.scale, x0 = f.x + f.facing * 38 * s, y0 = GROUND - f.y - 128 * s, L = Math.min(680, (f.mf - 13) * 70);
+      drawFX(f) { if (f.mf <= 13 || f.mf > 62) return; const s = f.ch.scale, x0 = f.x + f.facing * 38 * s, y0 = GROUND - f.y - 128 * s, L = Math.min(f.move.jetLen, (f.mf - 13) * 70);
         ctx.save(); ctx.globalCompositeOperation = 'lighter';
         for (let i = 0; i < 3; i++) { ctx.strokeStyle = `rgba(${i ? '170,225,255' : '230,248,255'},${0.55 - i * 0.12})`; ctx.lineWidth = 22 - i * 7; ctx.beginPath(); ctx.moveTo(x0, y0);
           for (let k = 1; k <= 8; k++) ctx.lineTo(x0 + f.facing * L * k / 8, y0 + Math.sin(globalT * 0.6 + k + i) * 4); ctx.stroke(); }
@@ -538,10 +604,11 @@ function specialMoveBase(id) {
         if (k === 36) { columnHit(f, o, { dmg: 26, stun: 22, bstun: 10, push: 2, launch: true, launchVy: 12, hitstop: 10, label: 'Pounce' }); mv.active = mf - mv.startup; mv.recovery = 10; f.vx = -f.facing * 5; }
       } };
     // → → + K: Claw Frenzy. A wild, screeching flurry of claws, every swipe leaving its marks
-    case 'kpFrenzy': return { id, label: 'Claw Frenzy', startup: 8, active: 52, recovery: 18, wind: 'kIdle', pose: 'kClawUp', selfMove: true,
+    case 'kpFrenzy': return { id, label: 'Claw Frenzy', startup: 8, active: 52, recovery: 18, wind: 'kIdle', pose: 'kClawX', selfMove: true,
       hitbox: [10,170,40,160], multi: 12, interval: 4, dmg: 7, lastDmg: 28, stun: 18, bstun: 10, push: 1, lastPush: 8, kd: true, kdVx: 9, kdVy: 8, type: 'mid', hitstop: 3, gdrain: 6, maxTravel: 300,
-      poseFn: (f, mf) => mf > 8 && mf <= 60 ? [POSES.kClawUp, POSES.kClawDown, POSES.kClawX][Math.floor(mf / 2) % 3] : null,
-      onFrame(f, o, mf) { if (mf > 8 && mf <= 60 && Math.abs(o.x - f.x) > 70) f.vx = f.facing * 4; else f.vx *= 0.7;
+      poseFn: (f, mf) => mf <= 4 ? lerpPose(f.prevPose, POSES.kClawX, easeOutQ(mf / 4)) : mf <= 60 ? lerpPose(POSES.kClawX, POSES.kClawDown, (1 - Math.cos(Math.PI * Math.max(0, mf - 4) / 4)) / 2) : mf <= 64 ? lerpPose(POSES.kClawDown, POSES.kIdle, (mf - 60) / 4) : null, // (an even rake, both claws crossing and raking down, back and forth every 8 frames: one swipe each way)
+      onFrame(f, o, mf) { if (mf > 8 && mf <= 60 && Math.abs(o.x - f.x) > 60) f.vx = f.facing * 6; else f.vx *= 0.7; // (he presses in, keeping them under his claws)
+       
         if (mf > 8 && mf <= 60 && mf % 4 === 1) clawSwipe(f, [110, 100 + (mf % 8 === 1 ? 20 : -10), (mf % 8 === 1 ? 1 : -1) * 0.9, 52]); if (mf === 9) sfx('vanish'); } };
     // → → + K (old): Tsuppari Rush. A flurry of sumo palm-claws
     case 'kpTsuppari': return { id, label: 'Tsuppari Rush', startup: 8, active: 24, recovery: 18, wind: 'kGrab', pose: 'kClaw', selfMove: true,
@@ -556,7 +623,8 @@ function specialMoveBase(id) {
     case 'kpGeyser': return { id, label: 'Geyser', startup: 18, active: 2, recovery: 22, wind: 'kGrab', pose: 'kToss',
       onFrame(f, o, mf) { f.vx = 0; if (mf === 8) { f.gx = clamp(o.x, f.x - 430, f.x + 430); parts.push({ type: 'ring', x: f.gx, y: GROUND - 4, r: 34, vr: -1.2, life: 12, max: 12, col: '150,215,255' }); sfx('charge'); }
         if (mf === 18) geyser(f, o, f.gx); } };
-    // ← ← + J: Shell Guard. Pulls into his shell: everything bounces off, and if something did, he spins out of it
+    // ← ← + J: Shell Guard. Turns his back and pulls into his shell: blows bounce off, projectiles fly back at whoever threw them,
+    // Lyra's spells and Jesse's shots leave them stunned — and if something hit the shell, he spins out of it
     // ← ← + K: Riptide. The water rises up BEHIND them and rolls in toward him, carrying them right up to him — guarding or not.
     // On a hit they arrive stunned in front of him, so his ground string follows. The answer to anyone who keeps their distance. Jump the wave and it passes under them
     case 'kpRiptide': return { id, label: 'Riptide', startup: 5, active: 40, recovery: 18, wind: 'kToss', pose: 'kBlast', hitbox: null,
@@ -581,10 +649,11 @@ function specialMoveBase(id) {
         ctx.lineTo(x1, GROUND); ctx.closePath(); ctx.fill();
         ctx.strokeStyle = 'rgba(235,250,255,.9)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x1 - d * 10, GROUND - 78 * k, 14 * k, d > 0 ? -Math.PI / 2 : Math.PI / 2, d > 0 ? Math.PI / 2 : Math.PI * 1.5, d < 0); ctx.stroke(); ctx.restore(); } };
     case 'kpShell': return { id, label: 'Shell Guard', startup: 3, active: 30, recovery: 14, wind: 'crouch', pose: 'kCurl', crouch: true, deflect: [2, 32], destroysProj: true, reflectAll: true,
-      onStart(f) { f.deflected = false; },
+      onStart(f, o) { f.deflected = false; f.facing = -(Math.sign(o.x - f.x) || f.facing); }, // (he turns his back on them: the shell takes it)
       onFrame(f, o, mf) { f.vx = 0; if (mf === 3) sfx('block'); if (f.deflected && mf > 6) { f.deflected = false; startMove(f, specialMove('kpShellSpin'), 1, true); } } };
     case 'kpShellSpin': return { id, label: 'Shell Spin', startup: 4, active: 20, recovery: 16, wind: 'kCurl', pose: 'kCurl', selfMove: true, crouch: true, spin: [4, 24],
       hitbox: [-40,110,0,90], multi: 4, interval: 5, dmg: 12, lastDmg: 26, stun: 18, bstun: 10, push: 1.5, lastPush: 8, kd: true, kdVx: 9, kdVy: 7, type: 'mid', hitstop: 4, gdrain: 8,
+      onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; }, // (round to face them again as he spins out)
       onFrame(f, o, mf) { if (mf > 4 && mf <= 24) f.vx = f.facing * 7; else f.vx *= 0.6; if (mf % 5 === 0) sfx('swing'); } };
     // ← ← + K: Cucumber Snack. Munches a cucumber and heals a little (hit him while he eats and it's a counter hit)
     case 'kpCucumber': return { id, label: 'Cucumber Snack', startup: 8, active: 30, recovery: 12, wind: 'kIdle', pose: 'kEat', heal: true,
@@ -621,10 +690,9 @@ function specialMoveBase(id) {
       drawFX(f, o) { const mv = f.move; if (!o || mv.fired || mf0(f) < 40) return; const x = o.x, y = GROUND - o.y - 100 * o.ch.scale, r = 26 + Math.max(0, 70 - f.mf) * 0.6;
         ctx.save(); ctx.strokeStyle = 'rgba(255,80,60,.95)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
         for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { ctx.beginPath(); ctx.moveTo(x + dx * r * 0.4, y + dy * r * 0.4); ctx.lineTo(x + dx * r * 1.3, y + dy * r * 1.3); ctx.stroke(); } ctx.restore(); } };
-    // → → + J: Roll Shot. Rolls forward (can't be hit while rolling) and fires both guns
-    case 'gnRoll': return { id, label: 'Roll Shot', startup: 18, active: 2, recovery: 18, wind: 'gLow', pose: 'gTwin', selfMove: true, crouch: true,
-      onStart(f) { f.invul = 14; },
-      poseFn: (f, mf) => mf < 16 ? POSES.gLow : null,
+    // → → + J: Roll Shot. Slides in low along the floor, then springs up and fires both guns
+    case 'gnRoll': return { id, label: 'Roll Shot', startup: 18, active: 2, recovery: 18, wind: 'gLow', pose: 'gTwin', selfMove: true, crouch: true, bodyHurt: true, // (hurtbox fitted to him: low through the roll, full height once he's up to shoot)
+      poseFn: (f, mf) => mf <= 2 ? lerpPose(f.prevPose, POSES.slideKick, mf / 2) : mf <= 14 ? POSES.slideKick : mf <= 17 ? lerpPose(POSES.slideKick, POSES.gTwin, (mf - 14) / 3) : null, // (a low slide along the floor like Kuro's Vanish Slide — his hurtbox lies low with him — then he springs up to fire; no invincibility: armor instead, like all his techniques)
       onFrame(f, o, mf) { if (mf <= 14) { f.vx = f.facing * 8; if (mf % 3 === 0) dustAt(f.x, false); } else f.vx *= 0.5; if (mf === 18) { shoot(f, { y: 122, dmg: 24 }); shoot(f, { y: 116, dmg: 24 }); } } };
     // → → + K: Jump Shot. Leaps forward and fires three shots down on them
     case 'gnJumpShot': return { id, label: 'Jump Shot', startup: 8, active: 26, recovery: 12, wind: 'jump', pose: 'gAirDown', manualY: true, noPush: true, selfMove: true,
@@ -645,7 +713,7 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { if (mf === 10) shoot(f, { y: 90, vx: 16, vy: -7, life: 36, dmg: 30, bounce: 1 }); } };
     // ← ← + J: Backflip Shot. Flips away (can't be hit at first) and shoots on the way
     case 'gnBackflip': return { id, label: 'Backflip Shot', startup: 6, active: 20, recovery: 10, wind: 'jump', pose: 'gAirDown', manualY: true, noPush: true, selfMove: true,
-      onStart(f) { f.invul = 12; f.bfx = f.x; },
+      onStart(f) { f.bfx = f.x; }, // (no invincibility: armor instead)
       onFrame(f, o, mf) { f.vx = 0; f.x = clamp(f.bfx - f.facing * 130 * Math.min(1, mf / 26), WALL_L, WALL_R); f.y = mf <= 26 ? 110 * Math.sin(Math.PI * mf / 26) : 0; f.flipT = mf < 18 ? 18 - mf : 0; f.flipMax = 18;
         if (mf === 16) shoot(f, { x: f.x + f.facing * 36, y: f.y + 80, vx: 18, vy: -6, life: 22, dmg: 26 }); } };
     // ← → + K: Double Heavy Shot. Two heavy shots one after the other: slow to come out and slow to recover (one bullet for both)
@@ -684,9 +752,10 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { f.y = mf <= 20 ? 90 * Math.sin(Math.PI * mf / 20) : 0; if (mf <= 18 && Math.abs(o.x - f.x) > 90) f.vx = f.facing * 5; else f.vx *= 0.6; // a desperate leap, briefcase over his head
         if (mf === 21) { sfx('hitH'); dustAt(f.x + f.facing * 100, true); cracks(f.x + f.facing * 90); game.shake = Math.max(game.shake, 6); for (let i = 0; i < 6; i++) parts.push({ type: 'spark', x: f.x + f.facing * 100, y: GROUND - 20, vx: rnd(-4, 4), vy: -rnd(3, 7), life: 22, max: 22, col: '250,250,255' }); } } };
     // ---- Tanaka's low techniques (himself): → → ↓ + J, ← ← ↓ + J, → → ↓ + K ----
-    case 'smSlide': return { id, label: 'Wet Floor Slide', startup: 9, active: 14, recovery: 20, wind: 'crouch', pose: 'slideKick', selfMove: true, speedFx: true, // he sets down a "Caution: wet floor" sign... and promptly slips past it, feet first
+    case 'smSlide': return { id, label: 'Wet Floor Slide', startup: 9, active: 14, recovery: 20, wind: 'crouch', pose: 'slideKick', selfMove: true, speedFx: true, crouch: true, bodyHurt: true, // (low the whole way, like Kuro's Vanish Slide: his hurtbox fitted to him crouched, then stretched out along the floor)
+      // he sets down a "Caution: wet floor" sign... and promptly slips past it, feet first
       hitbox: [0,110,0,38], low: true, dmg: 40, stun: 22, bstun: 12, push: 2, kd: true, kdVx: 3, kdVy: 5, type: 'mid', hitstop: 8, gdrain: 10,
-      poseFn(f, mf) { return mf <= 4 ? POSES.sBow : mf <= 8 ? POSES.sArch : null; }, // bends to set the sign down, arms flail as he slips...
+      poseFn(f, mf) { return mf > 40 ? null : mf <= 4 ? POSES.crouch : mf <= 8 ? lerpPose(POSES.crouch, POSES.slideKick, (mf - 4) / 4) : POSES.slideKick; }, // drops straight into a crouch to set the sign down (low at once, as Kuro's Vanish Slide), and slips into the slide, feet first
       onFrame(f, o, mf) { const mv = f.move;
         if (mf === 1) { mv.signX = f.x - f.facing * 34; popText(f.x, GROUND - 190, L('CAUTION: WET FLOOR', '足元注意：濡れています'), '255,215,60'); }
         if (mf === 6) { sfx('swing'); popText(f.x, GROUND - 160, L('WHOA—!', 'うわっ！'), '150,210,255'); }
@@ -720,7 +789,7 @@ function specialMoveBase(id) {
       drawFX(f) { // the tail itself: big, thick, with a spade tip — it swings from behind him, round, and out along the floor in front, trailing fire
         const S = f.move.startup, mf = f.mf; if (mf < 2 || mf > S + 16) return;
         const s0 = f.ch.scale, J = solve(f.pose), bx = f.x + (f.animDX || 0) + f.facing * 14 * s0, by = GROUND - f.y - s0 * (J.hip[1] + f.hipUp) + 4; // from his rear
-        const k = mf < S ? 0.18 * (mf / S) : Math.min(1, 0.18 + (mf - S) / 10 * 0.82), fade = mf > S + 10 ? 1 - (mf - S - 10) / 6 : 1;
+        const k = sdTailK(f.move, mf), fade = mf > S + 10 ? 1 - (mf - S - 10) / 6 : 1;
         const an = Math.PI * (1 - k), L = 150 * s0; // from behind him (π) round to straight in front (0)
         const tip = [bx + Math.cos(an) * L * f.facing, GROUND - 12 - Math.sin(an) * 26], ctl = [bx + Math.cos(an + 0.5 * f.facing) * L * 0.5 * f.facing, by + 30];
         ctx.save();
@@ -733,18 +802,18 @@ function specialMoveBase(id) {
         ctx.restore(); } };
     case 'smTackle': return { id, label: 'Rush Hour Kick', startup: 14, active: 12, recovery: 20, wind: 'crouch', pose: 'jKickH', selfMove: true, speedFx: true, // → → + J: a sprint for the train — and a flying kick at the end of it
       hitbox: [10,120,40,150], dmg: 46, stun: 22, bstun: 16, push: 3, launch: true, launchVy: 11, type: 'mid', hitstop: 10, gdrain: 34, // (heavy on guard: it smashes through)
-      poseFn(f, mf) { return mf < 3 ? POSES.crouch : mf < 11 ? (mf % 4 < 2 ? POSES.dash : POSES.shoulder) : null; }, // crouch, sprint (arms pumping)... then the kick
+      hitFrom: 11, bodyHurt: true, poseFn(f, mf) { if (mf > 32) return null; if (mf <= 3) return lerpPose(f.prevPose, POSES.crouch, mf / 3); const run = lerpPose(POSES.dash, POSES.shoulder, (1 - Math.cos(Math.PI * (mf - 3) / 4)) / 2); return mf <= 9 ? run : mf <= 14 ? lerpPose(run, POSES.jKickH, (mf - 9) / 5) : POSES.jKickH; }, // crouch, sprint (arms pumping, evenly)... and the kick comes out of the run, live as it does
       onFrame(f, o, mf) { if (mf === 2) popText(f.x, GROUND - 190, L("I'M LATE!", '遅刻だ！'), '255,210,120');
         if (mf > 2 && mf <= 24 && !f.hitConnected && Math.abs(o.x - f.x) > 55) { f.vx = f.facing * (mf < 11 ? 9 : 12); if (mf % 2 === 0) parts.push({ type: 'smoke', x: f.x - f.facing * 20, y: GROUND - 6, vx: -f.facing, vy: -0.5, r: 5, vr: 0.3, life: 14, max: 14, col: '220,215,205' }); } else f.vx *= 0.6;
         if (mf >= 11 && mf <= 22) f.y = 34 * Math.sin(Math.PI * Math.min(1, (mf - 11) / 11)); else f.y = 0;
         if (f.hitConnected && f.lastResult === 'block' && !f.move.smashed) { f.move.smashed = true; game.shake = Math.max(game.shake, 5); parts.push({ type: 'ring', x: o.x, y: GROUND - 90, r: 10, vr: 7, life: 12, max: 12, col: '255,210,120' }); }
         hitRecover(f, 8); }, manualY: true };
     // → → + K: Sliding Dogeza. He throws himself flat in a full apology and slides across the floor on his belly: a low that launches
-    case 'smUpper': return { id, label: 'Sliding Dogeza', startup: 9, active: 14, recovery: 20, wind: 'crouch', pose: 'sDogeza', crouch: true, selfMove: true, speedFx: true,
+    case 'smUpper': return { id, label: 'Sliding Dogeza', startup: 9, active: 14, recovery: 20, wind: 'crouch', pose: 'sDogeza', crouch: true, selfMove: true, speedFx: true, bodyHurt: true, // (hurtbox fitted to him lying flat in the bow)
       hitbox: [0,120,0,38], low: true, dmg: 46, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 11, type: 'mid', hitstop: 9, gdrain: 10,
       onFrame(f, o, mf) { if (mf === 1) popText(f.x, GROUND - 170, L('I\'M SO SORRY!', '申し訳ございません！'), '230,230,240');
         if (mf > 4 && mf <= 24 && !f.hitConnected && Math.abs(o.x - f.x) > 45) { f.vx = f.facing * 12; if (mf % 2 === 0) parts.push({ type: 'smoke', x: f.x - f.facing * 20, y: GROUND - 6, vx: -f.facing, vy: -0.5, r: 5, vr: 0.3, life: 14, max: 14, col: '220,215,205' }); } else f.vx *= 0.6; } };
-    case 'smCoffee': return { id, label: 'Hot Coffee', startup: 10, active: 6, recovery: 20, wind: 'palmW', pose: 'palm',
+    case 'smCoffee': return { id, label: 'Hot Coffee', startup: 10, active: 10, recovery: 16, wind: 'palmW', pose: 'palm', hitFrom: 9, // (like a breath attack: the splash is live all the way along its arc, drop by drop — see tanakaParts)
       hitbox: [20,140,60,150], dmg: 34, stun: 20, bstun: 12, push: 1, stunT: 54, stunKind: 'burn', type: 'mid', hitstop: 8, gdrain: 8,
       onFrame(f, o, mf) { if (mf === 10) sfx('flame'); },
       drawFX(f) { if (f.mf < 9 || f.mf > 20) return; ctx.save(); const x = f.x + f.facing * 60, y = GROUND - f.y - 115;
@@ -752,7 +821,7 @@ function specialMoveBase(id) {
         ctx.restore(); } };
     // ← ← + J: Dogeza Uppercut. He dashes in crouched, face to the floor in an apology... then springs up with an uppercut (mid height)
     case 'smBow': return { id, label: 'Dogeza Uppercut', startup: 16, active: 6, recovery: 20, wind: 'sDogeza', pose: 'uppercut', crouch: true, selfMove: true, speedFx: true,
-      poseFn: (f, mf) => mf < 12 ? POSES.sDogeza : null,
+      hitFrom: 10, poseFn: (f, mf) => mf > 30 ? null : mf <= 3 ? lerpPose(f.prevPose, POSES.sDogeza, mf / 3) : mf <= 9 ? POSES.sDogeza : mf <= 22 ? lerpPose(POSES.sDogeza, POSES.uppercut, (mf - 9) / 13) : POSES.uppercut, // (the bow, then he rises evenly into the uppercut — his fist live from the moment it leaves the floor)
       hitbox: [10,115,40,195], dmg: 48, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 13, type: 'mid', hitstop: 11, gdrain: 10, burst: [60, 170],
       onFrame(f, o, mf) { if (mf === 2) popText(f.x, GROUND - 170, L('I\'M SO SORRY!', '申し訳ございません！'), '230,230,240');
         if (mf > 2 && mf <= 14 && !f.hitConnected && Math.abs(o.x - f.x) > 50) { f.vx = f.facing * 10; if (mf % 2 === 0) parts.push({ type: 'smoke', x: f.x - f.facing * 20, y: GROUND - 6, vx: -f.facing, vy: -0.5, r: 4, vr: 0.3, life: 12, max: 12, col: '220,215,205' }); } else f.vx *= 0.6;
@@ -776,19 +845,47 @@ function specialMoveBase(id) {
     case 'sdTailDrop': return { id, label: 'Tail Hammer', startup: 18, active: 6, recovery: 22, wind: 'sdIdle', pose: 'sArch', overhead: true, tail: { a0: 2.2, a1: -0.7, len: 185, h: 120 }, // ← ← ↑ + J: he turns his back, looks over his shoulder, and brings the tail down from overhead (guard it standing)
       hitbox: [30,190,0,220], dmg: 46, stun: 24, bstun: 14, push: 2, kd: true, kdVx: 3, kdVy: 6, type: 'mid', hitstop: 11, gdrain: 12,
       onFrame(f, o, mf) { if (mf === 2) popText(f.x, GROUND - 200, L('LOOK OUT—', '上だ——'), '255,90,70'); if (mf === 16) sfx('swing'); if (mf === 19) { cracks(f.x + f.facing * 150); game.shake = Math.max(game.shake, 5); parts.push({ type: 'ring', x: f.x + f.facing * 150, y: GROUND - 6, r: 10, vr: 8, life: 14, max: 14, col: '255,100,50' }); } } };
+    // ← ← ↓ + K / ← ← ↑ + K: the devil's feints — he calls one height and hits the other
+    case 'sdFeintSweep': return { id, label: 'Feint Sweep', startup: 20, active: 14, recovery: 20, wind: 'sdIdle', pose: 'slideKick', selfMove: true, bodyHurt: true, maxTravel: 320, manualY: true, noPush: true, // (a feint: he shouts to look out above and rears up — then drops into a long slide along the floor, the tail sweeping round at their ankles, like Kuro's sweep)
+      poseFn: (f, mf) => mf > 40 ? null : mf <= 8 ? lerpPose(f.prevPose, POSES.sArch, mf / 8) : mf <= 16 ? lerpPose(POSES.sArch, POSES.slideKick, (mf - 8) / 8) : POSES.slideKick, // (he springs up, arms and tail raised high — then comes down into the slide) // he whirls round, back to them, and his great devil tail sweeps out across the floor at their ankles
+      hitbox: [-70,160,0,36], low: true, dmg: 38, stun: 22, bstun: 12, push: 3, kd: true, kdVx: 4, kdVy: 6, type: 'mid', hitstop: 8, gdrain: 10,
+      onFrame(f, o, mf) { f.y = mf <= 14 ? 55 * Math.sin(Math.PI * mf / 14) : 0; if (mf === 2) popText(f.x, GROUND - 200, L('LOOK OUT ABOVE—', '上だ——'), '255,90,70'); if (mf >= 16 && mf <= 34 && Math.abs(o.x - f.x) > 60 && !f.hitConnected) f.vx = f.facing * 8; else if (mf > 16) f.vx *= 0.7; if (mf === 17) sfx('swing'); if (mf === 20) { cracks(f.x + f.facing * 70); parts.push({ type: 'ring', x: f.x, y: GROUND - 6, r: 20, vr: 9, life: 16, max: 16, col: '255,100,50' }); }
+        if (mf >= 19 && mf <= 34 && mf % 2 === 0) for (let i = 0; i < 3; i++) { const an = vrnd(0, Math.PI); parts.push({ type: 'aura', x: f.x + Math.cos(an) * 120, y: GROUND - 6, vx: 0, vy: -vrnd(1, 3), life: 18, max: 18, r: vrnd(3, 6), col: '255,120,50' }); } },
+      drawFX(f) { // the tail itself: big, thick, with a spade tip — it swings from behind him, round, and out along the floor in front, trailing fire
+        const S = f.move.startup, mf = f.mf; if (mf < 2 || mf > S + 16) return;
+        const s0 = f.ch.scale, J = solve(f.pose), bx = f.x + (f.animDX || 0) + f.facing * 14 * s0, by = GROUND - f.y - s0 * (J.hip[1] + f.hipUp) + 4; // from his rear
+        const k = sdTailK(f.move, mf), fade = mf > S + 10 ? 1 - (mf - S - 10) / 6 : 1;
+        const an = Math.PI * (1 - k), L = 150 * s0; // from behind him (π) round to straight in front (0)
+        const sw = [bx + Math.cos(an) * L * f.facing, GROUND - 12 - Math.sin(an) * 26], sc = [bx + Math.cos(an + 0.5 * f.facing) * L * 0.5 * f.facing, by + 30];
+        const up = mf <= 10 ? 1 : mf <= 16 ? 1 - (mf - 10) / 6 : 0, raised = [bx - f.facing * 30 * s0, by - 150 * s0], rc = [bx - f.facing * 50 * s0, by - 60 * s0]; // (the feint: the tail raised high over him first, then down into the sweep)
+        const tip = [sw[0] + (raised[0] - sw[0]) * up, sw[1] + (raised[1] - sw[1]) * up], ctl = [sc[0] + (rc[0] - sc[0]) * up, sc[1] + (rc[1] - sc[1]) * up];
+        ctx.save();
+        if (mf >= S) { ctx.globalCompositeOperation = 'lighter'; for (let i = 0; i < 10; i++) { const a2 = Math.PI * (1 - Math.max(0, k - i * 0.04)), x = bx + Math.cos(a2) * L * f.facing, y = GROUND - 12 - Math.sin(a2) * 26; ctx.fillStyle = `rgba(255,${100 + i * 12},50,${(0.55 - i * 0.05) * fade})`; ctx.beginPath(); ctx.arc(x, y, 12 - i, 0, Math.PI * 2); ctx.fill(); } ctx.globalCompositeOperation = 'source-over'; } // a trail of fire behind the tip
+        ctx.globalAlpha = fade; ctx.lineCap = 'round';
+        for (let i = 0; i < 16; i++) { const u0 = i / 16, u1 = (i + 1) / 16, q = (u, P0, P1, P2) => (1 - u) * (1 - u) * P0 + 2 * (1 - u) * u * P1 + u * u * P2;
+          ctx.strokeStyle = i % 2 ? '#7a1010' : '#941818'; ctx.lineWidth = 18 - u0 * 12; ctx.beginPath(); ctx.moveTo(q(u0, bx, ctl[0], tip[0]), q(u0, by, ctl[1], tip[1])); ctx.lineTo(q(u1, bx, ctl[0], tip[0]), q(u1, by, ctl[1], tip[1])); ctx.stroke(); } // the tail, thick at the base, tapering
+        const d = Math.atan2(tip[1] - ctl[1], tip[0] - ctl[0]); ctx.translate(tip[0], tip[1]); ctx.rotate(d);
+        ctx.fillStyle = '#b01c1c'; ctx.strokeStyle = '#ffb08a'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(32, 0); ctx.lineTo(0, -16); ctx.lineTo(7, 0); ctx.lineTo(0, 16); ctx.closePath(); ctx.fill(); ctx.stroke(); // the spade at its tip
+        ctx.restore(); } };
+    case 'sdFeintHammer': return { id, label: 'Feint Hammer', startup: 26, active: 6, recovery: 22, wind: 'crouch', pose: 'sArch', overhead: true, tail: { a0: 2.2, a1: -0.7, len: 185, h: 120 }, hitFrom: 25, // (a feint: he shouts to look out below and crouches, the tail swept low along the floor from behind him to their feet — then it whips up over the top and hammers down from above; live only on the way down)
+      tailPath: mf => mf <= 10 ? 3.54 + (5.58 - 3.54) * (mf / 10) : mf <= 22 ? -0.7 + (2.2 + 0.7) * ((mf - 10) / 12) : 2.2 + (-0.7 - 2.2) * Math.min(1, (mf - 22) / 9),
+      poseFn: (f, mf) => mf > 40 ? null : mf <= 10 ? lerpPose(f.prevPose, POSES.crouch, mf / 10) : mf <= 22 ? lerpPose(POSES.crouch, POSES.sArch, (mf - 10) / 12) : POSES.sArch, // ← ← ↑ + J: he turns his back, looks over his shoulder, and brings the tail down from overhead (guard it standing)
+      hitbox: [30,190,0,220], dmg: 46, stun: 24, bstun: 14, push: 2, kd: true, kdVx: 3, kdVy: 6, type: 'mid', hitstop: 11, gdrain: 12,
+      onFrame(f, o, mf) { if (mf === 2) popText(f.x, GROUND - 200, L('DOWN BELOW—', '下だ——'), '255,90,70'); if (mf === 24) sfx('swing'); if (mf === 27) { cracks(f.x + f.facing * 150); game.shake = Math.max(game.shake, 5); parts.push({ type: 'ring', x: f.x + f.facing * 150, y: GROUND - 6, r: 10, vr: 8, life: 14, max: 14, col: '255,100,50' }); } } };
     case 'sdTailLash': return { id, label: 'Tail Lash', startup: 10, active: 6, recovery: 20, wind: 'sdIdle', pose: 'sdIdle', selfMove: true, tail: { a0: 2.5, a1: 0.1, len: 190, h: 100 }, // → → + J: a step in and a long lash of the tail
       hitbox: [30,220,50,140], dmg: 42, stun: 22, bstun: 12, push: 3, type: 'mid', hitstop: 9, gdrain: 10,
       onFrame(f, o, mf) { f.vx = mf <= 8 ? f.facing * 4 : f.vx * 0.6; if (mf === 9) sfx('swing'); } };
-    case 'sdTailUpper': return { id, label: 'Tail Hook', startup: 9, active: 7, recovery: 24, wind: 'sdIdle', pose: 'sdIdle', tail: { a0: -0.5, a1: 1.4, len: 170, h: 70 }, // → → + K: the tail scoops up under them and flings them into the air
+    case 'sdTailUpper': return { id, label: 'Tail Hook', startup: 9, active: 7, recovery: 24, wind: 'sdIdle', pose: 'sdIdle', bodyHurt: true, tail: { a0: -0.5, a1: 1.4, len: 170, h: 70 }, // → → + K: the tail scoops up under them and flings them into the air
       hitbox: [30,190,0,210], dmg: 48, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 13, type: 'mid', hitstop: 11, gdrain: 10, onFrame(f, o, mf) { if (mf === 8) sfx('rise'); } };
-    case 'sdChainB': return { id, label: 'Hell Chain', startup: 12, active: 6, recovery: 18, wind: 'sdIdle', pose: 'sdBeckon', // ← ← → + J: the chain lashes out from his belly, at waist height
-      hitbox: [40,290,20,150], dmg: 24, stun: 30, bstun: 12, push: 0, type: 'mid', hitstop: 8, gdrain: 8,
+    case 'sdChainB': return { id, label: 'Hell Chain', startup: 12, active: 6, recovery: 18, wind: 'sdIdle', pose: 'sdBeckon', grab: true, noDmg: true, // (no damage: it only catches them and drags them in)
+      // ← ← → + J: the chain lashes out from his belly, at waist height — and catches them even guarding (a grab: J + K breaks it in time)
+      hitbox: [40,290,20,150], dmg: 24, stun: 30, bstun: 12, push: 0, type: 'mid', hitstop: 8, gdrain: 0,
       onFrame(f, o, mf) { const mv = f.move; f.vx = 0; if (mf === 12) sfx('throw');
         if (f.hitConnected && !mv.pulled) { mv.pulled = true; mv.pullT = 10; popText(o.x, GROUND - 200, L('GET OVER HERE!', 'こっちへ来い！'), '255,90,60'); }
         if (mv.pullT > 0) { mv.pullT--; o.vx = 0; o.kb = 0; o.x = lerp(o.x, clamp(f.x + f.facing * 70, WALL_L, WALL_R), 0.35); if (o.state === 'blockstun') o.bstun = Math.max(o.bstun || 0, 14); else o.stun = Math.max(o.stun, 22); }
         if (mv.pulled) hitRecover(f, 6); },
       drawFX(f, o) { const mv = f.move; if (f.mf < 10 || f.mf > 30) return; const s0 = f.ch.scale, x0 = f.x + f.facing * 20 * s0, y0 = GROUND - f.y - 82 * s0; // from his belly
-        const tip = mv.pulled && o ? o.x : f.x + f.facing * Math.min(290, (f.mf - 10) * 60), ty = mv.pulled && o ? GROUND - o.y - 80 : y0;
+        const held = o && (mv.pulled || (mv.grabT != null && !mv.broken)), tip = held ? o.x : f.x + f.facing * Math.min(290, (f.mf - 10) * 60), ty = held ? GROUND - o.y - 80 : y0; // (caught: the chain stays on them while they struggle)
         ctx.save(); ctx.strokeStyle = '#3a1a1a'; ctx.lineWidth = 15; ctx.lineCap = 'round'; ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(tip, ty); ctx.stroke(); ctx.setLineDash([]);
         ctx.strokeStyle = '#ff6a3a'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(tip, ty); ctx.stroke(); ctx.fillStyle = '#8a1414'; ctx.beginPath(); ctx.moveTo(tip + f.facing * 22, ty); ctx.lineTo(tip, ty - 14); ctx.lineTo(tip, ty + 14); ctx.closePath(); ctx.fill(); ctx.restore(); } };
     // ---- the angel: rays of light from his eyes ----
@@ -797,9 +894,12 @@ function specialMoveBase(id) {
     case 'saRayFly': return { id, label: 'Ascending Gaze', startup: 26, active: 6, recovery: 20, wind: 'saPray', pose: 'saPray', manualY: true, hitbox: null, // ← ← ↑ + J: he soars up out of reach (invincible while rising) and fires the ray down at them
       onFrame(f, o, mf) { f.vx = 0; f.y = mf <= 18 ? 170 * Math.sin(Math.PI / 2 * mf / 18) : mf <= 34 ? 170 : Math.max(0, 170 - (mf - 34) * 12); if (mf <= 26) f.invul = Math.max(f.invul, 2);
         if (mf === 2) { sfx('rise'); for (let i = 0; i < 8; i++) parts.push({ type: 'aura', x: f.x + vrnd(-20, 20), y: GROUND - 20, vx: vrnd(-1, 1), vy: -vrnd(2, 4), life: 18, max: 18, r: 3, col: '255,245,210' }); }
-        if (mf === 26) { sfx('beam'); if (Math.abs(o.x - f.x) < 460) columnHit(f, o, { dmg: 38, stun: 22, bstun: 12, push: 2, type: 'mid', hitstop: 9, gdrain: 10, label: 'Ascending Gaze' }); } if (mf >= 40) f.y = 0; },
-      drawFX(f, o) { if (f.mf < 22 || f.mf > 32 || !o) return; const e = eyePos(f), tx = o.x, ty = GROUND - o.y - 90 * o.ch.scale; rayDraw(e, [tx, ty], 1 - Math.max(0, f.mf - 27) / 6); } };
-    case 'saDive': return { id, label: 'Seraph Dive', startup: 18, active: 12, recovery: 22, wind: 'saPray', pose: 'saPray', manualY: true, armorDive: true, armorFrom: 9, noPush: true, // ← ← → + J: a high jump and a dive straight at them — half the stage at most; armored on the way down
+        if (mf === 22) f.move.aim = [o.x, GROUND - o.y - 90 * o.ch.scale]; // (he takes aim from on high...)
+        if (mf === 26) { sfx('beam'); const e = eyePos(f), a = f.move.aim, L = Math.hypot(a[0] - e[0], a[1] - e[1]), k = Math.min(1, 460 / Math.max(1, L)), boxes = rayBoxes(e[0], e[1], e[0] + (a[0] - e[0]) * k, e[1] + (a[1] - e[1]) * k), hu = hurtbox(o, false), hb = hu && boxes.find(b => overlap(b, hu)); // (...and the ray hits along its line, as drawn, not wherever they've got to)
+          if (hb) { const r = applyHit(f, o, { dmg: 38, stun: 22, bstun: 12, push: 2, type: 'mid', chip: true, hitstop: 9, gdrain: 10, label: 'Ascending Gaze', str: 1 }, Math.sign(o.x - f.x) || f.facing, hb, hu); if (r) { f.hitConnected = true; f.lastResult = r; } } } if (mf >= 40) f.y = 0; },
+      drawFX(f, o) { if (f.mf < 22 || f.mf > 32 || !o) return; const e = eyePos(f), a = f.move.aim || [o.x, GROUND - o.y - 90 * o.ch.scale], L = Math.hypot(a[0] - e[0], a[1] - e[1]), k = Math.min(1, 460 / Math.max(1, L)); rayDraw(e, [e[0] + (a[0] - e[0]) * k, e[1] + (a[1] - e[1]) * k], 1 - Math.max(0, f.mf - 27) / 6); } };
+    case 'saDive': return { id, label: 'Seraph Dive', startup: 18, active: 12, recovery: 22, wind: 'saPray', pose: 'blast', manualY: true, armorDive: true, armorFrom: 9, noPush: true, bodyHurt: true, hitFrom: 6, // (live in the air: from the top of the leap he dives palms first, and they hit all the way down)
+      poseFn: (f, mf) => mf > 34 ? null : mf <= 6 ? lerpPose(f.prevPose, POSES.jump, mf / 6) : mf <= 14 ? lerpPose(POSES.jump, POSES.blast, (mf - 6) / 8) : POSES.blast, // ← ← → + J: a high jump and a dive straight at them — half the stage at most; armored on the way down
       hitbox: [-10,90,0,150], dmg: 50, stun: 24, bstun: 14, push: 3, kd: true, kdVx: 6, kdVy: 8, type: 'mid', hitstop: 12, gdrain: 12,
       onStart(f, o) { const sg = Math.sign(o.x - f.x) || f.facing; f.dv = { x0: f.x, tx: clamp(f.x + sg * Math.min(Math.abs(o.x - f.x), (WALL_R - WALL_L) / 2), WALL_L, WALL_R) }; }, // (from end to end it only goes as far as midway)
       onFrame(f, o, mf) { const mv = f.move; f.vx = 0;
@@ -826,7 +926,7 @@ function specialMoveBase(id) {
         if (mf === 7 || mf === 12) clawSwipe(f, [80, 110, mf === 7 ? 0.9 : -0.9, 54, '255,120,90']); } };
     case 'sdMaul': return { id, label: 'Savage Maul', startup: 6, active: 22, recovery: 16, wind: 'sdIdle', pose: 'kClawX', selfMove: true,
       hitbox: [10,130,30,160], multi: 5, interval: 4, dmg: 9, lastDmg: 26, stun: 18, bstun: 10, push: 0.8, lastPush: 8, kd: true, kdVx: 11, kdVy: 8, type: 'mid', hitstop: 4, gdrain: 6,
-      poseFn: (f, mf) => mf > 6 && mf <= 28 ? [POSES.kClawUp, POSES.kClawDown, POSES.kClawX][Math.floor(mf / 2) % 3] : null,
+      hitFrom: 3, poseFn: (f, mf) => mf <= 4 ? lerpPose(f.prevPose, POSES.kClawX, mf / 4) : mf <= 28 ? lerpPose(POSES.kClawX, POSES.kClawDown, (1 - Math.cos(Math.PI * (mf - 4) / 4)) / 2) : mf <= 32 ? lerpPose(POSES.kClawDown, POSES.sdIdle, (mf - 28) / 4) : null, // (an even raking, both claws, back and forth every 8 frames)
       onFrame(f, o, mf) { if (mf > 6 && mf <= 28 && Math.abs(o.x - f.x) > 70) f.vx = f.facing * 3; else f.vx *= 0.7; if (mf > 6 && mf <= 28 && mf % 4 === 3) clawSwipe(f, [85, 105 + (mf % 8 < 4 ? 20 : -15), (mf % 8 < 4 ? 1 : -1) * 0.9, 56, '255,120,90']); if (mf === 7) sfx('flame'); } };
     case 'sdBeckon': return { id, label: 'Beckon', startup: 3, active: 34, recovery: 16, wind: 'sdBeckon', pose: 'sdBeckon', parry: true, parryInto: 'sdBeckonMaul', fx: 'ward',
       onFrame(f, o, mf) { f.vx = 0; if (mf === 3) popText(f.x, GROUND - 200, L('COME HERE~', 'おいで～'), '255,120,90'); if (mf % 8 === 0) parts.push({ type: 'aura', x: f.x + f.facing * 60, y: GROUND - 120, vx: -f.facing, vy: -0.5, life: 14, max: 14, r: 4, col: '255,90,60' }); } };
@@ -853,10 +953,10 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { if (mf === 10) { sfx('orb'); for (const vy of [-1.5, 0, 1.5]) spawnPJ(f, 'feather', { x: f.x + f.facing * 50, y: 120, vx: f.facing * 12, vy, life: 50, r: 10, h: { dmg: 16, stun: 16, bstun: 8, push: 1.2, gdrain: 5, label: 'Feather Shot' } }); } } };
     case 'saHalo': return { id, label: 'Halo Throw', startup: 12, active: 2, recovery: 18, wind: 'charge', pose: 'blast', proj: 'haloP', limit: 1,
       onFrame(f, o, mf) { if (mf === 12) { sfx('throw'); spawnPJ(f, 'haloP', { x: f.x + f.facing * 30, y: 160, vx: f.facing * 12, life: 110, r: 18, hits: 2, interval: 14, boomerang: 24, h: { dmg: 28, stun: 20, bstun: 10, push: 2, gdrain: 8, juggle: true, jugVy: 6, label: 'Halo Throw' } }); } } };
-    case 'saGlide': return { id, label: 'Angel Glide', startup: 6, active: 20, recovery: 14, wind: 'jump', pose: 'blast', manualY: true, noPush: true, selfMove: true, speedFx: true, projInvul: [1, 26],
+    case 'saGlide': return { id, label: 'Angel Glide', startup: 6, active: 20, recovery: 14, wind: 'jump', pose: 'blast', manualY: true, noPush: true, selfMove: true, speedFx: true, bodyHurt: true, projInvul: [1, 26],
       hitbox: [0,130,30,160], dmg: 36, stun: 22, bstun: 12, push: 3, kd: true, kdVx: 8, kdVy: 8, type: 'mid', hitstop: 10, gdrain: 10,
       onFrame(f, o, mf) { f.vx = mf <= 26 && !f.hitConnected ? f.facing * 9 : f.hitConnected ? -f.facing * 7 : f.vx * 0.6; f.y = mf <= 26 ? 30 * Math.sin(Math.PI * mf / 26) : 0; if (mf % 3 === 0) parts.push({ type: 'spark', x: f.x - f.facing * 20, y: GROUND - f.y - 120, vx: -f.facing * 2, vy: 1, life: 14, max: 14, col: '255,250,230' }); } };
-    case 'saAscend': return { id, label: 'Holy Ascension', startup: 6, active: 10, recovery: 20, wind: 'uppercutW', pose: 'uppercut', manualY: true, noPush: true, selfMove: true, maxTravel: 300, // → → + K: he dashes in and rises with an uppercut of light — armor all the way
+    case 'saAscend': return { id, label: 'Holy Ascension', startup: 6, active: 10, recovery: 20, wind: 'uppercutW', pose: 'uppercut', manualY: true, noPush: true, selfMove: true, maxTravel: 300, bodyHurt: true, // → → + K: he dashes in and rises with an uppercut of light — armor all the way
       hitbox: [0,130,40,230], dmg: 52, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 13.5, type: 'mid', hitstop: 11, gdrain: 10,
       onFrame(f, o, mf) { if (mf <= 16 && !f.hitConnected && Math.abs(o.x - f.x) > 60) f.vx = f.facing * 11; else f.vx *= 0.5;
         f.y = mf <= 16 ? 120 * Math.sin(Math.PI / 2 * mf / 16) : Math.max(0, 120 - (mf - 16) * 9); if (mf === 6) sfx('rise'); if (mf % 2 === 0 && mf < 16) parts.push({ type: 'spark', x: f.x + rnd(-20, 20), y: GROUND - f.y - rnd(40, 160), vx: 0, vy: 2, life: 14, max: 14, col: '255,245,200' }); } };
@@ -947,7 +1047,10 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { if (mf === 4) spawnLift(f, o, false); } };
     case 'forceWave': return { id, label: 'Spirit Fist', startup: 10, active: 9, recovery: 18, wind: 'psyW', pose: 'psyPush', giantFist: [135, 105, 1.15],
       hitbox: [30,175,30,170], multi: 3, interval: 3, dmg: 18, lastDmg: 30, stun: 18, bstun: 10, push: 2, lastPush: 12, kd: true, kdVx: 10, kdVy: 6, type: 'mid', hitstop: 5, chip: true, gdrain: 8,
-      onFrame(f, o, mf) { if (mf === 10) sfx('palm'); } };
+      onFrame(f, o, mf) { if (mf === 10) sfx('palm');
+        const mv = f.move, k = mf - mv.startup; if (k < 0 || k > mv.active) return; // the fist flies out to them (as far as 230), then stays on them for the rest of its hits — its hitbox is the fist itself
+        if (k === 0) mv.fistTo = clamp((o.x - f.x) * f.facing / f.ch.scale, 55, 230);
+        mv.giantFist = [lerp(55, mv.fistTo, Math.min(1, k / 3)), ...mv.giantFist.slice(1)]; } };
     case 'orbBurst': return { id, label: 'Orb Burst', startup: 12, active: 12, recovery: 18, wind: 'psyCast', pose: 'psyBoth',
       onFrame(f, o, mf) { // every orb (or one from her hand, if she has none) fires a ray at them
         const n = Math.max(1, Math.min(5, orbCount(f)));
@@ -1004,34 +1107,50 @@ function specialMoveBase(id) {
     case 'jWave': return { id, label: 'Spirit Fist Burst', startup: 6, active: 6, recovery: 18, wind: 'psyW', pose: 'psyUp', giantFist: [115, 150, 1.1, -0.5],
       hitbox: [30,175,30,250], dmg: 50, kd: true, kdVx: 14, kdVy: 9, type: 'mid', hitstop: 13, gdrain: 10 };
     // ----- Tetsu -----
-    case 'meteorFist': return { id, label: 'Meteor Fist', pre: 6, startup: 22, active: 10, recovery: 18, wind: 'meteorW', pose: 'meteorPunch', fx: 'comet', manualY: true, noPush: true, selfMove: true, aura: true,
+    case 'meteorFist': return { id, label: 'Meteor Fist', pre: 6, startup: 16, active: 10, recovery: 18, wind: 'meteorW', pose: 'meteorPunch', fx: 'comet', manualY: true, noPush: true, selfMove: true, aura: true, bodyHurt: true,
+      limbJoint: 'h1', limbReach: 40, limbBack: 34, limbUp: 24, limbDown: 28, sweepBox: true, hitFrom: 2, // (dangerous from the top of the jump: the fist is already coming down)
+      // a box on the slamming fist, longer reach, lower and more compact — the slam, not a tall guess
       hitbox: [-10,80,-20,90], dmg: 62, stun: 20, bstun: 14, push: 3, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 11, gdrain: 12,
       onStart(f, o) {
-        const side = Math.sign(o.x - f.x) || f.facing; f.facing = side;
+        const side = Math.sign(o.x - f.x) || f.facing; f.facing = side; f.mfOrigDist = Math.abs(o.x - f.x); // the real gap, before the leap moves him: a short hop for someone close, not the same tall arc every time
         f.leap = { x0: f.x, tx: clamp(f.x + side * Math.min(Math.max(0, Math.abs(o.x - f.x) - 30), 250), WALL_L, WALL_R) }; sfx('rise');
+      },
+      poseFn(f, mf) { // fist raised on the way up, then brought down through the whole descent, so the box on it travels smoothly instead of appearing at the bottom
+        const mv = f.move, down = mv.startup; // (down by the time it's officially active: a short hop still has to beat whatever they're starting)
+        const up = { ...POSES.meteorW, a1u: 132, a1l: 162 }; // (raised high but out in front, not swung back behind his head: the hand is the hitbox from the start, and it never trails his own body)
+        if (mf <= 5) return lerpPose(f.prevPose, up, easeOutQ(mf / 5));
+        if (mf <= down) return lerpPose(up, POSES.meteorPunch, easeInOutQ((mf - 5) / (down - 5)));
+        return mf <= mv.startup + mv.active ? POSES.meteorPunch : null;
       },
       onFrame(f, o, mf) { // leap in and slam both fists down
         f.vx = 0;
-        const L = f.key === 'brawler' ? f.move.startup + 2 : 32; // (Tetsu's lands as the blow comes out)
-        if (mf <= L) { const e = mf / L; f.x = lerp(f.leap.x0, f.leap.tx, e); f.y = 140 * Math.sin(Math.PI * e); }
+        const L = f.key === 'brawler' ? f.move.startup + 9 : 32, peak = clamp((f.mfOrigDist || 250) * 0.85, 60, 140); // (Tetsu: landing comes well after active starts, not 2 frames after — so the leap itself, not just the slam, is a real hit window)
+        if (mf <= L) { const e = mf / L; f.x = lerp(f.leap.x0, f.leap.tx, e); f.y = peak * Math.sin(Math.PI * e); }
         if (mf === L) { f.y = 0; dustAt(f.x + f.facing * 30, true); cracks(f.x + f.facing * 40); parts.push({ type: 'ering', x: f.x + f.facing * 40, y: GROUND, r: 8, vr: 7, life: 14, max: 14, col: '125,235,255' }); game.shake = Math.max(game.shake, 5); sfx('land'); }
       } };
-    case 'qiSweep': return { id, label: 'Qi Sweep', pre: 7, startup: 8, active: 14, recovery: 16, wind: 'scoopW', pose: 'scoop', selfMove: true, aura: true, speedFx: true,
+    case 'qiSweep': return { id, label: 'Qi Sweep', pre: 7, startup: 8, active: 14, recovery: 16, wind: 'scoopW', pose: 'scoop', selfMove: true, aura: true, speedFx: true, bodyHurt: true, hurtSkip: 'h1', // (his own hurtbox doesn't reach out to the scooping hand's own tip — that's his attack's reach, not a reason to be that exposed)
       trail: { cx: 30, cy: 20, r: 62, a0: -75, a1: 65, col: '125,235,255' },
-      hitbox: [0,70,0,36], low: true, dmg: 48, stun: 20, bstun: 10, push: 2, launch: true, launchVy: 11, type: 'mid', hitstop: 8, gdrain: 8,
+      hitFrom: 4, hitbox: [30,105,0,36], low: true,
+      poseFn(f, mf) { // the same scoop, crouched much lower (head about 30 lower): the wind-up through the lunge, then the scoop up through them
+        const mv = f.move, su = mv.startup; if (mf >= su + mv.active) return null;
+        const W = { ...POSES.scoopW, t: 68, l1u: 95, l1l: -25, l2u: -85, l2l: -120 }, S = { ...POSES.scoop, t: 60, l1u: 95, l1l: -25, l2u: -85, l2l: -120 };
+        if (mf <= su) return lerpPose(f.prevPose, W, easeOutQ(Math.min(1, mf / Math.max(1, su))));
+        return lerpPose(W, S, easeInOutQ(Math.min(1, (mf - su) / 6)));
+      }, dmg: 48, stun: 20, bstun: 10, push: 2, launch: true, launchVy: 11, type: 'mid', hitstop: 8, gdrain: 8, // (longer reach: 70 -> 95 -> 99, the practical ceiling — any further connects from far enough away that the launched opponent clears the engine's 130-unit air-juggle-continuation range, so his own U follow-up whiffs)
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
-      onFrame(f, o, mf) { if (mf > 4 && mf <= 22 && !f.hitConnected && Math.abs(o.x - f.x) > 50) { f.vx = f.facing * 11; if (mf % 2 === 0) dustAt(f.x, false); } else f.vx *= 0.6; } };
-    case 'shoulder': return { id, label: 'Shoulder Charge', pre: 6, startup: 12, active: 8, recovery: 22, wind: 'crouch', pose: 'shoulder', selfMove: true, speedFx: true,
-      hitbox: [10,62,40,120], dmg: 70, stun: 20, bstun: 12, push: 3, kd: true, kdVx: 10, kdVy: 6, type: 'mid', hitstop: 12, gdrain: 14,
+      onFrame(f, o, mf) { if (mf > 4 && mf <= 22 && !f.hitConnected && Math.abs(o.x - f.x) > 50) { f.vx = f.facing * 11; if (mf % 2 === 0) dustAt(f.x, false); } else if (f.hitConnected && mf <= 30 && Math.abs(o.x - f.x) > 80) f.vx = f.facing * 8; /* (scooped from further out: he slides on in under them, so the juggle is still in reach) */ else f.vx *= 0.6; } };
+    case 'shoulder': return { id, label: 'Shoulder Charge', pre: 6, startup: 12, active: 8, recovery: 22, wind: 'crouch', pose: 'shoulder', selfMove: true, speedFx: true, bodyHurt: true,
+      hitFrom: 3, // (the shoulder is dangerous from the moment he starts charging, not only at the end of it)
+      hitbox: [10,105,40,120], dmg: 70, stun: 20, bstun: 12, push: 3, kd: true, kdVx: 10, kdVy: 6, type: 'mid', hitstop: 12, gdrain: 14, // (reach extended well past his own hurtbox's leading edge during the charge — it shouldn't be possible for him to be more exposed than his own shoulder is threatening)
       onFrame(f, o, mf) { if (mf > 3 && mf <= f.move.startup + f.move.active && !f.hitConnected && Math.abs(o.x - f.x) > 52) f.vx = f.facing * 13; else f.vx *= 0.6; } }; // (charges in from about a third of the screen)
     case 'qiOrb': return { id, label: 'Qi Orb', pre: 12, startup: 14, active: 2, recovery: 18, wind: 'blastW', pose: 'blast', proj: 'orb', limit: 1, aura: true,
       onFrame(f, o, mf) { if (mf === 14) spawnQiOrb(f); } };
     case 'qiParry': return { id, label: 'Qi Parry', startup: 7, active: 22, recovery: 20, wind: 'charge', pose: 'parryStance', parry: true, aura: true, fx: 'ward',
       onFrame(f, o, mf) { if (mf > 7 && mf <= 29 && mf % 3 === 0) auraParticle(f); } };
-    case 'pushParry': return { id, label: 'Push Parry', startup: 4, active: 10, recovery: 26, noProjParry: true, wind: 'charge', pose: 'parryStance', parry: true, parryInto: 'parryShove', aura: true, fx: 'ward', // ← ← + U: parries from the 5th frame; a parried blow gets a shove that sends them away (no damage)
-      onFrame(f, o, mf) { if (mf > 4 && mf <= 14 && mf % 3 === 0) auraParticle(f); } };
-    case 'kickParry': return { id, label: 'Kick Parry', startup: 4, active: 10, recovery: 32, noProjParry: true, wind: 'charge', pose: 'parryStance', parry: true, parryInto: 'parryKick', aura: true, fx: 'ward', // ← ← + I: the same, but he answers with a kick
-      onFrame(f, o, mf) { if (mf > 4 && mf <= 14 && mf % 3 === 0) auraParticle(f); } };
+    case 'pushParry': return { id, label: 'Push Parry', startup: 4, active: 14, recovery: 26, noProjParry: true, wind: 'charge', pose: 'parryStance', parry: true, parryInto: 'parryShove', aura: true, fx: 'ward', // ← ← + U: parries from the 5th frame; a parried blow gets a shove that sends them away (no damage)
+      onFrame(f, o, mf) { if (mf > 4 && mf <= 18 && mf % 3 === 0) auraParticle(f); } };
+    case 'kickParry': return { id, label: 'Kick Parry', startup: 4, active: 14, recovery: 32, noProjParry: true, wind: 'charge', pose: 'parryStance', parry: true, parryInto: 'parryKick', aura: true, fx: 'ward', // ← ← + I: the same, but he answers with a kick
+      onFrame(f, o, mf) { if (mf > 4 && mf <= 18 && mf % 3 === 0) auraParticle(f); } };
     case 'parryShove': return { id, label: 'Qi Shove', startup: 2, active: 3, recovery: 14, wind: 'palmW', pose: 'blast', hitbox: null, aura: true, burst: [80, 110],
       onStart(f, o) { const side = Math.sign(o.x - f.x) || f.facing; if (o.state !== 'ko') { setState(o, 'blockstun'); o.stun = 14; o.move = null; o.vx = side * 30; } sfx('qi'); game.shake = Math.max(game.shake, 3); } }; // (pushed far back, unhurt: back to neutral at a distance)
     case 'parryKick': return { id, label: 'Counter Kick', startup: 4, active: 4, recovery: 18, wind: 'kickW', pose: 'midKick', hitbox: [10,115,50,135],
@@ -1040,8 +1159,8 @@ function specialMoveBase(id) {
       dmg: 50, stun: 20, bstun: 12, push: 3, launch: true, launchVy: 13, noGrace: true, type: 'mid', hitstop: 12, gdrain: 10 };
     case 'stomp': return { id, label: 'Earth Stomp', low: true, projInvul: [0, 32], pre: 7, startup: 12, active: 2, recovery: 18, wind: 'stompW', pose: 'stompDown', proj: 'wave', limit: 1, // (low: its shockwave runs along the floor)
       onFrame(f, o, mf) { if (mf === 12) { spawnWave(f); dustAt(f.x + f.facing * 40, true); cracks(f.x + f.facing * 22); game.shake = Math.max(game.shake, 4); sfx('land'); } } };
-    case 'tornado': return { id, label: 'Cyclone Lariat', projInvul: [1, 34], pre: 7, startup: 12, active: 21, recovery: 12, wind: 'lariatW', pose: 'lariat', fx: 'cyclone', manualY: true, noPush: true, selfMove: true, spin: [13, 33],
-      hitbox: [-20,100,20,140], multi: 3, interval: 5, dmg: 22, lastDmg: 34, stun: 18, bstun: 10, push: 1.5, lastPush: 3, launch: true, launchVy: 12, type: 'mid', hitstop: 6, gdrain: 10,
+    case 'tornado': return { id, label: 'Cyclone Lariat', projInvul: [1, 34], pre: 7, startup: 12, active: 21, recovery: 12, wind: 'lariatW', pose: 'lariat', fx: 'cyclone', manualY: true, noPush: true, selfMove: true, spin: [13, 33], bodyHurt: true,
+      hitFrom: 8, hitbox: [20,80,70,145], multi: 3, interval: 5, dmg: 22, lastDmg: 34, stun: 18, bstun: 10, push: 1.5, lastPush: 3, launch: true, launchVy: 12, type: 'mid', hitstop: 6, gdrain: 10, // raised off the floor: the lariat is a swinging arm at chest/head height, not something that should also catch a low crouch
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
       onFrame(f, o, mf) { // a small backstep, then a jumping spinning lariat forward
         if (mf <= 6) { f.vx = -f.facing * 3; f.y = 0; } else if (mf <= 8) f.vx = 0;
@@ -1081,15 +1200,32 @@ function specialMoveBase(id) {
         if (mf <= 8) { const e = mf / 8; f.x = lerp(f.tj.x0, f.tj.tx, e); f.y = f.tj.top * e; }
         else if (mf <= 26) { f.y = Math.max(f.y, f.y + (o.y + 10 - f.y) * 0.3); f.x = clamp(o.x - f.facing * 30, WALL_L, WALL_R); } // keep level with them as they rise
       } };
-    case 'duckUpper': return { id, label: 'Crouching Upper', pre: 6, startup: 11, active: 10, recovery: 18, wind: 'crouch', pose: 'uppercut', selfMove: true, speedFx: true, aura: true, burst: [60, 170], // → → + I: ducks in low and drives an uppercut up through them
-      hitbox: [10,95,30,180], dmg: 64, stun: 22, bstun: 14, push: 4, cpLaunch: true, launchVy: 13.5, type: 'mid', hitstop: 11, gdrain: 14, // (a counter or a punish launches: a combo)
+    case 'duckUpper': return { id, label: 'Crouching Upper', pre: 6, startup: 11, active: 10, recovery: 18, wind: 'crouch', pose: 'uppercut', selfMove: true, speedFx: true, aura: true, burst: [60, 170], bodyHurt: true, // → → + I: ducks in low and drives an uppercut up through them
+      limbJoint: 'h1', limbReach: 50, limbBack: 16, limbUp: 38, limbDown: 38, // a more centered box on the fist itself (was heavily up-biased, so it already covered the top before he'd risen) — now it genuinely climbs with him
+      poseFn(f, mf) { // two blows: a straight punch at mid height out of the dash, then the fist drops back low and the uppercut drives up through them
+        const mv = f.move; if (mf >= mv.startup + mv.active) return null;
+        const low = { l1u: 100, l1l: -40, l2u: 40, l2l: -120 }; // (ducked much lower than his ordinary crouch: head about 20 lower)
+        const duck = { ...POSES.crouch, t: 55, ...low }, punch = { ...POSES.cPunch, t: 55, ...low }, cock = { ...POSES.cUpper, t: 25, ...low };
+        if (mf <= 8) return duck;
+        if (mf <= 13) return lerpPose(duck, punch, easeOutQ((mf - 8) / 5));
+        if (mf <= 14) return punch;
+        if (mf <= 19) return lerpPose(punch, cock, easeInOutQ((mf - 14) / 5)); // (the fist drawn back down gradually, not snapped)
+        if (mf <= 26) return lerpPose(cock, POSES.uppercut, easeInOutQ((mf - 19) / 7));
+        return POSES.uppercut;
+      },
+      hitFrom: 8, hitbox: [10,95,30,180], multi: 2, interval: 3, dmg: 26, lastDmg: 46, stun: 22, bstun: 14, push: 0.5, lastPush: 4, launch: true, launchVy: 13.5, type: 'mid', hitstop: 9, gdrain: 14, // (the punch holds them in place for the uppercut, and the uppercut launches: a combo)
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
-      onFrame(f, o, mf) { if (mf <= f.move.startup && !f.hitConnected && Math.abs(o.x - f.x) > 60) { f.vx = f.facing * 9; if (mf % 2 === 0) dustAt(f.x, false); } else f.vx *= 0.6; } };
-    case 'tripleQi': return { id, label: 'Triple Qi Blast', pre: 8, startup: 13, active: 2, recovery: 22, wind: 'blastW', pose: 'blast', proj: 'qi', limit: 1, aura: true, // ← → + I: three blasts at once, each a little faster than the last — they arrive one after another
-      onFrame(f, o, mf) { if (mf === 13) for (const sp of [5, 7, 9.5]) { spawnQi(f); Object.assign(projs[projs.length - 1], { vx: f.facing * sp, dmg: 32, stun: 16, bstun: 12, push: 2.5 }); } } };
+      onFrame(f, o, mf) {
+        if (mf > 16 && f.hitCount === 0) f.hitCount = 1; // (the punch only counts while it's out; past it, whatever lands is the uppercut)
+        if (mf <= 16 && f.hitCount === 1) f.lastHitMf = Math.max(f.lastHitMf, 16); // (the uppercut can't land before the fist starts rising: frame 19 on)
+        if (mf <= f.move.startup + 4 && !f.hitConnected && Math.abs(o.x - f.x) > 60) { f.vx = f.facing * 9; if (mf % 2 === 0) dustAt(f.x, false); } else f.vx *= 0.6;
+      } };
+    case 'tripleQi': return { id, label: 'Swift Qi Blast', pre: 8, startup: 13, active: 2, recovery: 22, wind: 'blastW', pose: 'blast', proj: 'qi', limit: 1, aura: true, // ← → + I: one qi blast, out a little sooner than ← → + U's and flying much faster
+      onFrame(f, o, mf) { if (mf === 13) { spawnQi(f); projs[projs.length - 1].vx = f.facing * 11; } } };
     case 'qiBlast': return { id, label: 'Qi Blast', pre: 8, startup: 13, active: 2, recovery: 22, wind: 'blastW', pose: 'blast', proj: 'qi', limit: 1, aura: true,
       onFrame(f, o, mf) { if (mf === 13) spawnQi(f); } };
-    case 'risingFist': return { id, label: 'Rising Fist', startup: 3, active: 14, recovery: 99, untilLand: true, landT: 12, wind: 'uppercutW', pose: 'dragonFist', spin: [4, 11], fx: 'helix', aura: true,
+    case 'risingFist': return { id, label: 'Rising Fist', startup: 3, active: 14, recovery: 99, untilLand: true, landT: 12, wind: 'uppercutW', pose: 'dragonFist', spin: [4, 11], fx: 'helix', aura: true, bodyHurt: true,
+      limbJoint: 'h1', limbReach: 75, limbBack: 14, limbUp: 30, limbDown: 90, // a box on the rising fist — tall, since the pose itself stretches his arm (and so his hipUp) a long way up: this still moves with him, not a fixed guess; extra reach keeps it ahead of his own hurtbox through the whole active window
       hitbox: [0,52,40,170], dmg: 85, stun: 20, bstun: 16, push: 4, launch: true, launchVy: 14, type: 'mid', hitstop: 10, chip: true, gdrain: 8,
       onStart(f) { f.invul = 5; },
       onFrame(f, o, mf) {

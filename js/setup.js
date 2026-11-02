@@ -34,6 +34,9 @@ const POSES = {
   down: P(-88, -95,-100, -80,-110, 82,95, 78,92),
   win: P(0, 170,178, -20,15, 12,0, -12,-4),
   dizzy: P(-10, -15,10, -35,-5, 20,4, -25,-10),
+  caught: P(-20, 140,165, 120,150, 18,4, -26,-14), // (held in a throw: leaning back, arms flailing)
+  caughtSumo: P(38, 120,100, 110,90, 22,-6, -24,-30), // (held in the kappa's sumo grip: bent forward over him, pushing down on his shell)
+  caughtLift: P(-26, 150,175, 135,160, 40,30, 10,-20), // (hoisted in the whirlpool grip: leaning back, legs kicking, arms flailing)
   jabW: P(6, 30,130, 15,115, 25,5, -25,-10),
   jab: P(14, 88,90, 10,120, 28,6, -28,-12),
   straight: P(22, 90,90, -5,125, 32,8, -30,-14),
@@ -136,14 +139,21 @@ const POSES = {
   kPeckUp: P(-16, 40,90, 30,80, 30,-6, -30,-18),          // head thrown up, pecking at someone above him
   kClaw: P(24, 112,64, 40,90, 50,6, -44,-26),
   kGrab: P(18, 88,92, 84,90, 40,6, -40,-18),
+  kSumoHold: P(34, 70,95, 64,92, ...CL), // (J: the sumo grip — low, arms locked round their waist)
+  kLiftHold: P(-8, 150,165, 140,160, 40,6, -40,-18), // (K: hoisting them up, arms raised, about to swirl them away)
   kToss: P(-14, 170,176, 166,172, 30,4, -30,-10),
   kThrow: P(16, 104,100, -30,10, 42,4, -42,-14),
   kBlast: P(14, 90,90, 86,88, 40,6, -40,-18),
   kBelly: P(80, 95,95, 90,90, -80,-80, -90,-90),
+  kDive: P(84, 100,96, 96,92, -78,-84, -88,-92), // (↓ + U / J / K: diving in head-first, flat along the floor, claws out in front)
   kCurl: P(50, 30,160, 20,150, ...CL),
+  kCrouch: P(78, 40,120, 30,110, ...CL), // (the kappa's crouch: hunched right down under his shell, head tucked in)
   kEat: P(6, 150,40, 120,30, 32,2, -32,-10),
   kLowClaw: P(40, 80,40, 60,90, ...CL),
+  kLowJab: P(34, 96,86, 60,90, ...CL), // (↓ + U: crouched, a quick claw jab straight out at their middle)
   kAirClaw: P(10, 110,60, 60,80, 100,15, 60,-35),
+  kAirRake: P(24, 40,15, 60,80, 100,15, 60,-35), // (the kappa's jump-in claws: raking down in front of him, low enough to catch someone under him)
+  kDivePeck: P(105, 150,160, 140,150, -10,-40, -40,-70), // (Air Peck: tipped forward, the beak stabbing down in front of him)
   kWin: P(0, 176,178, 172,176, 22,3, -22,-8),
   // the gunslinger: two revolvers, no kicks
   gIdle: P(4, 52,70, 40,62, 30,4, -32,-12),
@@ -168,6 +178,7 @@ const POSES = {
   sdBeckon: P(18, 96,150, 40,90, 50,-30, -10,-50),             // a low crouch, one hand curling: come here...
   sSpring: P(-10, 160,170, 120,140, 10,0, -30,-60),
   sCase: P(20, 104,70, 40,70, 50,6, -44,-26),
+  sCaseLow: P(34, 40,70, 70,72, ...CL), // (↓ + K Briefcase Trip: crouched, the case swung low along the floor at their feet)
   // poses for each fighter's own combo strings
   kReverse: P(14, 60,140, 110,90, 40,4, -40,-14),
   kStepSlash: P(40, 100,70, 50,30, 70,-20, -30,-70),
@@ -197,6 +208,12 @@ const POSES = {
   pThrust: P(22, 90,92, 58,84, 62,10, -52,-72),
   pBashW: P(-10, 40,82, 18,46, 30,6, -30,-12),
   pBash: P(24, 30,64, 96,96, 56,6, -45,-30),
+  pShieldPunchW: P(-8, -20,150, 40,60, 30,6, -30,-12), // (U: the shield drawn in, the sword raised back out of the way)
+  pShieldPunch: P(20, -30,160, 96,96, 52,6, -42,-26),
+  pRampDash: P(30, -30,160, 94,94, 52,5, -45,-40), // (→ → + U's run: shield out in front, the sword up behind)
+  pCrShieldW: P(26, -20,150, 40,60, ...CL), // (↓ + U: a crouching shield jab)
+  pCrShield: P(34, -30,160, 92,92, ...CL),
+  pLowParry: P(30, -20,150, 50,20, ...CL), // (← ← + K: crouched, the shield down by the floor in front of his legs)
   pRiseW: P(34, 30,10, 70,92, 70,-25, 20,-60),
   pRise: P(-6, 168,176, 64,92, 32,0, -10,-40),
   pLowCut: P(42, 78,40, 62,92, 85,-15, 20,-90),
@@ -205,7 +222,7 @@ const POSES = {
   pSpin: P(2, 92,94, -88,-90, 42,8, -40,-14),
   pAir: P(10, 104,82, 62,84, 100,15, 60,-35),
   pAirDown: P(16, 70,26, 60,80, 90,30, 50,-40),
-  crouchP: P(30, 52,100, 70,92, ...CL),
+  crouchP: P(58, 30,70, 96,118, 100,-40, 40,-105), // (ducking right down: bent low over his knees, the shield in front of his helmet, the sword held low)
   chargeB: P(4, -28,40, -18,52, 30,6, -30,-12),
   winB: P(0, 176,178, 150,172, 22,3, -22,-8),
   staffJabW: P(4, 45,70, 10,60, 34,4, -30,-14),
@@ -228,6 +245,8 @@ const POSES = {
   staffRise: P(-8, 170,176, 142,170, 42,10, -28,-44),
   staffWhirl: P(4, 92,92, -92,-92, 40,8, -40,-14),
   airStaff: P(16, 100,92, 72,82, 100,15, 60,-35),
+  airStaffJab: P(30, 45,30, 25,60, 100,15, 60,-35), // Mei's air jab: the staff driven steeply down at them from above (about 60° down)
+  staffFloorPoke: P(62, 50,90, 35,75, 100,-40, 40,-120), // Mei's ↓ + J: crouched low, the staff level along the floor (about 33 up)
   airStaffSwing: P(24, 120,70, 90,60, 100,15, 60,-35),
   airStaffWhirl: P(8, 92,92, -92,-92, 100,15, 60,-35),
   airStaffDown: P(40, 54,32, 34,22, 70,-15, 25,-50),

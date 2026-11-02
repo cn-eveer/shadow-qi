@@ -55,6 +55,13 @@ function lyraTip(f) { // where the crystal on Lyra's staff is right now (screen 
   const cx = J.h1[0] + ux * 113, cy = J.h1[1] + uy * 113;
   return [f.x + (f.animDX || 0) + f.facing * s * cx, GROUND - f.y - (f.ch.hover ? hoverOf(f) : 0) - s * (cy + hip)];
 }
+// a ray's hitbox: small boxes all along it, from where it starts to where it ends (screen coords in, world boxes out); kept a few frames for the training overlay
+function rayBoxes(sx, sy, tx, ty) {
+  const n = Math.max(2, Math.ceil(Math.hypot(tx - sx, ty - sy) / 18)), out = [];
+  for (let i = 0; i <= n; i++) { const x = sx + (tx - sx) * i / n, y = GROUND - (sy + (ty - sy) * i / n); out.push({ x0: x - 10, x1: x + 10, y0: Math.max(0, y - 10), y1: y + 10 }); }
+  (game.dbgRays = game.dbgRays || []).push({ boxes: out, t: game.frame });
+  return out;
+}
 function tripleRay(f, o) {
   const reach = 430, inRange = Math.abs(o.x - f.x) <= reach, hu = inRange ? hurtbox(o, true) : null;
   sfx('zap');
@@ -62,8 +69,8 @@ function tripleRay(f, o) {
     const tip = lyraTip(f), sx = tip[0], sy = tip[1] + (k - 1) * 4; // (all three out of the crystal on her staff)
     const oy = jumpedOver(o) ? 0 : o.y, tx = inRange ? o.x : f.x + f.facing * reach, ty = GROUND - oy - (55 + k * 32) * o.ch.scale; // (aimed where they stand: jump over the rays)
     parts.push({ type: 'ray', x: sx, y: sy, x1: tx, y1: ty, life: 14, max: 14, col: '210,190,255', w: 1.3 });
-    if (!hu || jumpedOver(o)) continue;
-    const hb = { x0: tx - 10, x1: tx + 10, y0: GROUND - ty - 10, y1: GROUND - ty + 10 };
+    const hb = hu && rayBoxes(sx, sy, tx, ty).find(b => overlap(b, hu)); // (only where the ray actually passes: a ray over someone crouched misses)
+    if (!hb || jumpedOver(o)) continue;
     applyHit(f, o, { dmg: k === 2 ? 24 : 14, stun: 18, bstun: 10, push: 1, type: 'mid', chip: true, hitstop: k === 2 ? 8 : 3, proj: true, str: 1, gdrain: 8, juggle: true, jugVy: 5,
       stunT: k === 2 ? 62 : undefined, stunKind: 'psy', label: 'Triple Ray' }, Math.sign(o.x - f.x) || f.facing, hb, hu);
   }
@@ -101,8 +108,8 @@ function burstRay(f, o, i, n) { // Orb Burst: a ray from an orb (or her hand) st
   parts.push({ type: 'ray', x: pos[0], y: pos[1], x1: tx, y1: ty, life: 12, max: 12 });
   sfx('zap');
   if (f.orbCD && f.orbCD[i] != null) f.orbCD[i] = Math.max(f.orbCD[i], 60);
-  if (!hu || jumpedOver(o)) return;
-  const hb = { x0: tx - 10, x1: tx + 10, y0: GROUND - ty - 10, y1: GROUND - ty + 10 };
+  const hb = hu && rayBoxes(pos[0], pos[1], tx, ty).find(b => overlap(b, hu)); // (only where the ray actually passes)
+  if (!hb || jumpedOver(o)) return;
   applyHit(f, o, { dmg: orbCount(f) ? 16 : 30, stun: 16, bstun: 8, push: 1, type: 'mid', chip: true, hitstop: 4, proj: true, str: 1, gdrain: 4, juggle: true, jugVy: 5, label: 'Orb Ray' }, Math.sign(o.x - f.x) || f.facing, hb, hu);
 }
 // Great Sage Pillar: a giant staff crashes down on them
@@ -226,8 +233,8 @@ function lyraCrystals(f, o, mf) { // each juggle hit: crystals form above them a
         parts.push({ type: 'crystal', x: cx, y: GROUND - o.y - 260 - k * 10, vx: o.vx * 0.5, vy: (190 + k * 10) / 6, r, life: 7, max: 7, rot: (k - (n - 1) / 2) * 0.12 }); } // ...and the crystal falls out of it
     }
     if (mf === hitF && near) {
-      const last = k === n - 1, cy = GROUND - o.y - 70 * o.ch.scale;
-      columnHit(f, o, { dmg: mv.cdmg[Math.min(k, mv.cdmg.length - 1)], stun: 22, bstun: 10, push: 0.3, juggle: true, jugVy: last ? (mv.lastJug || mv.jugVy) : mv.jugVy, relaunch: !!(last && mv.relaunch), hitstop: last ? 9 : 4, label: mv.label,
+      const last = k === n - 1, cy = GROUND - o.y - 70 * o.ch.scale, wy = o.y + 70 * o.ch.scale, R = mv.runes ? 34 + r * 0.6 : r, cx = o.x + (k - (n - 1) / 2) * 14; // (where this crystal / rune circle comes down on them)
+      columnHit(f, o, { box: { x0: cx - R, x1: cx + R, y0: Math.max(0, wy - (mv.runes ? R : r * 1.7)), y1: wy + (mv.runes ? R : r * 1.7) }, dmg: mv.cdmg[Math.min(k, mv.cdmg.length - 1)], stun: 22, bstun: 10, push: 0.3, juggle: true, jugVy: last ? (mv.lastJug || mv.jugVy) : mv.jugVy, relaunch: !!(last && mv.relaunch), hitstop: last ? 9 : 4, label: mv.label,
         ...(last && mv.kdEnd ? { kd: true, kdVx: mv.kdVx || 6, kdVy: mv.kdVy != null ? mv.kdVy : -6, juggle: false } : {}) });
       if (mv.runes) { parts.push({ type: 'ring', x: o.x, y: cy, r: 8, vr: last ? 7 : 5, life: 12, max: 12, col: '255,190,245' }); for (let i = 0; i < 6; i++) { const an = i * Math.PI / 3; parts.push({ type: 'spark', x: o.x, y: cy, vx: Math.cos(an) * 5, vy: Math.sin(an) * 5, life: 12, max: 12, col: '255,200,250' }); } }
       else crystalShatter(o.x, cy, last);
@@ -237,12 +244,20 @@ function lyraCrystals(f, o, mf) { // each juggle hit: crystals form above them a
   }
 }
 // Lyra's runes appear right where the opponent stands, out to a long range (further than Jesse's guns)
+// her spells in the air or in a juggle: the crystal fist / giant fist forms on them, wherever they've been carried — within reach of where it
+// would be (up to 170 ahead, 90 above or below) — so it can be tight around the magic and still find them
+function lyraAim(f, o, mv) {
+  const s = f.ch.scale, dx = (o.x - f.x) * f.facing / s, dy = (o.y + 60 * o.ch.scale - f.y) / s;
+  for (const key of ['psyFist', 'giantFist']) { const p = mv[key]; if (!p) continue;
+    if (!mv.aim0) mv.aim0 = {}; if (!mv.aim0[key]) mv.aim0[key] = [p[0], p[1]];
+    const [x0, y0] = mv.aim0[key]; mv[key] = [clamp(dx, 30, Math.max(170, x0)), clamp(dy, y0 - 90, y0 + 90), ...p.slice(2)]; }
+}
 function lyraReach(f, o, maxD, minD) {
   const mv = f.move, s = f.ch.scale, ahead = (o.x - f.x) * f.facing / s, base = mv.psyFist ? mv.psyFist[0] : mv.floorGlyph != null ? mv.floorGlyph : mv.groundBurst;
   if (base == null) return;
   const gol = o.golem; let at = ahead; // (Hohen out of her range, his golem in it: the spell goes for the golem)
   if (gol && !gol.broken && !gol.hidden && ahead > maxD) { const ga = (gol.x - f.x) * f.facing / s; if (ga >= 0 && ga <= maxD) at = ga; }
-  const d = clamp(at, minD, maxD), shift = d - base;
+  const d = clamp(at, Math.min(minD, 45), maxD), shift = d - base; // (someone right up close: the spell lands on them, not past them — its hitbox is only the magic itself)
   if (mv.psyFist) mv.psyFist = [d, ...mv.psyFist.slice(1)];
   if (mv.floorGlyph) mv.floorGlyph = d; else if (mv.groundBurst) mv.groundBurst = d;
   if (mv.hitbox) mv.hitbox = [mv.hitbox[0] + shift, mv.hitbox[1] + shift, mv.hitbox[2], mv.hitbox[3]];
@@ -316,7 +331,9 @@ const caughtIn = o => o.state === 'knock' && o.juggle; // already juggled in a c
 const jumpedOver = (o, h = 60) => o.y > h && !caughtIn(o); // a free opponent this high has jumped over a ranged attack aimed along the ground
 function columnHit(f, o, h) { // a hit that lands wherever they are (supers, floods, pillars)
   const hu = hurtbox(o, true); if (!hu) return;
-  const hb = { x0: o.x - 20, x1: o.x + 20, y0: 0, y1: h.colH || 400 }; /* (colH: a low column, like Riptide's) */
+  const cy = o.y + 70 * o.ch.scale, hb = h.box || (f.key === 'psychic' ? { x0: o.x - 40, x1: o.x + 40, y0: Math.max(0, cy - 55), y1: cy + 55 } : { x0: o.x - 20, x1: o.x + 20, y0: 0, y1: h.colH || 400 }); /* (colH: a low column, like Riptide's. Lyra: the magic closing round them, not a column to the sky) */
+  (game.dbgRays = game.dbgRays || []).push({ boxes: [hb], t: game.frame }); // (shown in training's hitbox view)
+  if (!overlap(hb, hu)) return;
   applyHit(f, o, { type: 'mid', chip: true, proj: true, str: h.launch || h.kd ? 2 : 1, hitstop: 4, gdrain: 6, ...h }, Math.sign(o.x - f.x) || f.facing, hb, hu);
 }
 // the salaryman's possession: the angel or the devil takes him over for ten seconds
@@ -334,7 +351,7 @@ function prePossessTick(f, t) {
 }
 function startPossession(f, kind) {
   if ((kind === 'angel' && f.ch.possess === 'devil') || (kind === 'devil' && f.ch.possess === 'angel')) kind = 'double'; // the other one arrives while one already has him: both at once
-  f.ch = kind === 'angel' ? ANGEL_CH : kind === 'devil' ? DEVIL_CH : DOUBLE_CH; f.possT = kind === 'double' ? Math.round(POSSESS_T * 0.75) : POSSESS_T;
+  f.ch = kind === 'angel' ? ANGEL_CH : kind === 'devil' ? DEVIL_CH : DOUBLE_CH; f.possT = kind === 'double' ? (f.possT > 0 ? f.possT : Math.round(POSSESS_T * 0.75)) : POSSESS_T; // (the double possession doesn't start the clock again: it runs on what's left of the first one — and runs down twice as fast, see state.js)
   popText(f.x, GROUND - 200, kind === 'angel' ? L('ANGEL POSSESSION!', '天使憑依！') : kind === 'devil' ? L('DEVIL POSSESSION!', '悪魔憑依！') : L('DOUBLE POSSESSION!!', '二重憑依！！'), kind === 'angel' ? '255,230,150' : kind === 'devil' ? '255,90,70' : '255,170,220');
   if (kind === 'double') { game.shake = Math.max(game.shake, 10); for (let i = 0; i < 24; i++) { const an = i * Math.PI / 12; parts.push({ type: 'spark', x: f.x, y: GROUND - f.y - 110, vx: Math.cos(an) * 9, vy: Math.sin(an) * 9, life: 22, max: 22, col: i % 2 ? '255,240,190' : '255,90,70' }); } }
   for (let i = 0; i < 16; i++) { const an = i * Math.PI / 8; parts.push({ type: 'spark', x: f.x, y: GROUND - f.y - 110, vx: Math.cos(an) * 6, vy: Math.sin(an) * 6, life: 18, max: 18, col: kind === 'angel' ? '255,240,190' : '255,90,60' }); }
@@ -354,7 +371,8 @@ function drawPossessBar(f) { // the time left in the possession, over his head
   ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(x - 1, y - 1, 62, 7);
   ctx.fillStyle = angel ? '#ffd86b' : '#ff4a3a'; ctx.fillRect(x, y, 60 * k, 5);
 }
-function aegisSpent(f) { f.guard = Math.min(f.guard, 50); f.guardSlowT = 600; } // after the Aegis: half a guard meter, recovering slowly
+const AEGIS_COST = 25; // the Aegis lives on a quarter of the guard meter: its four seconds use it all, hits use it up sooner
+function aegisSpent(f) { f.guardSlowT = 600; } // after the Aegis: the guard meter comes back slowly
 // heavy techniques are slow to recover when they miss or are guarded, but quick to follow up when they land
 function hitRecover(f, n) { const mv = f.move; if (!mv.cut && f.hitConnected && f.lastResult !== 'block') { mv.cut = true; mv.recovery = Math.min(mv.recovery, n); } }
 const holding = f => { const mv = f.move; return mv.holdFor != null ? f.mf < mv.holdFor : !!(f.inp && f.inp.held && f.inp.held[mv.holdBtn]); };
@@ -415,10 +433,19 @@ function spawnAegis(f) {
 function parryCounter(d, a, h) {
   sparks(d.x + d.facing * 30, GROUND - 100, 'block'); sfx('block'); popText(d.x, GROUND - 170, 'PARRY!', '125,235,255');
   game.freeze = Math.max(game.freeze, 10);
+  if (d.move.projStun && a.key === 'psychic') { parryStun(d, a); return; } // (Aldric's parries: a projectile is sent straight back (parryReflect); Lyra's magic, which can't be, leaves her stunned)
   if (h.proj) return; // projectiles are just absorbed
+  if (a.state === 'attack' && a.move) { a.hitCount = a.move.multi || 1; a.move.active = Math.max(0, a.mf - a.move.startup); } // (a parried attack stops there: no more hits from it — Water Cannon's jet, a flurry)
   d.facing = Math.sign(a.x - d.x) || d.facing;
   const dry = d.move.parryIntoDry && d.ch.ammo && !(d.ammo > 0 && !(d.reloadT > 0)); // (Jesse with no bullets: the shove instead of the shot)
   startMove(d, specialMove((dry ? d.move.parryIntoDry : d.move.parryInto) || 'parryStrike'), 1, true); d.invul = 8;
+}
+function parryStun(d, a) {
+  if (d.move.stunDone || a.ko) return; d.move.stunDone = true; // (once per parry: a burst of bullets doesn't keep restarting it)
+  for (const p of projs) if (p.owner === a && !p.dead && PJ.has(p.type) && p.type !== 'trap' && Math.sign(d.x - p.x) === Math.sign(p.vx)) { p.dead = true; if (p.boomerang) a.plateOut = false; sparks(p.x, GROUND - (p.y || 80), 'block'); } // (the rest of the volley still on its way to him shatters too)
+  a.move = null; a.vx = 0; setState(a, 'stunned'); a.stunT = 80; a.stunKind = 'holy'; a.st0 = ++serial;
+  parts.push({ type: 'lbeam', x: a.x, w: 30, life: 16, max: 16 }); popText(a.x, GROUND - a.y - 185, 'STUNNED!', '255,170,90'); sfx('orb');
+  game.freeze = Math.max(game.freeze, 12);
 }
 function spawnRain(f, o, idx) { // lightning balls drop straight down onto a juggled opponent
   projs.push({ id: ++serial, type: 'rain', owner: f, idx, x: o.x + (idx - 1) * 14, y: Math.min(o.y + 200, 420), vx: 0, vy: -11, r: 14,
@@ -546,8 +573,11 @@ LOOKS.staff = {
   jUpper: { label: 'Pole Upper', pose: 'staffRise' },
   jRise: { label: 'Soaring Staff', pose: 'staffRise', blade: false, aura: false, trail: { cx: 20, cy: 90, r: 120, a0: -40, a1: 100, col: GOLD } },
   jSpin: { label: 'Staff Whirl', pose: 'staffWhirl', spinStaff: true, trail: { cx: 0, cy: 90, r: 120, a0: -60, a1: 60, col: GOLD } },
-  aPalm: { label: 'Air Staff Jab', pose: 'airStaff', hitbox: [5,150,5,130] },
-  aElbow: { label: 'Air Staff Swing', pose: 'airStaffSwing', spinWind: true, hitbox: [5,150,5,130] },
+  aPalm: { label: 'Air Staff Jab', pose: 'airStaffJab', hitbox: [5,150,5,130], staffExt: 15 }, // (a jab driven steeply down at them from above — she's over them in a juggle — sliding out a little as Staff Thrust's does)
+  aElbow: { label: 'Air Staff Swing', pose: 'airStaffSwing', spinWind: true, hitbox: [5,150,5,130],
+    poseFn: (f, mf) => { const mv = f.move, su = mv.startup, end = su + mv.active; if (mf > end + 3) return null; // raised through the wind-up, then swung down through them across the active frames (it used to hold the staff upright the whole time)
+      if (mf <= 1) return lerpPose(f.prevPose, POSES.airStaffSwing, mf);
+      return mf <= end ? lerpPose(POSES.airStaffSwing, POSES.airStaffJab, easeOutQ((mf - 1) / Math.max(1, end - 1))) : POSES.airStaffJab; } },
   aKunai: { label: 'Staff Flurry', blade: false, hitbox: [5,160,0,135], trail: { cx: 20, cy: 100, r: 110, a0: 70, a1: -40, col: GOLD }, poseFn: (f, mf) => (mf > 4 && mf <= 13) ? (Math.floor((mf - 5) / 3) % 2 ? POSES.airStaffSwing : POSES.airStaff) : null },
   aSpin: { label: 'Air Staff Whirl', pose: 'airStaffWhirl', spinStaff: true, spin: null, hitbox: [-60,170,0,140], trail: { cx: 0, cy: 80, r: 120, a0: -60, a1: 60, col: GOLD } },
   aMeteor: { label: 'Staff Meteor', pose: 'airStaffDown', trail: { cx: 20, cy: 40, r: 100, a0: 160, a1: 260, col: GOLD } },

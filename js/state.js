@@ -84,10 +84,12 @@ function countProj(f, type) { let n = 0; for (const p of projs) if (p.owner === 
 // Punch + Kick = super; → → + Punch / Kick and ↓ + Punch = specials (Kuro's light and heavy buttons give different moves)
 // an opponent in the air: launched into a juggle, or jumping / attacking from a jump
 const inAir = o => (o.state === 'knock' && o.juggle) || ((o.state === 'jump' || o.state === 'attack') && o.y > 25);
+// a ← → technique that spends part of the gauge instead of filling it (Full Moon Tempest: too strong to throw out for free)
+const METER_COST = { fullMoon: 50 };
 function resolveSpecial(f, o, inp) {
   if (!inp.btn) return null;
   if (inp.fuse && f.ch.fuseSp && f.fuseG >= 100) return f.ch.fuseSp; // ← → + J + K with his fusion gauge full (Hohen's golem armour)
-  if (inp.bf && f.ch.spBF && f.ch.spBF[inp.btn]) return f.ch.spBF[inp.btn]; // ← → + a button (Kuro's Moon Tempests)
+  if (inp.bf && f.ch.spBF && f.ch.spBF[inp.btn]) { const sid = f.ch.spBF[inp.btn]; if (!METER_COST[sid] || f.meter >= METER_COST[sid]) return sid; } // ← → + a button (Kuro's Moon Tempests)
   if (inp.sup && f.meter >= 100) return f.ch.sup;
   const isP = inp.btn[1] === 'p', heavy = inp.btn[0] === 'h';
   if (inp.ff || inp.bb) {
@@ -103,8 +105,13 @@ function resolveSpecial(f, o, inp) {
   if (inp.down && isP && heavy) return f.ch.sp.dP || null; // ↓ + I
   return null;
 }
+// Tanaka's (and his spirits') heavy I and K and his → → / ← ← blows: live from early in the swing, as soon as it leaves the wind-up
+const TANAKA_EARLY = new Set(['smCase', 'saFist', 'saGlide']);
+const tanakaEarly = mv => TANAKA_EARLY.has(mv.id) || (mv.normal && mv.str === 1 && mv.stance === 's');
 function startMove(f, mv, str, keepBuffer) {
   f.prevPose = { ...f.pose };
+  if ((f.key === 'paladin' || ((f.key === 'kappa' || f.key === 'salary') && mv && !mv.grab && !(mv.manualY && f.key === 'kappa') && !mv.longRange && !mv.jug && !mv.tail)) && mv && mv.hitbox && !mv.poseFn && !mv.parry && !mv.held && !mv.super && mv.startup < 900 && mv.pose) { mv.poseFn = evenSwing; if (mv.hitFrom == null) mv.hitFrom = Math.max(1, f.key === 'salary' && tanakaEarly(mv) ? Math.round(mv.startup * 0.35) : mv.startup - (f.key === 'salary' && /uppercut/.test(mv.pose) ? 5 : 3)); }
+  if (f.key === 'salary' && mv && mv.tail && !mv.jug && !mv.low && mv.hitFrom == null && mv.startup < 900) mv.hitFrom = Math.max(1, Math.round(mv.startup * 0.4)); // (the devil's tail: live early in its even sweep — not a low one, whose tip only reaches the floor late in it) // (Tanaka's uppercuts: live a little earlier still, catching them on the way up through their body) // (Aldric: an even swing, live from early on — see aldricSwing)
   f.move = mv; f.mf = 0; f.str = str; f.hitCount = 0; f.lastHitMf = -99; f.hitConnected = false; f.serial = ++serial; f.armorHits = 0;
   f.shadow = false; f.followQ = null; f.lastResult = null; f.chainQ = null; f.shadowRun = false;
   if (f.ctrl.consume && !keepBuffer) f.ctrl.consume();
@@ -112,7 +119,7 @@ function startMove(f, mv, str, keepBuffer) {
   if (f.y <= 0 && !mv.selfMove) f.vx = 0;
   if (mv.super) { f.meter = 0; game.superFlash = { f, name: mv.name, t: SUPER_CUT, max: SUPER_CUT }; sfx('super');
     for (let i = 0; i < 16; i++) { const an = i * Math.PI / 8; parts.push({ type: 'speed', x: f.x + Math.cos(an) * 30, y: GROUND - f.y - 90 + Math.sin(an) * 30, vx: Math.cos(an) * 9, vy: Math.sin(an) * 9, life: 12, max: 12, col: f.ch.fxCol }); } }
-  else if (!mv.normal) f.meter = Math.min(100, f.meter + 3); // ...and using techniques
+  else if (METER_COST[mv.id]) f.meter = Math.max(0, f.meter - METER_COST[mv.id]); // a technique that spends the gauge instead
   if (mv.normal) sfx('swing');
   if (mv.rushTag) f.rushN = mv.rushOpen ? 0 : (f.rushN || 0) + 1;
   if (mv.jug) { const oj = other(f); if (oj && Math.abs(oj.x - f.x) > 6) f.facing = Math.sign(oj.x - f.x); } // (a juggle attack turns to face them: a juggle can carry them over to the other side)
@@ -177,6 +184,13 @@ function moveFrames(f, mv) {
   if (f.ch.recPlus && mv.recovery < 90) { mv.recovery += f.ch.recPlus; mv.recPlusAmt = f.ch.recPlus; } // (a fighter who's slower to recover: a miss or a guard costs more — the guard number stays as set; a hit that launches or knocks down gives it back, see applyHit)
   if (e.blk != null) { mv.blockAdv = e.blk; mv.noGuardLag = true; f.lastMoveTech = false; } // (its own guard number: no extra off-balance on top)
 }
+// Aldric can parry straight out of his guard: ← ← + U (Push Parry) comes out while he's guarding, even in blockstun or just after his own attack
+const GUARD_PARRIES = new Set(['plParryRise']);
+function guardParry(f, o, inp) {
+  if (f.key !== 'paladin' || !inp.btn || !inp.bb) return false;
+  const sid = resolveSpecial(f, o, inp); if (!GUARD_PARRIES.has(sid)) return false;
+  startMove(f, specialMove(sid), STR[inp.btn[0]]); return true;
+}
 function tryAttack(f, o, inp, noLight) { // (noLight: anything but a light attack — a string can't start itself over)
   if (!inp.btn) return false;
   const str = STR[inp.btn[0]], isP = inp.btn[1] === 'p';
@@ -197,7 +211,8 @@ function tryAttack(f, o, inp, noLight) { // (noLight: anything but a light attac
     startMove(f, jm, jm.str); return true;
   }
   if (noLight && str === 0) return false;
-  startMove(f, normalMove(f.ch, isP ? 'p' : 'k', str, inp.down ? 'c' : 's'), str);
+  const nm = normalMove(f.ch, isP ? 'p' : 'k', str, inp.down ? 'c' : 's'); if (!nm) return false;
+  startMove(f, nm, str);
   return true;
 }
 function startJump(f, inp) {
@@ -323,6 +338,7 @@ function runMove(f, o, inp) {
     }
   }
   if (mv.onFrame) mv.onFrame(f, o, f.mf);
+  if (f.key === 'psychic' && (mv.air || mv.jug || (o.state === 'knock' && o.juggle)) && f.mf <= mv.startup + (mv.active || 0)) lyraAim(f, o, mv); // (her air and juggle spells form on them)
   if (mv.claw && f.mf === mv.startup + 1) clawSwipe(f, mv.claw, o); // the kappa's claws leave three slashes in the air
   if (f.move !== mv) return;
   if (f.mf >= mv.startup + mv.active + mv.recovery && !(f.guardLagUntil > game.frame && (!mv.normal || mv.fiveEnder) && f.y <= 0)) endMove(f); // (a guarded technique: still stuck until its opening is over)
@@ -367,11 +383,11 @@ function update(f, o, inp) {
   if (f.golem) golemUpdate(f, o);
   if (f.brands && --f.brandT <= 0) f.brands = 0; // holy brands fade
   if (f.healT > 0) f.healT--;
-  if (f.aegisT > 0) { // Aldric's Aegis: it stays up for four seconds while he moves and fights, feeding on his guard meter (about ten a second)
-    f.guard = Math.max(0, f.guard - 0.16); f.guardIdle = 0;
-    if (--f.aegisT <= 0 || f.guard <= 0 || f.ko) { f.aegisT = 0; aegisSpent(f); }
+  if (f.aegisT > 0) { // Aldric's Aegis: it stays up for four seconds while he moves and fights, living on a quarter of his guard meter (aegisFloor: where it stops)
+    f.guard = Math.max(0, f.guard - AEGIS_COST / 240); f.guardIdle = 0;
+    if (--f.aegisT <= 0 || f.guard <= (f.aegisFloor || 0) || f.ko) { f.aegisT = 0; aegisSpent(f); }
   }
-  if (f.possT > 0 && --f.possT === 0) endPossession(f);
+  if (f.possT > 0) { f.possT = Math.max(0, f.possT - (f.ch.possess === 'double' ? 2 : 1)); if (f.possT === 0) endPossession(f); } // (the double possession burns through its time twice as fast)
   if (f.ch.possess === 'double' && !f.ko) { const o2 = other(f); // a field of holy light and hellfire: anyone close is burned
     if (globalT % 3 === 0) { const an = globalT * 0.12; for (const sd of [0, Math.PI]) parts.push({ type: 'aura', x: f.x + Math.cos(an + sd) * 95, y: GROUND - f.y - 90 + Math.sin(an + sd) * 40, vx: 0, vy: -0.6, life: 16, max: 16, r: 5, col: sd ? '255,90,60' : '255,240,190' }); }
     if (o2 && !o2.ko && !(o2.invul > 0) && o2.state !== 'getup' && Math.abs(o2.x - f.x) < 115 && Math.abs(o2.y - f.y) < 140 && game.frame % 24 === 0) { o2.hp = Math.max(1, o2.hp - 10); o2.flash = 4; parts.push({ type: 'spark', x: o2.x, y: GROUND - o2.y - 90, vx: 0, vy: -2, life: 10, max: 10, col: '255,150,120' }); } }
@@ -398,6 +414,7 @@ function update(f, o, inp) {
       if (f.st % 7 === 0) ambientFX(f);
       f.facing = toward; f.combo = 0;
       if (f.atkCD <= 0 && tryAttack(f, o, inp)) break; // (a technique with ↑ held is tried before jumping)
+      if (guardParry(f, o, inp)) break;
       if (inp.dashTap === 1 && !f.ch.noDash) { setState(f, 'dash'); sfx('swing'); break; } // (Hohen can't dash or back dash)
       if (inp.dashTap === -1 && !f.ch.noDash) { setState(f, 'bdash'); sfx('swing'); break; }
       if (inp.up) { startJump(f, inp); break; }
@@ -452,7 +469,7 @@ function update(f, o, inp) {
       f.facing = toward; f.vx = 0;
       if (f.st >= (f.ch.recoverT || 12)) setState(f, inp.down ? 'crouch' : 'stand');
       break;
-    case 'blockstun': if (f.st >= f.stun) { setState(f, inp.down ? 'crouch' : 'guard'); f.settleT = 10; } break;
+    case 'blockstun': if (guardParry(f, o, inp)) break; if (f.st >= f.stun) { setState(f, inp.down ? 'crouch' : 'guard'); f.settleT = 10; } break;
     case 'down': // lie on the ground a while; tap ← or → to roll away instead of standing up in place
       if (f.ko) break;
       if (f.st >= 18 && inp.tap) { setState(f, 'roll'); f.rollDir = inp.tap; sfx('land'); }

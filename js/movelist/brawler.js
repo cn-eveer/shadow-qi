@@ -14,7 +14,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Meteor Fist<small>Leaps in and slams both fists down (a mid). Guarded, it shoves them far back and tears at the guard. A counter hit launches them.</small></td><td class="cmd">→ → + U</td></tr>
           <tr><td>Crouching Upper<small>Ducks in low and drives an uppercut up through them. A counter hit launches them.</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>Qi Blast<small>A qi projectile, out quickly and safe when guarded.</small></td><td class="cmd">← → + U</td></tr>
-          <tr><td>Triple Qi Blast<small>Three qi blasts at once, each a little faster than the last: they arrive one after another. Safe when guarded.</small></td><td class="cmd">← → + I</td></tr>
+          <tr><td>Swift Qi Blast<small>One qi blast, out a little sooner than ← → + U's and flying much faster. Safe when guarded.</small></td><td class="cmd">← → + I</td></tr>
           <tr><td>Qi Sweep<small>Lunges in low and scoops them up with both palms.</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>Shoulder Charge<small>A shoulder tackle that charges in from about a third of the screen and knocks them back. Shrugs off light hits on the way in; punishable if guarded.</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>Push Parry<small>A quick parry (from the 5th frame, briefly). A blow that hits him during it is parried and he shoves them far away, without damage. Projectiles are not parried: they hit him. Neither is Lyra’s magic. Slow to recover if it catches nothing.</small></td><td class="cmd">← ← + U</td></tr>
@@ -67,7 +67,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>流星拳<small>跳び込んで両拳を叩きつける（中段）。ガードされても大きく押し返し、ガードゲージを削る。カウンターで打ち上げる。</small></td><td class="cmd">→ → + U</td></tr>
           <tr><td>潜り昇拳<small>低く潜り込んでアッパーで突き上げる。カウンターで打ち上げる。</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>気功弾<small>出の速い気の飛び道具。ガードされても安全。</small></td><td class="cmd">← → + U</td></tr>
-          <tr><td>三連気功弾<small>3発の気功弾を同時に放つ。少しずつ速さが違い、順番に届く。ガードされても安全。</small></td><td class="cmd">← → + I</td></tr>
+          <tr><td>疾風気弾<small>気弾を1発放つ。← → + Uより少し早く出て、ずっと速く飛ぶ。ガードされても安全。</small></td><td class="cmd">← → + I</td></tr>
           <tr><td>気の掬い<small>低く踏み込み、両掌で掬い上げる。</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>肩当て<small>画面の約3分の1から突進する体当たりで押し返す。突進中は弱い攻撃を耐える。ガードされると反撃される。</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>気の押し返し<small>出の速い受け流し（5フレーム目から短い間）。受け流した相手をダメージなしで大きく押し返す。飛び道具は受け流せず、そのまま当たる。ライラの魔法も受け流せない。空振りすると硬直が長い。</small></td><td class="cmd">← ← + U</td></tr>

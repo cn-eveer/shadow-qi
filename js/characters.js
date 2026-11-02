@@ -1,5 +1,7 @@
 'use strict';
 /* ================= characters ================= */
+const kappaDive = (a, b, sp) => (f, o, mf) => { if (mf >= a && mf <= b && Math.abs(o.x - f.x) > 60 && !f.hitConnected) { f.vx = f.facing * sp; if (mf % 3 === 0) parts.push({ type: 'aura', x: f.x - f.facing * 20, y: GROUND - 6, vx: -f.facing, vy: -1, life: 10, max: 10, r: 3, col: '150,215,255' }); } }; // the kappa's floor dives: he swims along the ground at them
+const aldricStep = (a, b, sp) => (f, o, mf) => { if (mf >= a && mf <= b && Math.abs(o.x - f.x) > 70 && !f.hitConnected) f.vx = f.facing * sp; }; // Aldric's shield jabs: a step in behind the shield
 const CHARS = {
   ninja: {
     // frames: wind-up 2 shorter (light) / 4 shorter (heavy), hand signs 20% shorter (still long enough to jab him first); every attack out 3 frames longer; recovery 3 / 5 / 5 longer
@@ -15,9 +17,23 @@ const CHARS = {
     pDmg: 0.9, kDmg: 0.92, pReach: 1, kReach: 1.08, chargeRate: 0.5, auraCol: '185,145,255',
     sp: { fP: 'shadowCharge', fPH: 'swordSlash', fK: 'cloneStrike', fKH: 'teleKick', bP: 'flame', bPH: 'fireballs', bK: 'vanishSlide', bKH: 'vanishDrop' }, sup: 'shadowArmy',
     heavy: {
-      p: { label: 'Kunai Slash', startup: 9, active: 5, recovery: 18, hitbox: [10,104,106,140], wind: 'slashW', pose: 'slash', blade: true, lunge: [3, 9, 4.5], hitstop: 10, speedFx: true,
+      p: { label: 'Kunai Slash', startup: 9, active: 5, recovery: 18, hitbox: [10,104,106,140], wind: 'slashW', pose: 'slash', blade: true, lunge: [3, 9, 4.5], hitstop: 10, speedFx: true, bodyHurt: true, // (hitbox: a fallback box for the other systems that read it; the real one below is the kunai itself. bodyHurt: his own hurtbox fitted to the swing too)
+        kunaiBox: true, // the hitbox is exactly the drawn kunai — hand to blade-tip, read straight off the same pose drawBody uses, frame by frame through the swing
+        poseFn(f, mf) { // the swing (slashW, kunai raised overhead -> slash, brought down and through) plays across the whole technique, wind-up and strike together, so it's still under way during the active frames instead of finished before them
+          const mv = f.move, su = mv.startup, total = su + mv.active; if (mf >= total) return null; // recovery: back to the generic system
+          const riseEnd = Math.max(1, Math.round(su * 0.55)); // raised overhead partway through the wind-up…
+          if (mf <= riseEnd) return lerpPose(f.prevPose, POSES.slashW, easeOutQ(Math.min(1, mf / riseEnd)));
+          return lerpPose(POSES.slashW, POSES.slash, easeInOutQ(Math.min(1, (mf - riseEnd) / Math.max(1, total - riseEnd)))); // …then down through the rest of the wind-up and the whole active window
+        },
         trail: { cx: 15, cy: 105, r: 80, a0: 80, a1: -35, col: '225,235,255' } },
-      k: { label: 'Crescent Kick', startup: 10, active: 5, recovery: 19, hitbox: [15,92,45,140], wind: 'crescentW', pose: 'crescent', lunge: [2, 8, 3.5], cpLaunch: true, launchVy: 13,
+      k: { label: 'Crescent Kick', startup: 10, active: 5, recovery: 19, hitbox: [15,92,45,140], wind: 'crescentW', pose: 'crescent', lunge: [2, 8, 3.5], cpLaunch: true, launchVy: 13, bodyHurt: true,
+        limbJoint: 'f1', limbReach: 34, limbBack: 15, limbUp: 15, limbDown: 15, // a compact box on the kicking foot, longer reach than just the foot's own width
+        poseFn(f, mf) { // the kick swings through: crescentW raised, into crescent, across the whole technique so it's still turning during the active frames
+          const mv = f.move, su = mv.startup, total = su + mv.active; if (mf >= total) return null;
+          const riseEnd = Math.max(1, Math.round(su * 0.5));
+          if (mf <= riseEnd) return lerpPose(f.prevPose, POSES.crescentW, easeOutQ(Math.min(1, mf / riseEnd)));
+          return lerpPose(POSES.crescentW, POSES.crescent, easeInOutQ(Math.min(1, (mf - riseEnd) / Math.max(1, total - riseEnd))));
+        },
         trail: { cx: 0, cy: 62, r: 78, a0: -45, a1: 95, col: '190,150,255' } },
     },
     colors: { cloth: '#29324d', back: '#181d2e', dark: '#0f131e', wrap: '#4a5674', glove: '#141822', accent: '#dd3a52', skin: '#f1d0aa', metal: '#8d97b0' },
@@ -27,17 +43,17 @@ const CHARS = {
     name: 'TETSU', dmgMul: 0.97, title: 'Qi Brawler', nameJa: 'テツ', titleJa: '気の拳士', armor: 3, jugDmg: 1.2, scale: 1.08, walk: 3.0, back: 2.4, jumpX: 3.9,
     pDmg: 1.4, kDmg: 1.2, pReach: 1.04, kReach: 0.96, chargeRate: 0.68, auraCol: '125,235,255',
     sp: { fP: 'meteorFist', fPH: 'duckUpper', fK: 'qiSweep', fKH: 'shoulder', bP: 'pushParry', bPH: 'kickParry', bK: 'stomp', bKH: 'tornado', dP: 'risingFist' }, sup: 'qiCannon',
-    spBF: { lp: 'qiBlast', hp: 'tripleQi' }, // ← → + U: Qi Blast, ← → + I: Triple Qi Blast
+    spBF: { lp: 'qiBlast', hp: 'tripleQi' }, // ← → + U: Qi Blast, ← → + I: Swift Qi Blast
     hitPlus: 4, counterStun: 8, // every hit leaves him 4 frames further ahead; a counter hit 8 (everyone else: 4)
     frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
       U: { su: 6, act: 6, rec: 9, blk: -4 }, dU: { su: 6, act: 6, rec: 9, blk: -4 }, J: { su: 6 }, dJ: { su: 10, act: 6, blk: -10 },
       I: { su: 12, rec: 11, blk: -8, set: { cpLaunch: true, launchVy: 13 } }, // (a counter or a punish launches: a combo)
-      K: { su: 14, act: 7, rec: 22, blk: -14, set: { launchVy: 14.5 } }, // (a counter launches a little higher: the follow-up comes later after the longer recovery)
+      K: { su: 14, act: 11, rec: 18, blk: -14, set: { launchVy: 14.5 } }, // (a counter launches a little higher: the follow-up comes later after the longer recovery) // 4 frames moved from recovery into active so the chop's descent has more real time to play out — same act+rec total (29), so on-hit advantage (computed off that sum) is unchanged, and blk is its own fixed number either way
       dK: { su: 12, act: 8, blk: -12, set: { launch: false, kd: true, kdVx: 3, kdVy: 5, cpLaunch: true, launchVy: 13 } }, // (sweeps them off their feet; a counter or a punish launches)
       risingFist: { su: 14, act: 18, blk: -18 },
       meteorFist: { su: 18, act: 20, blk: -18, set: { cutOnHit: true, launch: false, bounce: false, kd: true, kdVx: 16, kdVy: 9, cpLaunch: true, launchVy: 12, guardPush: 16, gdrain: 32, chip: true, hitbox: [-10,80,28,110] } }, // (a mid: the fists come down at body height) // (guarded: shoves them far back and tears at the guard)
       duckUpper: { su: 18, act: 16, blk: -14, set: { cutOnHit: true } },
-      qiBlast: { su: 14, act: 3, rec: 3, blk: 0 }, tripleQi: { su: 16, act: 3, rec: 3, blk: 0 },
+      qiBlast: { su: 14, act: 3, rec: 3, blk: 0 }, tripleQi: { su: 13, act: 3, rec: 3, blk: 0 },
       qiSweep: { su: 18, act: 18, blk: -21 },
       shoulder: { su: 18, act: 12, blk: -21, set: { maxTravel: 300, tArmor: true } }, // (armor: shrugs off up to three light hits)
       stomp: { su: 14, act: 6, rec: 3, blk: 0 },
@@ -51,8 +67,24 @@ const CHARS = {
       $tlD: { su: 21, act: 8, rec: 24, blk: -16 }, // J, J, ↓ + K (mid)
     },
     heavy: {
-      p: { label: 'Qi Palm', startup: 10, active: 4, recovery: 19, hitbox: [20,118,106,130], wind: 'palmW', pose: 'palm', lunge: [3, 11, 5], push: 10, gdrain: 22, burst: [80, 108] },
-      k: { label: 'Axe Kick', startup: 10, active: 4, recovery: 19, hitbox: [20,104,0,150], wind: 'axeW', pose: 'axe', lunge: [3, 11, 5.5], cpLaunch: true, launchVy: 13, kd: true, stomp: [56, 0],
+      p: { label: 'Qi Palm', startup: 10, active: 4, recovery: 19, hitbox: [20,118,106,130], wind: 'palmW', pose: 'palm', lunge: [3, 11, 5], push: 10, gdrain: 22, burst: [80, 108], bodyHurt: true,
+        limbJoint: 'h1', limbReach: 70, limbBack: 12, limbUp: 16, limbDown: 16, hitFrom: 5, // a compact box on the striking palm, live as it starts forward
+        poseFn(f, mf) { // pulled back, then pushed out evenly through the rest of the wind-up into the strike (the generic strike whips it out in the last two frames)
+          const mv = f.move, su = mv.startup, total = su + mv.active; if (mf >= total) return null;
+          if (mf <= 4) return lerpPose(f.prevPose, POSES.palmW, easeOutQ(mf / 4));
+          if (mf <= su + 1) return lerpPose(POSES.palmW, POSES.palm, easeInOutQ((mf - 4) / (su - 3)));
+          return POSES.palm;
+        } },
+      k: { label: 'Axe Kick', startup: 6, active: 11, recovery: 18, hitbox: [20,104,0,150], wind: 'axeW', pose: 'axe', lunge: [3, 11, 5.5], cpLaunch: true, launchVy: 13, kd: true, stomp: [56, 0], // active/recovery here are overwritten by the brawler frames table's 'K' entry at runtime (moveFrames) — kept in sync with it so this object stays an accurate picture of what actually plays
+        limbJoint: 'f1', limbReach: 42, limbBack: 14, limbUp: 10, limbDown: 10, hitFrom: 2, // a compact box on the kicking foot, longer reach, shorter height
+        poseFn(f, mf) { // the leg lifts up near his own head first, holds there a beat, then comes down slowly through the rest of the window — a real chop, not a snap
+          const mv = f.move, total = mv.startup + mv.active; if (mf >= total) return null;
+          const k = mf / total, hold = 0.25;
+          if (k < hold) return lerpPose(f.prevPose, POSES.axeW, easeOutQ(Math.min(1, k / hold)));
+          const d = Math.min(1, (k - hold) / (1 - hold));
+          return lerpPose(POSES.axeW, POSES.axe, d * d); // slow to start, picking up speed into the chop
+        },
+        hurtW: 25, hurtBack: 10, // narrower than his full stretched-out silhouette: the leg reaching out shouldn't make his whole body that exposed
         trail: { cx: 5, cy: 62, r: 72, a0: 100, a1: -20, col: '255,215,160' } },
     },
     colors: { skin: '#c98b5e', skinB: '#a46c45', pants: '#2d303c', pantsB: '#1e2029', vest: '#2f7d5c', vestB: '#235c44', wrap: '#f0e8d8', wrapB: '#cdc4b1', hair: '#18120e', band: '#8a5129', belt: '#5a3a1f', shoe: '#17181c', bead: '#7a4b2a', sash: '#c23b2e' },
@@ -62,7 +94,7 @@ const CHARS = {
     reachAdd: 28, name: 'MEI', title: 'Staff Prodigy', nameJa: 'メイ', titleJa: '棍の天才', dmgMul: 0.88, guardDmgMul: 0.6, slowTech: 4, pushMul: 1.6, prePose: 'chargeB', jugDmg: 1.15, scale: 0.94, walk: 3.6, back: 3.0, jumpX: 4.8, jumpV: 19.5, doubleJump: true,
     pDmg: 1.35, kDmg: 1.2, pReach: 1.9, kReach: 1.0, chargeRate: 0.66, auraCol: '255,200,90', fxCol: '255,205,110',
     spBF: { lp: 'staffThrow', hp: 'staffWhirl' }, // ← → + U: Staff Boomerang, ← → + I: Staff Whirlwind
-    sp: { fP: 'extendStaff', fPH: 'vaultSmash', fK: 'poleKick', fKH: 'sweepStaff', bP: 'windmill', bPH: 'cloudLeap', bK: 'somersault', bKH: 'feint' }, sup: 'greatSage',
+    sp: { fP: 'extendStaff', fPH: 'vaultSmash', fK: 'poleKick', fKH: 'sweepStaff', bP: 'windmill', bPH: 'cloudLeap', bK: 'vaultBack', bKH: 'feint' }, sup: 'greatSage',
     recPlus: 5, // every attack recovers 5 frames slower (see moveFrames)
     antiAir: 250, // her mid and top attacks reach up to here, over her head as well: they catch a jump or a drop from above
     frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
@@ -75,21 +107,35 @@ const CHARS = {
       $ml2: { su: 10, act: 5, rec: 12, blk: -6 }, $mlE: { su: 15, act: 6, rec: 20, blk: -16 }, // J, J (mid) / J, J, K and J, K
       extendStaff: { su: 21, blk: -10 }, vaultSmash: { su: 21, blk: -18 }, poleKick: { su: 14, blk: -14 }, sweepStaff: { su: 18, blk: -18 }, // (→ → + J Pole Spin Kick, → → + K Sweeping Staff)
       staffThrow: { su: 16, act: 2, rec: 3, set: { noGuardLag: true } }, staffWhirl: { su: 18, act: 2, rec: 3, set: { noGuardLag: true } }, // (硬直 8 with her +5, guarded or not)
-      windmill: { su: 18, blk: -16 }, cloudLeap: { su: 21, act: 20, blk: -18 }, somersault: { su: 14, blk: -14 }, feint: { su: 18, blk: -8 },
+      windmill: { su: 18, blk: -16 }, cloudLeap: { su: 21, act: 20, blk: -18 }, vaultBack: { su: 18, blk: -16 }, // (Pole Vault Smash backwards: a little sooner than its 21) feint: { su: 18, blk: -8 },
     },
     heavy: {
-      p: { label: 'Staff Sweep', startup: 10, active: 5, recovery: 18, hitbox: [10,250,50,150], wind: 'staffSwingW', pose: 'staffSwing', lunge: [3, 9, 1], /* (a long sweep: she hardly steps in) */ hitstop: 10, spinWind: true,
+      p: { label: 'Staff Sweep', startup: 10, active: 5, recovery: 18, hitbox: [10,250,50,150], wind: 'staffSwingW', pose: 'staffSwing', lunge: [3, 9, 1], /* (a long sweep: she hardly steps in) */ hitstop: 10,
+        hitFrom: 5, staffFront: true, // (the staff — its striking half, hand to tip — is live from the moment the swing starts coming round, not only at the end of it)
+        poseFn(f, mf) { // raised high behind her, then swung round over and forward to level, spread evenly across the whole wind-up and active frames — so the swing (and the hitbox on the staff) can be followed, not one snap
+          const mv = f.move, end = mv.startup + mv.active; if (mf > end + 4) return null;
+          if (mf <= 3) return lerpPose(f.prevPose, POSES.staffHighW, easeOutQ(mf / 3));
+          return mf <= end ? lerpPose(POSES.staffHighW, POSES.thrust, (mf - 3) / (end - 3)) : POSES.thrust; // (an even swing: the same distance each frame)
+        },
         trail: { cx: 20, cy: 100, r: 120, a0: 120, a1: -20, col: '255,205,110' } },
       k: { label: 'Round Swing', startup: 11, active: 8, recovery: 18, hitbox: [-150,195,20,170], wind: 'staffSwingW', pose: 'staffWhirl', lunge: [3, 9, 1], cpLaunch: true, launchVy: 13, kd: true, kdVx: 10,
         spin: [11, 19], spinStaff: true, trail: { cx: 0, cy: 95, r: 150, a0: -170, a1: 170, col: '255,205,110' } },
     },
     normalLook: {
       sp0: { label: 'Staff Thrust', wind: 'thrustW', pose: 'thrust', staffExt: 40, hitbox: [20,175,92,128] },
-      cp1: { label: 'Rising Staff', wind: 'crouch', pose: 'staffRise', trail: { cx: 20, cy: 90, r: 110, a0: -40, a1: 100, col: '255,205,110' } },
+      cp1: { label: 'Rising Staff', wind: 'crouch', pose: 'staffRise', trail: { cx: 20, cy: 90, r: 110, a0: -40, a1: 100, col: '255,205,110' },
+        poseFn(f, mf) { // the staff dropped low in front through the wind-up, then swept up through them across the active frames — not already up behind her before they start
+          const mv = f.move, su = mv.startup, end = su + mv.active; if (mf > end + 4) return null;
+          const mid = lerpPose(POSES.staffSweep, POSES.staffRise, 0.42); // (angled up in front: where it is as the active frames start)
+          if (mf <= 7) return lerpPose(f.prevPose, POSES.staffSweep, easeOutQ(mf / 7));
+          if (mf <= su) return lerpPose(POSES.staffSweep, mid, easeInOutQ((mf - 7) / (su - 7)));
+          if (mf <= end) return lerpPose(mid, POSES.staffRise, (mf - su) / (end - su)); // (an even sweep: the same distance each frame)
+          return POSES.staffRise; // (held a moment at the top before the recovery takes over, so it doesn't snap)
+        } },
       jp0: { label: 'Air Staff Poke', wind: 'jump', pose: 'airStaff' },
       sk0: { label: 'Low Thrust', wind: 'staffHighW', pose: 'staffLowThrust', staffExt: 30, hitbox: [20,165,0,60], trail: { cx: 20, cy: 85, r: 125, a0: 60, a1: -35, col: '255,205,110' } },
-      ck0: { label: 'Crouch Staff Poke', wind: 'crouch', pose: 'staffLowCrouch', hitbox: [20,150,0,30] },
-      ck1: { label: 'Staff Floor Sweep', wind: 'crouch', pose: 'staffSweep', spinStaff: true, hitbox: [20,195,0,30] },
+      ck0: { label: 'Crouch Staff Poke', wind: 'staffFloorPoke', pose: 'staffFloorPoke', staffFront: true, hitbox: [20,150,0,30] }, // (the staff held level along the floor and slid out at their feet: only low)
+      ck1: { label: 'Staff Floor Sweep', wind: 'staffFloorPoke', pose: 'staffFloorPoke', spinStaff: true, floorSpin: true, hitbox: [20,195,0,30] }, // (crouched low, the staff spun flat along the floor round her hand: only low)
       jk0: { label: 'Air Staff Low Swing', wind: 'jump', pose: 'airStaffDown', hitbox: [10,135,0,60] },
       jk1: { label: 'Air Staff Whirl', wind: 'jump', pose: 'airStaffWhirl', spinStaff: true, hitbox: [-40,145,0,90] },
       jp1: { label: 'Falling Staff', wind: 'slamWAir', pose: 'airStaffDown', launch: true, launchVy: 10, bounce: true, hitbox: [0,145,-10,110], spinWind: true,
@@ -101,6 +147,7 @@ const CHARS = {
   psychic: {
     name: 'LYRA', title: 'Psychic Sage', nameJa: 'ライラ', titleJa: '超能力の賢者', dmgMul: 1.23, slowTech: 13, normalPre: 6, pushMul: 1.5, reachMul: 1.22, stringDelay: 9, prePose: 'psyCast', jugDmg: 1.0, jugHitMul: 1.2, scale: 1.0, walk: 4.0, back: 4.0, jumpX: 5.0, // (her magic is the slowest to come out, but she moves quickly)
     hover: true, orbs: true,
+    noNormal: ['cp0'], // (no ↓ + U)
     pDmg: 0.9, kDmg: 0.9, pReach: 1.15, kReach: 1.0, chargeRate: 0.48, auraCol: '200,160,255', fxCol: '210,190,255',
     sp: { fP: 'phantomFist', fPH: 'crushFist', fK: 'psyLift', fKH: 'forceWave', bP: 'orbBurst', bPH: 'tripleRay', bK: 'orbStrong', bKH: 'orbLong' }, sup: 'thousandFists',
     frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
@@ -121,7 +168,7 @@ const CHARS = {
       jp1: { label: 'Falling Glyph', pose: 'airPsyDown', hitbox: [10,115,10,100], psyFist: [85, 60, 0.8, 0.5] },
       sk0: { label: 'Floor Glyph', wind: 'psyW', pose: 'psyLowCast', hitbox: [80,195,0,42], floorGlyph: 145, onStart: (f, o) => lyraReach(f, o, LYRA_RANGE, 110), onFrame: (f, o, mf) => { if (mf <= f.move.startup) lyraReach(f, o, LYRA_RANGE, 80); } },
       sk1: null,
-      ck0: { label: 'Crouch Floor Glyph', wind: 'crouch', pose: 'psyLowCast', hitbox: [70,180,0,30], floorGlyph: 130 },
+      ck0: { label: 'Crouch Floor Glyph', wind: 'crouch', pose: 'psyLowCast', hitbox: [70,180,0,30], floorGlyph: 130, onStart: (f, o) => lyraReach(f, o, 160, 45) }, // (the glyph opens at their feet, within its own short range)
       ck1: { label: 'Glyph Trip', wind: 'crouch', pose: 'psyLowCast', hitbox: [90,215,0,30], floorGlyph: 160, kd: false, launch: true, launchVy: 12, guardPop: true, onStart: (f, o) => lyraReach(f, o, LYRA_FAR, 160) }, // (the glyph opens under them, wherever they are: a low that launches; guarded, it still pops them up off the ground)
       jk0: { label: 'Air Glyph Drop', wind: 'jump', pose: 'airPsyDown', hitbox: [10,110,0,60], psyFist: [70, 25, 0.6, 1] },
       jk1: { label: 'Air Glyph Spin', wind: 'jump', pose: 'airPsyBoth', hitbox: [-30,120,0,90], psyFist: [60, 50, 0.75, 0.5] },
@@ -131,7 +178,7 @@ const CHARS = {
     meterCol: ['#c04fd8', '#ffc3f4'], bannerCol: 'rgba(170,60,190,.88)', idle: 'idleL', chargePose: 'chargeL', winPose: 'winL', atkCD: 12, recoverT: 12, hitFx: 'ripple',
   },
   paladin: {
-    name: 'ALDRIC', title: 'Holy Paladin', nameJa: 'アルドリック', titleJa: '聖騎士', autoBlock: true, dmgMul: 1.08, guardDmgMul: 0.55, guardMul: 0.42, sturdy: true, jugDmg: 1.2, scale: 1.08, walk: 2.5, back: 1.9, jumpX: 3.0, jumpV: 14,
+    name: 'ALDRIC', title: 'Holy Paladin', nameJa: 'アルドリック', titleJa: '聖騎士', autoBlock: true, dmgMul: 1.08, guardDmgMul: 0.55, guardMul: 0.3, sturdy: true, jugDmg: 1.2, scale: 1.08, walk: 2.5, back: 1.9, jumpX: 3.0, jumpV: 14,
     pDmg: 1.05, kDmg: 1.0, pReach: 1.5, kReach: 1.3, chargeRate: 0.55, auraCol: '190,225,255', fxCol: '205,232,255',
     sp: { fP: 'plRampart', fPH: 'plJudgeThrust', fK: 'plWindmill', fKH: 'plLeap', bP: 'plParryRise', bPH: 'plParryStun', bK: 'plAegis', bKH: 'plPray' }, sup: 'plJudgement',
     frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
@@ -149,7 +196,8 @@ const CHARS = {
         onFrame: (f, o, mf) => { if (mf <= f.move.startup) f.vx = f.facing * 4; else f.vx *= 0.6; } }, // (a pushing thrust: he steps in with it)
     },
     normalLook: {
-      sp0: { label: 'Pommel Strike', wind: 'pBashW', pose: 'pSlash', hitbox: [20,150,85,140] },
+      sp0: { label: 'Shield Punch', wind: 'pShieldPunchW', pose: 'pShieldPunch', hitbox: [20,150,85,140], onFrame: aldricStep(2, 10, 7) }, // (he steps in behind the shield)
+      cp0: { label: 'Crouch Shield Jab', wind: 'pCrShieldW', pose: 'pCrShield', hitbox: [20,140,20,90], onFrame: aldricStep(2, 8, 4) },
       cp1: { label: 'Rising Shield', wind: 'pQuake', pose: 'pShieldUp', hitbox: [10,135,40,200] },
       sk0: { label: 'Low Cut', wind: 'pThrustW', pose: 'pLowCut', hitbox: [20,165,0,50] },
       ck0: { label: 'Crouch Sword Poke', wind: 'crouch', pose: 'pLowCut', hitbox: [20,150,0,32] },
@@ -171,9 +219,9 @@ Object.assign(CHARS, {
     pDmg: 1.0, kDmg: 1.0, pReach: 1.1, kReach: 0.9, chargeRate: 0.62, auraCol: '120,220,200', fxCol: '140,215,255',
     sp: { fP: 'kpPlate', fPH: 'kpCannon', fK: 'kpPounce', fKH: 'kpFrenzy', bP: 'kpBubble', bPH: 'kpGeyser', bK: 'kpShell', bKH: 'kpRiptide' }, sup: 'kpFlood',
     frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
-      U: { su: 10, blk: -4 }, dU: { su: 10, blk: -4 }, dJ: { su: 10, blk: -4 }, J: { su: 18, act: 13 }, // (J and K are throws: unblockable, no guard number; ten more frames of 持続 so the one caught can break them)
-      I: { su: 16, blk: -12 }, K: { su: 18, act: 13 }, dI: { su: 16, blk: -16 }, dK: { su: 16, blk: -14 },
-      $c2: { su: 14, blk: -6 }, $c3: { su: 17, blk: -6 }, $c4: { su: 21, blk: -6 }, $cF: { su: 21, act: 14 }, $cUI: { su: 18, blk: -16 }, $cUK: { su: 18, blk: -16 }, // (U, U 14F / U×3 low 17F / U×4 low 21F; U, ↓ + I a low launcher, U, ↓ + K a low)
+      U: { su: 10, blk: -4 }, dU: { su: 10, blk: -4 }, dJ: { su: 10, blk: -4 }, J: { su: 18, act: 27 }, // (J and K are throws: unblockable, no guard number; twenty-four more frames of 持続 so the one caught can break them)
+      I: { su: 16, blk: -12 }, K: { su: 18, act: 27 }, dI: { su: 16, blk: -16 }, dK: { su: 16, blk: -14 },
+      $c2: { su: 14, blk: -6 }, $c3: { su: 17, blk: -6 }, $c4: { su: 21, blk: -6 }, $cF: { su: 21, act: 28 }, $cUI: { su: 18, blk: -16 }, $cUK: { su: 18, blk: -16 }, // (U, U 14F / U×3 low 17F / U×4 low 21F; U, ↓ + I a low launcher, U, ↓ + K a low)
        $cL: { su: 16, blk: -15 }, $cE: { su: 20, blk: -12 }, // U, U … U×4 / U×4, K (throw) / U, I / U, K
       $cl2: { su: 12, blk: -6 }, $clE: { su: 18, blk: -16 },
       kpPlate: { su: 16, blk: -6 }, kpCannon: { su: 20, blk: -16 }, kpPounce: { su: 22, blk: -16 }, kpFrenzy: { su: 20, blk: -16 },
@@ -181,22 +229,23 @@ Object.assign(CHARS, {
     },
     heavy: { // no kicks: the K button grabs and throws
       p: { label: 'Rending Claws', startup: 10, active: 5, recovery: 18, hitbox: [10,150,40,160], wind: 'kClawUp', pose: 'kClawX', lunge: [3, 9, 4.5], hitstop: 11, claw: [95, 110, 0.9, 70] },
-      k: { label: 'Whirlpool Toss', grab: true, startup: 7, active: 3, recovery: 26, hitbox: [10,92,20,150], wind: 'kGrab', pose: 'kToss', dmg: 58, stun: 24, launch: true, launchVy: 13, hitstop: 12, gdrain: 0, onFrame: kappaToss },
+      k: { label: 'Whirlpool Toss', grab: true, startup: 7, active: 3, recovery: 26, hitbox: [10,92,20,150], wind: 'kGrab', pose: 'kToss', dmg: 58, stun: 24, launch: true, launchVy: 13, hitstop: 12, gdrain: 0, onFrame: kappaToss, poseFn: kappaHold },
     },
     normalLook: {
       sp0: { label: 'Claw Swipe', wind: 'kClawUp', pose: 'kClawDown', claw: [80, 100, 0.8, 44] },
       sp1: { label: 'Rending Claws', claw: [95, 110, 0.9, 70] },
       cp1: { label: 'Upward Rake', wind: 'kClawDown', pose: 'kClawUp', hitbox: [10,135,40,195], claw: [60, 140, -1.3, 70] },
-      sk0: { label: 'Sumo Toss', grab: true, wind: 'kGrab', pose: 'kToss', hitbox: [10,92,20,150], startup: 6, recovery: 22, dmg: 46, kd: true, kdVx: 6, kdVy: 9, chain: null, low: false, onFrame: kappaToss },
-      ck0: { label: 'Low Claw', wind: 'crouch', pose: 'kLowClaw', hitbox: [20,120,0,40], claw: [80, 30, 0.2, 40] },
-      ck1: { label: 'Ankle Rake', wind: 'crouch', pose: 'kLowClaw', hitbox: [20,150,0,30], claw: [95, 24, 0.1, 54] },
-      jk0: { label: 'Air Claw Drop', wind: 'jump', pose: 'kAirClaw', hitbox: [10,100,0,90], claw: [70, 70, 1.0, 50] },
-      jp0: { label: 'Air Rake', wind: 'jump', pose: 'kAirClaw', claw: [70, 90, 0.8, 44] },
+      sk0: { label: 'Sumo Toss', grab: true, wind: 'kGrab', pose: 'kToss', hitbox: [10,92,20,150], startup: 6, recovery: 22, dmg: 46, kd: true, kdVx: 6, kdVy: 9, chain: null, low: false, onFrame: kappaToss, poseFn: kappaHold },
+      cp0: { label: 'Dive Jab', wind: 'kCrouch', pose: 'kDive', low: true, hitbox: [20,110,0,34], bodyHurt: true, onFrame: kappaDive(2, 7, 6) }, // ↓ + U / J / K: he dives in head-first and swims along the floor, low, flat (his hurtbox lies flat with him), claws and beak first
+      ck0: { label: 'Belly Dive', wind: 'kCrouch', pose: 'kDive', low: true, hitbox: [20,120,0,34], bodyHurt: true, onFrame: kappaDive(2, 9, 8) },
+      ck1: { label: 'Swimming Dive', wind: 'kCrouch', pose: 'kDive', low: true, hitbox: [20,150,0,30], bodyHurt: true, cpLaunch: true, launchVy: 13, onFrame: kappaDive(2, 12, 9) }, // (like Kuro's sweep: knocks down, launches on a counter or a punish)
+      jk0: { label: 'Air Claw Drop', wind: 'kClawUp', pose: 'kAirRake', hitbox: [10,100,0,90], claw: [70, 70, 1.0, 50] },
+      jp0: { label: 'Air Rake', wind: 'kClawUp', pose: 'kAirRake', claw: [70, 90, 0.8, 44] },
       jp1: { label: 'Air Rending Claws', wind: 'jump', pose: 'kClawDown', claw: [80, 80, 0.9, 60] },
       jk1: { label: 'Water Drop', wind: 'jump', pose: 'kAirClaw', hitbox: [0,110,-10,80], onFrame: (f, o, mf) => { if (mf === 6) spawnPJ(f, 'water', { x: f.x + f.facing * 30, y: f.y + 60, vx: f.facing * 6, vy: -8, life: 30, r: 12, h: { dmg: 26, stun: 18, bstun: 10, push: 2, gdrain: 6, label: 'Water Drop', juggle: true, jugVy: 5 } }); } },
     },
     colors: { skin: '#6fc27a', skinB: '#4f9a5a', belly: '#f3e7a4', shell: '#4f8a3d', shellB: '#35652a', beak: '#f2b134', plate: '#f4f7fb', water: '#8fd3f4', hair: '#2f5d2a', claw: '#f6f0dc' },
-    meterCol: ['#3fb39a', '#b8f3ff'], bannerCol: 'rgba(40,150,130,.88)', idle: 'kIdle', chargePose: 'kEat', winPose: 'kWin', atkCD: 9, recoverT: 9, hitFx: 'claw',
+    crouchPose: 'kCrouch', meterCol: ['#3fb39a', '#b8f3ff'], bannerCol: 'rgba(40,150,130,.88)', idle: 'kIdle', chargePose: 'kEat', winPose: 'kWin', atkCD: 9, recoverT: 9, hitFx: 'claw',
   },
   gunman: {
     idle: 'gHolster', name: 'JESSE', title: 'Gunslinger', nameJa: 'ジェシー', titleJa: 'ガンマン', ammo: 15, dmgMul: 1.43, scale: 1.02, walk: 3.3, back: 2.9, jumpX: 4.4, jumpV: 17.5, jugDmg: 1.05,
@@ -206,20 +255,20 @@ Object.assign(CHARS, {
     recPlus: 6, recRefund: true, // every attack recovers 6 frames slower on a miss or a guard; any hit that lands gives it back (see moveFrames)
     frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)
       U: { su: 12, blk: -4 }, dU: { su: 12, blk: -4 }, J: { su: 10, blk: -4 }, dJ: { su: 10, blk: -4 },
-      I: { su: 16, blk: -12, held: true }, K: { su: 18, blk: -14 }, dI: { su: 16, blk: -16 }, dK: { su: 16, blk: -14 }, /* (held: his charge shots; the tap's start-up is its own) */
+      I: { su: 17, blk: -12 }, K: { su: 18, blk: -14 }, dI: { su: 16, blk: -16 }, dK: { su: 16, blk: -14 }, /* (held: his charge shots; the tap's start-up is its own) */
       $g2: { su: 12, blk: -6 }, $g3: { su: 15, blk: -6 }, $g4: { su: 18, blk: -6 }, $gF: { su: 18, blk: -18 }, $gL: { su: 16, blk: -16 }, $gE: { su: 20, blk: -12 }, // U, U … U×4 (12 / 15 / 18F) / U×4, K / U, I / U, K
       $gl2: { su: 12, blk: -6 }, $glE: { su: 18, blk: -16 },
       gnFan: { su: 20, blk: -16 }, gnQuick: { su: 12, blk: -8, held: true }, gnRoll: { su: 20, blk: -16 }, gnJumpShot: { su: 22, blk: -16 }, // (Quick Draw stays his fastest)
       gnDouble: { su: 28, blk: -20 }, gnDyna: { su: 21, blk: -16 }, gnDance: { su: 20, blk: -16 }, gnBackflip: { blk: -6 }, /* (the flip fires its shot at a fixed moment: 23F) */
     },
    heavy: { // no kicks: both heavies are gunshots at mid range
-      p: { label: 'Twin Shot', held: true, tapStartup: 9, startup: 999, active: 2, recovery: 20, hitbox: null, wind: 'gAim', pose: 'gTwin', onFrame: twinCharge },
+      p: { label: 'Twin Shot', startup: 9, active: 2, recovery: 20, hitbox: null, wind: 'gAim', pose: 'gTwin', onFrame: (f, o, mf) => { if (mf === f.move.startup) { shoot(f, { y: 122, dmg: 22, range: 360 }); shoot(f, { y: 116, dmg: 22, range: 360 }); } } }, // (I is no longer held to charge: just the two shots)
       k: { label: 'Heavy Shot', startup: 13, active: 2, recovery: 24, hitbox: null, wind: 'gAim', pose: 'gRecoil', onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 122, dmg: 50, big: true, kd: true, range: 300 }); } }, // (K is no longer held to charge: ← → + K is the double heavy shot)
     },
     normalLook: {
-      sp0: { label: 'Hip Shot', startup: 4, wind: 'gIdle', pose: 'gAim', hitbox: null, chain: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 118, dmg: 22, range: 270 }); } }, // (upper body: crouch and it passes over)
+      sp0: { label: 'Hip Shot', startup: 4, wind: 'gIdle', pose: 'gAim', hitbox: null, chain: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 118, dmg: 22, range: 340 }); } }, // (upper body: crouch and it passes over)
       cp0: { label: 'Low Shot', startup: 5, wind: 'crouch', pose: 'gLow', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 44, dmg: 20, low: true, range: 280 }); } }, // (↓ + U: a low shot, at knee height)
-      cp1: { label: 'Sky Shot', startup: 6, wind: 'gLow', pose: 'gUp', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { x: f.x + f.facing * 34, y: 84, vx: 16, vy: 8, life: 14, dmg: 34, launch: true, launchVy: 12, jugVy: 11 }); } },
+      cp1: { label: 'Sky Shot', startup: 6, wind: 'gLow', pose: 'gUp', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { x: f.x + f.facing * 34, y: 84, vx: 16, vy: -7, bounce: 1, range: Math.round((WALL_R - WALL_L) * 0.6), dmg: 34, launch: true, launchVy: 12, jugVy: 11 }); } }, // (↓ + I: fired at the floor in front of him, it ricochets up off it and on, six tenths of the stage at most)
       sk0: { label: 'Low Shot', startup: 5, wind: 'crouch', pose: 'gLow', crouch: true, hitbox: null, chain: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 44, dmg: 22, low: true, range: 260 }); } }, // (he drops into a crouch and fires at knee height)
       ck0: { label: 'Crouch Shot', startup: 5, wind: 'crouch', pose: 'gLow', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 44, dmg: 20, low: true, range: 290 }); } },
       ck1: { label: 'Ground Shot', startup: 8, wind: 'crouch', pose: 'gLow', hitbox: null, onFrame: (f, o, mf) => { if (mf === f.move.startup) shoot(f, { y: 46, dmg: 36, low: true, kd: true, range: 310, big: true }); } },
@@ -255,11 +304,14 @@ Object.assign(CHARS, {
 CHARS.salary.lookKey = 'salary';
 // each fighter's own heavy attack in the air (I while jumping)
 const addLook = (ch, look) => { ch.normalLook = { ...(ch.normalLook || {}), ...look }; };
-addLook(CHARS.ninja, { jp1: { label: 'Air Kunai Slash', pose: 'slash', blade: true, trail: { cx: 15, cy: 100, r: 75, a0: 70, a1: -40, col: '225,235,255' } },
-  cp1: { hitbox: [12,125,50,165], startup: 9 }, // ↓ + I, the Uppercut Launcher: reaches about twice as far, and comes out a little sooner (15F → 14F)
-  ck1: { hitbox: [20,150,0,30], cpLaunch: true, launchVy: 13 } }); // ↓ + K, the Sweep: reaches further, and like the Crescent Kick it launches on a counter or a punish (a juggle), knocking down otherwise
-addLook(CHARS.brawler, { jp1: { label: 'Air Hammer Fist', pose: 'tHammer', burst: [70, 70], aura: true } });
-addLook(CHARS.salary, { jp1: { label: 'Air Briefcase Drop', pose: 'sCase' }, jk1: { label: 'Air Briefcase Swing', pose: 'sCase' }, ck1: { label: 'Briefcase Trip', wind: 'crouch', pose: 'sCase', hitbox: [20,120,0,40] } });
+addLook(CHARS.ninja, { jp1: { label: 'Air Kunai Slash', pose: 'slash', blade: true, kunaiBox: true, bodyHurt: true, trail: { cx: 15, cy: 100, r: 75, a0: 70, a1: -40, col: '225,235,255' } }, // kunaiBox: the same hand-to-blade-tip box as the grounded Kunai Slash, compact instead of a guessed box
+  cp1: { hitbox: [12,125,50,165], startup: 9, // ↓ + I, the Uppercut Launcher: reaches about twice as far, and comes out a little sooner (15F → 14F). hitbox: the fallback for other systems; the real one below is the rising fist
+    limbJoint: 'h1', limbReach: 75, limbBack: 12, limbUp: 22, limbDown: 16, bodyHurt: true },
+  ck1: { hitbox: [20,150,0,30], cpLaunch: true, launchVy: 13, pose: 'slideKick', // (hitbox: the fallback for other systems; the real one below is the kicking leg. pose: the same low silhouette as Vanish Slide — planted, not sliding anywhere)
+    limbJoint: 'f1', limbReach: 70, limbBack: 15, limbUp: 15, limbDown: 15, sweepBox: true, bodyHurt: true } }); // ↓ + K, the Sweep: reaches further, and like the Crescent Kick it launches on a counter or a punish (a juggle), knocking down otherwise — a compact box on the leg itself, low and planted, no retreat of any kind, his own hurtbox fitted to the crouch
+addLook(CHARS.brawler, { jp1: { label: 'Air Hammer Fist', pose: 'tHammer', burst: [70, 70], aura: true },
+  ck1: { ...CHARS.ninja.normalLook.ck1 } }); // ↓ + K: the same sweep as Kuro's — low, planted slide-kick silhouette, a compact box on the kicking leg, launching on a counter or punish (his own frame data stays)
+addLook(CHARS.salary, { jp1: { label: 'Air Briefcase Drop', pose: 'sCase' }, jk1: { label: 'Air Briefcase Swing', pose: 'sCase' }, ck1: { label: 'Briefcase Trip', wind: 'crouch', pose: 'sCaseLow', hitbox: [20,120,0,40] } });
 for (const k in CHARS) CHARS[k].key = k;
 
 // ---------- charge attacks (hold I) ----------
@@ -284,12 +336,12 @@ Object.assign(CHARS.salary, { normalLook: { ...(CHARS.salary.normalLook || {}),
     onFrame: (f, o, mf) => { if (mf === f.move.startup) { sfx('throw'); spawnPJ(f, 'mug', { x: f.x + f.facing * 30, y: f.y + 100, vx: f.facing * 7, vy: -7, life: 50, r: 14, h: { dmg: 64, stun: 24, bstun: 12, push: 2, gdrain: 10, overhead: true, label: 'Mug Drop' } }); } } }, // (a heavy mug: an overhead)
 } });
 // the salaryman's two possessed forms: the same body, a different move set (and look) until the timer runs out
-const ANGEL_CH = { ...CHARS.salary, spLow: { bK: 'saRayLow' }, spUp: { bK: 'saRayFly' }, spFwd: { bK: 'saDive' }, possess: 'angel', dmgMul: 1.15, regen: 0.2, lookKey: 'salaryAngel', idle: 'saPray', hover: false, doubleJump: true, pDmg: 1.1, kDmg: 1.1, walk: 3.5, auraCol: '255,235,170', fxCol: '255,240,190', hitFx: 'holy', meterCol: ['#e6b84a', '#fff4c8'],
+const ANGEL_CH = { ...CHARS.salary, spLow: { bK: 'saRayLow' }, spUp: { bK: 'saRayFly' }, spFwd: { bK: 'saDive' }, possess: 'angel', dmgMul: 1.15, regen: 20 / 60, lookKey: 'salaryAngel', idle: 'saPray', hover: false, doubleJump: true, pDmg: 1.1, kDmg: 1.1, walk: 3.5, auraCol: '255,235,170', fxCol: '255,240,190', hitFx: 'holy', meterCol: ['#e6b84a', '#fff4c8'],
   sp: { fP: 'saJab', fPH: 'saFist', fK: 'saGlide', fKH: 'saAscend', bP: 'saBless', bPH: 'saWard', bK: 'saRay', bKH: 'smDevil' }, sup: 'saHeaven',
   heavy: { p: { label: 'Holy Palm', startup: 10, active: 5, recovery: 18, hitbox: [10,150,50,150], wind: 'palmW', pose: 'palm', lunge: [3, 9, 3.5], hitstop: 10, cpLaunch: true, launchVy: 13, burst: [90, 110] },
            k: { label: 'Wing Kick', startup: 9, active: 5, recovery: 18, hitbox: [10,150,40,150], wind: 'kickW', pose: 'highKick', lunge: [3, 8, 4], cpLaunch: true, launchVy: 12 } } };
 const DOUBLE_CH_BASE = 1;
-const DEVIL_CH = { ...CHARS.salary, spLow: { fK: 'sdCrawl', bK: 'sdTail', fKH: 'sdTailUpper' }, spUp: { bK: 'sdTailDrop' }, spFwd: { bK: 'sdChainB' }, possess: 'devil', dmgMul: 2.0, drain: 0.45, lookKey: 'salaryDevil', idle: 'sdIdle', walk: 3.9, back: 3.4, fastAtk: true, crouchPose: 'sdIdle', pDmg: 0.95, kDmg: 0.95, auraCol: '255,90,70', fxCol: '255,120,60', hitFx: 'flame', meterCol: ['#b8322d', '#ffb08a'],
+const DEVIL_CH = { ...CHARS.salary, spLow: { fK: 'sdCrawl', bK: 'sdTail', fKH: 'sdTailUpper', bKH: 'sdFeintSweep' }, spUp: { bK: 'sdTailDrop', bKH: 'sdFeintHammer' }, spFwd: { bK: 'sdChainB' }, possess: 'devil', dmgMul: 1.5, drain: 25 / 60, lookKey: 'salaryDevil', idle: 'sdIdle', walk: 3.9, back: 3.4, fastAtk: true, crouchPose: 'sdIdle', pDmg: 0.95, kDmg: 0.95, auraCol: '255,90,70', fxCol: '255,120,60', hitFx: 'flame', meterCol: ['#b8322d', '#ffb08a'],
   sp: { fP: 'sdLunge', fPH: 'sdMaul', fK: 'sdTailLash', fKH: 'sdTailUpper', bP: 'sdBeckon', bPH: 'smAngel', bK: 'sdWhip', bKH: 'sdDrain' }, sup: 'sdInferno',
   heavy: { p: { label: 'Hellclaw', startup: 10, active: 6, recovery: 18, hitbox: [10,160,40,170], wind: 'palmW', pose: 'kClaw', lunge: [3, 9, 4], hitstop: 11, kd: true, kdVx: 9 },
            k: { label: 'Demon Kick', startup: 10, active: 5, recovery: 18, hitbox: [10,150,30,130], wind: 'kickW', pose: 'highKick', lunge: [3, 8, 4], cpLaunch: true, launchVy: 12 } } };
@@ -299,20 +351,27 @@ const ANGEL_FRAMES = { ...CHARS.salary.frames,
   saJab: { su: 12, blk: -6 }, saFist: { su: 20, blk: -16 }, saGlide: { su: 18, blk: -16 }, saAscend: { su: 22, blk: -16 }, saRay: { su: 24, blk: -16 }, saRayLow: { su: 18, blk: -16 }, saRayFly: { su: 18, blk: -15 }, saDive: { su: 18, blk: -16 } };
 const DEVIL_FRAMES = { ...CHARS.salary.frames,
   $d2: { su: 10, blk: -6 }, $d3: { su: 10, blk: -6 }, $d4: { su: 10, blk: -6 }, $dF: { su: 16, blk: -18 }, $dL: { su: 14, blk: -16 }, $dE: { su: 18, blk: -12 }, $dl2: { su: 10, blk: -6 }, $dlE: { su: 16, blk: -16 },
-  sdLunge: { su: 20, blk: -16 }, sdMaul: { su: 20, blk: -16 }, sdTailLash: { su: 20, blk: -16 }, sdTailUpper: { su: 20, blk: -16 }, sdWhip: { su: 20, blk: -16 }, sdCrawl: { su: 18, blk: -16 }, sdTail: { su: 18, blk: -14 }, sdTailDrop: { su: 18, blk: -16 }, sdChainB: { su: 18, blk: -16 }, sdDrain: { su: 24 } };
+  sdLunge: { su: 20, blk: -16 }, sdMaul: { su: 20, blk: -16 }, sdTailLash: { su: 20, blk: -16 }, sdTailUpper: { su: 20, blk: -16 }, sdWhip: { su: 20, blk: -16 }, sdCrawl: { su: 18, blk: -16 }, sdTail: { su: 18, blk: -14 }, sdFeintSweep: { su: 21, blk: -14 }, sdTailDrop: { su: 18, blk: -16 }, sdFeintHammer: { su: 27, blk: -16 }, sdChainB: { su: 18, blk: -16 }, sdDrain: { su: 24 } };
 Object.assign(ANGEL_CH, { frames: ANGEL_FRAMES }); Object.assign(DEVIL_CH, { frames: DEVIL_FRAMES });
-const DOUBLE_CH = { ...DEVIL_CH, possess: 'double', lookKey: 'salaryDevil', dmgMul: 2.1, drain: 2.2, scale: 1.4, tallBox: true, armorAll: true, /* (both spirits in him: far bigger, and nothing short of a super or a throw stops him) */ regen: 0, noGuard: true, doubleJump: true, auraCol: '255,170,200', fxCol: '255,190,160', meterCol: ['#d0607a', '#ffe0c0'], // angel and devil both: wings and halo, horns and tail
+const DOUBLE_CH = { ...DEVIL_CH, possess: 'double', lookKey: 'salaryDevil', dmgMul: 1.75, drain: 5 / 60, scale: 1.4, tallBox: true, armorAll: true, /* (both spirits in him: far bigger, and nothing short of a super or a throw stops him) */ regen: 0, noGuard: true, doubleJump: true, auraCol: '255,170,200', fxCol: '255,190,160', meterCol: ['#d0607a', '#ffe0c0'], // angel and devil both: wings and halo, horns and tail
   sp: { fP: 'saJab', fPH: 'sdMaul', fK: 'sdTailLash', fKH: 'sdTailUpper', bP: 'sdBeckon', bPH: 'saFist', bK: 'saRay', bKH: 'sdDrain' },
-  spLow: { bK: 'saRayLow', fK: 'sdCrawl', fKH: 'sdTailUpper' }, spUp: { bK: 'saRayFly' }, spFwd: { bK: 'sdChainB' } };
+  spLow: { bK: 'saRayLow', fK: 'sdCrawl', fKH: 'sdTailUpper', bKH: 'sdFeintSweep' }, spUp: { bK: 'saRayFly', bKH: 'sdFeintHammer' }, spFwd: { bK: 'sdChainB' } };
 DOUBLE_CH.frames = { ...ANGEL_FRAMES, ...DEVIL_FRAMES }; /* (both spirits' strings and techniques) */
 Object.assign(ANGEL_CH, { spAuto: angelAuto }); Object.assign(DEVIL_CH, { spAuto: devilAuto }); Object.assign(DOUBLE_CH, { spAuto: (f, o, k) => angelAuto(f, o, k) || devilAuto(f, o, k) });
 Object.assign(DEVIL_CH, { normalLook: { // the devil's kicks are all tail now, and reach further
+  cp0: { label: 'Hellfire Spit', startup: 6, active: 2, recovery: 14, wind: 'crouch', pose: 'blast', hitbox: null, crouch: true, // ↓ + U: no office pens for the devil — a gob of hellfire, at the pen's height
+    onFrame: (f, o, mf) => { if (mf === f.move.startup) { sfx('flame'); spawnPJ(f, 'hellfire', { x: f.x + f.facing * 40, y: 62, vx: f.facing * 15, life: 40, r: 9, h: { dmg: 24, stun: 16, bstun: 8, push: 1.5, gdrain: 4, low: false, label: 'Hellfire Spit' } }); } } },
   sk0: { label: 'Tail Flick', low: false, wind: 'sdIdle', pose: 'sdIdle', hitbox: [30,165,60,130], tail: { a0: 2.4, a1: 0.1, len: 150, h: 95 } },
   sk1: { label: 'Tail Crack', low: false, wind: 'sdIdle', pose: 'sdIdle', hitbox: [30,200,50,140], tail: { a0: 2.8, a1: -0.1, len: 180, h: 100 } },
   ck0: { label: 'Low Tail Flick', wind: 'sdIdle', pose: 'sdIdle', hitbox: [30,160,0,44], low: true, tail: { a0: 2.9, a1: -0.25, len: 150, h: 40 } },
   ck1: { label: 'Tail Trip', wind: 'sdIdle', pose: 'sdIdle', hitbox: [30,190,0,40], low: true, kd: true, tail: { a0: 3.0, a1: -0.3, len: 180, h: 36 } },
 } });
-ANGEL_CH.normalLook = { ...(CHARS.salary.normalLook || {}), jp1: { label: 'Air Light Fist', pose: 'blast', burst: [80, 90] }, sp0: { label: 'Light Jab', burst: [70, 120] }, ck1: { label: 'Feather Sweep', wind: 'crouch', pose: 'slideKick', hitbox: [20,120,0,34] }, jk1: { label: 'Air Wing Kick', pose: 'roundhouse' } };
+ANGEL_CH.normalLook = { ...(CHARS.salary.normalLook || {}),
+  cp0: { label: 'Feather Shot', startup: 6, active: 2, recovery: 14, wind: 'crouch', pose: 'blast', hitbox: null, crouch: true, // ↓ + U: the angel throws no pens — a feather of light, at the same height
+    onFrame: (f, o, mf) => { if (mf === f.move.startup) { sfx('orb'); spawnPJ(f, 'feather', { x: f.x + f.facing * 40, y: 62, vx: f.facing * 15, life: 40, r: 9, h: { dmg: 24, stun: 16, bstun: 8, push: 1.5, gdrain: 4, low: false, label: 'Feather Shot' } }); } } },
+  ck0: { label: 'Halo Skim', startup: 9, active: 2, recovery: 16, wind: 'crouch', pose: 'blast', hitbox: null, crouch: true, midHit: true, // ↓ + J: no stapler either — his halo, tossed in an arc at body height
+    onFrame: (f, o, mf) => { if (mf === f.move.startup) { sfx('throw'); spawnPJ(f, 'haloP', { x: f.x + f.facing * 36, y: 80, vx: f.facing * 8.5, vy: 6.5, g: 0.42, life: 70, r: 12, h: { dmg: 34, stun: 18, bstun: 10, push: 2, gdrain: 6, label: 'Halo Skim' } }); } } },
+  jp1: { label: 'Air Light Fist', pose: 'blast', burst: [80, 90] }, sp0: { label: 'Light Jab', burst: [70, 120] }, ck1: { label: 'Feather Sweep', wind: 'crouch', pose: 'slideKick', bodyHurt: true, hitbox: [20,120,0,34] }, jk1: { label: 'Air Wing Kick', pose: 'roundhouse' } };
 DEVIL_CH.normalLook = { ...(CHARS.salary.normalLook || {}), ...(DEVIL_CH.normalLook || {}), jp1: { label: 'Air Hellclaw', pose: 'kClawDown', claw: [80, 80, 0.9, 60, '255,120,90'] }, sp0: { label: 'Devil Swipe', pose: 'kClawDown', claw: [70, 100, 0.8, 40, '255,120,90'] }, ck1: { label: 'Tail Sweep', wind: 'crouch', pose: 'slideKick', hitbox: [20,130,0,34] }, jk1: { label: 'Air Tail Lash', pose: 'roundhouse' } };
 DOUBLE_CH.normalLook = DEVIL_CH.normalLook; // (double possession fights with the devil's claws and tail too: it was copied from the devil before these were set)
 // second palette, used when both online players pick the same fighter

@@ -1,21 +1,172 @@
 'use strict';
 /* ================= hit detection ================= */
-// Mei's staff: where it actually is this frame (the same geometry the drawing uses: held near the back end, the long end out front).
-// The hit area runs along the staff from her front hand out to the tip (and covers where it swept since the last frame).
-function staffTipBox(f, mv, hb0) {
-  if (!f.pose || mv.spinStaff || /kick|Kick/.test(mv.pose || '') || /kick|Kick/.test(mv.label || '')) return hb0; // (twirls and kicks keep their own hit areas)
-  const J = solve(f.pose), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0;
-  let dx = J.h1[0] - J.h2[0], dy = J.h1[1] - J.h2[1], L = Math.hypot(dx, dy);
-  if (L < 14) { dx = J.h1[0] - J.e1[0]; dy = J.h1[1] - J.e1[1]; L = Math.hypot(dx, dy) || 1; }
-  const ux = dx / L, uy = dy / L, len = 150 + (mv.staffExt || 0);
-  const W = (lx, ly) => [f.x + (f.animDX || 0) + d * s * lx, f.y + s * (ly + hu)]; // pose space → world (x, height above the floor)
-  const p0 = W(J.h1[0], J.h1[1]), p1 = W(J.h1[0] + ux * len, J.h1[1] + uy * len), pad = 20;
-  const box = { x0: Math.min(p0[0], p1[0]) - pad, x1: Math.max(p0[0], p1[0]) + pad, y0: Math.max(0, Math.min(p0[1], p1[1]) - pad), y1: Math.max(p0[1], p1[1]) + pad };
-  const prev = mv.tipBox && mv.tipBoxMf === f.mf - 1 ? mv.tipBox : null; mv.tipBox = box; mv.tipBoxMf = f.mf;
-  const U = (p, q) => q ? { x0: Math.min(p.x0, q.x0), x1: Math.max(p.x1, q.x1), y0: Math.min(p.y0, q.y0), y1: Math.max(p.y1, q.y1) } : p;
-  let out = U(box, prev); // (a fast swing: the whole stretch it swept)
-  if (mv.launch || mv.jug || mv.air || f.y > 0 || /rise|Rise|Up\b|up\b|Upper|Cudgel|Swing/.test((mv.pose || '') + ' ' + (mv.label || ''))) out = U(out, hb0); // (rising swings and juggle hits scoop up close to her too)
+// Mei: the hitbox is the staff itself — a chain of small boxes along the whole of it, butt end to tip, laid exactly
+// where drawStaff puts it (the same stretch on Extending Staff), plus the in-between positions since last frame so a fast swing
+// can't pass someone without touching them. Overlap is tested box by box, so only the stick hits, not the rectangle around it.
+// Where Mei's staff is, in pose space: both hands on it, held near the back end with the long end out front — or, with her hands
+// close together, held at the middle along her forearm. Between the two it blends (it used to switch outright at a 14px hand gap,
+// so a swing whose hands drifted across it snapped the staff round and back). drawStaff and the hitbox both read this.
+function staffLine(J, ext, spinAngle, flat) {
+  if (spinAngle != null && flat) { const c = Math.cos(spinAngle), n = Math.sin(spinAngle); return [[J.h1[0] - c * 92, J.h1[1] + n * 3], [J.h1[0] + c * (92 + ext), J.h1[1] - n * 3], c < 0 ? -1 : 1, 0]; } // (spun flat along the floor: round her hand, seen side-on)
+  if (spinAngle != null) { const ux = Math.cos(spinAngle), uy = Math.sin(spinAngle); return [[J.h1[0] - ux * 92, J.h1[1] - uy * 92], [J.h1[0] + ux * (92 + ext), J.h1[1] + uy * (92 + ext)], ux, uy]; }
+  const hx = J.h1[0] - J.h2[0], hy = J.h1[1] - J.h2[1], L = Math.hypot(hx, hy), fx = J.h1[0] - J.e1[0], fy = J.h1[1] - J.e1[1], F = Math.hypot(fx, fy) || 1;
+  const w = clamp((L - 12) / 3, 0, 1); let ux = fx / F * (1 - w) + (L ? hx / L : 0) * w, uy = fy / F * (1 - w) + (L ? hy / L : 0) * w; const U = Math.hypot(ux, uy);
+  if (U < 0.2) { ux = fx / F; uy = fy / F; } else { ux /= U; uy /= U; }
+  const back = 92 + (34 - 92) * w, front = 92 + (150 - 92) * w, c0 = [J.h1[0] + (J.h2[0] - J.h1[0]) * w, J.h1[1] + (J.h2[1] - J.h1[1]) * w];
+  return [[c0[0] - ux * back, c0[1] - uy * back], [J.h1[0] + ux * (front + ext), J.h1[1] + uy * (front + ext)], ux, uy];
+}
+const staffSpinAt = (f, mv) => f.mf * 0.7 * f.facing;
+// hit checks run before this frame's pose is set (updatePose), so a box read off f.pose is a frame behind what's drawn. For Mei's moves that
+// author their own motion (poseFn: a pure function of the frame), use the pose being drawn this frame, so the hitbox is on the staff you see.
+const livePose = f => ((f.key === 'staff' || f.key === 'paladin' || f.key === 'kappa' || f.key === 'salary') && f.state === 'attack' && f.move && f.move.poseFn && !(f.pre > 0) && f.move.poseFn(f, f.mf)) || f.pose; // a twirling staff's angle: 0.7 rad a frame, as it always spun
+function staffSeg(f, mv) {
+  const J = solve(livePose(f)), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, k = f.mf - mv.startup;
+  const ext = staffExtAt(f, mv); // (as drawn: see drawFighter)
+  const spin = mv.spinStaff && f.mf > Math.max(1, mv.startup - 4) ? staffSpinAt(f, mv) : null;
+  let [a, b] = staffLine(J, ext, spin, mv.floorSpin); if (mv.staffFront && spin == null) a = J.h1; // (staffFront: only the striking end, hand to tip — a low poke's hitbox stays low)
+  const W = p => [f.x + (f.animDX || 0) + d * s * p[0], f.y + s * (p[1] + hu)];
+  return [W(a), W(b)]; // (the whole staff as drawn, butt end to tip)
+}
+function staffBoxes(f, mv) {
+  if (mv.spinStaff && !mv.floorSpin && f.mf > Math.max(1, mv.startup - 4)) { // twirling: the staff is a blur all the way round her hand — a disc of small boxes out to its length, not a rectangle
+    const J = solve(livePose(f)), s = f.ch.scale, hu = f.hipUp || 0, c = [f.x + (f.animDX || 0) + f.facing * s * J.h1[0], f.y + s * (J.h1[1] + hu)], r = 14 * s, out = [];
+    for (const R of [0, 32, 62, 92]) for (let k = 0; k < (R ? Math.round(R / 8) : 1); k++) { const an = k / Math.round(R / 8 || 1) * Math.PI * 2, x = c[0] + Math.cos(an) * R * s, y = c[1] + Math.sin(an) * R * s; out.push({ x0: x - r, x1: x + r, y0: Math.max(0, y - r), y1: y + r }); }
+    return out;
+  }
+  const seg = staffSeg(f, mv), prev = mv.stSeg && mv.stSegMf === f.mf - 1 ? mv.stSeg : null; mv.stSeg = seg; mv.stSegMf = f.mf;
+  const r = 14 * f.ch.scale, out = [], L = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+  const segs = prev ? [0.34, 0.67, 1].map(t => [L(prev[0], seg[0], t), L(prev[1], seg[1], t)]) : [seg];
+  for (const [a, b] of segs) for (let i = 0; i <= 8; i++) { const p = L(a, b, i / 8); out.push({ x0: p[0] - r, x1: p[0] + r, y0: Math.max(0, p[1] - r), y1: p[1] + r }); }
   return out;
+}
+// Lyra: her blows are the magic drawn where they land (drawEffects), so the hitbox is that magic: the crystal fist's circle, the floor
+// glyph (low), the column of a ground burst, the giant fist's shape — not the much wider box the move carries for the other systems
+function lyraParts(f, mv, o) {
+  const s = f.ch.scale, d = f.facing, out = [], at = (lx, ly) => [f.x + d * lx * s, f.y + ly * s], box = (cx, cy, hw, hh) => ({ x0: cx - hw, x1: cx + hw, y0: Math.max(0, cy - hh), y1: cy + hh });
+  if (mv.psyFist) { const [px, py, sc] = mv.psyFist, R = Math.max(14, 30 * (sc || 1) * s), c = at(px, py); out.push(box(c[0], c[1], R, R)); }
+  if (mv.giantFist) { const [gx, gy, sc] = mv.giantFist, k = (sc || 1) * s, c = at(gx, gy); out.push({ x0: Math.min(c[0] - d * 34 * k, c[0] + d * 28 * k), x1: Math.max(c[0] - d * 34 * k, c[0] + d * 28 * k), y0: Math.max(0, c[1] - 22 * k), y1: c[1] + 22 * k }); }
+  if (mv.floorGlyph) { const gx = f.x + d * mv.floorGlyph * s; out.push({ x0: gx - 38, x1: gx + 38, y0: 0, y1: 40 }); }
+  if (mv.groundBurst) { const gx = f.x + d * mv.groundBurst * s; out.push({ x0: gx - 36, x1: gx + 36, y0: 0, y1: 200 }); }
+  if (mv.shardsTo && o) { const k = (f.mf - mv.startup + 3) / 9; for (let i = 0; i < 3; i++) { const t = clamp(k * 2.2 - i * 0.15, 0, 1), x = lerp(f.x + d * 30, o.x, t), y = lerp(f.y + 100, o.y + 70, t) - (i - 1) * 12; out.push(box(x, y, 14, 9)); } } // (the three shards, where Shard Barrage draws them)
+  if (mv.orbitRunes) for (let i = 0; i < 4; i++) { const an = f.mf * 0.4 + i * Math.PI / 2, r = 40 + f.mf * 3; out.push(box(f.x + Math.cos(an) * r, f.y + 90 - Math.sin(an) * r * 0.5, 14, 14)); } // (Orbit Burst's four runes, as drawn)
+  return out.length ? out : null;
+}
+// Aldric's greatsword: the angle it's held at — along his forearm, raised at the wrist (or whirling). drawGreatsword and the hitbox both read this.
+function swordDir(J, wrist, spinAngle) {
+  if (spinAngle != null) return [Math.cos(spinAngle), Math.sin(spinAngle)];
+  const th = Math.atan2(J.h1[1] - J.e1[1], J.h1[0] - J.e1[0]) + (wrist != null ? wrist : 0.6); return [Math.cos(th), Math.sin(th)];
+}
+// Aldric: the hitbox is what he hits with — the sword (a chain of small boxes from the pommel to the tip, plus where it swept since the last
+// frame), the shield on a shield blow, a knee or foot on a knee or a kick — read off the pose drawn this frame
+// how far a blade of light (staffExt) reaches out beyond the weapon this frame: it grows over 3 frames from extFrom (the start of the
+// active frames unless the move says), stays out to the end of them, and fades over 6 — the drawing and the hitboxes all read this
+function staffExtAt(f, mv) {
+  if (!mv || !mv.staffExt) return 0;
+  const k = f.mf - (mv.extFrom != null ? mv.extFrom : mv.startup), on = mv.startup + mv.active - (mv.extFrom != null ? mv.extFrom : mv.startup);
+  return mv.staffExt * (k <= 0 ? 0 : k <= 3 ? k / 3 : k <= on ? 1 : Math.max(0, 1 - (k - on) / 6));
+}
+// the kappa: his claws are the hitbox — a short chain from the hand out past the claw tips (both hands when he rakes with both),
+// swept from where they were last frame so a fast swipe can't skip past someone; his body when he dives or slides belly-first;
+// the Water Cannon's jet only as far as it has reached
+function kappaParts(f, mv) {
+  const s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, W = p => [f.x + (f.animDX || 0) + d * s * p[0], f.y + s * (p[1] + hu)];
+  if (mv.longRange) { const L = Math.max(0, Math.min(mv.jetLen || 680, (f.mf - mv.startup + 1) * 70)), x0 = f.x + d * 38 * s, y = f.y + 128 * s; return [{ x0: Math.min(x0, x0 + d * L), x1: Math.max(x0, x0 + d * L), y0: y - 30, y1: y + 18 }]; } // (as drawn: see its drawFX)
+  if (mv.grab || mv.jug || mv.pose === 'kBelly' || mv.pose === 'kCurl' || (mv.claw && mv.claw[5] === 'tgt')) return null; // (throws, the belly and shell moves, and the juggles — he hops up into them and the claws rake on them, where the slash is drawn — keep their own boxes)
+  const J = solve(livePose(f)), r = 13 * s;
+  if (/Peck|Bite/.test(mv.label || '') || /kPeck|kBite/.test(mv.pose || '')) { const c = W([J.head[0] + 6, J.head[1] + 4]); return [{ x0: c[0] - 18 * s, x1: c[0] + 18 * s, y0: Math.max(0, c[1] - 16 * s), y1: c[1] + 16 * s }]; } // (a peck or a bite: his beak)
+  const both = /kClawX|kPounce|kDive/.test(mv.pose || '');
+  const chain = (h, e) => { const dx = h[0] - e[0], dy = h[1] - e[1], L = Math.hypot(dx, dy) || 1; return [0, 0.5, 1].map(t => W([h[0] + dx / L * 22 * t, h[1] + dy / L * 22 * t])); }; // (hand to just past the claw tips)
+  const pts = chain(J.h1, J.e1).concat(both ? chain(J.h2, J.e2) : [], mv.air ? [W(J.f1), W(J.f2)] : [], mv.pose === 'kDive' ? [W(J.head)] : []); // (in the air he rakes with his clawed feet too)
+  const prev = mv.kpPts && mv.kpMf === f.mf - 1 && mv.kpPts.length === pts.length ? mv.kpPts : null; mv.kpPts = pts; mv.kpMf = f.mf;
+  const out = []; for (let i = 0; i < pts.length; i++) for (const t of prev ? [0.5, 1] : [1]) { const p = prev ? [prev[i][0] + (pts[i][0] - prev[i][0]) * t, prev[i][1] + (pts[i][1] - prev[i][1]) * t] : pts[i]; out.push({ x0: p[0] - r, x1: p[0] + r, y0: Math.max(0, p[1] - r), y1: p[1] + r }); }
+  return out;
+}
+// Tanaka (and his angel and devil): his fist, his foot or his briefcase is the hitbox — a short chain swept from where it was last frame —
+// and the devil's tail is boxed along the tail as it's drawn (see tailArcFX / drawTail); rays, chains, breath and whole-body moves keep their own boxes
+function tanakaParts(f, mv) {
+  const s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, W = p => [f.x + (f.animDX || 0) + d * s * p[0], f.y + s * (p[1] + hu)], pose = mv.pose || '', lab = mv.label || '';
+  const sweep = (key, pts, r) => { const prev = mv[key] && mv[key + 'Mf'] === f.mf - 1 && mv[key].length === pts.length ? mv[key] : null; mv[key] = pts; mv[key + 'Mf'] = f.mf;
+    const out = []; for (let i = 0; i < pts.length; i++) for (const t of prev ? [0.5, 1] : [1]) { const p = prev ? [prev[i][0] + (pts[i][0] - prev[i][0]) * t, prev[i][1] + (pts[i][1] - prev[i][1]) * t] : pts[i]; out.push({ x0: p[0] - r, x1: p[0] + r, y0: Math.max(0, p[1] - r), y1: p[1] + r }); } return out; };
+  if (mv.id === 'saRay' || mv.id === 'saRayLow') { const low = mv.id === 'saRayLow', J0 = solve(f.pose), ex = f.x + (f.animDX || 0) + d * s * (J0.head[0] + 9), ey = f.y + s * (J0.head[1] + (f.hipUp || 0) + 2), tx = f.x + d * (low ? 380 : 420) * s, ty = low ? 18 : f.y + 110 * s, n = 22, out = []; // (his eye rays: boxed along the beam as drawn — eyePos to its end; the low one only where it's down at their feet)
+    for (let i = 0; i <= n; i++) { const x = ex + (tx - ex) * i / n, y = ey + (ty - ey) * i / n; if (!low || y < 50) out.push({ x0: x - 10, x1: x + 10, y0: Math.max(0, y - 10), y1: y + 10 }); } return out.length ? out : [{ x0: -9999, x1: -9998, y0: -99, y1: -98 }]; }
+  if (mv.id === 'smCoffee') { const out = []; for (let i = 0; i < 9; i++) { const k = (f.mf - 9 + i * 0.4) / 10; if (k < 0 || k > 1.1) continue; const x = f.x + d * 60 + d * k * 90, y = f.y + 115 + Math.sin(k * Math.PI) * 30 - i * 3; out.push({ x0: x - 10, x1: x + 10, y0: Math.max(0, y - 10), y1: y + 10 }); } return out.length ? out : [{ x0: f.x + d * 55, x1: f.x + d * 65, y0: f.y + 110, y1: f.y + 120 }]; } // (Hot Coffee: the splash itself, drop by drop, as drawn)
+  if (mv.id === 'sdChainB') { const L = Math.min(290, (f.mf - 10) * 60), x0 = f.x + d * 20 * s, y = f.y + 82 * s; return [0.25, 0.5, 0.75, 1].map(u => { const x = x0 + d * (L * u); return { x0: x - 14, x1: x + 14, y0: y - 14, y1: y + 14 }; }); } // (Hell Chain: along the chain as drawn, out to its spearhead)
+  if (mv.id === 'sdTail' || mv.id === 'sdFeintSweep') { const S = mv.startup, mf = f.mf, k = sdTailK(mv, mf), an = Math.PI * (1 - k), L = 150 * s, bx = f.x + d * 14 * s; // (Tail Sweep: its own tail, round along the floor — see its drawFX)
+    const J2 = solve(livePose(f)); return sweep('tlPts', [0.6, 0.8, 1].map(u => [bx + Math.cos(an) * L * u * d, 12 + Math.sin(an) * 26 * u]).concat(mv.id === 'sdFeintSweep' ? [W(J2.f1)] : []), 14 * s); } // (and, sliding in on the feint, his foot)
+  if (mv.tail && !mv.jug) { // the tail: its tip on its arc this frame, and the outer half of the curve back to his rear
+    const T = mv.tail, S = mv.tailS != null ? mv.tailS + 1 : mv.startup, end = S + (mv.tailS != null ? 3 : (mv.active || 4)), mf = f.mf;
+    const k = tailK(mv, mf, S, end), an = mv.tailPath ? mv.tailPath(mf) : T.a0 + (T.a1 - T.a0) * k, L = T.len * s;
+    const cx = f.x + d * 14 * s, cy = f.y + (T.h || 90) * s, tip = [cx + Math.cos(an) * L * d, cy + Math.sin(an) * L];
+    const J = solve(f.pose), b = [f.x + (f.animDX || 0) + d * 14 * s, f.y + s * (J.hip[1] + (f.hipUp || 0)) - 4], c = [(b[0] + tip[0]) / 2 - d * 18, Math.max(b[1], tip[1]) + 26];
+    const q = u => [(1 - u) * (1 - u) * b[0] + 2 * (1 - u) * u * c[0] + u * u * tip[0], (1 - u) * (1 - u) * b[1] + 2 * (1 - u) * u * c[1] + u * u * tip[1]];
+    const boxes = sweep('tlPts', [0.55, 0.7, 0.85, 1].map(q), 14 * s), lowOnly = mv.low ? boxes.filter(b => b.y0 < 40 * s) : boxes; // (a low tail move hits only where the tail is down at their feet)
+    return lowOnly.length ? lowOnly : [{ x0: -9999, x1: -9998, y0: -99, y1: -98 }];
+  }
+  if (mv.grab || mv.jug || (mv.air && mv.hover) || mv.longRange || (/sDogeza|sArch|saPray|sdBeckon|blast|win|saKneel|sdIdle/.test(pose) && mv.id !== 'saGlide' && mv.id !== 'saDive') || /Coffee|Tie|Paper/.test(lab)) return null; // (the coffee splash, the necktie and the paperwork are the blow, not his fist; the juggles keep their reach up into the air)
+  const J = solve(livePose(f)), ext = (h, e, n) => { const dx = h[0] - e[0], dy = h[1] - e[1], L = Math.hypot(dx, dy) || 1; return [0, 0.5, 1].map(t => W([h[0] + dx / L * n * t, h[1] + dy / L * n * t])); };
+  if (/Briefcase|Case/.test(lab)) { const dx = J.h1[0] - J.e1[0], dy = J.h1[1] - J.e1[1], L = Math.hypot(dx, dy) || 1; return sweep('tnPts', [8, 22].map(t => W([J.h1[0] + dx / L * t, J.h1[1] + dy / L * t])), 15 * s); } // (the briefcase, swung out in his front hand — see drawSalary)
+  if (mv.id === 'saGlide' || mv.id === 'saDive' || /Shove/.test(lab)) return sweep('tnPts', ext(J.h1, J.e1, 8).concat(ext(J.h2, J.e2, 8)), 13 * s); // (both palms: the glide, the shove)
+  const out_ = (pts, lowOK) => pts.filter(p => (p[0] - f.x) * d > 12 * s && (lowOK || p[1] > f.y + 20 * s)); // (a fist or foot counts once it's out in front of his body — and a high blow's foot once it's off the floor)
+  if (/[Kk]ick|sweep|slideKick|jKick/.test(pose) || /Kick|Sweep|Trip/.test(lab)) { const b = sweep('tnPts', ext(J.f1, J.k1, 12), 13 * s), keep = b.filter(x => out_([[(x.x0 + x.x1) / 2, (x.y0 + x.y1) / 2]], mv.low || /slideKick|sweep/.test(pose)).length); return keep.length ? keep : [{ x0: -9999, x1: -9998, y0: -99, y1: -98 }]; } // (his foot)
+  const burst = mv.burst && f.mf > mv.startup && f.mf <= mv.startup + (mv.active || 3) ? [(c => ({ x0: c[0] - 22 * s, x1: c[0] + 22 * s, y0: Math.max(0, c[1] - 22 * s), y1: c[1] + 22 * s }))([f.x + d * mv.burst[0] * s, f.y + mv.burst[1] * s])] : []; // (the angel's light bursting out past his fist: it's part of the blow)
+  const fist = sweep('tnPts', ext(J.h1, J.e1, /kClaw/.test(pose) ? 22 : 10).concat(pose === 'kClawX' ? ext(J.h2, J.e2, 22) : []), 13 * s).filter(x => out_([[(x.x0 + x.x1) / 2, (x.y0 + x.y1) / 2]], true).length).concat(burst);
+  return fist.length ? fist : [{ x0: -9999, x1: -9998, y0: -99, y1: -98 }]; // (his fist — or the devil's claws, both when he rakes with both — once it's out in front of him)
+}
+function aldricParts(f, mv) {
+  const J = solve(livePose(f)), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, W = p => [f.x + (f.animDX || 0) + d * s * p[0], f.y + s * (p[1] + hu)];
+  const tag = (mv.label || '') + ' ' + (mv.pose || ''), r = 12 * s, sq = (p, hw, hh) => ({ x0: p[0] - hw, x1: p[0] + hw, y0: Math.max(0, p[1] - hh), y1: p[1] + hh });
+  const shield = /Shield|Bash|Aegis|Rampart/.test(tag) ? (c => [{ x0: c[0] - 20 * s, x1: c[0] + 20 * s, y0: Math.max(0, c[1] - 40 * s), y1: c[1] + 30 * s }])(W([J.h2[0] + 6, J.h2[1] - 6])) : []; // (a shield blow: the shield too, as drawn on his back arm)
+  if (/pShieldPunch|pCrShield|Rampart/.test(tag)) return shield; // (the sword held back: only the shield hits — U, ↓ + U, and the Rampart Charge and Slam)
+  if (/Knee|Kick/.test(tag)) { const p = W(/Knee/.test(tag) ? J.k1 : J.f1); return [sq(p, 22 * s, 22 * s)]; }
+  if (/Punch|Elbow/.test(tag)) return [sq(W(J.h1), 20 * s, 20 * s)]; // (a punch: his fist)
+  if (/Pommel/.test(tag)) { const [ux, uy] = swordDir(J, mv.wrist != null ? mv.wrist : 0.25, null); return [sq(W([J.h1[0] - ux * 18, J.h1[1] - uy * 18]), 22 * s, 22 * s), sq(W(J.h1), 18 * s, 18 * s)]; } // (the pommel and his sword hand, not the blade)
+  const k = f.mf - mv.startup, ext = staffExtAt(f, mv);
+  const spin = mv.spinStaff && f.mf > Math.max(1, mv.startup - 4) ? staffSpinAt(f, mv) : null, len = 104 + ext;
+  if (spin != null) { const c = W(J.h1), out = []; for (const R of [0, 40, 80, 12 + len]) for (let i = 0; i < (R ? Math.round(R / 8) : 1); i++) { const an = i / Math.round(R / 8 || 1) * Math.PI * 2; out.push(sq([c[0] + Math.cos(an) * R * s, c[1] + Math.sin(an) * R * s], r, r)); } return out; } // (whirling: a blur all the way round his hand)
+  const [ux, uy] = swordDir(J, mv.wrist != null ? mv.wrist : 0.25, null), seg = [W([J.h1[0] - ux * 16, J.h1[1] - uy * 16]), W([J.h1[0] + ux * (12 + len), J.h1[1] + uy * (12 + len)])];
+  const prev = mv.swSeg && mv.swSegMf === f.mf - 1 ? mv.swSeg : null; mv.swSeg = seg; mv.swSegMf = f.mf;
+  const L = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t], segs = prev ? [0.34, 0.67, 1].map(t => [L(prev[0], seg[0], t), L(prev[1], seg[1], t)]) : [seg], out = [];
+  for (const [a, b] of segs) for (let i = 0; i <= 6; i++) out.push(sq(L(a, b, i / 6), r, r));
+  return out.concat(shield);
+}
+// Aldric's and the kappa's blows that don't author their own motion: the wind-up pose into the strike pose, spread evenly across the wind-up
+// and the active frames (the generic strike snaps into the pose just before they start), with the weapon live from early in the swing
+function evenSwing(f, mf) {
+  const mv = f.move, su = mv.startup, end = su + (mv.active || 0), r = Math.max(2, Math.round(su * 0.35)); if (mf > end + 3) return null;
+  const Wp = POSES[mv.wind] || POSES.idle, Ap = POSES[mv.pose] || POSES.idle;
+  if (mf <= r) return lerpPose(f.prevPose, Wp, easeOutQ(mf / r));
+  return mf <= end ? lerpPose(Wp, Ap, (mf - r) / Math.max(1, end - r)) : Ap; // (even: the same distance each frame)
+}
+// Kuro's Iai Slash dashes at 32 px/frame through the opponent — far more than the blade's own reach in one frame —
+// so its hitbox also covers whatever ground it swept since the last frame, the same way Mei's staff-tip box does:
+// the blade itself can stay a tight box around his arm instead of a wide one guessing where he'll have moved to
+function iaiSweepBox(f, mv, hb0) {
+  const prev = mv.iaiBox && mv.iaiBoxMf === f.mf - 1 ? mv.iaiBox : null;
+  mv.iaiBox = hb0; mv.iaiBoxMf = f.mf;
+  return prev ? { x0: Math.min(hb0.x0, prev.x0), x1: Math.max(hb0.x1, prev.x1), y0: Math.min(hb0.y0, prev.y0), y1: Math.max(hb0.y1, prev.y1) } : hb0;
+}
+// Kunai Slash / Counter Vanish: the hitbox is the kunai exactly as it's drawn — the same hand-to-blade-tip segment
+// drawBody lays down for o.blade (draw-fighters.js). Kunai Slash's own poseFn carries the overhead-to-strike swing
+// through its active window (not finished before it, the way the generic wind-up would), so this box genuinely moves
+// frame by frame with it — starting up near the head and coming down to the arm — instead of a single box sized to
+// cover the whole arc at once
+function kunaiBox(f) {
+  const J = solve(f.pose), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0;
+  const dx = J.h1[0] - J.e1[0], dy = J.h1[1] - J.e1[1], L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
+  const W = (lx, ly) => [f.x + (f.animDX || 0) + d * s * lx, Math.max(0, f.y + s * (ly + hu))];
+  const [hx, hy] = W(J.h1[0], J.h1[1]), [tx, ty] = W(J.h1[0] + ux * 42, J.h1[1] + uy * 42), pad = 7 * s; // 42: a longer reach past the hand, well past the blade's own drawn 21
+  return { x0: Math.min(hx, tx) - pad, x1: Math.max(hx, tx) + pad, y0: Math.max(0, Math.min(hy, ty) - pad), y1: Math.max(hy, ty) + pad };
+}
+// a hitbox that moves with the limb actually throwing the blow — the kicking foot, the hand holding the fist or the blade —
+// instead of a box fixed to his position: read straight off his live pose, so it travels exactly as the limb does, frame by
+// frame, through the wind-up and the strike (mv.hitbox is left alone: other systems — CPU reads, height labels, step-in — still use it)
+function limbBox(f, mv) {
+  const J = solve(livePose(f)), s = f.ch.scale, hu = f.hipUp || 0; let j = J[mv.limbJoint];
+  if (f.flipT > 0) { const r = -(1 - f.flipT / (f.flipMax || 20)) * Math.PI * 2, c = Math.cos(r), n = Math.sin(r); j = [j[0] * c - j[1] * n, j[0] * n + j[1] * c]; } // (mid-somersault: turned about the hip with the body, the way drawFighter draws it)
+  const x = f.x + (f.animDX || 0) + f.facing * s * j[0], y = Math.max(0, f.y + s * (j[1] + hu));
+  const reach = mv.limbReach || 40, back = mv.limbBack != null ? mv.limbBack : 15, up = mv.limbUp || 20, down = mv.limbDown != null ? mv.limbDown : 20;
+  return f.facing > 0 ? { x0: x - back, x1: x + reach, y0: Math.max(0, y - down), y1: y + up }
+                       : { x0: x - reach, x1: x + back, y0: Math.max(0, y - down), y1: y + up };
 }
 // no blow reaches further than this in front of its user (Lyra's spells have their own range, LYRA_RANGE)
 const MELEE_REACH = 220;
@@ -39,7 +190,7 @@ const TECH_TIER = {
   // Tetsu (Rising Fist: his uppercut comes out without a tell, but it's punished hard if guarded)
   qiBlast: 'mod', tripleQi: 'mod', staffThrow: 'mod', staffWhirl: 'mod', pushParry: 'fast', kickParry: 'fast', parryShove: 'fast', parryKick: 'fast', duckUpper: 'mod', meteorFist: 'heavy', qiSweep: 'heavy', shoulder: 'mod', qiOrb: 'fast', qiParry: 'fast', stomp: 'heavy', tornado: 'heavy', risingFist: 'heavy',
   // Mei
-  extendStaff: 'fast', vaultSmash: 'heavy', sweepStaff: 'mod', poleKick: 'mod', windmill: 'mod', cloudLeap: 'heavy', somersault: 'heavy', feint: 'fast',
+  extendStaff: 'fast', vaultSmash: 'heavy', sweepStaff: 'mod', poleKick: 'mod', windmill: 'mod', cloudLeap: 'heavy', vaultBack: 'heavy', feint: 'fast',
   // Lyra
   phantomFist: 'fast', crushFist: 'heavy', psyLift: 'heavy', forceWave: 'mod', orbBurst: 'mod', tripleRay: 'mod', orbStrong: 'mod', orbLong: 'mod',
   // Aldric
@@ -57,25 +208,25 @@ const TECH_TIER = {
 };
 const NO_TELL = new Set(['risingFist', 'smBow', 'saRayFly', 'saDive', 'smAngel', 'smDevil']); // (these have their own long lead-in)
 // Kappa's throws and U-string hits can be broken by the one they catch: I + U for the J throw, J + K for the K throw (and the string's), U + I + J for the U string.
-// The buttons are pressed together. A throw holds them for ten frames first (they can't move, only press): break it in time and nothing lands, the two are
+// The buttons are pressed together. A throw holds them for twenty-four frames first (they can't move, only press): break it in time and nothing lands, the two are
 // pushed apart; if not, the throw lands. A string hit is broken by buttons pressed in the ten frames before it.
-const BREAK_BTN = { J: ['lp', 'hp'], K: ['lk', 'hk'], S: ['lp', 'hp', 'lk'] }, BREAK_WINDOW = 10;
+const BREAK_BTN = { J: ['lp', 'hp'], K: ['lk', 'hk'], S: ['lp', 'hp', 'lk'] }, BREAK_WINDOW = 10, GRAB_WINDOW = 24;
 function throwBreak(a, d, h) {
-  const mv = a.move; if (a.key !== 'kappa' || !mv) return false;
+  const mv = a.move; if (!mv || (a.key !== 'kappa' && mv.id !== 'sdChainB')) return false; // (the kappa's throws and the devil's Hell Chain)
   if (mv.broken) return true; // (this one was already broken)
-  const need = h.grab ? (mv.normal && mv.kind === 'k' && mv.str === 0 ? BREAK_BTN.J : BREAK_BTN.K) : mv.inString && ['c2', 'c3', 'c4'].includes(mv.strKey) ? BREAK_BTN.S : null;
+  const need = h.grab ? (mv.id === 'sdChainB' ? BREAK_BTN.K : mv.normal && mv.kind === 'k' && mv.str === 0 ? BREAK_BTN.J : BREAK_BTN.K) : mv.inString && ['c2', 'c3', 'c4'].includes(mv.strKey) ? BREAK_BTN.S : null;
   if (!need || ['knock', 'down', 'getup', 'gbreak', 'stunned', 'slashed', 'attack', 'jump'].includes(d.state)) return false;
-  const now = game.frame; if (h.grab && mv.grabT == null) { mv.grabT = now; d.grabLock = BREAK_WINDOW; popText(d.x, GROUND - d.y - 185, L('GRABBED!', '掴まれた！'), '255,200,120'); }
-  const from = h.grab ? mv.grabT - BREAK_WINDOW : now - BREAK_WINDOW, ts = need.map(b => d.btnEdge && d.btnEdge[b] != null ? d.btnEdge[b] : -99);
+  const now = game.frame; if (h.grab && mv.grabT == null) { mv.grabT = now; d.caughtKind = /Sumo/.test(mv.label) ? 'sumo' : 'lift'; mv.active = Math.max(mv.active, a.mf - mv.startup + Math.ceil(GRAB_WINDOW * 1.25) + 2); /* (the hold is counted in game frames; under the flood his moves run a fifth faster) */ d.grabLock = GRAB_WINDOW; popText(d.x, GROUND - d.y - 185, L('GRABBED!', '掴まれた！'), '255,200,120'); }
+  const from = h.grab ? mv.grabT - GRAB_WINDOW : now - BREAK_WINDOW, ts = need.map(b => d.btnEdge && d.btnEdge[b] != null ? d.btnEdge[b] : -99);
   if (Math.min(...ts) >= from && Math.max(...ts) - Math.min(...ts) <= 5) {
     const side = Math.sign(d.x - a.x) || a.facing; mv.broken = true; d.grabLock = 0;
     sparks(d.x - side * 24, GROUND - d.y - 100, 'block'); sfx('block'); popText(d.x, GROUND - d.y - 185, L('BREAK!', 'ブレイク！'), '255,235,140'); game.freeze = Math.max(game.freeze, 8);
     a.kb = -side * 6; d.kb = side * 6; d.btnEdge = {};
     return true;
   }
-  return !!(h.grab && now - mv.grabT < BREAK_WINDOW); // (still inside the window: not thrown yet)
+  return !!(h.grab && now - mv.grabT < GRAB_WINDOW); // (still inside the window: not thrown yet — the grab keeps the move live until then)
 }
-function hasArmor(f) { const mv = f.move; return !!mv && ((mv.armorDive && f.mf >= (mv.armorFrom || 24)) || (f.key === 'kappa' && (mv.id === 'kpPounce' || mv.id === 'kpFrenzy' || (mv.dashLeft > 0))) || (f.key === 'brawler' && mv.tArmor) || (f.ch.possess === 'angel' && mv.id === 'saAscend') || mv.id === 'plRampart' || mv.stoneSkin || (f.ch.fused && !mv.normal && !mv.super && techTier(mv) !== 'fast')); } // (Hohen's Bedrock Stride: stone skin; in the golem armour, his techniques have armour like Tetsu's)
+function hasArmor(f) { const mv = f.move; return !!mv && ((f.key === 'gunman' && /^gn/.test(mv.id || '') && !mv.super && !mv.parry) || (mv.armorDive && f.mf >= (mv.armorFrom || 24)) || (f.key === 'kappa' && (mv.id === 'kpPounce' || mv.id === 'kpFrenzy' || (mv.dashLeft > 0))) || (f.key === 'brawler' && mv.tArmor) || (f.ch.possess === 'angel' && mv.id === 'saAscend') || mv.id === 'plRampart' || mv.stoneSkin || (f.ch.fused && !mv.normal && !mv.super && techTier(mv) !== 'fast')); } // (Hohen's Bedrock Stride: stone skin; in the golem armour, his techniques have armour like Tetsu's)
 function techTier(mv) { return TECH_TIER[mv.id] || (mv.parry ? 'fast' : mv.launch ? 'heavy' : 'mod'); }
 const TELL = { mod: 14, heavy: 20 }; // frames of the tell before the wind-up: long enough that a jab pressed after it starts still lands first
 const U_REACH = {};
@@ -87,7 +238,7 @@ function uReach(d) { // how far the defender's U reaches (Lyra and Jesse reach m
 function techGuardLag(a, d, h) {
   const five = a.state === 'attack' && a.move && a.move.fiveEnder && !a.move.noFiveLag && a.move.startup < 900; // (noFiveLag: an ender with its own block frames)
   if (a.state === 'attack' && a.move && a.move.super && a.move.startup < 900) { const left = a.move.startup + (a.move.active || 0) + a.move.recovery - a.mf, cap = (h.bstun || 10) + 8; if (left > cap) a.move.recovery = Math.max(2, a.move.recovery - (left - cap)); return; } // (supers are safe when guarded)
-  if ((!a.lastMoveTech && !five) || a.ko || (a.move && a.move.noGuardLag)) return;
+  if ((!a.lastMoveTech && !five) || a.ko || (a.move && a.move.noGuardLag) || h.noGuardLag) return; // (h.noGuardLag: a shot that isn't minus on guard — it can land after his move is over)
   const R = uReach(d), dist = Math.abs(a.x - d.x) + 30, travel = dist > R ? 16 + Math.ceil(Math.max(0, dist - R - 110) / 8) : 0; // (a dash in takes about 16 frames; the guard pushes them apart a little more)
   const tier = five ? 'heavy' : a.move && a.state === 'attack' && !a.move.normal ? techTier(a.move) : a.lastTechTier || 'mod'; // (the end of a five-hit string is punished hard)
   if (tier === 'fast') { // quick techniques are safe: if one would leave him open, he recovers sooner
@@ -106,22 +257,86 @@ function techGuardLag(a, d, h) {
   if (!a.lagShown || game.frame - a.lagShown > 30) { a.lagShown = game.frame; popText(a.x, GROUND - a.y - 175, L('OPEN!', '隙あり！'), '255,170,120'); }
 }
 function popTextOnce(f, t) { if (!f.airGuardT || game.frame - f.airGuardT > 20) { f.airGuardT = game.frame; popText(f.x, GROUND - f.y - 170, t, '190,225,255'); } }
+// a hurtbox fitted to wherever his body actually is this frame — hip, shoulders, head, both arms and both legs, the same
+// pose solve() already gives the drawing — instead of a box of fixed width and height centered on his feet: a sliding,
+// stretched-out or airborne silhouette covers different ground than a standing one, frame by frame, just as his hitboxes
+// already track the limb throwing the blow
+// the kappa when he isn't attacking: from the back of his shell to the tip of his beak or his claws, whichever leads — not his trailing back foot
+function kappaBody(d) {
+  const J = solve(d.pose), s = d.ch.scale, dir = d.facing, hu = d.hipUp || 0;
+  const back = Math.min(J.hip[0], J.sh[0]) - 16, front = Math.max(J.head[0] + 20, J.h1[0] + 10, J.h2[0] + 10, J.k1[0]);
+  let y1 = -Infinity; for (const k of ['head', 'sh', 'h1', 'h2']) y1 = Math.max(y1, J[k][1] + (k === 'head' ? 16 : 8));
+  const xa = d.x + (d.animDX || 0) + dir * s * back, xb = d.x + (d.animDX || 0) + dir * s * front;
+  return { x0: Math.min(xa, xb), x1: Math.max(xa, xb), y0: d.y, y1: d.y + s * (y1 + hu) };
+}
+// Tail Sweep's tail: round from behind him through the wind-up, reaching the front of him as it comes live, then on across the floor (drawing and hitbox)
+const sdTailK = (mv, mf) => mf < mv.startup ? 0.75 * mf / mv.startup : Math.min(1, 0.75 + (mf - mv.startup) / 10 * 0.25);
+// the devil's tail attacks: he turns his back to them for the swing (a quick turn, then back) — the drawing and his hurtbox both follow it
+function tailSxOf(f) { const mv = f.move; if (!mv || f.state !== 'attack' || !(mv.tail || mv.tailTurn)) return 1; const m = f.mf, end = mv.startup + (mv.active || 4) + Math.min(mv.recovery || 10, 14);
+  return m < 4 ? Math.cos(Math.PI * m / 4) : m > end ? 1 : m > end - 5 ? Math.cos(Math.PI * (1 - (m - (end - 5)) / 5)) : -1; }
+function poseHurtbox(d, bodyOnly) { // (bodyOnly: the torso, head and legs — not arms held out in front)
+  const J = solve(d.pose), s = d.ch.scale, dir = d.facing * (tailSxOf(d) < 0 ? -1 : 1), hu = d.hipUp || 0; // (turned round for a tail swing: as drawn)
+  const skip = d.move && d.state === 'attack' && (d.move.hurtSkip || d.move.limbJoint || (d.key === 'kappa' ? 'h1' : null)); // the limb actually throwing the blow: a counter shouldn't be able to snipe the very tip of his own outstretched fist or foot — the hitbox out there is his, not a reason to also widen his hurtbox (hurtSkip: for a move whose hitbox isn't itself limb-tracked, but which still reaches an arm or leg out far enough to need the same exclusion)
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const k of bodyOnly ? ['hip', 'sh', 'head', 'k1', 'f1', 'k2', 'f2'] : ['hip', 'sh', 'head', 'e1', 'h1', 'e2', 'h2', 'k1', 'f1', 'k2', 'f2']) {
+    if (k === skip) continue;
+    const j = J[k], wx = d.x + (d.animDX || 0) + dir * s * j[0], wy = d.y + s * (j[1] + hu);
+    if (wx < x0) x0 = wx; if (wx > x1) x1 = wx;
+    if (wy < y0) y0 = wy; if (wy > y1) y1 = wy;
+  }
+  const pad = 9 * s;
+  return { x0: x0 - pad, x1: x1 + pad, y0: Math.max(0, y0 - pad), y1: y1 + pad };
+}
 function hurtbox(d, juggle, low) {
   if (d.invul > 0 || d.hidden || d.ko || d.state === 'getup' || d.state === 'roll' || d.state === 'slashed') return null;
   if (d.loopGuard > 0) return null; // stuck too long in one combo: nothing more can hit them until they're free (no endless loops)
   // lying down: only a low attack can still reach, once per knockdown
   if (d.state === 'down') return (low && !d.otgUsed && d.st > 4) ? { x0: d.x - 58, x1: d.x + 58, y0: 0, y1: 28 } : null;
   if (d.state === 'knock' && (d.jugSpent || (!juggle && !d.juggle))) return null; // launched opponents can be hit by anything (until the juggle is spent)
+  const atkMv = d.state === 'attack' && d.move;
+  if (d.key === 'salary' && /devil|double/.test(d.ch.possess || '') && d.pose && d.state !== 'knock' && !(atkMv && d.move.bodyHurt)) { // (the devil hunches and leans, and turns his back for the tail: fitted to the body he's drawn as)
+    const hb = poseHurtbox(d, true), lowD = d.state === 'crouch' || (d.state === 'blockstun' && d.cguard) || (d.state === 'hitstun' && d.crouchHit) || (atkMv && d.move.crouch);
+    if (!lowD && d.y <= 0) hb.y1 = Math.max(hb.y1, d.y + 135 * d.ch.scale); return hb; }
+  if (d.key === 'kappa' && d.pose && d.state !== 'knock') { // (the kappa leans and hunches like an animal: fitted to the body he's drawn as, head and all —
+    const hb = atkMv ? poseHurtbox(d) : kappaBody(d), low = d.state === 'crouch' || (d.state === 'blockstun' && d.cguard) || (d.state === 'hitstun' && d.crouchHit) || (atkMv && (d.move.crouch || d.move.low)) || /kBelly|kCurl|kCrouch/.test((atkMv && d.move.pose) || '');
+    if (!low && d.y <= 0) hb.y1 = Math.max(hb.y1, d.y + 135 * d.ch.scale); return hb; } // standing, still as tall as anyone, so a high still hits him; crouched, tucked down under his shell)
+  if (atkMv && d.move.bodyHurt && d.pose) return poseHurtbox(d); // fitted to the body's own silhouette this frame, not a fixed box
   const s = d.ch.scale;
   let h = 135;
-  const crouching = d.state === 'crouch' || (d.state === 'blockstun' && d.cguard) || (d.state === 'hitstun' && d.crouchHit) || (d.state === 'attack' && d.move && d.move.crouch);
+  const crouching = d.state === 'crouch' || (d.state === 'blockstun' && d.cguard) || (d.state === 'hitstun' && d.crouchHit) || (atkMv && d.move.crouch);
+  if (crouching && !atkMv && d.pose) return poseHurtbox(d); // (crouched — guarding low, or hit there — he leans well forward of the old fixed box: fit it to the body he's actually drawn as)
   if (crouching) h = 95;
   if (d.state === 'land') h = 110;
   if (d.y > 0 || d.state === 'knock') h = 118;
-  return { x0: d.x - 25 * s, x1: d.x + 25 * s, y0: d.y, y1: d.y + h * s };
+  const w = (atkMv && d.move.hurtW) || 25; // narrower than the usual 25 either side: a move that pulls most of him back out of the way
+  const back = (atkMv && d.move.hurtBack) || 0; // shifted behind his facing, away from however far forward the attack reaches
+  const cx = d.x - back * d.facing;
+  return { x0: cx - w * s, x1: cx + w * s, y0: d.y, y1: d.y + h * s };
 }
 const overlap = (a, b) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
 const atWall = d => d.x <= WALL_L + 1 || d.x >= WALL_R - 1;
+// training only (H): the boxes hit detection actually uses this frame — hurtboxes in blue, an active hitbox in red, a flying
+// projectile's in orange — drawn in world space (y: height above the floor), the same boxes checkHits and the projectile
+// hit loops read, so what's on screen is exactly what would trade
+function drawHitBox(b, col, fillA, lineA) {
+  if (!b) return;
+  const x = b.x0, y = GROUND - b.y1, w = Math.max(1, b.x1 - b.x0), h = Math.max(1, b.y1 - b.y0);
+  ctx.save(); ctx.fillStyle = `rgba(${col},${fillA})`; ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = `rgba(${col},${lineA})`; ctx.lineWidth = 2; ctx.strokeRect(x, y, w, h); ctx.restore();
+}
+function drawHitboxDebug() {
+  for (const f of fighters) { if (f.hidden) continue; drawHitBox(hurtbox(f, !!f.juggle, true), '90,180,255', 0.16, 0.85); if (f.golem && !f.golem.broken && !f.golem.hidden) { drawHitBox(golemBox(f.golem), '90,180,255', 0.12, 0.7); if (f.golem.dbgParts && game.frame - f.golem.dbgMf <= 1) for (const b of f.golem.dbgParts) drawHitBox(b, '255,70,70', 0.3, 0.95); } } // (Hohen's golem: its own hurtbox, and its blow while it's out)
+  for (const f of fighters) {
+    const mv = f.state === 'attack' && f.move; if (!mv || !mv.hitbox) continue;
+    if (f.mf <= (mv.hitFrom != null ? mv.hitFrom : mv.startup) || f.mf > mv.startup + mv.active) continue; // (only while it can actually hit: checkHits' own window)
+    if (f.hitCount >= (mv.multi || 1)) continue; // (already landed everything it's going to: checkHits stops computing a box for it, so there's nothing current left to show)
+    const hb = mv.dbgBoxMf === f.mf ? mv.dbgBox : boxOf(f, meleeBox(f, mv.hitbox)); // the exact box checkHits used this frame, not a recomputation (kunaiBox, limbBox, iaiSweepBox and the rest all live there — this just mirrors it)
+    if (mv.dbgBoxMf === f.mf && mv.dbgParts) for (const b of mv.dbgParts) drawHitBox(b, '255,70,70', 0.3, 0.95); // (Mei's staff: the boxes along the stick)
+    else drawHitBox(hb, '255,70,70', 0.3, 0.95);
+  }
+  for (const p of projs) { if (!p.dead) drawHitBox(projBox(p), '255,170,60', 0.24, 0.9); }
+  if (game.dbgRays) { game.dbgRays = game.dbgRays.filter(r => game.frame - r.t <= 6); for (const r of game.dbgRays) for (const b of r.boxes) drawHitBox(b, '255,70,70', 0.3, 0.95); } // (Lyra's rays: the instant they fire, and a moment after)
+}
 // the wall stops the defender: whatever push they can't take, the attacker gets, the same way back
 function wallPush(a, d, side) {
   const v = Math.abs(d.vx); if (!v) return;
@@ -220,6 +435,10 @@ function showHeight(d, side, hb, h, miss) {
   parts.push({ type: 'htag', who: d, side, x: d.x + side * 34 * s, y: GROUND - clamp((Math.max(hb.y0, 0) + Math.min(hb.y1, d.y + 135 * s)) / 2, 14, 210), vx: 0, vy: -0.25, life: 70, max: 70,
     text: L(t[0], t[1]) + (miss ? L(' (miss)', '（空振り）') : ''), col: t[2] });
 }
+// MP: landing a blow fills it most per hit, taking one a little less, getting one guarded only a little; guarding fills it steadily;
+// an attack that misses fills nothing
+const MP_HIT = 0.07, MP_TAKEN = 0.045, MP_GUARDED = 0.025, MP_GUARD = 5;
+const GBREAK_EXTRA = 60, GBREAK_DMG = 1.3; // a guard break: stunned a second longer than the blow's own guard-break time, and everything that lands on them meanwhile hurts 30% more
 function applyHit(a, d, h, side, hb, hu) {
   if (d.jugSpent && d.state === 'knock') return null; // the juggle limit was reached: nothing can pick them up again before they land (no infinite juggles)
   if (a.ch.dmgMul && h.dmg) h = { ...h, dmg: Math.round(h.dmg * a.ch.dmgMul) }; // a fighter-wide power boost (Mei, Lyra)
@@ -240,33 +459,35 @@ function applyHit(a, d, h, side, hb, hu) {
     return null;
   }
   if (throwBreak(a, d, h)) return null;
-  // armor: Tetsu during his moderate and heavy techniques (tell included), and Aldric's Rampart Charge — the hits land and hurt,
+  // armor: Tetsu and Jesse during their techniques (Tetsu's tell included; strong blows still stop them), and Aldric's Rampart Charge — the hits land and hurt,
   // but they don't stop him: the technique keeps going (no counter). They can only be punished afterwards.
   const dblArmor = d.ch.possess === 'double' && !h.grab && !h.superHit && !['knock', 'down', 'getup'].includes(d.state); // double possession: light hits can't stop him
   const kDash = d.key === 'kappa' && d.state === 'dash' && !h.grab && !h.superHit; // the kappa's dash has armor: hits land, but don't stop him
   const strong = !!(h.heavy || h.tech || h.launch || h.kd || (h.str || 0) >= 1); // (a heavy blow, a technique, a launcher, a knockdown)
   const supArmor = d.state === 'attack' && d.move && d.move.supArmor && d.mf <= d.move.startup && !h.grab && !h.superHit && !strong && Math.abs(a.x - d.x) < 220; // Tetsu's and Kuro's supers, before they come out: light hits from up close don't stop it (strong ones and anything from further away do)
-  if (supArmor || dblArmor || kDash || (d.state === 'attack' && d.move && !h.grab && !h.superHit && hasArmor(d) && !(d.key === 'brawler' && strong) && (d.pre > 0 || d.move.startup >= 900 || d.mf <= d.move.startup + (d.move.active || 0)))) {
+  if (supArmor || dblArmor || kDash || (d.state === 'attack' && d.move && !h.grab && !h.superHit && hasArmor(d) && !((d.key === 'brawler' || d.key === 'gunman') && strong) && (d.pre > 0 || d.move.startup >= 900 || d.mf <= d.move.startup + (d.move.active || 0)))) {
     const dmg = Math.max(1, Math.round(h.dmg * (supArmor ? 1 : 0.85))); // (the super's armor takes them in full: one that would finish him still does)
     if (d.hp - dmg > 0) {
       d.hp -= dmg; d.flash = 4; d.healT = 0;
       sparks(cx, cy, 'hit'); sfx('hitL'); if (!d.armorT || game.frame - d.armorT > 20) { d.armorT = game.frame; popText(d.x, GROUND - d.y - 175, L('ARMOR', 'アーマー'), '125,235,255'); }
       parts.push({ type: 'hex', x: cx, y: cy, r: 8, vr: 3, life: 12, max: 12, col: d.key === 'paladin' ? '200,230,255' : '125,235,255', rot: R() * 3 });
-      a.meter = Math.min(100, a.meter + dmg * 0.11); a.hitConnected = true; a.lastResult = 'armor';
+      a.meter = Math.min(100, a.meter + dmg * MP_HIT); a.hitConnected = true; a.lastResult = 'armor';
       game.freeze = Math.max(game.freeze, 4); trackAdv(a, d, 'hit', h.label);
       return 'armor';
     }
   }
   if (d.state === 'attack' && d.move && d.move.counterVanish && d.mf <= d.move.startup && !(d.pre > 0 && d.move.tellPre)) { counterVanish(d, a); return null; } // (his hand signs come first: hit him then and he can't vanish)
   if (h.grab && (d.y > 0 || d.state === 'knock' || d.state === 'down' || d.state === 'getup' || d.invul > 0)) return null; // throws only catch someone on their feet
-  if (d.state === 'attack' && d.move && d.move.deflect && d.mf >= d.move.deflect[0] && d.mf <= d.move.deflect[1]) { d.deflected = true; // Aldric's rotations: nothing gets through
+  if (d.state === 'attack' && d.move && d.move.deflect && d.mf >= d.move.deflect[0] && d.mf <= d.move.deflect[1]) { if (d.move.reflectAll && (a.key === 'psychic' || a.key === 'gunman')) parryStun(d, a); // (the kappa's shell: Lyra's magic and Jesse's shots leave them stunned)
+    d.deflected = true; // Aldric's rotations: nothing gets through
     sparks(cx, cy, 'block'); sfx('block'); if (!d.passT || game.frame - d.passT > 12) { d.passT = game.frame; popText(d.x, GROUND - d.y - 180, 'DEFLECT!', '255,225,140'); }
     game.freeze = Math.max(game.freeze, 3); return null;
   }
   if (d.aegisT > 0 && !['hitstun', 'knock', 'down', 'getup', 'gbreak', 'stunned', 'slashed'].includes(d.state)) { // Aegis: from any side, at the cost of guard meter
-    d.guard -= (h.gdrain || 6) * 2.4 + (h.dmg || 0) * 0.35 + 6; d.guardIdle = 0; d.aegisHitT = game.frame; // (each hit tears a big piece out of the light: two to four hits break it)
+    d.guard -= ((h.gdrain || 6) * 2.4 + (h.dmg || 0) * 0.35 + 6) / 10; d.guardIdle = 0; d.aegisHitT = game.frame; // (each hit wears the light down a little: about three heavy blows use up its quarter of the meter)
     d.hp = Math.max(1, d.hp - Math.ceil((h.dmg || 0) * 0.25)); // a quarter of the damage still gets through the light
-    if (d.guard <= 0) { d.guard = 0; d.guardSlowT = 600; d.aegisT = 0; setState(d, 'gbreak'); d.stun = 50; d.move = null; popText(d.x, GROUND - d.y - 165, 'GUARD BREAK!', '255,120,130'); sparks(cx, cy, 'big'); sfx('break'); game.freeze = Math.max(game.freeze, 10); return 'block'; }
+    if (d.guard <= 0) { d.guard = 0; d.guardSlowT = 600; d.aegisT = 0; setState(d, 'gbreak'); d.stun = 50 + GBREAK_EXTRA; d.move = null; popText(d.x, GROUND - d.y - 165, 'GUARD BREAK!', '255,120,130'); sparks(cx, cy, 'big'); sfx('break'); game.freeze = Math.max(game.freeze, 10); return 'block'; }
+    if (d.guard <= (d.aegisFloor || 0)) { d.aegisT = 0; aegisSpent(d); sparks(cx, cy, 'big'); sfx('break'); popText(d.x, GROUND - d.y - 190, 'AEGIS BROKEN', '190,225,255'); game.freeze = Math.max(game.freeze, 6); return 'block'; } // (its quarter of the meter is used up: the light shatters, but his own guard holds)
     sparks(cx, cy, 'block'); sfx('block'); if (!d.passT || game.frame - d.passT > 12) { d.passT = game.frame; popText(d.x, GROUND - d.y - 190, 'AEGIS', '190,225,255'); }
     game.freeze = Math.max(game.freeze, 3); return 'block';
   }
@@ -274,13 +495,13 @@ function applyHit(a, d, h, side, hb, hu) {
     sparks(cx, cy, 'block'); sfx('block'); if (!d.passT || game.frame - d.passT > 12) { d.passT = game.frame; popText(d.x, GROUND - d.y - 180, 'SHIELD', '255,225,140'); }
     game.freeze = Math.max(game.freeze, 3); return 'block';
   }
-  if (d.state === 'attack' && d.move && d.move.parry && d.mf > d.move.startup && d.mf <= d.move.startup + d.move.active && !(d.move.frontOnly && side !== -d.facing) && !(h.proj && d.move.noProjParry) && a.key !== 'psychic') { parryCounter(d, a, h); return null; } // (noProjParry: Tetsu's and Aldric's parries answer blows, not projectiles; Lyra's magic can't be parried at all)
+  if (d.state === 'attack' && d.move && d.move.parry && d.mf > d.move.startup && d.mf <= d.move.startup + d.move.active && !(d.move.frontOnly && side !== -d.facing) && !(h.proj && d.move.noProjParry) && (a.key !== 'psychic' || d.move.projStun) && !(d.move.lowParry && !h.low && !h.proj && a.key !== 'psychic')) { parryCounter(d, a, h); return null; } // (noProjParry: Tetsu's parries answer blows, not projectiles; Lyra's magic can't be parried — except by Aldric's parries, projStun, which stun whoever shot or cast it)
   if (d.state === 'down') { // ground hit: a low attack on a downed opponent
     const dmg = Math.max(1, Math.round(h.dmg * 0.6));
     d.hp = Math.max(game.training ? 1 : 0, d.hp - dmg); d.otgUsed = true; d.flash = 7;
     d.st = Math.min(d.st, 22); d.y = 1; d.vy = 3;
     if (d.hp <= 0) d.ko = true;
-    a.meter = Math.min(100, a.meter + dmg * 0.075);
+    a.meter = Math.min(100, a.meter + dmg * MP_HIT * 0.7);
     sparks(cx, cy, 'hit'); sfx('hit'); popText(cx, cy - 40, 'GROUND HIT', '255,200,120');
     game.freeze = Math.max(game.freeze, 5);
     trackAdv(a, d, 'hit', h.label);
@@ -313,7 +534,8 @@ function applyHit(a, d, h, side, hb, hu) {
     const pushB = (h.bpush != null ? h.bpush : (h.push || 1) * 0.9) * (h.rushTag ? 1 : a.ch.pushMul || 1); // (rush strings keep their own spacing)
     const big = guardBig(a, h); d.guard -= guardCost(a, d, h, big); d.guardIdle = 0;
     if (d.guard <= 0) {
-      d.guard = 0; setState(d, 'gbreak'); d.stun = h.gbstun || 45; d.vx = side * 3; d.move = null;
+      d.guard = 0; setState(d, 'gbreak'); d.stun = (h.gbstun || 45) + GBREAK_EXTRA; d.vx = side * 3; d.move = null;
+      if (h.dmg) { d.hp = Math.max(1, d.hp - Math.round(h.dmg * 0.5)); d.flash = 7; } // (the blow that breaks the guard goes half through)
       popText(d.x, GROUND - d.y - 165, 'GUARD BREAK!', '255,120,130');
       sparks(cx, cy, 'big'); sfx('break');
       game.freeze = Math.max(game.freeze, 10); game.shake = Math.max(game.shake, 7);
@@ -323,7 +545,7 @@ function applyHit(a, d, h, side, hb, hu) {
     if (airGuard) { // guarded in the air: pushed back a little, still falling, can't attack until the block wears off
       d.vx = side * Math.max(2, pushB * 0.7); d.vy = Math.min(d.vy, 3); d.atkCD = Math.max(d.atkCD || 0, h.bstun || 10); d.airAttacked = true;
       d.hp = Math.max(1, d.hp - chipOf(h, big));
-      d.meter = Math.min(100, d.meter + 2); sparks(cx, cy, 'block'); sfx('block'); popTextOnce(d, L('AIR GUARD', '空中ガード'));
+      d.meter = Math.min(100, d.meter + MP_GUARD - 1); a.meter = Math.min(100, a.meter + (h.dmg || 0) * MP_GUARDED); sparks(cx, cy, 'block'); sfx('block'); popTextOnce(d, L('AIR GUARD', '空中ガード'));
       trackAdv(a, d, 'block', h.label); game.freeze = Math.max(game.freeze, 3); techGuardLag(a, d, h); launcherGuardLag(a, d, h);
       return 'block';
     }
@@ -332,7 +554,8 @@ function applyHit(a, d, h, side, hb, hu) {
     techGuardLag(a, d, h); launcherGuardLag(a, d, h); // a technique or a launcher that's guarded leaves its user open
     d.hp = Math.max(1, d.hp - chipOf(h, big)); // chip damage through the guard: a little for anything, more for techniques and supers
     if (!h.proj) wallPush(a, d, side); // guarded against the wall: the attacker slides back instead
-    d.meter = Math.min(100, d.meter + 3); // ...and guarding
+    d.meter = Math.min(100, d.meter + MP_GUARD); // ...guarding (more than anything else)...
+    a.meter = Math.min(100, a.meter + (h.dmg || 0) * MP_GUARDED); // ...and, a little, getting a blow guarded (much less than landing it)
     sparks(cx, cy, 'block'); sfx('block');
     game.freeze = Math.max(game.freeze, 3);
     trackAdv(a, d, 'block', h.label);
@@ -345,7 +568,8 @@ function applyHit(a, d, h, side, hb, hu) {
   const crouchCaught = !airGuard && d.y <= 0 && low && hc !== 'low' && ['stand', 'crouch', 'guard', 'blockstun', 'recover'].includes(d.state); // a mid caught them crouching
   const counter = (d.state === 'attack' && d.move && (d.mf <= d.move.startup || d.move.heal)) || crouchCaught; // (praying leaves Aldric wide open)
   if (d.state === 'attack' && d.move && (d.pre > 0 || ((d.move.pre || d.move.slow) && d.mf <= d.move.startup))) { popText(d.x, GROUND - 200, 'INTERRUPTED!', '255,220,120'); d.pre = 0; } // a technique hit while gathering or casting is lost
-  const cpl = h.cpLaunch && (punish || counter) && d.y <= 0; // Kuro's Crescent Kick launches on a counter or punish
+  const cpl = h.cpLaunch && (punish || counter || h.cpCarry) && d.y <= 0; // Kuro's Crescent Kick launches on a counter or punish
+  if ((punish || counter) && a.move && (a.move.multi || 1) > 1) a.move.cpCarry = true; // (a multi-hit blow that opened on a counter or punish: its launching hit still counts as one, though they're in hit-stun by then)
   const meteorBounce = h.meteor && !d.mBounced && (d.y > 0 || d.juggle); // the meteor bounces someone in the air once per combo; otherwise it knocks down
   const nl = h.neutralLaunch && !juggling; // Fire Spout / Qi Geyser launch someone who isn't juggled yet
   if (d.state === 'gbreak') d.guard = 50;
@@ -362,7 +586,8 @@ function applyHit(a, d, h, side, hb, hu) {
   // a quick jab (about 15 frames from start to finish) keeps 72%, a heavy blow (about 40) 93%, a big technique 95%
   const cm = a.move, frames = cm ? Math.min(cm.startup, 60) + (cm.active || 0) + Math.min(cm.recovery || 0, 60) : 30;
   const comboScale = d.combo > 1 && a.serial !== d.comboSerial && !h.fullDmg ? clamp(0.6 + frames / 120, 0.65, 0.95) : 1; // (a few big, separate heavy techniques keep it all)
-  let dmg = Math.max(1, Math.round(h.dmg * scale * riseScale * comboScale * (tech ? (airTech ? AIR_TECH : TECH_DMG) : 1) * (h.bounce && h.launch ? BOUNCE_DMG : 1) * (d.ch.takeMul || 1))); // (takeMul: a form that's harder to hurt — Hohen fused with his golem)
+  let dmg = Math.max(1, Math.round(h.dmg * scale * riseScale * comboScale * (tech ? (airTech ? AIR_TECH : TECH_DMG) : 1) * (h.bounce && h.launch ? BOUNCE_DMG : 1) * (d.ch.takeMul || 1) * (d.state === 'gbreak' ? GBREAK_DMG : 1))); // (takeMul: a form that's harder to hurt — Hohen fused with his golem)
+  if (h.noDmg) dmg = 0; // (a blow that only catches them — the devil's Hell Chain drags them in, it doesn't hurt)
   if (d.extendBonus && !isSup) { dmg += d.extendBonus; d.extendBonus = 0; popText(d.x, GROUND - d.y - 175, L('EXTENDED +', '追撃ボーナス +') + EXTEND_BONUS, '255,225,140'); } // (the second lift or bounce extends the combo: a one-time bonus)
   d.hp = Math.max(0, d.hp - dmg);
   if (a.y > 0 && a.state === 'attack' && a.move && a.move.air && d.juggle && !a.move.manualY && a.move.chain && Object.values(a.move.chain).some(Boolean)) a.vy = Math.max(a.vy, 3.2); // an air combo: hitting them keeps him hanging in the air a moment
@@ -373,8 +598,8 @@ function applyHit(a, d, h, side, hb, hu) {
   if (h.brand && a.key === 'paladin') addBrand(d, h.brand);
   if (game.training && d.hp <= 0) d.hp = 1;
   d.flash = 7; d.move = null; d.hidden = false; d.shadow = false; d.shadowRun = false;
-  a.meter = Math.min(100, a.meter + dmg * 0.11); // MP fills by fighting: dealing damage...
-  d.meter = Math.min(100, d.meter + dmg * 0.07); // ...and taking it
+  a.meter = Math.min(100, a.meter + dmg * MP_HIT); // MP fills by fighting: dealing damage...
+  d.meter = Math.min(100, d.meter + dmg * MP_TAKEN); // ...and taking it
   if (d.hp <= 0) { d.ko = true; setState(d, 'knock'); d.vy = 9; d.vx = side * 4.5; d.y = Math.max(d.y, 1); }
   else if (h.slash && d.y <= 0 && !cpl) { // (a slash that's a counter or a punish launches instead, if the move says so: cpLaunch)
     setState(d, 'slashed'); d.stun = h.iai ? 38 : 26; d.slashDir = side; d.vx = side * 1.5;
@@ -458,19 +683,28 @@ function hitDecoys(a, hb) {
 function checkHits(a, o) {
   if (a.state !== 'attack' || !a.move || !a.move.hitbox) return;
   const mv = a.move;
-  if (a.mf <= mv.startup || a.mf > mv.startup + mv.active) return;
+  if (a.mf <= (mv.hitFrom != null ? mv.hitFrom : mv.startup) || a.mf > mv.startup + mv.active) return; // (hitFrom: a blow that's already dangerous before its official active frames — Meteor Fist's fist on the way down)
   const multi = mv.multi || 1;
   if (a.hitCount >= multi) return;
   if (a.hitCount > 0 && a.mf - a.lastHitMf < (mv.interval || 99)) return;
-  let hb = boxOf(a, meleeBox(a, mv.hitbox));
-  if (a.key === 'staff') hb = staffTipBox(a, mv, hb);
+  let hb = mv.kunaiBox ? kunaiBox(a) : mv.limbJoint ? limbBox(a, mv) : boxOf(a, meleeBox(a, mv.hitbox));
+  let parts = null;
+  if (a.key === 'staff' && a.pose && mv.spinStaff && mv.limbJoint) { parts = staffBoxes(a, mv).concat([hb]); hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) })); } // (a kick with the staff twirling: both the foot and the staff hit)
+  else if (a.key === 'paladin' && a.pose && !mv.super) { parts = aldricParts(a, mv); hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) })); }
+  else if (a.key === 'salary' && a.pose && !mv.super && (parts = tanakaParts(a, mv))) hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) }));
+  else if (a.key === 'kappa' && a.pose && !mv.super && (parts = kappaParts(a, mv))) hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) }));
+  else if (a.key === 'psychic' && (parts = lyraParts(a, mv, o))) hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) }));
+  else if (a.key === 'staff' && a.pose && !/kick|Kick/.test((mv.pose || '') + ' ' + (mv.label || ''))) { parts = staffBoxes(a, mv); hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) })); }
+  if (mv.iai || mv.sweepBox) hb = iaiSweepBox(a, mv, hb); // a tight box on the limb itself, swept along its own path so a fast or diagonal motion can't tunnel past someone between two frames (mv.sweepBox: any other move whose tracked limb moves fast enough to need the same thing — Vanish Drop Kick's diagonal arc, say)
   if (floodOwner(a)) hb = { ...hb, x0: -200, x1: W + 200 }; // the flood carries the kappa's every blow: it reaches them anywhere on the stage // Mei: the staff hits along its front half, out to the tip — not at her fists
+  mv.dbgBox = hb; mv.dbgParts = parts; mv.dbgBoxMf = a.mf; // training's H overlay reads this back, so it draws exactly the box just computed here — never a separate, possibly stale recomputation (iaiSweepBox in particular keeps its own frame-to-frame state, which a second call would corrupt)
   if (hitDecoys(a, hb)) { // a guarding shadow soaked up this attack
     a.hitCount = multi; a.hitConnected = true; a.lastResult = 'block'; a.vx -= (Math.sign(o.x - a.x) || a.facing) * 2;
     return;
   }
   const hu = hurtbox(o, !!mv.juggle, !!mv.low);
-  if (!hu || !overlap(hb, hu)) {
+  const touch = hu && (parts ? parts.find(b => overlap(b, hu)) : overlap(hb, hu) && hb); // (Mei's staff: only the stick itself connects)
+  if (!touch) {
     if (hu && hb.x0 < hu.x1 && hb.x1 > hu.x0) mv.passed = hb; // (in reach, but over or under them)
     if (mv.passed && !a.hitConnected && a.mf === mv.startup + mv.active) showHeight(o, Math.sign(o.x - a.x) || a.facing, mv.passed, mv, true);
     return;
@@ -482,7 +716,7 @@ function checkHits(a, o) {
     push: (multi > 1 && last && mv.lastPush) ? mv.lastPush : mv.push,
     kd: multi > 1 ? (last && mv.kd) : mv.kd,
     type: mv.type, low: !!mv.low, overhead: !!mv.overhead, hitstop: mv.hitstop, chip: mv.chip, bpush: mv.guardPush, /* (a technique's own push on a guard: guardPush) */ guardPop: !!mv.guardPop, str: mv.str != null ? mv.str : a.str, proj: false, // (low: must be guarded crouching)
-    gdrain: mv.gdrain != null ? mv.gdrain : (multi > 1 ? 2 : 8), rushTag: !!mv.rushTag, tech: isTech(mv), label: mv.label || '', slash: !!mv.slash, iai: !!mv.iai, heavy: !!(mv.normal && mv.str === 1), kdVx: mv.kdVx, kdVy: mv.kdVy, noGrace: !!mv.noGrace, launch: multi > 1 ? (last && !!mv.launch) : !!mv.launch, launchVy: mv.launchVy, bounce: !!mv.bounce, cpLaunch: !!mv.cpLaunch, jugVy: (multi > 1 && last && mv.lastJugVy) ? mv.lastJugVy : mv.jugVy, fixedLift: !!mv.fixedLift, meteor: !!mv.meteor, stunT: mv.stunT, stunKind: mv.stunKind, neutralLaunch: multi > 1 ? (last && !!mv.neutralLaunch) : !!mv.neutralLaunch, relaunch: !!mv.relaunch, slashMark: !!mv.slashMark, brand: mv.brand || 0, grab: !!mv.grab, fullDmg: !!mv.fullDmg,
+    gdrain: mv.gdrain != null ? mv.gdrain : (multi > 1 ? 2 : 8), rushTag: !!mv.rushTag, tech: isTech(mv), label: mv.label || '', slash: !!mv.slash, iai: !!mv.iai, heavy: !!(mv.normal && mv.str === 1), kdVx: mv.kdVx, kdVy: mv.kdVy, noGrace: !!mv.noGrace, launch: multi > 1 ? (last && !!mv.launch) : !!mv.launch, launchVy: mv.launchVy, bounce: !!mv.bounce, cpLaunch: !!mv.cpLaunch, cpCarry: !!mv.cpCarry, jugVy: (multi > 1 && last && mv.lastJugVy) ? mv.lastJugVy : mv.jugVy, fixedLift: !!mv.fixedLift, meteor: !!mv.meteor, stunT: mv.stunT, stunKind: mv.stunKind, neutralLaunch: multi > 1 ? (last && !!mv.neutralLaunch) : !!mv.neutralLaunch, relaunch: !!mv.relaunch, slashMark: !!mv.slashMark, brand: mv.brand || 0, grab: !!mv.grab, fullDmg: !!mv.fullDmg, noDmg: !!mv.noDmg,
   };
   if (mv.normal && !mv.air) {
     // stun is counted from the attacker's remaining frames, so the advantage per strength is always the same
@@ -492,7 +726,7 @@ function checkHits(a, o) {
     hit.gbstun = remaining + 30;
     hit.bpush = mv.bpush;
   }
-  const res = applyHit(a, o, hit, Math.sign(o.x - a.x) || a.facing, hb, hu);
+  const res = applyHit(a, o, hit, Math.sign(o.x - a.x) || a.facing, touch, hu);
   if (res) { a.hitCount++; a.lastHitMf = a.mf; a.hitConnected = true; a.lastResult = res; }
   if (res && floodOwner(a) && Math.abs(o.x - a.x) > 140) { const n = Math.ceil(Math.abs(o.x - a.x) / 26); for (let i = 0; i < n; i++) { const k = i / n; parts.push({ type: 'aura', x: lerp(a.x, o.x, k), y: GROUND - lerp(a.y + 90, o.y + 90, k) + Math.sin(k * Math.PI) * -20, vx: 0, vy: -0.4, life: 12 + i % 4, max: 16, r: 4, col: '150,220,255' }); } } // (a jet of water carries the blow across)
   if (res === 'block' && !mv.super && !mv.guardStalled) { mv.guardStalled = true; mv.recovery += GUARD_STALL; a.recoilT = GUARD_STALL + 8; } // guarded: he's knocked off balance — a short stall every fighter shows, before he can act again
@@ -516,7 +750,7 @@ function fixAdv(a, d, h, r) {
     else mv.recovery = Math.max(1, mv.recovery + T - left);
     a.guardLagUntil = 0; a.guardLagNeed = 0; mv.lagLock = false;
   }
-  if (r === 'hit' && mv.cutOnHit && a.mf > mv.startup) mv.active = Math.max(0, a.mf - mv.startup); // (a long-lasting blow that has landed: it ends there, so the follow-up isn't late)
+  if (r === 'hit' && mv.cutOnHit && a.mf > (mv.hitFrom != null ? Math.min(mv.hitFrom, mv.startup) : mv.startup) && a.hitCount >= (mv.multi || 1) - 1) mv.active = Math.max(0, a.mf - mv.startup); // (a long-lasting blow that has landed: it ends there, so the follow-up isn't late)
   if (r === 'hit' && mv.hitAdv != null && d.state === 'hitstun') d.stun = Math.max(1, left + mv.hitAdv - (d.ch.recoverT || 12)) + (d.wasCounter ? counterStunOf(a) : 0); // (they act once their recovery after the hit-stun is over; a counter hit adds COUNTER_STUN)
 }
 { const core = applyHit; applyHit = function (a, d, h, side, hb, hu) { const r = core.apply(this, arguments); if (r === 'hit' || r === 'block') fixAdv(a, d, h, r); if (r === 'hit' && a.ch.hitPlus && d.state === 'hitstun') d.stun += a.ch.hitPlus; /* (a fighter whose hits all leave him further ahead: Tetsu) */ if (r === 'hit' && a.move && a.move.recPlusAmt && (!a.move.normal || d.state !== 'hitstun' || a.ch.recRefund)) { a.move.recovery -= a.move.recPlusAmt; a.move.recPlusAmt = 0; } /* (Mei's longer recovery: given back when a technique lands, or a hit launches or knocks down — the follow-up keeps its timing) */ if (a.ch.possess === 'angel' && a.move && a.move.normal && a.move.str === 1 && (r === 'hit' || r === 'block') && a.hp > 0) { const n = r === 'block' ? 28 : 12; a.hp = Math.min(1000, a.hp + n); a.healT = 60; popText(a.x, GROUND - a.y - 200, '+' + n, '255,240,190'); } /* (the angel's I and K heal him: more when they're guarded) */ if ((r === 'hit' || r === 'block' || r === 'armor') && a.fd) fdContact(a, r); if ((r === 'hit' || r === 'block') && a.sorbs && a.sorbs.length && !h.orbRay && game.frame - (a.orbT || -99) > 10) { a.orbT = game.frame; orbAssist(a, a.move || {}); } /* (Lyra's orbs fire when one of her attacks lands or is guarded: one volley per attack) */ return r; }; } // a move's own advantage; the training frame data

@@ -45,6 +45,7 @@ function updateTbar() {
   tbar.querySelector('[data-t="mp"]').textContent = L(`MP refill: ${game.mpFull ? 'on' : 'off'} (M)`, `MP回復：${game.mpFull ? 'オン' : 'オフ'} (M)`);
   tbar.querySelector('[data-t="reset"]').textContent = L('Reset to start position (R)', '初期位置に戻す (R)');
   const lb = tbar.querySelector('[data-t="list"]'); lb.textContent = L(`Moves: ${game.moveList ? 'on' : 'off'} (L)`, `技表：${game.moveList ? 'オン' : 'オフ'} (L)`); lb.setAttribute('aria-pressed', String(!!game.moveList));
+  const hb = tbar.querySelector('[data-t="hitbox"]'); hb.textContent = L(`Hitboxes: ${game.showHitboxes ? 'on' : 'off'} (H)`, `当たり判定：${game.showHitboxes ? 'オン' : 'オフ'} (H)`); hb.setAttribute('aria-pressed', String(!!game.showHitboxes));
   const dl = game.demoSet === 'punish' ? { prev: ['Previous punish (A)', '前の反撃 (A)'], replay: ['Replay (R)', 'もう一度 (R)'], next: ['Next punish (D)', '次の反撃 (D)'], switch: ['Switch fighter (F)', 'キャラ切替 (F)'] }
     : { prev: ['Previous combo (A)', '前のコンボ (A)'], replay: ['Replay (R)', 'もう一度 (R)'], next: ['Next combo (D)', '次のコンボ (D)'], switch: ['Switch fighter (F)', 'キャラ切替 (F)'] };
   dbar.querySelectorAll('button').forEach(b => { const t = dl[b.dataset.d]; if (t) b.textContent = L(t[0], t[1]); });
@@ -55,6 +56,7 @@ function trainingAction(t) {
   else if (t === 'mp') game.mpFull = !game.mpFull;
   else if (t === 'reset') resetPositions();
   else if (t === 'list') game.moveList = !game.moveList;
+  else if (t === 'hitbox') game.showHitboxes = !game.showHitboxes;
   sfx('select'); updateTbar();
 }
 tbar.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { initAudio(); trainingAction(b.dataset.t); b.blur(); }));
@@ -273,6 +275,7 @@ window.addEventListener('keydown', e => {
       else if (e.code === 'KeyM') trainingAction('mp');
       else if (e.code === 'KeyR') trainingAction('reset');
       else if (e.code === 'KeyL') trainingAction('list');
+      else if (e.code === 'KeyH') trainingAction('hitbox');
       else if (e.code === 'KeyC' && game.moveList) stepTab(); // (the 技表's tabs)
       else if (e.code === 'Comma' && game.moveList) stepMoveList(-1);
       else if (e.code === 'Period' && game.moveList) stepMoveList(1);

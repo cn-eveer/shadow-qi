@@ -107,12 +107,7 @@ function drawBrawler(J, C, o = {}) {
 }
 // the staff: from beyond the back hand, through the front hand and on past it; gold caps on both ends
 function drawStaff(J, C, o) {
-  let dx = J.h1[0] - J.h2[0], dy = J.h1[1] - J.h2[1], L = Math.hypot(dx, dy);
-  if (L < 14) { dx = J.h1[0] - J.e1[0]; dy = J.h1[1] - J.e1[1]; L = Math.hypot(dx, dy) || 1; }
-  let ux = dx / L, uy = dy / L;
-  if (o.staffSpin != null) { const an = o.staffSpin; ux = Math.cos(an); uy = Math.sin(an); }
-  const spin = o.staffSpin != null || L < 14, back = spin ? 92 : 34, front = spin ? 92 : 150, c0 = spin ? J.h1 : J.h2, c1 = J.h1; // held near the back end: a short end behind her hands, the long end out in front (twirling, it spins about the middle)
-  const a = [c0[0] - ux * back, c0[1] - uy * back], b = [c1[0] + ux * (front + (o.staffExt || 0)), c1[1] + uy * (front + (o.staffExt || 0))];
+  const [a, b, ux, uy] = staffLine(J, o.staffExt || 0, o.staffSpin, o.floorSpin); // (held near the back end, or at the middle when her hands are close / it's twirling: see staffLine)
   seg(a, b, 5.2, C.staffB); seg(a, b, 3.6, C.staff);
   seg(a, [a[0] + ux * 9, a[1] + uy * 9], 6, C.cap); seg([b[0] - ux * 9, b[1] - uy * 9], b, 6, C.cap);
   if (o.staffExt) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; seg([b[0] - ux * 16, b[1] - uy * 16], b, 9, 'rgba(255,215,120,.45)'); ctx.restore(); }
@@ -252,9 +247,7 @@ function excalAura(f, mv) { // how strongly the Excalibur aura shows on Aldric's
   return on * off;
 }
 function drawGreatsword(J, C, o) {
-  const th = Math.atan2(J.h1[1] - J.e1[1], J.h1[0] - J.e1[0]) + (o.wrist != null ? o.wrist : 0.6); // held at a raised wrist angle, not hanging off the forearm
-  let ux = Math.cos(th), uy = Math.sin(th);
-  if (o.staffSpin != null) { ux = Math.cos(o.staffSpin); uy = Math.sin(o.staffSpin); }
+  const [ux, uy] = swordDir(J, o.wrist, o.staffSpin); // (held at a raised wrist angle, not hanging off the forearm; or whirling — the hitbox reads the same)
   const nx = -uy, ny = ux, h = J.h1, len = 104 + (o.staffExt || 0);
   const at = k => [h[0] + ux * k, h[1] + uy * k];
   seg(at(-16), at(8), 5, C.grip); dot(at(-18), 4.2, C.trim);                                      // grip and pommel
@@ -513,7 +506,7 @@ function drawSalary(J, C, o) {
     ctx.fillStyle = '#7a1414'; ctx.beginPath(); ctx.moveTo(J.hip[0] - 40, J.hip[1] + 6); ctx.lineTo(J.hip[0] - 47, J.hip[1] + 2); ctx.lineTo(J.hip[0] - 41, J.hip[1] + 13); ctx.closePath(); ctx.fill(); } // a devil's tail
   seg(J.hip, J.k2, 10, C.suitB); seg(J.k2, J.f2, 9, C.suitB); foot(J.k2, J.f2, 8.5, 6.5, C.shoe);
   seg(J.sh, J.e2, 9, C.suitB); seg(J.e2, J.h2, 8, C.suitB); dot(J.h2, 4.6, C.skin);
-  if (!pos) { ctx.fillStyle = C.bag; ctx.fillRect(J.h2[0] - 12, J.h2[1] - 22, 24, 17); ctx.fillStyle = '#c8a46a'; ctx.fillRect(J.h2[0] - 2, J.h2[1] - 8, 4, 3); seg([J.h2[0] - 4, J.h2[1] - 4], [J.h2[0] + 4, J.h2[1] - 4], 2, '#3a2512'); } // briefcase
+  if (!pos && !o.caseFront) { ctx.fillStyle = C.bag; ctx.fillRect(J.h2[0] - 12, J.h2[1] - 22, 24, 17); ctx.fillStyle = '#c8a46a'; ctx.fillRect(J.h2[0] - 2, J.h2[1] - 8, 4, 3); seg([J.h2[0] - 4, J.h2[1] - 4], [J.h2[0] + 4, J.h2[1] - 4], 2, '#3a2512'); } // briefcase
   seg(J.hip, J.sh, 19, C.suit);
   seg(mid(J.hip, J.sh, 0.45), [J.sh[0] + n[0] * 2, J.sh[1] + n[1] * 2], 7, C.shirt);                                  // shirt front
   seg(mid(J.hip, J.sh, 0.5), [J.sh[0] + n[0] * 2 - td[0] * 3, J.sh[1] + n[1] * 2 - td[1] * 3], 3.2, C.tie);           // tie
@@ -538,6 +531,7 @@ function drawSalary(J, C, o) {
   if (pos === 'angel' || pos === 'double') { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(255,220,110,${0.85 + 0.15 * Math.sin(t * 0.2)})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(0, 18 + Math.sin(t * 0.1) * 1.5, 10, 3, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); } // halo
   ctx.restore();
   seg(J.sh, J.e1, 9, C.suit); seg(J.e1, J.h1, 8, C.suit); seg(mid(J.e1, J.h1, 0.85), J.h1, 6, C.shirt); dot(J.h1, 4.8, pos === 'devil' ? '#e05a4a' : C.skin);
+  if (!pos && o.caseFront) { ctx.save(); ctx.translate(J.h1[0], J.h1[1]); ctx.rotate(Math.atan2(J.h1[1] - J.e1[1], J.h1[0] - J.e1[0])); ctx.fillStyle = C.bag; ctx.fillRect(2, -9, 26, 18); ctx.fillStyle = '#c8a46a'; ctx.fillRect(4, -2, 3, 4); ctx.restore(); } // a briefcase blow: the case swung out in his front hand
   if (pos === 'angel' && !o.tint && o.praying) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const m = [(J.h1[0] + J.h2[0]) / 2, Math.max(J.h1[1], J.h2[1]) + 10]; // praying: palms pressed together, a thin line of light rising from the fingertips
     ctx.strokeStyle = 'rgba(255,245,200,.7)'; ctx.lineWidth = 2; for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(m[0], m[1]); ctx.lineTo(m[0] + i * 9, m[1] + 30 + (i ? 0 : 12)); ctx.stroke(); } ctx.restore(); }
   else if (pos === 'angel' && !o.tint) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (const h of [J.h1, J.h2]) { const g = ctx.createRadialGradient(h[0], h[1], 1, h[0], h[1], 16); g.addColorStop(0, 'rgba(255,250,220,.95)'); g.addColorStop(1, 'rgba(255,220,120,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(h[0], h[1], 16 + Math.sin(t * 0.2) * 2, 0, Math.PI * 2); ctx.fill(); } ctx.restore(); } // fists of light
@@ -648,7 +642,7 @@ function drawHeavyFX(f) {
     }
   }
   if (mv.fx === 'ward') { // the parry circle held in front of his palms
-    const cx = f.x + f.facing * 58 * s, cy = GROUND - f.y - 108 * s, r = 46 * s;
+    const cx = f.x + f.facing * 58 * s, cy = GROUND - f.y - (mv.lowParry ? 44 : 108) * s, r = (mv.lowParry ? 40 : 46) * s; // (Aldric's low parry: down by the floor, round his shield)
     ctx.strokeStyle = `rgba(${FC},${0.8 * fade})`; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.ellipse(cx, cy, r * 0.38, r, 0, 0, Math.PI * 2); ctx.stroke();
     ctx.setLineDash([7, 9]); ctx.lineDashOffset = -globalT * 1.6; ctx.lineWidth = 2;
@@ -795,7 +789,7 @@ function drawSanctuary(f) { // a dome of light over the planted sword
 }
 function drawAegis(f) { // a sphere of light around him: it fades as it runs out (time or guard meter, whichever is closer), flickers and cracks near the end, flashes when hit
   const mv = f.move, s = f.ch.scale, cx = f.x, cy = GROUND - f.y - 95 * s, R = 108 * s, t = globalT;
-  const left = Math.min(f.guard / 100, f.aegisT / 240); // how much is left
+  const left = Math.min((f.guard - (f.aegisFloor || 0)) / AEGIS_COST, f.aegisT / 240); // how much is left (of its quarter of the guard meter, or of its time)
   const low = left < 0.3, flick = low ? (Math.floor(t / (left < 0.15 ? 2 : 4)) % 2 ? 0.35 : 1) : 1, hitF = f.aegisHitT != null ? Math.max(0, 1 - (game.frame - f.aegisHitT) / 10) : 0;
   const k = (0.12 + 0.88 * left) * flick + hitF * 0.8;
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
@@ -863,6 +857,11 @@ function drawFighter(f) {
     for (let k = 3; k >= 1; k--) drawBody(f.key, f.pose, f.x - (f.x - (f.ia ? f.ia.x0 : f.x)) * 0.08 * k, GROUND - f.y + k * 6, f.facing, f.hipUp, { scale: f.ch.scale, alpha: 0.14 * (4 - k), sword: true });
   if (mv && mv.iai && f.mf > 16 && f.mf <= 24) // afterimages along the iai dash
     for (let k = 3; k >= 1; k--) drawBody(f.key, f.pose, f.x - f.vx * k * 0.5, GROUND - f.y, f.facing, f.hipUp, { scale: f.ch.scale, alpha: 0.15 * (4 - k), sword: true });
+  if (mv && mv.speedUp > 1 && f.tw && f.tw[2] && speedBridgeActive(f)) { // a sped-up wind-up skips real poses between one tick and the next: a few in-between bodies, faint, bridge the jump
+    const n = clamp(Math.round(mv.speedUp) - 1, 1, 3);
+    for (let i = n; i >= 1; i--) { const k = i / (n + 1);
+      drawBody(f.key, lerpPose(f.tw[2], f.pose, k), f.x + (f.animDX || 0), GROUND - f.y, f.facing, f.hipUp, { scale: f.ch.scale, alpha: 0.16 * (1 - k * 0.35), tint: GHOST_TINT[f.key] }); }
+  }
   const sp = f.state === 'attack' && f.move && f.move.spin;
   const turn = sp && f.mf >= sp[0] && f.mf <= sp[1] ? (f.mf - sp[0] + 1) / (sp[1] - sp[0] + 1) : null;
   if (turn !== null) drawSpinFX(f, turn);
@@ -872,27 +871,26 @@ function drawFighter(f) {
   if (mv && mv.rage && !mv.fired && f.mf > 10) drawRage(f);
   // Mei's staff: it can stretch out (Extending Staff) or spin like a windmill
   let staffExt = 0, staffSpin = null;
-  if (mv && mv.staffExt) { const k = f.mf - mv.startup; staffExt = mv.staffExt * (k <= 0 ? 0 : k <= 3 ? k / 3 : k <= mv.active ? 1 : Math.max(0, 1 - (k - mv.active) / 6)); }
-  if (mv && mv.spinStaff && f.mf > Math.max(1, mv.startup - 4)) staffSpin = globalT * 0.7 * f.facing;
+  if (mv && mv.staffExt) staffExt = staffExtAt(f, mv);
+  if (mv && mv.spinStaff && f.mf > Math.max(1, mv.startup - 4)) staffSpin = staffSpinAt(f, mv); // (by the move's own frame, so the hitbox can follow it)
   if (mv && mv.spinWind && f.mf <= mv.startup) staffSpin = globalT * 0.9 * f.facing; // twirls the staff to wind up
   if (f.key === 'staff' && (f.state === 'stand' || f.state === 'jump' && f.dj) && (globalT + f.side * 97) % 220 < 34) staffSpin = globalT * 0.55 * f.facing; // twirls it now and then
   let rot = f.state === 'roll' ? -(f.st / 24) * Math.PI * 2 * f.rollDir * f.facing : f.state === 'broll' ? (Math.max(0, f.st - 4) / 20) * Math.PI * 2 : 0;
   if (f.flipT > 0) rot = -(1 - f.flipT / (f.flipMax || 20)) * Math.PI * 2; // somersault
   if (mv && mv.speedFx && f.mf > mv.startup - 6 && f.mf <= mv.startup + mv.active) // afterimages on fast techniques
-    for (let k = 3; k >= 1; k--) drawBody(f.key, f.pose, f.x - (f.vx || f.facing * 4) * k * 1.6, GROUND - f.y, f.facing, f.hipUp, { scale: f.ch.scale, alpha: 0.1 * (4 - k), tint: GHOST_TINT[f.key], staffExt, staffSpin, sword });
+    for (let k = 3; k >= 1; k--) drawBody(f.key, f.pose, f.x - (f.vx || f.facing * 4) * k * 1.6, GROUND - f.y, f.facing, f.hipUp, { scale: f.ch.scale, alpha: 0.1 * (4 - k), tint: GHOST_TINT[f.key], staffExt, staffSpin, floorSpin: !!(mv && mv.floorSpin), sword });
   const dance = f.state === 'stunned' && f.stunKind === 'dance' ? Math.abs(Math.sin(f.st * 0.4)) * 20 : 0; // made to dance by the gunslinger
   const gunOut = f.key !== 'gunman' || f.state === 'attack' || (f.gunOutT || 0) > 0 || f.state === 'win' || (showOn() && game.phaseT - (f.side ? 8 : 0) < 92);
   if (f.ch.possess === 'double') { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const r0 = 105 + Math.sin(globalT * 0.15) * 5; // the field around him: half holy light, half hellfire
     ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,240,190,.55)'; ctx.beginPath(); ctx.ellipse(f.x, GROUND - 6, r0, 14, 0, Math.PI, Math.PI * 2); ctx.stroke(); ctx.strokeStyle = 'rgba(255,90,60,.6)'; ctx.beginPath(); ctx.ellipse(f.x, GROUND - 6, r0, 14, 0, 0, Math.PI); ctx.stroke(); ctx.restore(); }
   const wakeInv = f.state === 'getup' || f.wakeT > 0;
   let tailSx = 1; // tail attacks: he turns his back to them (a quick turn), swings the tail from his rear, and turns back
-  if (mv && f.state === 'attack' && (mv.tail || mv.tailTurn)) { const m = f.mf, end = mv.startup + (mv.active || 4) + Math.min(mv.recovery || 10, 14);
-    tailSx = m < 4 ? Math.cos(Math.PI * m / 4) : m > end ? 1 : m > end - 5 ? Math.cos(Math.PI * (1 - (m - (end - 5)) / 5)) : -1; }
+  tailSx = tailSxOf(f); // (shared with his hurtbox: hits.js)
   if (wakeInv) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(f.x, GROUND - f.y - 70, 10, f.x, GROUND - f.y - 70, 80); g.addColorStop(0, 'rgba(200,235,255,.35)'); g.addColorStop(1, 'rgba(200,235,255,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(f.x, GROUND - f.y - 70, 56, 92, 0, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = `rgba(220,240,255,${0.5 + 0.3 * Math.sin(globalT * 0.6)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(f.x, GROUND - 4, 40, 9, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); } // getting up: invincible — a pale glow and a blinking body
   if (f.state === 'win') { drawWinFX(f); const ws = winStaffSpin(f); if (ws != null) staffSpin = ws; } // victory.js
   if (f.golem) drawGolem(f);
-  drawBody(f.key, f.pose, f.x + (f.animDX || 0), GROUND - f.y - dance - (f.ch.hover ? hoverOf(f) : 0), f.facing, f.hipUp, { scale: f.ch.scale, armor: f.golem ? armorOf(f) : 0, praying: !!(mv && mv.pose === 'saKneelPray'), hideMini: f.state === 'attack' && f.move ? (f.move.toDouble ? 'both' : f.move.id === 'smAngel' ? 'angel' : f.move.id === 'smDevil' ? 'devil' : null) : null, gunOut, rot, sx: (turn === null ? 1 : Math.cos(2 * Math.PI * turn)) * tailSx, flash: f.flash > 3 || (wakeInv && Math.floor(globalT / 3) % 2 === 0), aura, blade, sword, speed: Math.abs(f.vx), alpha: blink ? 0.6 : 1, staffExt, staffSpin, alt: f.alt, shieldSpin: !!(mv && mv.shieldSpin), aegisRing: !!(mv && mv.aegisRing), bladeHalo: !!(mv && mv.bladeHalo), shieldOut: !!f.shieldOut, staffOut: !!f.staffOut, possess: f.ch.possess, plateOut: !!f.plateOut, face: f.state, edgeA: excalAura(f, mv), wrist: f.state === 'charge' ? 0 : mv ? (mv.wrist != null ? mv.wrist : 0.25) : 0.6 });
+  drawBody(f.key, f.pose, f.x + (f.animDX || 0), GROUND - f.y - dance - (f.ch.hover ? hoverOf(f) : 0), f.facing, f.hipUp, { scale: f.ch.scale, armor: f.golem ? armorOf(f) : 0, praying: !!(mv && mv.pose === 'saKneelPray'), caseFront: !!(mv && f.state === 'attack' && f.key === 'salary' && /Briefcase|Case/.test(mv.label || '')), hideMini: f.state === 'attack' && f.move ? (f.move.toDouble ? 'both' : f.move.id === 'smAngel' ? 'angel' : f.move.id === 'smDevil' ? 'devil' : null) : null, gunOut, rot, sx: (turn === null ? 1 : Math.cos(2 * Math.PI * turn)) * tailSx, flash: f.flash > 3 || (wakeInv && Math.floor(globalT / 3) % 2 === 0), aura, blade, sword, speed: Math.abs(f.vx), alpha: blink ? 0.6 : 1, staffExt, staffSpin, floorSpin: !!(mv && mv.floorSpin), alt: f.alt, shieldSpin: !!(mv && mv.shieldSpin), aegisRing: !!(mv && mv.aegisRing), bladeHalo: !!(mv && mv.bladeHalo), shieldOut: !!f.shieldOut, staffOut: !!f.staffOut, possess: f.ch.possess, plateOut: !!f.plateOut, face: f.state, edgeA: excalAura(f, mv), wrist: f.state === 'charge' ? 0 : mv ? (mv.wrist != null ? mv.wrist : 0.25) : 0.6 });
   const fx = () => { // (mirror match: the second fighter's effects in another hue — the body keeps its own palette)
   const prevOwner = FX_OWNER; FX_OWNER = f;
   if (f.brands > 0) drawBrands(f);

@@ -508,6 +508,7 @@ function render() {
   drawFlood(); // the Great Flood's water, over their feet
   drawProjs(projs.filter(p => !behind(p.type)));
   drawParts();
+  if (game.training && game.showHitboxes) drawHitboxDebug();
   ctx.restore();
   drawHUD();
   if (!game.paused) drawAnnounce(); // keep round banners from showing through the pause menu

@@ -1,5 +1,12 @@
 'use strict';
 /* ================= pose selection ================= */
+// a technique sped up by techSpeed (Kuro's hand signs and wind-ups) packs several logic frames into one real tick,
+// so f.pose alone only ever shows where it lands, never where it passed through: true while this tick is one of those,
+// so drawFighter can bridge the gap with a few extra in-between poses instead of a single snapped-to pose.
+function speedBridgeActive(f) {
+  const mv = f.state === 'attack' && f.move; if (!mv || !mv.speedUp) return false;
+  return !f.hitConnected && (f.pre > 0 || f.mf < mv.startup) && !(mv.speedHold && mv.speedHold(f));
+}
 const STEADY_IDLE = { staff: true, paladin: true, psychic: true };
 function idlePose(phase, key, ch) { // (a possessed salaryman stands the angel's or the devil's way)
   const c = ch || CHARS[key], s = Math.sin(globalT * 0.09 + phase), p = { ...POSES[(c && c.idle) || 'idle'] };
@@ -161,7 +168,7 @@ function rayDraw(e, t, a) { // two beams of holy light from his eyes
 }
 function angelRay(id, label, aim) { // the angel's eye ray: aimed at the waist (mid) or the feet (low)
   const low = aim === 'low';
-  return { id, label, startup: 14, active: 6, recovery: 20, wind: 'saPray', pose: 'saPray', hitbox: low ? [30,380,0,44] : [30,420,80,140], low, dmg: low ? 30 : 34, stun: 22, bstun: 12, push: 2, type: 'mid', hitstop: 8, gdrain: 8,
+  return { id, label, startup: 14, active: 6, recovery: 20, wind: 'saPray', pose: 'saPray', hitFrom: 13, hitbox: low ? [30,380,0,44] : [30,420,80,140], low, // (live only once the beam is out: from the frame it's drawn) dmg: low ? 30 : 34, stun: 22, bstun: 12, push: 2, type: 'mid', hitstop: 8, gdrain: 8,
     onFrame(f, o, mf) { if (mf === 4) popText(f.x, GROUND - 200, L('BEHOLD!', '見よ！'), '255,235,170'); if (mf === 14) sfx('beam'); },
     drawFX(f) { const S = f.move.startup; if (f.mf < S - 6 || f.mf > S + 8) return; const e = eyePos(f), s0 = f.ch.scale;
       if (f.mf < S) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(255,245,200,${(f.mf - S + 6) / 6})`; ctx.beginPath(); ctx.arc(e[0], e[1], 5, 0, Math.PI * 2); ctx.fill(); ctx.restore(); return; } // his eyes light up first
@@ -179,10 +186,13 @@ function drawTail(f, tip, fade, fire) { // the devil's tail: thick at the base, 
   ctx.fillStyle = '#b01c1c'; ctx.strokeStyle = '#ffb08a'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(32, 0); ctx.lineTo(0, -16); ctx.lineTo(7, 0); ctx.lineTo(0, 16); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.restore();
 }
+// how far along its arc a tail attack's tip is: a single swing goes round evenly from its first frame to its last (the same distance
+// every frame, so its hitbox moves smoothly and is live early in the sweep); a frenzy's quick strikes (tailS) keep their own snap
+function tailK(mv, mf, S, end) { if (mv.tailS != null) return mf < S ? 0.15 * mf / S : Math.min(1, 0.15 + 0.85 * (mf - S) / Math.max(1, end - S)); return clamp(mf / Math.max(1, end), 0, 1); }
 function tailArcFX(f, mv) { // a tail attack's tip travels along an arc (angles: 0 = straight ahead, π/2 = up, π = behind) from mv.tail.a0 to a1 as it strikes
   const T = mv.tail, S = mv.tailS != null ? mv.tailS + 1 : mv.startup, mf = f.mf, end = S + (mv.tailS != null ? 3 : (mv.active || 4)); if (mf < 1 || mf > end + 8) return; // (tailS: a frenzy of strikes, each its own quick sweep)
-  const k = mf < S ? 0.15 * mf / S : Math.min(1, 0.15 + 0.85 * (mf - S) / Math.max(1, end - S)), fade = mf > end ? 1 - (mf - end) / 8 : 1;
-  const an = T.a0 + (T.a1 - T.a0) * k, L = T.len * f.ch.scale, s0 = f.ch.scale, cx = f.x + f.facing * 14 * s0, cy = GROUND - f.y - (T.h || 90) * s0;
+  const k = tailK(mv, mf, S, end), fade = mf > end ? 1 - (mf - end) / 8 : 1;
+  const an = mv.tailPath ? mv.tailPath(mf) : T.a0 + (T.a1 - T.a0) * k, L = T.len * f.ch.scale, s0 = f.ch.scale, cx = f.x + f.facing * 14 * s0, cy = GROUND - f.y - (T.h || 90) * s0; // (tailPath: a tail with its own course — Tail Hammer's feint)
   const tip = [cx + Math.cos(an) * L * f.facing, cy - Math.sin(an) * L];
   if (mf >= S && mf <= end) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = 'rgba(255,110,60,.5)'; ctx.lineWidth = 10; ctx.beginPath(); for (let i = 0; i <= 8; i++) { const a2 = T.a0 + (T.a1 - T.a0) * Math.max(0, k - i * 0.05); const x = cx + Math.cos(a2) * L * f.facing, y = cy - Math.sin(a2) * L; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke(); ctx.restore(); } // a streak of fire behind the tip
   drawTail(f, tip, fade, mf >= S && mf <= end);
@@ -300,6 +310,7 @@ function followPose(A, W) { // over-extend a little past the strike
 function targetPose(f) {
   if (showOn() && f.state === 'stand' && SHOW[f.key]) return showPose(f, 'intro', game.phaseT - (f.side ? 8 : 0)); // the entrance
   if (f.state === 'win') return winPose(f); // victory.js
+  if (f.grabLock > 0) { const p = { ...POSES[f.caughtKind === 'sumo' ? 'caughtSumo' : f.caughtKind === 'lift' ? 'caughtLift' : 'caught'] }, w = Math.sin(globalT * 0.9); p.a1u += w * 14; p.a1l += w * 18; p.a2u -= w * 14; p.a2l -= w * 18; p.t += w * 3; return p; } // caught in a throw: struggling in the grip
   switch (f.state) {
     case 'stand': return Math.abs(f.vx) > 0.1 ? walkPose(f) : idlePose(f.side * 1.7, f.key, f.ch);
     case 'crouch': { if (f.backHeld) return POSES.cguard; const c = POSES[f.ch.crouchPose || 'crouch']; if (Math.abs(f.vx) < 0.3) return c; const s = Math.sin(globalT * 0.35), p = { ...c }; p.l1u += s * 10; p.l2u -= s * 10; p.l1l -= Math.max(0, s) * 8; p.l2l -= Math.max(0, -s) * 8; p.t += 3; return p; } // (a low shuffle forward)
