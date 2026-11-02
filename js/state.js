@@ -116,7 +116,6 @@ function startMove(f, mv, str, keepBuffer) {
   if (mv.super) { f.meter = 0; game.superFlash = { f, name: mv.name, t: SUPER_CUT, max: SUPER_CUT }; sfx('super');
     for (let i = 0; i < 16; i++) { const an = i * Math.PI / 8; parts.push({ type: 'speed', x: f.x + Math.cos(an) * 30, y: GROUND - f.y - 90 + Math.sin(an) * 30, vx: Math.cos(an) * 9, vy: Math.sin(an) * 9, life: 12, max: 12, col: f.ch.fxCol }); } }
   else if (METER_COST[mv.id]) f.meter = Math.max(0, f.meter - METER_COST[mv.id]); // a technique that spends the gauge instead
-  else if (!mv.normal) f.meter = Math.min(100, f.meter + 3); // ...and using techniques
   if (mv.normal) sfx('swing');
   if (mv.rushTag) f.rushN = mv.rushOpen ? 0 : (f.rushN || 0) + 1;
   if (mv.jug) { const oj = other(f); if (oj && Math.abs(oj.x - f.x) > 6) f.facing = Math.sign(oj.x - f.x); } // (a juggle attack turns to face them: a juggle can carry them over to the other side)

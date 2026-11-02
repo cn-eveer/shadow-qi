@@ -60,7 +60,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Light attacks<small>Fast and safe when guarded. You recover first, so you can guard again in time.</small></td><td class="keys"><kbd>U</kbd> <kbd>J</kbd></td></tr>
           <tr><td>Heavy attacks<small>Each fighter has their own heavy punch and heavy kick with longer reach. They hit harder and drain the guard meter, but recover slowly when guarded, so a light attack can punish them up close.</small></td><td class="keys"><kbd>I</kbd> <kbd>K</kbd></td></tr>
           <tr><td>Guard meter<small>The thin bar under your health. Guarding drains it, heavy attacks and specials most of all. At zero your guard breaks: the blow that breaks it goes half through, you’re left dizzy for a long moment, and everything that hits you meanwhile does 30% more. It refills slowly while you aren’t guarding.</small></td><td></td></tr>
-          <tr><td>MP gauge<small>One gauge at the bottom of the screen. It fills as you fight: when you hit, when you’re hit, when you guard and when you use techniques. (It can’t be charged.)</small></td><td></td></tr>
+          <tr><td>MP gauge<small>One gauge at the bottom of the screen. It fills slowly as you fight: guarding fills it the most, landing a hit fills it, taking a hit a little less, and getting your attack guarded only a little. An attack that misses fills nothing. (It can’t be charged.)</small></td><td></td></tr>
         </tbody>
       </table></div>
       <h3>Online battle</h3>
@@ -117,7 +117,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>弱攻撃<small>速く、ガードされても安全。</small></td><td class="keys"><kbd>U</kbd> <kbd>J</kbd></td></tr>
           <tr><td>強攻撃<small>リーチが長く威力も高いが、ガードされると弱攻撃で反撃される。</small></td><td class="keys"><kbd>I</kbd> <kbd>K</kbd></td></tr>
           <tr><td>ガードゲージ<small>体力の下の細いバー。ガードすると減り、0になるとガードブレイク：割った攻撃のダメージが半分通り、長く気絶し、その間に受ける攻撃は30%増し。</small></td><td class="cmd"></td></tr>
-          <tr><td>MPゲージ<small>画面下。戦うとたまる：攻撃を当てる・受ける・ガードする・技を使う。（チャージはできない）</small></td><td class="cmd"></td></tr>
+          <tr><td>MPゲージ<small>画面下。戦うとゆっくりたまる：ガードが一番たまり、攻撃を当てる・受けるでもたまる。ガードされた攻撃は少しだけ、空振りではたまらない。（チャージはできない）</small></td><td class="cmd"></td></tr>
         </tbody>
       </table></div>
       <h3>ノックバック</h3>

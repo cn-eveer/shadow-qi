@@ -369,6 +369,9 @@ function showHeight(d, side, hb, h, miss) {
   parts.push({ type: 'htag', who: d, side, x: d.x + side * 34 * s, y: GROUND - clamp((Math.max(hb.y0, 0) + Math.min(hb.y1, d.y + 135 * s)) / 2, 14, 210), vx: 0, vy: -0.25, life: 70, max: 70,
     text: L(t[0], t[1]) + (miss ? L(' (miss)', '（空振り）') : ''), col: t[2] });
 }
+// MP: landing a blow fills it most per hit, taking one a little less, getting one guarded only a little; guarding fills it steadily;
+// an attack that misses fills nothing
+const MP_HIT = 0.07, MP_TAKEN = 0.045, MP_GUARDED = 0.025, MP_GUARD = 5;
 const GBREAK_EXTRA = 60, GBREAK_DMG = 1.3; // a guard break: stunned a second longer than the blow's own guard-break time, and everything that lands on them meanwhile hurts 30% more
 function applyHit(a, d, h, side, hb, hu) {
   if (d.jugSpent && d.state === 'knock') return null; // the juggle limit was reached: nothing can pick them up again before they land (no infinite juggles)
@@ -402,7 +405,7 @@ function applyHit(a, d, h, side, hb, hu) {
       d.hp -= dmg; d.flash = 4; d.healT = 0;
       sparks(cx, cy, 'hit'); sfx('hitL'); if (!d.armorT || game.frame - d.armorT > 20) { d.armorT = game.frame; popText(d.x, GROUND - d.y - 175, L('ARMOR', 'アーマー'), '125,235,255'); }
       parts.push({ type: 'hex', x: cx, y: cy, r: 8, vr: 3, life: 12, max: 12, col: d.key === 'paladin' ? '200,230,255' : '125,235,255', rot: R() * 3 });
-      a.meter = Math.min(100, a.meter + dmg * 0.11); a.hitConnected = true; a.lastResult = 'armor';
+      a.meter = Math.min(100, a.meter + dmg * MP_HIT); a.hitConnected = true; a.lastResult = 'armor';
       game.freeze = Math.max(game.freeze, 4); trackAdv(a, d, 'hit', h.label);
       return 'armor';
     }
@@ -431,7 +434,7 @@ function applyHit(a, d, h, side, hb, hu) {
     d.hp = Math.max(game.training ? 1 : 0, d.hp - dmg); d.otgUsed = true; d.flash = 7;
     d.st = Math.min(d.st, 22); d.y = 1; d.vy = 3;
     if (d.hp <= 0) d.ko = true;
-    a.meter = Math.min(100, a.meter + dmg * 0.075);
+    a.meter = Math.min(100, a.meter + dmg * MP_HIT * 0.7);
     sparks(cx, cy, 'hit'); sfx('hit'); popText(cx, cy - 40, 'GROUND HIT', '255,200,120');
     game.freeze = Math.max(game.freeze, 5);
     trackAdv(a, d, 'hit', h.label);
@@ -475,7 +478,7 @@ function applyHit(a, d, h, side, hb, hu) {
     if (airGuard) { // guarded in the air: pushed back a little, still falling, can't attack until the block wears off
       d.vx = side * Math.max(2, pushB * 0.7); d.vy = Math.min(d.vy, 3); d.atkCD = Math.max(d.atkCD || 0, h.bstun || 10); d.airAttacked = true;
       d.hp = Math.max(1, d.hp - chipOf(h, big));
-      d.meter = Math.min(100, d.meter + 2); sparks(cx, cy, 'block'); sfx('block'); popTextOnce(d, L('AIR GUARD', '空中ガード'));
+      d.meter = Math.min(100, d.meter + MP_GUARD - 1); a.meter = Math.min(100, a.meter + (h.dmg || 0) * MP_GUARDED); sparks(cx, cy, 'block'); sfx('block'); popTextOnce(d, L('AIR GUARD', '空中ガード'));
       trackAdv(a, d, 'block', h.label); game.freeze = Math.max(game.freeze, 3); techGuardLag(a, d, h); launcherGuardLag(a, d, h);
       return 'block';
     }
@@ -484,7 +487,8 @@ function applyHit(a, d, h, side, hb, hu) {
     techGuardLag(a, d, h); launcherGuardLag(a, d, h); // a technique or a launcher that's guarded leaves its user open
     d.hp = Math.max(1, d.hp - chipOf(h, big)); // chip damage through the guard: a little for anything, more for techniques and supers
     if (!h.proj) wallPush(a, d, side); // guarded against the wall: the attacker slides back instead
-    d.meter = Math.min(100, d.meter + 3); // ...and guarding
+    d.meter = Math.min(100, d.meter + MP_GUARD); // ...guarding (more than anything else)...
+    a.meter = Math.min(100, a.meter + (h.dmg || 0) * MP_GUARDED); // ...and, a little, getting a blow guarded (much less than landing it)
     sparks(cx, cy, 'block'); sfx('block');
     game.freeze = Math.max(game.freeze, 3);
     trackAdv(a, d, 'block', h.label);
@@ -526,8 +530,8 @@ function applyHit(a, d, h, side, hb, hu) {
   if (h.brand && a.key === 'paladin') addBrand(d, h.brand);
   if (game.training && d.hp <= 0) d.hp = 1;
   d.flash = 7; d.move = null; d.hidden = false; d.shadow = false; d.shadowRun = false;
-  a.meter = Math.min(100, a.meter + dmg * 0.11); // MP fills by fighting: dealing damage...
-  d.meter = Math.min(100, d.meter + dmg * 0.07); // ...and taking it
+  a.meter = Math.min(100, a.meter + dmg * MP_HIT); // MP fills by fighting: dealing damage...
+  d.meter = Math.min(100, d.meter + dmg * MP_TAKEN); // ...and taking it
   if (d.hp <= 0) { d.ko = true; setState(d, 'knock'); d.vy = 9; d.vx = side * 4.5; d.y = Math.max(d.y, 1); }
   else if (h.slash && d.y <= 0 && !cpl) { // (a slash that's a counter or a punish launches instead, if the move says so: cpLaunch)
     setState(d, 'slashed'); d.stun = h.iai ? 38 : 26; d.slashDir = side; d.vx = side * 1.5;
