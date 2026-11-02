@@ -221,7 +221,7 @@ const POSES = {
   pSpin: P(2, 92,94, -88,-90, 42,8, -40,-14),
   pAir: P(10, 104,82, 62,84, 100,15, 60,-35),
   pAirDown: P(16, 70,26, 60,80, 90,30, 50,-40),
-  crouchP: P(30, 52,100, 70,92, ...CL),
+  crouchP: P(58, 30,70, 96,118, 100,-40, 40,-105), // (ducking right down: bent low over his knees, the shield in front of his helmet, the sword held low)
   chargeB: P(4, -28,40, -18,52, 30,6, -30,-12),
   winB: P(0, 176,178, 150,172, 22,3, -22,-8),
   staffJabW: P(4, 45,70, 10,60, 34,4, -30,-14),
