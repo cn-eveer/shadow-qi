@@ -885,8 +885,7 @@ function drawFighter(f) {
     ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,240,190,.55)'; ctx.beginPath(); ctx.ellipse(f.x, GROUND - 6, r0, 14, 0, Math.PI, Math.PI * 2); ctx.stroke(); ctx.strokeStyle = 'rgba(255,90,60,.6)'; ctx.beginPath(); ctx.ellipse(f.x, GROUND - 6, r0, 14, 0, 0, Math.PI); ctx.stroke(); ctx.restore(); }
   const wakeInv = f.state === 'getup' || f.wakeT > 0;
   let tailSx = 1; // tail attacks: he turns his back to them (a quick turn), swings the tail from his rear, and turns back
-  if (mv && f.state === 'attack' && (mv.tail || mv.tailTurn)) { const m = f.mf, end = mv.startup + (mv.active || 4) + Math.min(mv.recovery || 10, 14);
-    tailSx = m < 4 ? Math.cos(Math.PI * m / 4) : m > end ? 1 : m > end - 5 ? Math.cos(Math.PI * (1 - (m - (end - 5)) / 5)) : -1; }
+  tailSx = tailSxOf(f); // (shared with his hurtbox: hits.js)
   if (wakeInv) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(f.x, GROUND - f.y - 70, 10, f.x, GROUND - f.y - 70, 80); g.addColorStop(0, 'rgba(200,235,255,.35)'); g.addColorStop(1, 'rgba(200,235,255,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(f.x, GROUND - f.y - 70, 56, 92, 0, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = `rgba(220,240,255,${0.5 + 0.3 * Math.sin(globalT * 0.6)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(f.x, GROUND - 4, 40, 9, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); } // getting up: invincible — a pale glow and a blinking body
   if (f.state === 'win') { drawWinFX(f); const ws = winStaffSpin(f); if (ws != null) staffSpin = ws; } // victory.js

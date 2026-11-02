@@ -788,7 +788,7 @@ function specialMoveBase(id) {
       drawFX(f) { // the tail itself: big, thick, with a spade tip — it swings from behind him, round, and out along the floor in front, trailing fire
         const S = f.move.startup, mf = f.mf; if (mf < 2 || mf > S + 16) return;
         const s0 = f.ch.scale, J = solve(f.pose), bx = f.x + (f.animDX || 0) + f.facing * 14 * s0, by = GROUND - f.y - s0 * (J.hip[1] + f.hipUp) + 4; // from his rear
-        const k = mf < S ? 0.18 * (mf / S) : Math.min(1, 0.18 + (mf - S) / 10 * 0.82), fade = mf > S + 10 ? 1 - (mf - S - 10) / 6 : 1;
+        const k = sdTailK(f.move, mf), fade = mf > S + 10 ? 1 - (mf - S - 10) / 6 : 1;
         const an = Math.PI * (1 - k), L = 150 * s0; // from behind him (π) round to straight in front (0)
         const tip = [bx + Math.cos(an) * L * f.facing, GROUND - 12 - Math.sin(an) * 26], ctl = [bx + Math.cos(an + 0.5 * f.facing) * L * 0.5 * f.facing, by + 30];
         ctx.save();
@@ -812,7 +812,7 @@ function specialMoveBase(id) {
       hitbox: [0,120,0,38], low: true, dmg: 46, stun: 22, bstun: 12, push: 2, launch: true, launchVy: 11, type: 'mid', hitstop: 9, gdrain: 10,
       onFrame(f, o, mf) { if (mf === 1) popText(f.x, GROUND - 170, L('I\'M SO SORRY!', '申し訳ございません！'), '230,230,240');
         if (mf > 4 && mf <= 24 && !f.hitConnected && Math.abs(o.x - f.x) > 45) { f.vx = f.facing * 12; if (mf % 2 === 0) parts.push({ type: 'smoke', x: f.x - f.facing * 20, y: GROUND - 6, vx: -f.facing, vy: -0.5, r: 5, vr: 0.3, life: 14, max: 14, col: '220,215,205' }); } else f.vx *= 0.6; } };
-    case 'smCoffee': return { id, label: 'Hot Coffee', startup: 10, active: 6, recovery: 20, wind: 'palmW', pose: 'palm',
+    case 'smCoffee': return { id, label: 'Hot Coffee', startup: 10, active: 10, recovery: 16, wind: 'palmW', pose: 'palm', hitFrom: 9, // (like a breath attack: the splash is live all the way along its arc, drop by drop — see tanakaParts)
       hitbox: [20,140,60,150], dmg: 34, stun: 20, bstun: 12, push: 1, stunT: 54, stunKind: 'burn', type: 'mid', hitstop: 8, gdrain: 8,
       onFrame(f, o, mf) { if (mf === 10) sfx('flame'); },
       drawFX(f) { if (f.mf < 9 || f.mf > 20) return; ctx.save(); const x = f.x + f.facing * 60, y = GROUND - f.y - 115;

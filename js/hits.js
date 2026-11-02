@@ -87,20 +87,25 @@ function tanakaParts(f, mv) {
   const s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, W = p => [f.x + (f.animDX || 0) + d * s * p[0], f.y + s * (p[1] + hu)], pose = mv.pose || '', lab = mv.label || '';
   const sweep = (key, pts, r) => { const prev = mv[key] && mv[key + 'Mf'] === f.mf - 1 && mv[key].length === pts.length ? mv[key] : null; mv[key] = pts; mv[key + 'Mf'] = f.mf;
     const out = []; for (let i = 0; i < pts.length; i++) for (const t of prev ? [0.5, 1] : [1]) { const p = prev ? [prev[i][0] + (pts[i][0] - prev[i][0]) * t, prev[i][1] + (pts[i][1] - prev[i][1]) * t] : pts[i]; out.push({ x0: p[0] - r, x1: p[0] + r, y0: Math.max(0, p[1] - r), y1: p[1] + r }); } return out; };
+  if (mv.id === 'smCoffee') { const out = []; for (let i = 0; i < 9; i++) { const k = (f.mf - 9 + i * 0.4) / 10; if (k < 0 || k > 1.1) continue; const x = f.x + d * 60 + d * k * 90, y = f.y + 115 + Math.sin(k * Math.PI) * 30 - i * 3; out.push({ x0: x - 10, x1: x + 10, y0: Math.max(0, y - 10), y1: y + 10 }); } return out.length ? out : [{ x0: f.x + d * 55, x1: f.x + d * 65, y0: f.y + 110, y1: f.y + 120 }]; } // (Hot Coffee: the splash itself, drop by drop, as drawn)
+  if (mv.id === 'sdTail') { const S = mv.startup, mf = f.mf, k = sdTailK(mv, mf), an = Math.PI * (1 - k), L = 150 * s, bx = f.x + d * 14 * s; // (Tail Sweep: its own tail, round along the floor — see its drawFX)
+    return sweep('tlPts', [0.6, 0.8, 1].map(u => [bx + Math.cos(an) * L * u * d, 12 + Math.sin(an) * 26 * u]), 14 * s); }
   if (mv.tail && !mv.jug) { // the tail: its tip on its arc this frame, and the outer half of the curve back to his rear
     const T = mv.tail, S = mv.tailS != null ? mv.tailS + 1 : mv.startup, end = S + (mv.tailS != null ? 3 : (mv.active || 4)), mf = f.mf;
     const k = tailK(mv, mf, S, end), an = T.a0 + (T.a1 - T.a0) * k, L = T.len * s;
     const cx = f.x + d * 14 * s, cy = f.y + (T.h || 90) * s, tip = [cx + Math.cos(an) * L * d, cy + Math.sin(an) * L];
     const J = solve(f.pose), b = [f.x + (f.animDX || 0) + d * 14 * s, f.y + s * (J.hip[1] + (f.hipUp || 0)) - 4], c = [(b[0] + tip[0]) / 2 - d * 18, Math.max(b[1], tip[1]) + 26];
     const q = u => [(1 - u) * (1 - u) * b[0] + 2 * (1 - u) * u * c[0] + u * u * tip[0], (1 - u) * (1 - u) * b[1] + 2 * (1 - u) * u * c[1] + u * u * tip[1]];
-    return sweep('tlPts', [0.55, 0.7, 0.85, 1].map(q), 14 * s);
+    const boxes = sweep('tlPts', [0.55, 0.7, 0.85, 1].map(q), 14 * s), lowOnly = mv.low ? boxes.filter(b => b.y0 < 40 * s) : boxes; // (a low tail move hits only where the tail is down at their feet)
+    return lowOnly.length ? lowOnly : [{ x0: -9999, x1: -9998, y0: -99, y1: -98 }];
   }
   if (mv.grab || mv.jug || (mv.air && mv.hover) || mv.longRange || (/sDogeza|sArch|saPray|sdBeckon|blast|win|saKneel|sdIdle/.test(pose) && mv.id !== 'saGlide') || /Coffee|Tie|Paper/.test(lab)) return null; // (the coffee splash, the necktie and the paperwork are the blow, not his fist; the juggles keep their reach up into the air)
   const J = solve(livePose(f)), ext = (h, e, n) => { const dx = h[0] - e[0], dy = h[1] - e[1], L = Math.hypot(dx, dy) || 1; return [0, 0.5, 1].map(t => W([h[0] + dx / L * n * t, h[1] + dy / L * n * t])); };
   if (/Briefcase|Case/.test(lab)) { const dx = J.h1[0] - J.e1[0], dy = J.h1[1] - J.e1[1], L = Math.hypot(dx, dy) || 1; return sweep('tnPts', [8, 22].map(t => W([J.h1[0] + dx / L * t, J.h1[1] + dy / L * t])), 15 * s); } // (the briefcase, swung out in his front hand — see drawSalary)
   if (mv.id === 'saGlide' || /Shove/.test(lab)) return sweep('tnPts', ext(J.h1, J.e1, 8).concat(ext(J.h2, J.e2, 8)), 13 * s); // (both palms: the glide, the shove)
   if (/[Kk]ick|sweep|slideKick|jKick/.test(pose) || /Kick|Sweep|Trip/.test(lab)) return sweep('tnPts', ext(J.f1, J.k1, 12), 13 * s); // (his foot)
-  return sweep('tnPts', ext(J.h1, J.e1, /kClaw/.test(pose) ? 22 : 10).concat(pose === 'kClawX' ? ext(J.h2, J.e2, 22) : []), 13 * s); // (his fist — or the devil's claws, both when he rakes with both)
+  const burst = mv.burst && f.mf > mv.startup && f.mf <= mv.startup + (mv.active || 3) ? [(c => ({ x0: c[0] - 22 * s, x1: c[0] + 22 * s, y0: Math.max(0, c[1] - 22 * s), y1: c[1] + 22 * s }))([f.x + d * mv.burst[0] * s, f.y + mv.burst[1] * s])] : []; // (the angel's light bursting out past his fist: it's part of the blow)
+  return sweep('tnPts', ext(J.h1, J.e1, /kClaw/.test(pose) ? 22 : 10).concat(pose === 'kClawX' ? ext(J.h2, J.e2, 22) : []), 13 * s).concat(burst); // (his fist — or the devil's claws, both when he rakes with both)
 }
 function aldricParts(f, mv) {
   const J = solve(livePose(f)), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, W = p => [f.x + (f.animDX || 0) + d * s * p[0], f.y + s * (p[1] + hu)];
@@ -259,8 +264,13 @@ function kappaBody(d) {
   const xa = d.x + (d.animDX || 0) + dir * s * back, xb = d.x + (d.animDX || 0) + dir * s * front;
   return { x0: Math.min(xa, xb), x1: Math.max(xa, xb), y0: d.y, y1: d.y + s * (y1 + hu) };
 }
+// Tail Sweep's tail: round from behind him through the wind-up, reaching the front of him as it comes live, then on across the floor (drawing and hitbox)
+const sdTailK = (mv, mf) => mf < mv.startup ? 0.75 * mf / mv.startup : Math.min(1, 0.75 + (mf - mv.startup) / 10 * 0.25);
+// the devil's tail attacks: he turns his back to them for the swing (a quick turn, then back) — the drawing and his hurtbox both follow it
+function tailSxOf(f) { const mv = f.move; if (!mv || f.state !== 'attack' || !(mv.tail || mv.tailTurn)) return 1; const m = f.mf, end = mv.startup + (mv.active || 4) + Math.min(mv.recovery || 10, 14);
+  return m < 4 ? Math.cos(Math.PI * m / 4) : m > end ? 1 : m > end - 5 ? Math.cos(Math.PI * (1 - (m - (end - 5)) / 5)) : -1; }
 function poseHurtbox(d, bodyOnly) { // (bodyOnly: the torso, head and legs — not arms held out in front)
-  const J = solve(d.pose), s = d.ch.scale, dir = d.facing, hu = d.hipUp || 0;
+  const J = solve(d.pose), s = d.ch.scale, dir = d.facing * (tailSxOf(d) < 0 ? -1 : 1), hu = d.hipUp || 0; // (turned round for a tail swing: as drawn)
   const skip = d.move && d.state === 'attack' && (d.move.hurtSkip || d.move.limbJoint || (d.key === 'kappa' ? 'h1' : null)); // the limb actually throwing the blow: a counter shouldn't be able to snipe the very tip of his own outstretched fist or foot — the hitbox out there is his, not a reason to also widen his hurtbox (hurtSkip: for a move whose hitbox isn't itself limb-tracked, but which still reaches an arm or leg out far enough to need the same exclusion)
   let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
   for (const k of bodyOnly ? ['hip', 'sh', 'head', 'k1', 'f1', 'k2', 'f2'] : ['hip', 'sh', 'head', 'e1', 'h1', 'e2', 'h2', 'k1', 'f1', 'k2', 'f2']) {
@@ -279,6 +289,9 @@ function hurtbox(d, juggle, low) {
   if (d.state === 'down') return (low && !d.otgUsed && d.st > 4) ? { x0: d.x - 58, x1: d.x + 58, y0: 0, y1: 28 } : null;
   if (d.state === 'knock' && (d.jugSpent || (!juggle && !d.juggle))) return null; // launched opponents can be hit by anything (until the juggle is spent)
   const atkMv = d.state === 'attack' && d.move;
+  if (d.key === 'salary' && /devil|double/.test(d.ch.possess || '') && d.pose && d.state !== 'knock' && !(atkMv && d.move.bodyHurt)) { // (the devil hunches and leans, and turns his back for the tail: fitted to the body he's drawn as)
+    const hb = poseHurtbox(d, true), lowD = d.state === 'crouch' || (d.state === 'blockstun' && d.cguard) || (d.state === 'hitstun' && d.crouchHit) || (atkMv && d.move.crouch);
+    if (!lowD && d.y <= 0) hb.y1 = Math.max(hb.y1, d.y + 135 * d.ch.scale); return hb; }
   if (d.key === 'kappa' && d.pose && d.state !== 'knock') { // (the kappa leans and hunches like an animal: fitted to the body he's drawn as, head and all —
     const hb = atkMv ? poseHurtbox(d) : kappaBody(d), low = d.state === 'crouch' || (d.state === 'blockstun' && d.cguard) || (d.state === 'hitstun' && d.crouchHit) || (atkMv && (d.move.crouch || d.move.low)) || /kBelly|kCurl|kCrouch/.test((atkMv && d.move.pose) || '');
     if (!low && d.y <= 0) hb.y1 = Math.max(hb.y1, d.y + 135 * d.ch.scale); return hb; } // standing, still as tall as anyone, so a high still hits him; crouched, tucked down under his shell)
