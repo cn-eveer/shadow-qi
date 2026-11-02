@@ -752,9 +752,10 @@ function specialMoveBase(id) {
       onFrame(f, o, mf) { f.y = mf <= 20 ? 90 * Math.sin(Math.PI * mf / 20) : 0; if (mf <= 18 && Math.abs(o.x - f.x) > 90) f.vx = f.facing * 5; else f.vx *= 0.6; // a desperate leap, briefcase over his head
         if (mf === 21) { sfx('hitH'); dustAt(f.x + f.facing * 100, true); cracks(f.x + f.facing * 90); game.shake = Math.max(game.shake, 6); for (let i = 0; i < 6; i++) parts.push({ type: 'spark', x: f.x + f.facing * 100, y: GROUND - 20, vx: rnd(-4, 4), vy: -rnd(3, 7), life: 22, max: 22, col: '250,250,255' }); } } };
     // ---- Tanaka's low techniques (himself): → → ↓ + J, ← ← ↓ + J, → → ↓ + K ----
-    case 'smSlide': return { id, label: 'Wet Floor Slide', startup: 9, active: 14, recovery: 20, wind: 'crouch', pose: 'slideKick', selfMove: true, speedFx: true, // he sets down a "Caution: wet floor" sign... and promptly slips past it, feet first
+    case 'smSlide': return { id, label: 'Wet Floor Slide', startup: 9, active: 14, recovery: 20, wind: 'crouch', pose: 'slideKick', selfMove: true, speedFx: true, crouch: true, bodyHurt: true, // (low the whole way, like Kuro's Vanish Slide: his hurtbox fitted to him crouched, then stretched out along the floor)
+      // he sets down a "Caution: wet floor" sign... and promptly slips past it, feet first
       hitbox: [0,110,0,38], low: true, dmg: 40, stun: 22, bstun: 12, push: 2, kd: true, kdVx: 3, kdVy: 5, type: 'mid', hitstop: 8, gdrain: 10,
-      poseFn(f, mf) { return mf <= 4 ? POSES.sBow : mf <= 8 ? POSES.sArch : null; }, // bends to set the sign down, arms flail as he slips...
+      poseFn(f, mf) { return mf > 40 ? null : mf <= 4 ? lerpPose(f.prevPose, POSES.crouch, mf / 4) : mf <= 8 ? lerpPose(POSES.crouch, POSES.slideKick, (mf - 4) / 4) : POSES.slideKick; }, // crouches to set the sign down, and slips straight into the slide, feet first
       onFrame(f, o, mf) { const mv = f.move;
         if (mf === 1) { mv.signX = f.x - f.facing * 34; popText(f.x, GROUND - 190, L('CAUTION: WET FLOOR', '足元注意：濡れています'), '255,215,60'); }
         if (mf === 6) { sfx('swing'); popText(f.x, GROUND - 160, L('WHOA—!', 'うわっ！'), '150,210,255'); }
