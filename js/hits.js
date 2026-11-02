@@ -369,7 +369,7 @@ function showHeight(d, side, hb, h, miss) {
   parts.push({ type: 'htag', who: d, side, x: d.x + side * 34 * s, y: GROUND - clamp((Math.max(hb.y0, 0) + Math.min(hb.y1, d.y + 135 * s)) / 2, 14, 210), vx: 0, vy: -0.25, life: 70, max: 70,
     text: L(t[0], t[1]) + (miss ? L(' (miss)', '（空振り）') : ''), col: t[2] });
 }
-const GBREAK_EXTRA = 30, GBREAK_DMG = 1.3; // a guard break: stunned half a second longer than the blow's own guard-break time, and everything that lands on them meanwhile hurts 30% more
+const GBREAK_EXTRA = 60, GBREAK_DMG = 1.3; // a guard break: stunned a second longer than the blow's own guard-break time, and everything that lands on them meanwhile hurts 30% more
 function applyHit(a, d, h, side, hb, hu) {
   if (d.jugSpent && d.state === 'knock') return null; // the juggle limit was reached: nothing can pick them up again before they land (no infinite juggles)
   if (a.ch.dmgMul && h.dmg) h = { ...h, dmg: Math.round(h.dmg * a.ch.dmgMul) }; // a fighter-wide power boost (Mei, Lyra)
