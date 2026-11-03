@@ -1,6 +1,7 @@
 :root{
   --bg:#e7e5ef; --surface:#f8f7fc; --text:#1c1b26; --muted:#5d5a70; --line:#d5d2e2;
   --ninja:#6a3fd0; --brawler:#0d859e; --staff:#c27a06; --psychic:#b0389c; --accent:#c4385a; --kbd-bg:#ffffff; --kbd-line:#c9c5da;
+  --paladin:#2f6fb8; --kappa:#24855a; --alchemist:#a8641e; --gunman:#b0482a; --salary:#56627e; --zebra:#efedf6; --note-bg:#f0eef7; --read:system-ui, -apple-system, 'Segoe UI', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Yu Gothic UI', Meiryo, sans-serif;
   --hud:'Bungee', Impact, 'Arial Black', sans-serif;
   --body:'Rajdhani', 'Segoe UI', system-ui, sans-serif;
   color-scheme:light;
@@ -12,12 +13,14 @@
   :root:not([data-theme="light"]){
     --bg:#11111c; --surface:#191927; --text:#ecebf5; --muted:#a09db5; --line:#2c2b40;
     --ninja:#b394ff; --brawler:#55d6ef; --staff:#ffc24a; --psychic:#ff8ae6; --accent:#ff6584; --kbd-bg:#24233a; --kbd-line:#3b3a56;
+    --paladin:#8cc4ff; --kappa:#6fe0a0; --alchemist:#ffbf73; --gunman:#ff9e6b; --salary:#b4c0de; --zebra:#1f1f30; --note-bg:#20202f;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --bg:#11111c; --surface:#191927; --text:#ecebf5; --muted:#a09db5; --line:#2c2b40;
   --ninja:#b394ff; --brawler:#55d6ef; --staff:#ffc24a; --psychic:#ff8ae6; --accent:#ff6584; --kbd-bg:#24233a; --kbd-line:#3b3a56;
+    --paladin:#8cc4ff; --kappa:#6fe0a0; --alchemist:#ffbf73; --gunman:#ff9e6b; --salary:#b4c0de; --zebra:#1f1f30; --note-bg:#20202f;
   color-scheme:dark;
 }
 *,*::before,*::after{box-sizing:inherit}
@@ -45,7 +48,7 @@ h1{font-family:var(--hud);font-weight:400;font-size:clamp(24px,3.6vw,36px);line-
 .pill:focus-visible,.overlay button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 
 .stage{position:relative;width:min(100%, calc((100vh - 96px) * 16 / 9));aspect-ratio:16/9;margin:0 auto;border-radius:16px;overflow:hidden;background:#100e22;box-shadow:0 14px 40px rgba(20,10,40,.28)}
-.drawer{position:fixed;top:0;right:0;bottom:0;width:min(600px,100vw);background:var(--surface);border-left:1px solid var(--line);box-shadow:-18px 0 40px rgba(10,6,24,.35);z-index:50;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(760px,100vw);background:var(--surface);border-left:1px solid var(--line);box-shadow:-18px 0 40px rgba(10,6,24,.35);z-index:50;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 .drawer[hidden]{display:none}
 .dhead{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .dhead h2{font:400 20px var(--hud);margin:0 auto 0 0}
@@ -172,31 +175,56 @@ html[lang="ja"] .pmrow button{font-size:clamp(11px,1.5cqw,16px)}
 .hint{margin-top:clamp(6px,1.4vw,12px);font-weight:600;opacity:.72;font-size:clamp(11px,1.45vw,14px)}
 
 .info{display:block}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 16px 14px}
-.card.ctl{border-top:5px solid var(--accent)}
-.card.ninja{border-top:5px solid var(--ninja)}
-.card.brawler{border-top:5px solid var(--brawler)}
-.card.staff{border-top:5px solid var(--staff)}
-.card.psychic{border-top:5px solid var(--psychic)}
-.card h2{font:400 22px/1.1 var(--hud);margin:0}
-.card h2 span{font:700 16px var(--body);color:var(--muted);margin-left:8px}
-.card h3{font:700 17px var(--body);margin:16px 0 4px}
-.blurb{margin:4px 0 8px;color:var(--muted);font-weight:600}
-.scroll{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:15.5px}
-th,td{text-align:left;padding:7px 6px;border-top:1px solid var(--line);vertical-align:top}
-thead th{border-top:0;color:var(--muted);font-weight:700;font-size:14px}
-td small{display:block;color:var(--muted);font-weight:500;font-size:14px;line-height:1.3;margin-top:1px}
-td.keys{white-space:nowrap}
-tr.sub td:first-child{padding-left:22px}
+.card{--cc:var(--accent);background:var(--surface);border:1px solid var(--line);border-top:5px solid var(--cc);border-radius:14px;padding:18px 18px 16px;font-family:var(--read)}
+.card.ninja{--cc:var(--ninja)} .card.brawler{--cc:var(--brawler)} .card.staff{--cc:var(--staff)} .card.psychic{--cc:var(--psychic)}
+.card.paladin{--cc:var(--paladin)} .card.kappa{--cc:var(--kappa)} .card.alchemist{--cc:var(--alchemist)} .card.gunman{--cc:var(--gunman)} .card.salary{--cc:var(--salary)}
+.card h2{font:400 24px/1.1 var(--hud);margin:0;color:var(--cc)}
+.card h2 span{font:700 15px var(--read);color:var(--muted);margin-left:10px}
+.card h3{font:700 16px var(--read);margin:22px 0 8px;padding-left:10px;border-left:4px solid var(--cc)}
+.blurb{margin:8px 0 12px;color:var(--text);font-size:15px;font-weight:500;line-height:1.65}
+.scroll{overflow-x:auto;margin-top:8px}
+table{width:100%;border-collapse:collapse;font-size:15px;line-height:1.45}
+th,td{text-align:left;padding:10px 10px;border-top:1px solid var(--line);vertical-align:middle}
+tbody tr:nth-child(even) td{background:var(--zebra)}
+thead th{border-top:0;color:var(--muted);font-weight:700;font-size:13px}
+td:first-child{font-weight:700}
+td small{display:block;color:var(--muted);font-weight:500;font-size:13.5px;line-height:1.55;margin-top:3px}
+td.keys,td.cmd{white-space:nowrap;text-align:right;width:1%;padding-left:14px}
+td[colspan]{background:var(--note-bg)!important;color:var(--cc);font-weight:700;font-size:14px;padding:8px 10px;border-top:2px solid var(--cc)}
+tr.sub td:first-child{padding-left:24px}
 tr.sub td{border-top-style:dashed}
-td.cmd{white-space:nowrap;font-weight:700;font-size:17px;letter-spacing:.02em}
-.ninja tr.super td:first-child{color:var(--ninja)}
-.brawler tr.super td:first-child{color:var(--brawler)}
-tr.super td:first-child{font-weight:700}
-kbd{display:inline-block;min-width:1.75em;text-align:center;padding:1px 6px;font:700 13.5px var(--body);color:var(--text);background:var(--kbd-bg);border:1px solid var(--kbd-line);border-bottom-width:2px;border-radius:6px}
-.note{margin:12px 0 0;color:var(--muted);font-size:14.5px}
-/* touch controls for phones and tablets: see-through, out of the way of the action */
+td.cmd{font-weight:700;font-size:17px;letter-spacing:.04em;color:var(--text)}
+tr.super td:first-child,tr.super td:first-child b{color:var(--cc)}
+td:first-child > b{color:var(--cc)}
+kbd{display:inline-block;min-width:2em;text-align:center;padding:2px 7px;font:700 15px var(--read);color:var(--text);background:var(--kbd-bg);border:1px solid var(--kbd-line);border-bottom-width:3px;border-radius:6px}
+.note{margin:12px 0 0;color:var(--text);font-size:14.5px;line-height:1.7;background:var(--note-bg);border-left:3px solid var(--cc);border-radius:8px;padding:10px 14px}
+.note b{color:var(--cc)}
+/* each fighter's long notes and rules fold away under the blurb, so the moves come first (see menus.js) */
+details.notes{margin:4px 0 14px;border:1px solid var(--line);border-radius:10px;padding:0 12px}
+details.notes > summary{cursor:pointer;padding:10px 0;font-weight:700;color:var(--cc);list-style-position:inside}
+details.notes > summary small{color:var(--muted);font-weight:600;margin-left:4px}
+details.notes[open]{padding-bottom:12px}
+details.notes .note:first-of-type{margin-top:0}
+/* the controls card: each heading and rule is a section to open (see menus.js); the open / close all button sits by the title */
+.card.ctl h2{display:flex;align-items:center;gap:10px}
+.pill.secall{margin-left:auto;font:700 13px var(--read);padding:5px 12px;border-color:var(--cc)}
+details.sec{margin:10px 0 0;border:1px solid var(--line);border-radius:10px;padding:0 14px;background:var(--surface)}
+details.sec > summary{cursor:pointer;padding:12px 0;font:700 15.5px var(--read);color:var(--text);list-style:none;display:flex;align-items:center;gap:10px}
+details.sec > summary::-webkit-details-marker{display:none}
+details.sec > summary::before{content:'';flex:none;width:7px;height:7px;border-right:2.5px solid var(--cc);border-bottom:2.5px solid var(--cc);transform:rotate(-45deg);transition:transform .15s;margin:0 3px}
+details.sec[open] > summary::before{transform:rotate(45deg)}
+details.sec[open]{padding-bottom:12px;border-color:var(--cc)}
+details.sec > .scroll{margin-top:0}
+details.sec > .note{margin-top:8px}
+details.sec > summary + .note{margin-top:0}
+.card h3.rules{margin-top:26px}
+/* inside the notes: one sentence a line, button sequences as chips, a string's hits joined by › (see menus.js) */
+ul.sents{margin:6px 0 0;padding-left:1.15em}
+ul.sents li{margin:5px 0;padding-left:2px}
+ul.sents li::marker{color:var(--cc)}
+.note .seq{display:inline-block;font:700 .95em/1.35 var(--read);color:var(--text);background:var(--kbd-bg);border:1px solid var(--kbd-line);border-bottom-width:2px;border-radius:5px;padding:0 6px;margin:1px 1px;white-space:nowrap}
+.note .arr{color:var(--cc);font-weight:700;padding:0 2px}
+td small .ln{display:block;margin-top:3px}/* touch controls for phones and tablets: see-through, out of the way of the action */
 .touch{position:absolute;inset:0;pointer-events:none;z-index:6;user-select:none;-webkit-user-select:none}
 .touch[hidden]{display:none}
 .touch.viewonly .tpad,.touch.viewonly .tbtns{display:none} /* (watching samples or CPU vs CPU: only the pause button) */
@@ -226,7 +254,7 @@ body.mobile .tbar .pill{font-size:11px;padding:3px 8px;opacity:.85;white-space:n
 /* the move list on a phone: full screen, just each move's name and command */
 body.mobile .drawer{width:100vw;border-left:0}
 body.mobile .srow{padding:6px 0}
-body.mobile .drawer :is(small,.blurb,.note,h3,.scroll.combo){display:none}
+body.mobile .drawer :is(small,.blurb,.note,h3,.scroll.combo,details.notes,.secall,details.sec:not(:has(.scroll))){display:none}
 /* training: the fighter's moves over the game, to try each one */
 .tlist{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:7;display:flex;align-items:center;gap:8px;background:rgba(8,6,26,.6);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:5px 6px;color:#fff;font:600 clamp(11px,1.6cqw,15px)/1.25 var(--body);text-align:center;user-select:none;-webkit-user-select:none}
 .tlist[hidden]{display:none}

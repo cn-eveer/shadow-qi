@@ -501,7 +501,7 @@ function specialMoveBase(id) {
         if (mf === 19) { sfx('slash'); parts.push({ type: 'slashx', x: f.x + f.facing * 180, y: GROUND - 110, r: 30, life: 10, max: 10, col: '190,225,255', rot: Math.PI / 4 }); }
       } };
     // → → + J: Crouching Slash. He drops low and rushes at them — four tenths of the stage at most — with a downward slash at their legs that bounces them
-    case 'plWindmill': return { id, label: 'Crouching Slash', startup: 16, active: 14, recovery: 26, wind: 'crouch', pose: 'pLowCut', selfMove: true, maxTravel: W * 0.4, speedFx: true, staffExt: 40, extFrom: 0, // (a long blade of light, out from the start of the dash: more reach, and 14 active frames)
+    case 'plWindmill': return { id, label: 'Crouching Slash', startup: 16, active: 20, recovery: 26, wind: 'crouch', pose: 'pLowCut', selfMove: true, maxTravel: W * 0.4, speedFx: true, staffExt: 40, extFrom: 0, // (a long blade of light, out from the start of the dash: more reach, and 20 active frames)
       hitbox: [10,200,0,205], dmg: 42, stun: 22, bstun: 16, push: 2, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 13, gdrain: 22,
       hitFrom: 1, poseFn(f, mf) { // (the blade is live from the first step of the dash) // low through the dash, then the cut comes up off the floor and rises overhead across the active frames — so it carries someone in the air too, with the blade, not a tall box
         const mv = f.move, su = mv.startup, end = su + mv.active; if (mf > end + 4) return null;

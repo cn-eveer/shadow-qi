@@ -187,7 +187,7 @@ const CHARS = {
       $p2: { su: 18, blk: -6 }, $p3: { su: 14, blk: -6 }, $p4: { su: 16, blk: -6 }, $pF: { su: 18, blk: -18 }, $pL: { su: 16, blk: -16 }, $pE: { su: 24, blk: -16 }, // U, U … U×4 / U×4, K / U, I / U, K
       $pUI: { su: 18, blk: -16 }, $pUK: { su: 18, blk: -16 }, // U, ↓ + I / U, ↓ + K (both low)
       $pl2: { su: 12, blk: -6 }, $plE: { su: 18, blk: -16 }, // J, J / J, J, K and J, K
-      plRampart: { blk: -16, held: true }, plJudgeThrust: { su: 22, blk: -16 }, plWindmill: { su: 16, blk: -16 }, plLeap: { su: 30, blk: -16 },
+      plRampart: { blk: -16, held: true }, plJudgeThrust: { su: 22, blk: -16 }, plWindmill: { su: 30, blk: -16 }, plLeap: { su: 30, blk: -16 },
     },
     heavy: {
       p: { label: 'Heavy Cleave', dmg: 66, startup: 9, active: 6, recovery: 24, hitbox: [10,180,0,195], wind: 'pCleaveW', pose: 'pCleave', hitstop: 12, kd: true, kdVx: 7, gdrain: 16,
@@ -341,7 +341,7 @@ const ANGEL_CH = { ...CHARS.salary, spLow: { bK: 'saRayLow' }, spUp: { bK: 'saRa
   heavy: { p: { label: 'Holy Palm', startup: 10, active: 5, recovery: 18, hitbox: [10,150,50,150], wind: 'palmW', pose: 'palm', lunge: [3, 9, 3.5], hitstop: 10, cpLaunch: true, launchVy: 13, burst: [90, 110] },
            k: { label: 'Wing Kick', startup: 9, active: 5, recovery: 18, hitbox: [10,150,40,150], wind: 'kickW', pose: 'highKick', lunge: [3, 8, 4], cpLaunch: true, launchVy: 12 } } };
 const DOUBLE_CH_BASE = 1;
-const DEVIL_CH = { ...CHARS.salary, spLow: { fK: 'sdCrawl', bK: 'sdTail', fKH: 'sdTailUpper', bKH: 'sdFeintSweep' }, spUp: { bK: 'sdTailDrop', bKH: 'sdFeintHammer' }, spFwd: { bK: 'sdChainB' }, possess: 'devil', dmgMul: 1.5, drain: 25 / 60, lookKey: 'salaryDevil', idle: 'sdIdle', walk: 3.9, back: 3.4, fastAtk: true, crouchPose: 'sdIdle', pDmg: 0.95, kDmg: 0.95, auraCol: '255,90,70', fxCol: '255,120,60', hitFx: 'flame', meterCol: ['#b8322d', '#ffb08a'],
+const DEVIL_CH = { ...CHARS.salary, spLow: { fK: 'sdCrawl', bK: 'sdTail', fKH: 'sdTailUpper', bKH: 'sdFeintSweep' }, spUp: { bK: 'sdTailDrop', bKH: 'sdFeintHammer' }, spFwd: { bK: 'sdChainB' }, possess: 'devil', dmgMul: 1.35, drain: 25 / 60, lookKey: 'salaryDevil', idle: 'sdIdle', walk: 3.9, back: 3.4, fastAtk: true, crouchPose: 'sdIdle', pDmg: 0.95, kDmg: 0.95, auraCol: '255,90,70', fxCol: '255,120,60', hitFx: 'flame', meterCol: ['#b8322d', '#ffb08a'],
   sp: { fP: 'sdLunge', fPH: 'sdMaul', fK: 'sdTailLash', fKH: 'sdTailUpper', bP: 'sdBeckon', bPH: 'smAngel', bK: 'sdWhip', bKH: 'sdDrain' }, sup: 'sdInferno',
   heavy: { p: { label: 'Hellclaw', startup: 10, active: 6, recovery: 18, hitbox: [10,160,40,170], wind: 'palmW', pose: 'kClaw', lunge: [3, 9, 4], hitstop: 11, kd: true, kdVx: 9 },
            k: { label: 'Demon Kick', startup: 10, active: 5, recovery: 18, hitbox: [10,150,30,130], wind: 'kickW', pose: 'highKick', lunge: [3, 8, 4], cpLaunch: true, launchVy: 12 } } };
@@ -353,7 +353,7 @@ const DEVIL_FRAMES = { ...CHARS.salary.frames,
   $d2: { su: 10, blk: -6 }, $d3: { su: 10, blk: -6 }, $d4: { su: 10, blk: -6 }, $dF: { su: 16, blk: -18 }, $dL: { su: 14, blk: -16 }, $dE: { su: 18, blk: -12 }, $dl2: { su: 10, blk: -6 }, $dlE: { su: 16, blk: -16 },
   sdLunge: { su: 20, blk: -16 }, sdMaul: { su: 20, blk: -16 }, sdTailLash: { su: 20, blk: -16 }, sdTailUpper: { su: 20, blk: -16 }, sdWhip: { su: 20, blk: -16 }, sdCrawl: { su: 18, blk: -16 }, sdTail: { su: 18, blk: -14 }, sdFeintSweep: { su: 21, blk: -14 }, sdTailDrop: { su: 18, blk: -16 }, sdFeintHammer: { su: 27, blk: -16 }, sdChainB: { su: 18, blk: -16 }, sdDrain: { su: 24 } };
 Object.assign(ANGEL_CH, { frames: ANGEL_FRAMES }); Object.assign(DEVIL_CH, { frames: DEVIL_FRAMES });
-const DOUBLE_CH = { ...DEVIL_CH, possess: 'double', lookKey: 'salaryDevil', dmgMul: 1.75, drain: 5 / 60, scale: 1.4, tallBox: true, /* (both spirits in him: far bigger; no armor — his only protection is taking half damage) */ regen: 0, noGuard: true, doubleJump: true, auraCol: '255,170,200', fxCol: '255,190,160', meterCol: ['#d0607a', '#ffe0c0'], // angel and devil both: wings and halo, horns and tail
+const DOUBLE_CH = { ...DEVIL_CH, possess: 'double', lookKey: 'salaryDevil', dmgMul: 1.5, drain: 25 / 60, scale: 1.4, tallBox: true, /* (both spirits in him: far bigger; no armor — his only protection is taking half damage) */ regen: 0, noGuard: true, doubleJump: true, auraCol: '255,170,200', fxCol: '255,190,160', meterCol: ['#d0607a', '#ffe0c0'], // angel and devil both: wings and halo, horns and tail
   sp: { fP: 'saJab', fPH: 'sdMaul', fK: 'sdTailLash', fKH: 'sdTailUpper', bP: 'sdBeckon', bPH: 'saFist', bK: 'saRay', bKH: 'sdDrain' },
   spLow: { bK: 'saRayLow', fK: 'sdCrawl', fKH: 'sdTailUpper', bKH: 'sdFeintSweep' }, spUp: { bK: 'saRayFly', bKH: 'sdFeintHammer' }, spFwd: { bK: 'sdChainB' } };
 DOUBLE_CH.frames = { ...ANGEL_FRAMES, ...DEVIL_FRAMES }; /* (both spirits' strings and techniques) */
