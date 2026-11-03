@@ -315,6 +315,72 @@ function applyLang() { // header, drawer, tabs and which language of the command
   drawer.querySelectorAll('.tabs button').forEach(b => { b.textContent = L(...tabNames[b.dataset.tab]); b.classList.toggle('on', b.dataset.tab === drawerTab); b.setAttribute('aria-selected', String(b.dataset.tab === drawerTab)); });
   drawer.querySelectorAll('article.card').forEach(a => { a.hidden = !(a.dataset.tab === drawerTab && a.dataset.lang === game.lang); });
 }
+// the move list's notes, easier to read: one sentence a line, button sequences as chips (U, U, I · ← ← + J), and a string's hits in order (a › b › c)
+const ML_TOK = '(?:(?:[←→↑↓](?:\\s?[←→↑↓])*\\s?[+＋]\\s?)?[UIJK](?:\\s?[+＋]\\s?[UIJK])*|[←→↑↓](?:\\s?[←→↑↓])+)';
+const ML_SEQ = new RegExp(`(${ML_TOK}(?:\\s?[、,]\\s?${ML_TOK})*)(?![A-Za-z])`, 'g');
+function mlSplit(html, at) { // split at the separators found outside tags and brackets: at(html, i) gives the separator's length there (0: none)
+  const out = []; let d = 0, start = 0;
+  for (let i = 0; i < html.length; i++) {
+    const c = html[i];
+    if (c === '<') { const j = html.indexOf('>', i); d += html[i + 1] === '/' ? -1 : 1; i = j; continue; }
+    if ('（(「“'.includes(c)) d++; else if ('）)」”'.includes(c)) d--;
+    else if (d <= 0) { const n = at(html, i); if (n) { out.push(html.slice(start, i + n)); start = i + n; i += n - 1; } }
+  }
+  out.push(html.slice(start)); return out.map(t => t.trim()).filter(Boolean);
+}
+function mlChips(el) { // the button sequences in a note's text, as chips
+  const tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), nodes = []; while (tw.nextNode()) nodes.push(tw.currentNode);
+  for (const t of nodes) {
+    const v = t.nodeValue, fr = document.createDocumentFragment(); let last = 0, m; ML_SEQ.lastIndex = 0;
+    while ((m = ML_SEQ.exec(v))) { if (m.index && /[A-Za-z]/.test(v[m.index - 1])) continue; fr.append(v.slice(last, m.index)); const c = document.createElement('span'); c.className = 'seq'; c.textContent = m[1]; fr.append(c); last = m.index + m[1].length; }
+    if (last) { fr.append(v.slice(last)); t.replaceWith(fr); }
+  }
+}
+for (const p of document.querySelectorAll('#info .note')) {
+  const en = p.closest('[data-lang]').dataset.lang === 'en', lead = (p.innerHTML.match(/^\s*<b>.*?<\/b>\s*/) || [''])[0];
+  const sents = mlSplit(p.innerHTML.slice(lead.length), (h, i) => en ? (h[i] === '.' && /^\s+[A-Z<(“"]/.test(h.slice(i + 1, i + 4)) ? 1 : 0) : (h[i] === '。' ? 1 : 0))
+    .map(s => { // "U, U, U, U, K: a, b, c": the hits, one after the other
+      const c = mlSplit(s, (h, i) => (h[i] === '：' || (h[i] === ':' && h[i + 1] === ' ')) ? 1 : 0); if (c.length < 2) return s;
+      const head = c[0], plain = head.replace(/<[^>]+>/g, ''); ML_SEQ.lastIndex = 0; if (plain.length > 40 || !(ML_SEQ.test(plain) || /juggle|mid-air|空中追撃|空中で/i.test(plain))) return s; // (a string's buttons, or a juggle's)
+      const hits = mlSplit(c.slice(1).join(' '), (h, i) => en ? (h.startsWith(', and ', i) ? 6 : h.startsWith(', ', i) ? 2 : 0) : (h[i] === '・' ? 1 : 0)).map(x => x.replace(/^(and |・)|[,・]$/g, ''));
+      return hits.length < 3 ? s : `${head} ${hits.join(' <span class="arr">›</span> ')}`;
+    });
+  p.innerHTML = lead + (sents.length > 1 ? `<ul class="sents">${sents.map(s => `<li>${s}</li>`).join('')}</ul>` : sents.join(''));
+  mlChips(p);
+}
+for (const sm of document.querySelectorAll('#info td small')) { // a long description in a table: one sentence a line too
+  const en = sm.closest('[data-lang]').dataset.lang === 'en', ss = mlSplit(sm.innerHTML, (h, i) => en ? (h[i] === '.' && /^\s+[A-Z<(“"]/.test(h.slice(i + 1, i + 4)) ? 1 : 0) : (h[i] === '。' ? 1 : 0));
+  if (ss.length >= 3) sm.innerHTML = ss.map(t => `<span class="ln">${t}</span>`).join('');
+}
+// the move list: each fighter's long notes and rules (between the blurb and the first table) fold away, so the moves come first
+for (const card of document.querySelectorAll('#info article.card:not(.ctl)')) {
+  const bl = card.querySelector(':scope > .blurb'), run = []; if (!bl) continue;
+  for (let el = bl.nextElementSibling; el && !el.matches('.scroll, h3'); el = el.nextElementSibling) run.push(el);
+  if (!run.length) continue;
+  const d = document.createElement('details'), n = run.filter(e => e.matches('.note')).length; d.className = 'notes';
+  d.innerHTML = `<summary>${card.dataset.lang === 'ja' ? '解説・ルールを読む' : 'Read the notes and rules'} <small>(${n})</small></summary>`;
+  bl.after(d); d.append(...run);
+}
+// the controls card: every heading and every rule (a note led by its bold title) becomes its own section, open from the start (fold any, or all at once)
+for (const card of document.querySelectorAll('#info article.card.ctl')) {
+  const ja = card.dataset.lang === 'ja', groups = []; let g = null, rules = false;
+  for (const el of [...card.children].slice(1)) {
+    const lead = el.matches('p.note') && el.firstElementChild && el.firstElementChild.tagName === 'B' && (el.firstChild === el.firstElementChild || !el.firstChild.textContent.trim()) ? el.firstElementChild : null; // (a rule: the note opens with its bold title)
+    if (el.matches('h3') || lead) { g = { title: el.matches('h3') ? el.textContent : lead.textContent.replace(/[。.:：\s]+$/, ''), els: [], rule: !!lead }; groups.push(g); if (el.matches('h3')) { el.remove(); continue; } lead.remove(); }
+    if (g) g.els.push(el);
+  }
+  groups.sort((a, b) => a.rule - b.rule); // (the headed sections first, then the rules)
+  for (const gr of groups) {
+    const d = document.createElement('details'); d.className = 'sec'; d.open = true; // (all open from the start: nothing to tap to read it; each can still be folded)
+    const s = document.createElement('summary'); s.textContent = gr.title; d.append(s, ...gr.els);
+    if (gr.rule && !rules) { rules = true; const h = document.createElement('h3'); h.className = 'rules'; h.textContent = ja ? '詳しいルール' : 'More rules'; card.append(h); }
+    card.append(d);
+  }
+  const tb = document.createElement('button'); tb.className = 'pill secall'; tb.type = 'button';
+  const label = () => { const all = [...card.querySelectorAll('details.sec')].every(d => d.open); tb.textContent = all ? (ja ? 'すべて閉じる' : 'Close all') : (ja ? 'すべて開く' : 'Open all'); return all; };
+  tb.addEventListener('click', () => { const all = label(); card.querySelectorAll('details.sec').forEach(d => { d.open = !all; }); label(); });
+  card.addEventListener('toggle', label, true); card.querySelector('h2').append(tb); label();
+}
 function openDrawer(open, mode) {
   if (mode) drawerMode = mode; drawer.classList.toggle('settings', drawerMode === 'settings'); drawer.classList.toggle('news', drawerMode === 'news');
   if (open && drawerMode === 'news') renderNews(); // (release notes, newest first)

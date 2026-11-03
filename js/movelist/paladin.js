@@ -22,7 +22,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Heavy Cleave<small>An overhead cleave that knocks them down.</small></td><td class="cmd">I</td></tr>
           <tr><td>Heavy Thrust<small>He steps in with a thrust that pushes them away.</small></td><td class="cmd">K</td></tr>
           <tr><td>Judgement Thrust<small>A slow, deliberate wind-up, then a lunging thrust across a third of the stage that lifts them for a juggle.</small></td><td class="cmd">→ → + I</td></tr>
-          <tr><td>Crouching Slash<small>He drops low and rushes up to four tenths of the stage, slashing down at their legs. A bounce: it hits the body as well as the legs.</small></td><td class="cmd">→ → + J</td></tr>
+          <tr><td>Crouching Slash<small>He drops low and rushes up to four tenths of the stage, slashing down at their legs. A bounce: it hits the body as well as the legs. Slow to come out (30 frames), with a long active window (20 frames).</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>Crusader Leap<small>A heavy, slow leap of four tenths of the stage at most; the sword is live all the way, swinging down through the fall, and he crashes down sword-first with an impact that rolls out to both sides. Bounces them, and even hits them while they lie on the floor.</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>Rising Shield<small>Up close: heaves the shield upward and launches them.</small></td><td class="cmd">↓ + I</td></tr>
         </tbody>
@@ -75,7 +75,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>大斬り<small>ダウンさせる振り下ろし。</small></td><td class="cmd">I</td></tr>
           <tr><td>大突き<small>踏み込んで突き、相手を押し出す。</small></td><td class="cmd">K</td></tr>
           <tr><td>裁きの突き<small>ゆっくりと重い溜めから、画面の三分の一を突き抜ける突きで浮かせる。</small></td><td class="cmd">→ → + I</td></tr>
-          <tr><td>しゃがみ斬り<small>低く構えて画面の4/10まで突進し、足元へ斬り下ろす。バウンド技：脚だけでなく胴にも当たる。</small></td><td class="cmd">→ → + J</td></tr>
+          <tr><td>しゃがみ斬り<small>低く構えて画面の4/10まで突進し、足元へ斬り下ろす。バウンド技：脚だけでなく胴にも当たる。発生は遅め（30フレーム）、持続は長い（20フレーム）。</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>聖戦の跳躍<small>画面の4/10までの重くゆっくりした跳躍。跳躍中も剣に当たり判定があり、落ちながら振り下ろし、剣ごと落下して衝撃が左右に広がる。相手をバウンドさせ、倒れている相手にも当たる。</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>盾上げ<small>至近距離で盾を振り上げて打ち上げる。</small></td><td class="cmd">↓ + I</td></tr>
         </tbody>
