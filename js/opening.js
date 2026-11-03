@@ -12,6 +12,7 @@ const OP_ROSTER = [
   { key: 'gunman', pose: ['gIdle', 'gAim', 'gTwin'], col: '255,200,120' },
   { key: 'salary', pose: ['sIdle', 'charge', 'win'], col: '200,205,225' },
   { key: 'alchemist', pose: ['alIdle', 'alThrowW', 'alThrow'], col: '255,200,120' },
+  { key: 'robot', pose: ['idle', 'charge', 'win'], col: '150,215,255' },
 ];
 const OP_CUT = 150, OP_PRO = 130, OP_NEW = 170, OP_CLASH = 110, OP_CLASHES = [['ninja', 'staff'], ['brawler', 'paladin'], ['psychic', 'ninja']];
 // real battle footage: the actual game, playing one of each fighter's sample combos, filmed up close
@@ -20,11 +21,13 @@ const OP_BATTLE = [ // a highlight reel: each clip starts right at the action (f
   { key: 'psychic', name: '3. Falling Star: Spirit Fist finish', len: 180 }, { key: 'brawler', name: '6. Qi Parry: two juggles', from: 3, len: 205, sup: true },
   { key: 'kappa', name: '8. Great Flood (super)', len: 290, sup: true }, { key: 'salary', name: '6. Devil Possession: Demon Uppercut', len: 255 },
   { key: 'gunman', name: '8. High Noon (super)', len: 150, sup: true }, { key: 'paladin', name: '8. Sanctuary (super)', len: 150, sup: true },
-  // Hohen, the newest, gets a run of his own: his spotlight first (pre), then the golem's long combo, the golem armour's Great Core Cannon, and Magnum Opus
-  { key: 'alchemist', name: '2. Golem in front (long): lift, lift, bounce', len: 260, pre: OP_NEW }, { key: 'alchemist', name: '21. Armour: Great Core Cannon', len: 205, sup: true },
-  { key: 'alchemist', name: '9. Magnum Opus', from: 1, len: 215, sup: true }]; // (the golem bursts into stones that encase them, then the circle erupts)
-const OP_NEWS = { head: () => L('A NEW CHALLENGER!', '新たな挑戦者、参戦！'), sub: () => L('THE NINTH WARRIOR', '九人目の戦士'), badge: () => L('NEW!', '新登場') }; // (the spotlight's words, and the badge's)
-const opDemoIdx = c => { const i = (COMBO_SET[c.key] || []).findIndex(d => d.name === c.name); return i >= 0 ? i : 0; };
+  { key: 'alchemist', name: '2. Golem in front (long): lift, lift, bounce', len: 260 }, { key: 'alchemist', name: '21. Armour: Great Core Cannon', len: 205, sup: true },
+  { key: 'alchemist', name: '9. Magnum Opus', from: 1, len: 215, sup: true }, // (the golem bursts into stones that encase them, then the circle erupts)
+  // Mimic, the newest, gets a run of his own: his spotlight first (pre), then three copies at work (as: whose sample combo he plays, in steel) — Kuro's lightning, Hohen's robotic golem, Aldric's Sanctuary
+  { key: 'robot', as: 'ninja', name: '6. Lightning stun: two juggles', from: 2, len: 195, sup: true, pre: OP_NEW }, { key: 'robot', as: 'alchemist', name: '2. Golem in front (long): lift, lift, bounce', len: 260 },
+  { key: 'robot', as: 'paladin', name: '8. Sanctuary (super)', len: 150, sup: true }];
+const OP_NEWS = { head: () => L('A NEW CHALLENGER!', '新たな挑戦者、参戦！'), sub: () => L('THE TENTH WARRIOR', '十人目の戦士'), badge: () => L('NEW!', '新登場') }; // (the spotlight's words, and the badge's)
+const opDemoIdx = c => { const i = (COMBO_SET[c.as || c.key] || []).findIndex(d => d.name === c.name); return i >= 0 ? i : 0; };
 const OP_BAT0 = OP_PRO, OP_CLASH0 = OP_BAT0 + OP_BATTLE.reduce((n, c) => n + (c.pre || 0) + c.len, 0); // (no slow roster cuts or clashes any more: straight into the action)
 const OP_GROUP = OP_CLASH0, OP_END = OP_GROUP + 260;
 function opClipAt(t) { let s0 = OP_BAT0; for (let i = 0; i < OP_BATTLE.length; i++) { const c = OP_BATTLE[i], pre = c.pre || 0; if (t < s0 + pre + c.len) return t >= s0 ? { i, k: t - s0 - pre } : null; s0 += pre + c.len; } return null; } // (k < 0: the clip's spotlight, before it)
@@ -32,7 +35,8 @@ function opSim() { game.freeze = Math.min(game.freeze, 2); game.mode = 'fight'; 
 function opPrepClip(i) { // set up the real game behind the scenes for clip i (the run-up to the combo comes after: opRunUp)
   const c = OP_BATTLE[i]; OP.prep = { i, n: 0, done: false };
   OP.muted = true;
-  game.p1Char = c.key; game.demoSet = 'combos'; startMatch(true, false, true); setupDemo(opDemoIdx(c)); game.demoUpto = c.upto != null ? c.upto : null;
+  game.p1Char = c.as || c.key; game.demoSet = 'combos'; startMatch(true, false, true); setupDemo(opDemoIdx(c)); game.demoUpto = c.upto != null ? c.upto : null;
+  if (c.as) Object.assign(fighters[0], { mimicLook: true, mimic: c.as, mimicAt: game.frame }); // (Mimic's reel: the copied fighter, in steel)
   game.mode = 'opening'; updateTbar(); ov.hidden = true;
   game.phase = 'fight'; game.phaseT = 0; if (game.demoState) { game.demoState.phase = 'run'; game.demoState.t = 0; } // (skip the round and sample intros nobody sees: far less to simulate)
   OP.muted = false;
@@ -48,6 +52,7 @@ function opStartClip(i) {
   parts.length = 0; // (the set-up's particles are never seen)
   OP.prep = null; OP.clip = i; OP.z = null; OP.cx = null; OP.cy = null; OP.cam = null; OP.pcam = null; OP.punch = 0; OP.slowT = 0; OP.lastHp = fighters[1].hp; OP.half = false;
   for (const f of fighters) f.tw = null; // (the clip's first frame: nothing to blend from)
+  if (fighters[0].mimicLook) fighters[0].mimicAt = game.frame; // (his scan, as the clip begins)
   opCamUpdate();
 }
 function opCamUpdate() { // once per game step: where the camera wants to be (close, punching in on the big moments, always keeping BOTH fighters in shot), eased toward it
@@ -108,7 +113,7 @@ const OP = { t: 0, clip: -1, muted: false };
 function warmOpening() { // prepare the opening's titles ahead of time, a few per frame, so none is drawn for the first time mid-movie
   if (OP.warm) return; OP.warm = true;
   let jobs; try { // (if the titles can't be listed, the movie still starts: the warm-up only saves a stutter)
-  const line = L('NINE WARRIORS. ONE STAGE.', '九人の戦士、ひとつの舞台。'), tag = L('NINE WARRIORS. ONE STAGE.', '九人の戦士。ひとつの舞台。');
+  const line = L('TEN WARRIORS. ONE STAGE.', '十人の戦士、ひとつの舞台。'), tag = L('TEN WARRIORS. ONE STAGE.', '十人の戦士。ひとつの舞台。');
   jobs = [[line, 48, '#ffe7b0', true], [line, 52, '#ffe7b0', true], [line, 56, '#ffe7b0', true], [line, 60, '#ffe7b0', true], ['SHADOW', 84, '#ffffff', false], ['✕', 72, '#ff6b8a', false], ['QI', 84, '#ffffff', false],
     [tag, 24, '#ffd27a', false], [L('SUPER!', '超必殺！'), 48, '#ffd23f', true], [L('PRESS ENTER', 'Enterキーで開始'), 20, '#ffffff', false], [L('TAP TO START', 'タップで開始'), 20, '#ffffff', false],
     ...OP_BATTLE.map(c => [L(CHARS[c.key].title, CHARS[c.key].titleJa).toUpperCase(), 32, '#ffffff', true]),
@@ -272,7 +277,7 @@ function opStripes(y, h, off, col, a) { // a hazard band: the fighter's colour o
   for (let x = -h - 40 + ((off % 40) + 40) % 40; x < W + h; x += 40) { ctx.beginPath(); ctx.moveTo(x, y + h); ctx.lineTo(x + 18, y + h); ctx.lineTo(x + 18 + h, y); ctx.lineTo(x + h, y); ctx.closePath(); ctx.fill(); }
   ctx.restore();
 }
-function opNewcomer(i, k) { // the newest fighter's spotlight, before his clip: A NEW CHALLENGER! stamped between hazard bands, then the transmutation circle, the golem rising out of it, and his name
+function opNewcomer(i, k) { // the newest fighter's spotlight, before his clip: A NEW CHALLENGER! stamped between hazard bands, then Mimic scanning his way through the fighters, and his name
   const r = OP_ROSTER.find(q => q.key === OP_BATTLE[i].key), ch = CHARS[r.key], col = r.col, gy = H - 90;
   if (k < 46) { // the warning
     ctx.fillStyle = '#0a0612'; ctx.fillRect(0, 0, W, H);
@@ -286,22 +291,18 @@ function opNewcomer(i, k) { // the newest fighter's spotlight, before his clip: 
     if (k > 38) opFlash((k - 38) / 8);
     return;
   }
-  const q = k - 46; // his moment
+  const q = k - 46; // his moment: the plain body, then scan after scan — a copy of each fighter in turn, each in its own colour — and back to himself
   opBackdrop(col, q);
   opSpeedLines(col, 0.35, -1, 14);
-  const zoom = 1.3 - 0.15 * ease(q / (OP_NEW - 46)), cx = 330, cy = gy - 100, x = lerp(220, 300, ease(q / 24)), gx = 250;
+  const zoom = 1.3 - 0.15 * ease(q / (OP_NEW - 46)), cx = 330, cy = gy - 100, x = lerp(220, 300, ease(q / 24)), pool = mimicPool();
+  const T = 8, n = q < 26 || q >= 26 + T * pool.length ? -1 : Math.floor((q - 26) / T), kc = n < 0 ? null : pool[n], cc = kc ? mimicCol(kc) : col, ph = n < 0 ? 0 : (q - 26) % T;
   ctx.save(); ctx.translate(cx, cy); ctx.scale(zoom, zoom); ctx.translate(-cx, -cy);
-  { const dk = ease((q - 4) / 24), tri = ease((q - 14) / 16), lit = q > 34 ? 1 : 0.6; // the transmutation circle draws itself on the ground, two triangles inside it
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(gx, gy); ctx.scale(1, 0.28); ctx.rotate(q * 0.01);
-    for (const [lw, c] of [[10, `rgba(${col},${0.25 * lit})`], [3, `rgba(${col},${0.95 * lit})`]]) { ctx.strokeStyle = c; ctx.lineWidth = lw;
-      if (dk > 0) { ctx.beginPath(); ctx.arc(0, 0, 175, 0, Math.PI * 2 * dk); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0, 135, Math.PI, Math.PI + Math.PI * 2 * dk); ctx.stroke(); }
-      if (tri > 0) for (const s0 of [0, Math.PI]) { ctx.beginPath(); for (let j = 0; j <= 3; j++) { const an = s0 - Math.PI / 2 + j * Math.PI * 2 / 3, pt = [Math.cos(an) * 135, Math.sin(an) * 135]; if (j === 0) ctx.moveTo(...pt); else if (j / 3 <= tri) ctx.lineTo(...pt); } ctx.stroke(); } }
-    ctx.restore(); }
-  if (q >= 30 && q < 60) { const a = 1 - (q - 30) / 30; ctx.save(); ctx.globalCompositeOperation = 'lighter'; const pg = ctx.createLinearGradient(gx - 70, 0, gx + 70, 0); pg.addColorStop(0, `rgba(${col},0)`); pg.addColorStop(0.5, `rgba(255,240,210,${0.7 * a})`); pg.addColorStop(1, `rgba(${col},0)`); ctx.fillStyle = pg; ctx.fillRect(gx - 70, 0, 140, gy); ctx.restore(); opShock(gx, gy, 60 + (q - 30) * 6, col, a); } // a pillar of light as it rises
-  if (q >= 30) drawGolemFigure(gx - 40, gy, 1, clamp((q - 30) / 20, 0, 1)); // the golem, out of the circle behind him
-  const pose = q < 22 ? POSES.alIdle : q < 42 ? lerpPose(POSES.alIdle, POSES.alGlasses, Math.sin(Math.PI * (q - 22) / 20)) : lerpPose(POSES.alIdle, POSES.opAlchemist, ease((q - 42) / 10)); // composed, a push of the spectacles, then a stone held up to the light
-  opPose(r.key, pose, x, gy, 1, { aura: q > 42, alpha: ease(q / 14) });
-  if (q >= 30 && q < 40) { const a = Math.sin(Math.PI * (q - 30) / 10); ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.translate(x + 8, gy - 150); ctx.rotate(q * 0.1); for (let j = 0; j < 4; j++) { ctx.rotate(Math.PI / 2); ctx.beginPath(); ctx.moveTo(0, -14); ctx.lineTo(2.5, 0); ctx.lineTo(-2.5, 0); ctx.closePath(); ctx.fill(); } ctx.restore(); } // a glint off his glasses
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(x, gy); ctx.scale(1, 0.28); ctx.rotate(q * 0.012); // a ring on the ground, in the colour of the copy
+  for (const [lw, al] of [[10, 0.25], [3, 0.95]]) { ctx.strokeStyle = `rgba(${cc},${al * ease(q / 14)})`; ctx.lineWidth = lw; ctx.beginPath(); ctx.arc(0, 0, 150, 0, Math.PI * 2); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0, 112, 0, Math.PI * 2); ctx.stroke(); }
+  ctx.restore();
+  if (kc) opPose(kc, idlePose(0, kc), x, gy, 1, { robot: true, alpha: 1 });
+  else opPose('robot', q < 26 ? POSES.idle : lerpPose(POSES.idle, POSES.opRobot, ease((q - (26 + T * pool.length)) / 10)), x, gy, 1, { aura: q > 26, alpha: ease(q / 14), core: mimicCol(pool[0]) });
+  if (n >= 0) { const sy = gy - (ph / T) * 200; ctx.save(); ctx.globalCompositeOperation = 'lighter'; const sg = ctx.createLinearGradient(0, sy - 14, 0, sy + 14); sg.addColorStop(0, `rgba(${cc},0)`); sg.addColorStop(0.5, `rgba(${cc},.9)`); sg.addColorStop(1, `rgba(${cc},0)`); ctx.fillStyle = sg; ctx.fillRect(x - 70, sy - 14, 140, 28); ctx.restore(); }
   ctx.restore();
   const nk = clamp((q - 50) / 10, 0, 1), sc = 1 + (1 - ease(nk)) * 1.6, ns = game.lang === 'ja' ? 72 : 86, nb = textBitmap(nm(ch), ns, '#ffffff', true), nw = (nb.w - nb.pad * 2) * ns / nb.q; // the name, slammed in, and the badge stamped on its corner
   ctx.save(); ctx.translate(690, 250); ctx.scale(sc, sc); opBigText(nm(ch), 0, 0, ns, '#ffffff', nk, 'center', true); ctx.restore();
@@ -366,6 +367,7 @@ Object.assign(POSES, {
   opGunman: P(-4, 90,90, 150,170, 38,0, -38,-14),     // one gun aimed, the other pointed at the sky
   opSalary: P(-6, 90,90, 155,170, 38,0, -38,-12),     // the briefcase held high, a hand thrust forward
   opAlchemist: P(-4, 128,162, -66,-40, 26,3, -24,-8), // a glowing stone held up to the light, the other hand open toward his golem
+  opRobot: P(-2, 60,100, 135,155, 30,2, -30,-8),      // Mimic: one fist forward, the other raised
 });
 // the closing shot: everyone arrives in their own way and holds their own pose, at different depths around the logo
 const OP_TEAM = [ // back row first (drawn behind, a little higher up the ridge), then the front row; evenly spaced so nobody hides anybody
@@ -378,6 +380,7 @@ const OP_TEAM = [ // back row first (drawn behind, a little higher up the ridge)
   { key: 'ninja', pose: 'opNinja', x: 242, y: -10, sc: 1, f: 1, enter: 'smoke', fx: 'shadow' },
   { key: 'brawler', pose: 'opBrawler', x: 612, y: -10, sc: 1, f: -1, enter: 'drop', fx: 'qi' },
   { key: 'gunman', pose: 'opGunman', x: 797, y: 0, sc: 1, f: -1, enter: 'slide', fx: 'dust' },
+  { key: 'robot', pose: 'opRobot', x: 427, y: 0, sc: 1, f: 1, enter: 'drop', fx: 'mimic' }, // (front row, centre: the newest, last to arrive — and he changes into each of them in turn)
 ];
 function opGroup(k) { // everyone together, then the logo
   const gy = H - 70;
@@ -404,7 +407,8 @@ function opGroup(k) { // everyone together, then the logo
     if (m.fx === 'qi' && life > 16) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const r = 80 + 6 * Math.sin(globalT * 0.25); const qg = ctx.createRadialGradient(x, y - 110, 4, x, y - 110, r); qg.addColorStop(0, 'rgba(220,250,255,.8)'); qg.addColorStop(1, 'rgba(125,235,255,0)'); ctx.fillStyle = qg; ctx.beginPath(); ctx.arc(x, y - 110, r, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
     if (m.fx === 'shadow' && life > 10) for (let c = 2; c >= 1; c--) opPose(m.key, p, x - m.f * c * 22, y, m.f, { tint: SHADOW_TINT, alpha: 0.16 * (3 - c) * ee });
     const glow = ctx.createRadialGradient(x, y, 2, x, y, 90); glow.addColorStop(0, `rgba(${col},${0.45 * ee})`); glow.addColorStop(1, `rgba(${col},0)`); ctx.fillStyle = glow; ctx.beginPath(); ctx.ellipse(x, y, 90, 18, 0, 0, Math.PI * 2); ctx.fill();
-    opPose(m.key, p, x, y, m.f, { alpha: a * (back ? 0.93 : 1), aura: life > 30, wrist: 0.6, gunOut: true, staffSpin: m.key === 'staff' && life < 30 ? globalT * 0.7 : null });
+    if (m.fx === 'mimic' && life > 34) { const pool = mimicPool(), kc = pool[Math.floor((life - 34) / 22) % pool.length]; opPose(kc, p, x, y, m.f, { alpha: a, robot: true }); } // (a copy of each fighter, one after another)
+    else opPose(m.key, p, x, y, m.f, { alpha: a * (back ? 0.93 : 1), aura: life > 30, wrist: 0.6, gunOut: true, staffSpin: m.key === 'staff' && life < 30 ? globalT * 0.7 : null });
     if (m.fx === 'orbs') { ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (let o = 0; o < 5; o++) { const an = globalT * 0.05 + o * 1.256; ctx.fillStyle = o % 2 ? 'rgba(130,190,255,.9)' : 'rgba(255,130,220,.9)'; ctx.beginPath(); ctx.arc(x + Math.cos(an) * 70, y - 100 + Math.sin(an) * 24, 6, 0, Math.PI * 2); ctx.fill(); } ctx.restore(); }
     if (m.enter !== 'fade' && life >= 16 && life < 40) { const q = (life - 16) / 24; opShock(x, y, 30 + q * 120, col, 1 - q); if (life < 22) opBurst(x, y - 40, 90, col, 1 - (life - 16) / 6); } // the landing
     if (m.enter === 'smoke' && life < 24) { ctx.save(); ctx.globalAlpha = 1 - life / 24; ctx.fillStyle = 'rgba(120,90,170,.7)'; for (let c = 0; c < 8; c++) { ctx.beginPath(); ctx.arc(x + Math.cos(c * 0.8) * (20 + life * 2), y - 70 + Math.sin(c * 1.3) * (30 + life), 18 + life, 0, Math.PI * 2); ctx.fill(); } ctx.restore(); }
@@ -422,7 +426,7 @@ function opGroup(k) { // everyone together, then the logo
     opBigText('SHADOW', -tot / 2 + w1 / 2, 0, 84, '#ffffff', lk); opBigText('✕', -tot / 2 + w1 + gap + w2 / 2, 0, 72, '#ff6b8a', lk); opBigText('QI', tot / 2 - w3 / 2, 0, 84, '#ffffff', lk);
     if (k > L0 + 14) { const sx = ((k - L0 - 14) * 14) % 900 - 450; ctx.save(); ctx.globalCompositeOperation = 'lighter'; const sg = ctx.createLinearGradient(sx - 60, 0, sx + 60, 0); sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(0.5, 'rgba(255,255,255,.35)'); sg.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = sg; ctx.fillRect(-tot / 2 - 20, -50, tot + 40, 100); ctx.restore(); } // a gleam runs across the title
     ctx.restore();
-    opBigText(L('NINE WARRIORS. ONE STAGE.', '九人の戦士。ひとつの舞台。'), W / 2, 178, 22, '#ffd27a', clamp((k - L0 - 18) / 15, 0, 1));
+    opBigText(L('TEN WARRIORS. ONE STAGE.', '十人の戦士。ひとつの舞台。'), W / 2, 178, 22, '#ffd27a', clamp((k - L0 - 18) / 15, 0, 1));
     if (k > L0 + 20) opShock(W / 2, 112, 300 + Math.sin(globalT * 0.05) * 8, '255,210,140', 0.22);
   }
   if (k > L0 + 40 && globalT % 50 < 32) opBigText(IS_MOBILE ? L('TAP TO START', 'タップで開始') : L('PRESS ENTER', 'Enterキーで開始'), W / 2, H - 22, 20, '#ffffff', 1);
@@ -437,15 +441,15 @@ function opPrologue(t) { // prologue: a magic circle draws itself across the nig
     ctx.beginPath(); ctx.arc(0, 0, R0 * 0.82, Math.PI, Math.PI + Math.PI * 2 * draw); ctx.stroke();
   }
   ctx.strokeStyle = 'rgba(255,215,150,.9)'; ctx.lineWidth = 3;
-  if (t > 14) { const sk = ease((t - 14) / 30), n = OP_ROSTER.length, step = Math.floor((n - 1) / 2); ctx.beginPath(); for (let i = 0; i <= n; i++) { const an = -Math.PI / 2 + i * Math.PI * 2 * step / n; const pt = [Math.cos(an) * R0 * 0.82, Math.sin(an) * R0 * 0.82]; if (i === 0) ctx.moveTo(...pt); else if (i / n <= sk) ctx.lineTo(...pt); } ctx.stroke(); } // a star with a point under each rune
+  if (t > 14) { const sk = ease((t - 14) / 30), n = OP_ROSTER.length, step = n % 2 ? Math.floor((n - 1) / 2) : 3; ctx.beginPath(); for (let i = 0; i <= n; i++) { const an = -Math.PI / 2 + i * Math.PI * 2 * step / n; const pt = [Math.cos(an) * R0 * 0.82, Math.sin(an) * R0 * 0.82]; if (i === 0) ctx.moveTo(...pt); else if (i / n <= sk) ctx.lineTo(...pt); } ctx.stroke(); } // a star with a point under each rune
   ctx.font = `18px ${HUD}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   OP_ROSTER.forEach((r, i) => { const on = t > 20 + i * 7, an = -Math.PI / 2 + i * Math.PI * 2 / OP_ROSTER.length, x = Math.cos(an) * R0, y = Math.sin(an) * R0;
     if (!on) return; const a = clamp((t - 20 - i * 7) / 6, 0, 1);
     const g = ctx.createRadialGradient(x, y, 1, x, y, 34); g.addColorStop(0, `rgba(255,255,255,${a})`); g.addColorStop(0.4, `rgba(${r.col},${a})`); g.addColorStop(1, `rgba(${r.col},0)`); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 34, 0, Math.PI * 2); ctx.fill();
-    ctx.save(); ctx.translate(x, y); ctx.rotate(-spin); ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fillText('ᚠᚢᚦᚨᚱᚲᚷᚹᚺ'[i], 0, 1); ctx.restore(); });
+    ctx.save(); ctx.translate(x, y); ctx.rotate(-spin); ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fillText('ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾ'[i], 0, 1); ctx.restore(); });
   ctx.restore();
   const l1 = clamp((t - 74) / 10, 0, 1) * clamp((OP_PRO - 6 - t) / 8, 0, 1), sc = 1 + 0.25 * (1 - ease((t - 74) / 14));
-  opBigText(L('NINE WARRIORS. ONE STAGE.', '九人の戦士、ひとつの舞台。'), W / 2, H / 2 + 10, 46 * sc, '#ffe7b0', l1, 'center', true);
+  opBigText(L('TEN WARRIORS. ONE STAGE.', '十人の戦士、ひとつの舞台。'), W / 2, H / 2 + 10, 46 * sc, '#ffe7b0', l1, 'center', true);
   if (t > OP_PRO - 14) opFlash((t - (OP_PRO - 14)) / 14);
 }
 function renderOpening() {
