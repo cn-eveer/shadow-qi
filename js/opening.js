@@ -21,13 +21,10 @@ const OP_BATTLE = [ // a highlight reel: each clip starts right at the action (f
   { key: 'psychic', name: '3. Falling Star: Spirit Fist finish', len: 180 }, { key: 'brawler', name: '6. Qi Parry: two juggles', from: 3, len: 205, sup: true },
   { key: 'kappa', name: '8. Great Flood (super)', len: 290, sup: true }, { key: 'salary', name: '6. Devil Possession: Demon Uppercut', len: 255 },
   { key: 'gunman', name: '8. High Noon (super)', len: 150, sup: true }, { key: 'paladin', name: '8. Sanctuary (super)', len: 150, sup: true },
-  { key: 'alchemist', name: '2. Golem in front (long): lift, lift, bounce', len: 260 }, { key: 'alchemist', name: '21. Armour: Great Core Cannon', len: 205, sup: true },
-  { key: 'alchemist', name: '9. Magnum Opus', from: 1, len: 215, sup: true }, // (the golem bursts into stones that encase them, then the circle erupts)
-  // Mimic, the newest, gets a run of his own: his spotlight first (pre), then three copies at work (as: whose sample combo he plays, in steel) — Kuro's lightning, Hohen's robotic golem, Aldric's Sanctuary
-  { key: 'robot', as: 'ninja', name: '6. Lightning stun: two juggles', from: 2, len: 195, sup: true, pre: OP_NEW }, { key: 'robot', as: 'alchemist', name: '2. Golem in front (long): lift, lift, bounce', len: 260 },
-  { key: 'robot', as: 'paladin', name: '8. Sanctuary (super)', len: 150, sup: true }];
-const OP_NEWS = { head: () => L('A NEW CHALLENGER!', '新たな挑戦者、参戦！'), sub: () => L('THE TENTH WARRIOR', '十人目の戦士'), badge: () => L('NEW!', '新登場') }; // (the spotlight's words, and the badge's)
-const opDemoIdx = c => { const i = (COMBO_SET[c.as || c.key] || []).findIndex(d => d.name === c.name); return i >= 0 ? i : 0; };
+  { key: 'alchemist', name: '2. Golem in front (long): lift, lift, bounce', len: 260 }, // (Hohen: one clip, his golem's long combo)
+  { key: 'robot', spot: true, pre: 100, len: 0 }]; // Mimic, the newest: just his entrance — his robot form and the word 登場 (no clips: he fights as everyone else)
+const OP_NEWS = { head: () => L('ENTRANCE', '登場') }; // (the newest fighter's word)
+const opDemoIdx = c => { const i = (COMBO_SET[c.key] || []).findIndex(d => d.name === c.name); return i >= 0 ? i : 0; };
 const OP_BAT0 = OP_PRO, OP_CLASH0 = OP_BAT0 + OP_BATTLE.reduce((n, c) => n + (c.pre || 0) + c.len, 0); // (no slow roster cuts or clashes any more: straight into the action)
 const OP_GROUP = OP_CLASH0, OP_END = OP_GROUP + 260;
 function opClipAt(t) { let s0 = OP_BAT0; for (let i = 0; i < OP_BATTLE.length; i++) { const c = OP_BATTLE[i], pre = c.pre || 0; if (t < s0 + pre + c.len) return t >= s0 ? { i, k: t - s0 - pre } : null; s0 += pre + c.len; } return null; } // (k < 0: the clip's spotlight, before it)
@@ -35,8 +32,7 @@ function opSim() { game.freeze = Math.min(game.freeze, 2); game.mode = 'fight'; 
 function opPrepClip(i) { // set up the real game behind the scenes for clip i (the run-up to the combo comes after: opRunUp)
   const c = OP_BATTLE[i]; OP.prep = { i, n: 0, done: false };
   OP.muted = true;
-  game.p1Char = c.as || c.key; game.demoSet = 'combos'; startMatch(true, false, true); setupDemo(opDemoIdx(c)); game.demoUpto = c.upto != null ? c.upto : null;
-  if (c.as) Object.assign(fighters[0], { mimicLook: true, mimic: c.as, mimicAt: game.frame }); // (Mimic's reel: the copied fighter, in steel)
+  game.p1Char = c.key; game.demoSet = 'combos'; startMatch(true, false, true); setupDemo(opDemoIdx(c)); game.demoUpto = c.upto != null ? c.upto : null;
   game.mode = 'opening'; updateTbar(); ov.hidden = true;
   game.phase = 'fight'; game.phaseT = 0; if (game.demoState) { game.demoState.phase = 'run'; game.demoState.t = 0; } // (skip the round and sample intros nobody sees: far less to simulate)
   OP.muted = false;
@@ -52,7 +48,6 @@ function opStartClip(i) {
   parts.length = 0; // (the set-up's particles are never seen)
   OP.prep = null; OP.clip = i; OP.z = null; OP.cx = null; OP.cy = null; OP.cam = null; OP.pcam = null; OP.punch = 0; OP.slowT = 0; OP.lastHp = fighters[1].hp; OP.half = false;
   for (const f of fighters) f.tw = null; // (the clip's first frame: nothing to blend from)
-  if (fighters[0].mimicLook) fighters[0].mimicAt = game.frame; // (his scan, as the clip begins)
   opCamUpdate();
 }
 function opCamUpdate() { // once per game step: where the camera wants to be (close, punching in on the big moments, always keeping BOTH fighters in shot), eased toward it
@@ -117,8 +112,7 @@ function warmOpening() { // prepare the opening's titles ahead of time, a few pe
   jobs = [[line, 48, '#ffe7b0', true], [line, 52, '#ffe7b0', true], [line, 56, '#ffe7b0', true], [line, 60, '#ffe7b0', true], ['SHADOW', 84, '#ffffff', false], ['✕', 72, '#ff6b8a', false], ['QI', 84, '#ffffff', false],
     [tag, 24, '#ffd27a', false], [L('SUPER!', '超必殺！'), 48, '#ffd23f', true], [L('PRESS ENTER', 'Enterキーで開始'), 20, '#ffffff', false], [L('TAP TO START', 'タップで開始'), 20, '#ffffff', false],
     ...OP_BATTLE.map(c => [L(CHARS[c.key].title, CHARS[c.key].titleJa).toUpperCase(), 32, '#ffffff', true]),
-    ...OP_BATTLE.filter(c => c.pre).flatMap(c => [[nm(CHARS[c.key]), L(86, 72), '#ffffff', true], [L(CHARS[c.key].title, CHARS[c.key].titleJa).toUpperCase(), 24, `rgb(${OP_ROSTER.find(r => r.key === c.key).col})`, false]]),
-    [OP_NEWS.head(), L(56, 48), '#ffffff', true], [OP_NEWS.sub(), 24, '#ffd27a', false], [OP_NEWS.badge(), L(20, 15), '#ffffff', true]];
+    [OP_NEWS.head(), 110, '#ffffff', true]];
   for (let n = 2; n <= 24; n++) jobs.push([L(`${n} HITS`, `${n} ヒット`), 40, '#ffd23f', true]);
   jobs.push([L('COMBO', 'コンボ'), 16, '#ffffff', false]);
   jobs.push(() => { const c = document.createElement('canvas'); c.width = c.height = 32; const x = c.getContext('2d'); x.font = `18px ${HUD}`; x.fillText('ᚠᚢᚦᚨᚱᚲᚷᚹᚺ', 0, 20); }); // the prologue's runes (the browser has to find a font for them)
@@ -157,7 +151,7 @@ function openingTick() { // the sound cues of the movie
   if (cl && cl.k < 0) { const nk = cl.k + OP_BATTLE[cl.i].pre; OP.clip = -1; // a new fighter's spotlight: its cues, and the clip set up a little at a time behind it
     if (nk === 1) sfx('super'); if (nk === 7) { sfx('hitH'); sfx('break'); } if (nk === 15) sfx('select');
     if (nk === 52) sfx('rise'); if (nk === 80) { sfx('break'); sfx('land'); } if (nk === 96) sfx('hitH'); if (nk === 108) sfx('select');
-    if (!OP.prep || OP.prep.i !== cl.i) opPrepClip(cl.i); opRunUp(8);
+    if (!OP_BATTLE[cl.i].spot) { if (!OP.prep || OP.prep.i !== cl.i) opPrepClip(cl.i); opRunUp(8); }
   } else if (cl) { if (OP.clip !== cl.i || cl.k === 0) opStartClip(cl.i);
     const b = fighters[1]; if (b && b.hp < OP.lastHp - 30) { OP.slowT = 14; OP.punch = 18; } if (b) OP.lastHp = b.hp; // a heavy hit: punch in and slow down
     if (game.superFlash) OP.punch = 20;
@@ -277,39 +271,21 @@ function opStripes(y, h, off, col, a) { // a hazard band: the fighter's colour o
   for (let x = -h - 40 + ((off % 40) + 40) % 40; x < W + h; x += 40) { ctx.beginPath(); ctx.moveTo(x, y + h); ctx.lineTo(x + 18, y + h); ctx.lineTo(x + 18 + h, y); ctx.lineTo(x + h, y); ctx.closePath(); ctx.fill(); }
   ctx.restore();
 }
-function opNewcomer(i, k) { // the newest fighter's spotlight, before his clip: A NEW CHALLENGER! stamped between hazard bands, then Mimic scanning his way through the fighters, and his name
-  const r = OP_ROSTER.find(q => q.key === OP_BATTLE[i].key), ch = CHARS[r.key], col = r.col, gy = H - 90;
-  if (k < 46) { // the warning
-    ctx.fillStyle = '#0a0612'; ctx.fillRect(0, 0, W, H);
-    const red = 0.22 + 0.18 * Math.abs(Math.sin(k * 0.22)), g = ctx.createRadialGradient(W / 2, H / 2, 20, W / 2, H / 2, W * 0.6); g.addColorStop(0, `rgba(232,48,79,${red})`); g.addColorStop(1, 'rgba(232,48,79,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-    const sb = ease(k / 10); opStripes(H / 2 - 104 - (1 - sb) * 80, 24, k * 5, col, sb); opStripes(H / 2 + 80 + (1 - sb) * 80, 24, -k * 5, col, sb);
-    const tk = clamp((k - 6) / 8, 0, 1), sc = 1 + (1 - ease(tk)) * 2;
-    ctx.save(); ctx.translate(W / 2, H / 2 - 18); ctx.scale(sc, sc); opBigText(OP_NEWS.head(), 0, 0, L(56, 48), '#ffffff', tk, 'center', true); ctx.restore();
-    opBigText(OP_NEWS.sub(), W / 2, H / 2 + 38, 24, '#ffd27a', clamp((k - 16) / 8, 0, 1));
-    if (k >= 14) opNewBadge(W / 2 + L(352, 272), H / 2 - 62, 1.1 + (1 - ease((k - 14) / 6)) * 1.5, clamp((k - 14) / 4, 0, 1), -0.25);
-    if (k >= 6 && k < 12) opFlash(0.6 - (k - 6) * 0.1);
-    if (k > 38) opFlash((k - 38) / 8);
-    return;
-  }
-  const q = k - 46; // his moment: the plain body, then scan after scan — a copy of each fighter in turn, each in its own colour — and back to himself
-  opBackdrop(col, q);
+function opNewcomer(i, k) { // the newest fighter's entrance: his plain robot form against the speed lines, and one word — 登場
+  const r = OP_ROSTER.find(q => q.key === OP_BATTLE[i].key), col = r.col, gy = H - 90;
+  opBackdrop(col, k);
   opSpeedLines(col, 0.35, -1, 14);
-  const zoom = 1.3 - 0.15 * ease(q / (OP_NEW - 46)), cx = 330, cy = gy - 100, x = lerp(220, 300, ease(q / 24)), pool = mimicPool();
-  const T = 8, n = q < 26 || q >= 26 + T * pool.length ? -1 : Math.floor((q - 26) / T), kc = n < 0 ? null : pool[n], cc = kc ? mimicCol(kc) : col, ph = n < 0 ? 0 : (q - 26) % T;
-  ctx.save(); ctx.translate(cx, cy); ctx.scale(zoom, zoom); ctx.translate(-cx, -cy);
-  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(x, gy); ctx.scale(1, 0.28); ctx.rotate(q * 0.012); // a ring on the ground, in the colour of the copy
-  for (const [lw, al] of [[10, 0.25], [3, 0.95]]) { ctx.strokeStyle = `rgba(${cc},${al * ease(q / 14)})`; ctx.lineWidth = lw; ctx.beginPath(); ctx.arc(0, 0, 150, 0, Math.PI * 2); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0, 112, 0, Math.PI * 2); ctx.stroke(); }
+  const x = lerp(200, 330, ease(k / 30));
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(x, gy); ctx.scale(1, 0.28); ctx.rotate(k * 0.012); // a ring on the ground
+  for (const [lw, al] of [[10, 0.25], [3, 0.95]]) { ctx.strokeStyle = `rgba(${col},${al * ease(k / 14)})`; ctx.lineWidth = lw; ctx.beginPath(); ctx.arc(0, 0, 150, 0, Math.PI * 2); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0, 112, 0, Math.PI * 2); ctx.stroke(); }
   ctx.restore();
-  if (kc) opPose(kc, idlePose(0, kc), x, gy, 1, { robot: true, alpha: 1 });
-  else opPose('robot', q < 26 ? POSES.idle : lerpPose(POSES.idle, POSES.opRobot, ease((q - (26 + T * pool.length)) / 10)), x, gy, 1, { aura: q > 26, alpha: ease(q / 14), core: mimicCol(pool[0]) });
-  if (n >= 0) { const sy = gy - (ph / T) * 200; ctx.save(); ctx.globalCompositeOperation = 'lighter'; const sg = ctx.createLinearGradient(0, sy - 14, 0, sy + 14); sg.addColorStop(0, `rgba(${cc},0)`); sg.addColorStop(0.5, `rgba(${cc},.9)`); sg.addColorStop(1, `rgba(${cc},0)`); ctx.fillStyle = sg; ctx.fillRect(x - 70, sy - 14, 140, 28); ctx.restore(); }
+  ctx.save(); ctx.translate(330, gy - 100); ctx.scale(1.25, 1.25); ctx.translate(-330, -(gy - 100));
+  opPose('robot', k < 26 ? POSES.idle : lerpPose(POSES.idle, POSES.opRobot, ease((k - 26) / 10)), x, gy, 1, { aura: k > 26, alpha: ease(k / 12) });
   ctx.restore();
-  const nk = clamp((q - 50) / 10, 0, 1), sc = 1 + (1 - ease(nk)) * 1.6, ns = game.lang === 'ja' ? 72 : 86, nb = textBitmap(nm(ch), ns, '#ffffff', true), nw = (nb.w - nb.pad * 2) * ns / nb.q; // the name, slammed in, and the badge stamped on its corner
-  ctx.save(); ctx.translate(690, 250); ctx.scale(sc, sc); opBigText(nm(ch), 0, 0, ns, '#ffffff', nk, 'center', true); ctx.restore();
-  opBigText(L(ch.title, ch.titleJa).toUpperCase(), 690, 318, 24, `rgb(${col})`, clamp((q - 58) / 12, 0, 1));
-  if (q >= 62) opNewBadge(690 + nw / 2 + 30, 204, 1 + (1 - ease((q - 62) / 6)) * 1.2, clamp((q - 62) / 4, 0, 1), 0.2);
-  if (q >= 50 && q < 58) opFlash(0.5 - (q - 50) * 0.06);
-  if (q < 8) opFlash(1 - q / 8);
+  const tk = clamp((k - 20) / 10, 0, 1), sc = 1 + (1 - ease(tk)) * 1.8;
+  ctx.save(); ctx.translate(690, 250); ctx.scale(sc, sc); opBigText(OP_NEWS.head(), 0, 0, 110, '#ffffff', tk, 'center', true); ctx.restore();
+  if (k >= 20 && k < 28) opFlash(0.5 - (k - 20) * 0.06);
+  if (k < 8) opFlash(1 - k / 8);
 }
 function drawWingsAt(x, y, k) { // the paladin's wings of light, for the movie
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
@@ -380,7 +356,7 @@ const OP_TEAM = [ // back row first (drawn behind, a little higher up the ridge)
   { key: 'ninja', pose: 'opNinja', x: 242, y: -10, sc: 1, f: 1, enter: 'smoke', fx: 'shadow' },
   { key: 'brawler', pose: 'opBrawler', x: 612, y: -10, sc: 1, f: -1, enter: 'drop', fx: 'qi' },
   { key: 'gunman', pose: 'opGunman', x: 797, y: 0, sc: 1, f: -1, enter: 'slide', fx: 'dust' },
-  { key: 'robot', pose: 'opRobot', x: 427, y: 0, sc: 1, f: 1, enter: 'drop', fx: 'mimic' }, // (front row, centre: the newest, last to arrive — and he changes into each of them in turn)
+  { key: 'robot', pose: 'opRobot', x: 427, y: 0, sc: 1, f: 1, enter: 'drop', fx: 'none' }, // (front row, centre: the newest, last to arrive, in his own robot form)
 ];
 function opGroup(k) { // everyone together, then the logo
   const gy = H - 70;
@@ -407,8 +383,7 @@ function opGroup(k) { // everyone together, then the logo
     if (m.fx === 'qi' && life > 16) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const r = 80 + 6 * Math.sin(globalT * 0.25); const qg = ctx.createRadialGradient(x, y - 110, 4, x, y - 110, r); qg.addColorStop(0, 'rgba(220,250,255,.8)'); qg.addColorStop(1, 'rgba(125,235,255,0)'); ctx.fillStyle = qg; ctx.beginPath(); ctx.arc(x, y - 110, r, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
     if (m.fx === 'shadow' && life > 10) for (let c = 2; c >= 1; c--) opPose(m.key, p, x - m.f * c * 22, y, m.f, { tint: SHADOW_TINT, alpha: 0.16 * (3 - c) * ee });
     const glow = ctx.createRadialGradient(x, y, 2, x, y, 90); glow.addColorStop(0, `rgba(${col},${0.45 * ee})`); glow.addColorStop(1, `rgba(${col},0)`); ctx.fillStyle = glow; ctx.beginPath(); ctx.ellipse(x, y, 90, 18, 0, 0, Math.PI * 2); ctx.fill();
-    if (m.fx === 'mimic' && life > 34) { const pool = mimicPool(), kc = pool[Math.floor((life - 34) / 22) % pool.length]; opPose(kc, p, x, y, m.f, { alpha: a, robot: true }); } // (a copy of each fighter, one after another)
-    else opPose(m.key, p, x, y, m.f, { alpha: a * (back ? 0.93 : 1), aura: life > 30, wrist: 0.6, gunOut: true, staffSpin: m.key === 'staff' && life < 30 ? globalT * 0.7 : null });
+    opPose(m.key, p, x, y, m.f, { alpha: a * (back ? 0.93 : 1), aura: life > 30, wrist: 0.6, gunOut: true, staffSpin: m.key === 'staff' && life < 30 ? globalT * 0.7 : null });
     if (m.fx === 'orbs') { ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (let o = 0; o < 5; o++) { const an = globalT * 0.05 + o * 1.256; ctx.fillStyle = o % 2 ? 'rgba(130,190,255,.9)' : 'rgba(255,130,220,.9)'; ctx.beginPath(); ctx.arc(x + Math.cos(an) * 70, y - 100 + Math.sin(an) * 24, 6, 0, Math.PI * 2); ctx.fill(); } ctx.restore(); }
     if (m.enter !== 'fade' && life >= 16 && life < 40) { const q = (life - 16) / 24; opShock(x, y, 30 + q * 120, col, 1 - q); if (life < 22) opBurst(x, y - 40, 90, col, 1 - (life - 16) / 6); } // the landing
     if (m.enter === 'smoke' && life < 24) { ctx.save(); ctx.globalAlpha = 1 - life / 24; ctx.fillStyle = 'rgba(120,90,170,.7)'; for (let c = 0; c < 8; c++) { ctx.beginPath(); ctx.arc(x + Math.cos(c * 0.8) * (20 + life * 2), y - 70 + Math.sin(c * 1.3) * (30 + life), 18 + life, 0, Math.PI * 2); ctx.fill(); } ctx.restore(); }

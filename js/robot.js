@@ -105,7 +105,7 @@ function drawRobot(J, C, o = {}) { // his own plain body: the one he stands in b
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; dot(J.h1, 2.6, `rgba(${col},${0.5 + 0.4 * pulse})`); ctx.restore();
 }
 DRAWERS.robot = drawRobot;
-{ const hf = drawHeavyFX; drawHeavyFX = function (f) { hf(f); if ((f.robot || f.mimicLook) && !f.hidden) drawRobotFX(f); }; }
+{ const hf = drawHeavyFX; drawHeavyFX = function (f) { hf(f); if (f.robot && !f.hidden) drawRobotFX(f); }; }
 function drawRobotFX(f) { // the ring on the floor and the scan when a round begins
   const col = mimicCol(f.key, f.alt), s = f.ch.scale, age = game.frame - (f.mimicAt || 0), x = f.x, gy = GROUND - Math.min(f.y, 0), pulse = 0.5 + 0.5 * Math.sin(globalT * 0.12);
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineWidth = 2.4; ctx.strokeStyle = `rgba(${col},${0.32 + 0.2 * pulse})`;
