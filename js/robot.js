@@ -185,4 +185,14 @@ function robotGiantJoint(sx, sy, fx, fy, pal) { // a joint at the elbow and a gl
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; dot([mx, my], 2.6, `rgba(${pal.eye},.95)`); ctx.strokeStyle = `rgba(${pal.eye},.7)`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(fx, fy, 13.5, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
 }
 function robotGiantLegs(pal) { for (const x of [-15, 15]) { dot([x, -22], 7, pal.line); dot([x, -22], 4.2, pal.dark); ctx.save(); ctx.globalCompositeOperation = 'lighter'; dot([x, -22], 2, `rgba(${pal.eye},.9)`); ctx.restore(); } } // knee joints
+function robotArmourHelmet(pal, t) { // Hohen's armour on Mimic: a boxy steel head, a glowing visor strip, an antenna (the head's own frame: faces +x, up is +y)
+  ctx.fillStyle = pal.body; ctx.strokeStyle = pal.line; ctx.lineWidth = 2.5; rrect(-12, -11, 26, 24, 5); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = pal.dark; rrect(-12, 6, 26, 7, 3); ctx.fill(); // the brow
+  ctx.fillStyle = '#10131c'; rrect(0, -2, 15, 9, 3); ctx.fill();
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; const pu = 0.75 + 0.25 * Math.sin(t * 0.2); ctx.fillStyle = `rgba(${pal.eye},${pu})`; rrect(2, 0.8, 11.5, 3.6, 1.8); ctx.fill();
+  const g = ctx.createLinearGradient(15, 2, 28, 2); g.addColorStop(0, `rgba(${pal.eye},${0.5 * pu})`); g.addColorStop(1, `rgba(${pal.eye},0)`); ctx.fillStyle = g; ctx.fillRect(14, -0.5, 14, 6); ctx.restore();
+  ctx.fillStyle = pal.dark; rrect(-15, -5, 6, 12, 2); ctx.fill(); ctx.stroke();
+  seg([-4, 13], [-8, 27], 2.6, pal.line); dot([-8, 28], 3.6, pal.dark); ctx.save(); ctx.globalCompositeOperation = 'lighter'; dot([-8, 28], 2.6 + 0.7 * Math.sin(t * 0.2), `rgba(${pal.eye},.95)`); ctx.restore();
+  for (let i = 0; i < 3; i++) seg([-6, -6 + i * 3], [-1, -6 + i * 3], 1, pal.line);
+}
 COMBO_SET.robot = []; PUNISH_SET.robot = []; DEMOS.robot = [];

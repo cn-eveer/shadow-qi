@@ -267,11 +267,12 @@ function step() {
   if (game.combo && --game.combo.t <= 0) game.combo = null;
   if (game.routeName && --game.routeName.t <= 0) game.routeName = null;
   if (game.phase === 'intro') {
-    if (!game.demo) for (const f of fighters) if (f.key === 'salary') prePossessTick(f, game.phaseT);
+    const te = game.phaseT - (game.lead || 0); // (the time since the countdown began: before it, game.lead frames for the fighters to speak)
+    if (!game.demo && te >= 0) for (const f of fighters) if (f.key === 'salary') prePossessTick(f, te);
     if (showOn()) for (const f of fighters) showFX(f, 'intro', game.phaseT - (f.side ? 8 : 0));
-    if (!game.training && game.phaseT === 4) { const fin = a.wins === 1 && b.wins === 1; announce(fin ? 'Final round!' : `Round ${game.round}!`, fin ? 'ファイナルラウンド！' : `ラウンド${game.round}！`); }
-    if (!game.training && COUNT_AT.includes(game.phaseT)) sfx('count');
-    if (game.phaseT >= (game.training ? 40 : INTRO_T)) { for (const f of fighters) if (f.prePoss) { startPossession(f, f.prePoss); f.possT = 0; f.wholeRound = true; f.wholeKind = f.prePoss; f.prePoss = null; /* (no timer: it lasts the whole round) */ } game.phase = 'fight'; game.phaseT = 0; if (!game.training) { sfx('go'); announce('Fight!', 'ファイト！'); } }
+    if (!game.training && te === 4) { const fin = a.wins === 1 && b.wins === 1; announce(fin ? 'Final round!' : `Round ${game.round}!`, fin ? 'ファイナルラウンド！' : `ラウンド${game.round}！`); }
+    if (!game.training && COUNT_AT.includes(te)) sfx('count');
+    if (te >= (game.training ? 40 : INTRO_T)) { for (const f of fighters) if (f.prePoss) { startPossession(f, f.prePoss); f.possT = 0; f.wholeRound = true; f.wholeKind = f.prePoss; f.prePoss = null; /* (no timer: it lasts the whole round) */ } game.phase = 'fight'; game.phaseT = 0; if (!game.training) { sfx('go'); announce('Fight!', 'ファイト！'); } }
   }
   else if (game.phase === 'fight') {
     const dead = fighters.filter(f => f.hp <= 0);

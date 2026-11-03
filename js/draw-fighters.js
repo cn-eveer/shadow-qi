@@ -907,7 +907,7 @@ function drawFighter(f) {
   const prevOwner = FX_OWNER; FX_OWNER = f;
   if (f.brands > 0) drawBrands(f);
   drawHeavyFX(f);
-  if (f.robot && showOn() && game.round > 1) drawSpeech(f, copySayOf(f), clamp((game.phaseT - 14) / 8, 0, 1) * clamp((124 - game.phaseT) / 10, 0, 1)); // (Mimic announces each new copy at the start of every later round; the first round has the exchange)
+  if (f.robot && showOn() && game.round > 1) drawSpeech(f, copySayOf(f), clamp((game.phaseT - 10) / 8, 0, 1) * clamp((94 - game.phaseT) / 10, 0, 1)); // (Mimic announces each new copy at the start of every later round; the first round has the exchange)
   if (SHOW[f.key]) { const sh = SHOW[f.key]; if (showOn() && game.round === 1) { /* (the greeting line only before the first round) */ const t = game.phaseT - (f.side ? 8 : 0); drawSpeech(f, introSpeechOf(f), introSpeechAlpha(f)); }
     }
   if (f.state === 'win') { const ln = winLine(f); if (ln) drawSpeech(f, ln, clamp((f.st - 20) / 10, 0, 1)); }

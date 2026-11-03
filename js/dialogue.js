@@ -222,7 +222,9 @@ function introPair(f) { // the line this fighter says before the first round: [e
   return d ? (f.side === 0 ? d[0] : d[1]) : null;
 }
 function introSpeechOf(f) { const l = introPair(f); return l ? L(...l) : (f.robot ? L('Copy complete.', 'コピー完了') : L(...SHOW[f.key].introLine)); }
-function introSpeechAlpha(f) { const p = game.phaseT, a0 = f.side ? 84 : 14, a1 = f.side ? 180 : 96; return clamp((p - a0) / 8, 0, 1) * clamp((a1 - p) / 10, 0, 1); } // (the left one speaks first, the right one answers)
+const DLG_LEAD = 170, ROBOT_LEAD = 100; // frames before the countdown (game.lead): the first round gives the two fighters time for their exchange; a later round gives Mimic time for his announcement
+function introSpeechAlpha(f) { const p = game.phaseT, a0 = f.side ? 90 : 10, a1 = f.side ? 168 : 88; return clamp((p - a0) / 8, 0, 1) * clamp((a1 - p) / 10, 0, 1); } // (the left one speaks first, the right one answers)
+{ const sr = startRound; startRound = function (n) { sr.apply(this, arguments); game.lead = (game.training || game.demo) ? 0 : n === 1 ? DLG_LEAD : fighters.some(f => f.robot) ? ROBOT_LEAD : 0; }; }
 function winPick(f) { // the line for this win: [en, ja], or null
   const o = other(f); if (!o) return null;
   const a = f.key, b = o.key, fin = game.finalWin === f, tier = fin ? 'final' : f.hp < 100 ? 'd' : f.hp < 300 ? 'c' : f.hp < 700 ? 'b' : 'a', i = tier === 'b' ? 0 : tier === 'c' ? 1 : 2;

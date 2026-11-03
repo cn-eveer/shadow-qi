@@ -491,9 +491,9 @@ function drawHUD() {
 }
 function drawAnnounce() {
   let txt = null, local = 0, big = false;
-  const t = game.phaseT;
+  const t = game.phase === 'intro' ? game.phaseT - (game.lead || 0) : game.phaseT; // (in the intro: since the countdown began — before it, the fighters speak)
   if (game.phase === 'intro' && game.training) { txt = game.demo ? L('SAMPLE COMBOS', 'コンボ見本') : L('TRAINING', 'トレーニング'); local = t; }
-  else if (game.phase === 'intro') {
+  else if (game.phase === 'intro' && t >= 0) {
     const final = fighters[0].wins === 1 && fighters[1].wins === 1;
     const c = COUNT_AT.filter(a => t >= a).length;
     if (!c) { txt = final ? L('FINAL ROUND', 'ファイナルラウンド') : L('ROUND ', 'ラウンド ') + game.round; local = t; }

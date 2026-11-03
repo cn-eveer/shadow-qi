@@ -499,7 +499,7 @@ const GEMS = [['110,255,220', -0.5], ['255,190,80', 0], ['150,170,255', 0.5]]; /
 function gemGlow(p, col, r, t) { const g = ctx.createRadialGradient(p[0], p[1], 0.5, p[0], p[1], r * 2.6); g.addColorStop(0, `rgba(${col},.95)`); g.addColorStop(1, `rgba(${col},0)`);
   ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p[0], p[1], r * 2.6, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = `rgba(255,255,255,.9)`; ctx.beginPath(); ctx.arc(p[0], p[1], r * 0.55, 0, Math.PI * 2); ctx.fill(); }
 function drawAlchemist(J, C, o) {
-  const t = globalT, td = J.td, n = [td[1], -td[0]], fx = !o.tint && !o.flash, A = o.tint ? 0 : o.armor || 0, pal = GOLEM_PALS[o.alt ? 1 : 0];
+  const t = globalT, td = J.td, n = [td[1], -td[0]], fx = !o.tint && !o.flash, A = o.tint ? 0 : o.armor || 0, pal = o.robot ? robotGolemPal({ alt: o.alt }) : GOLEM_PALS[o.alt ? 1 : 0]; // (Mimic: steel)
   const add = (a, b, k) => [a[0] + b[0] * k, a[1] + b[1] * k], has = i => A === 'skin' ? (i === 5 || i === 7 || i === 8) : A > i; // (the stone skin: just the cuirass, vambraces and gauntlets)
   seg(J.hip, J.k2, 10, C.pantsB); seg(J.k2, J.f2, 9, C.pantsB); foot(J.k2, J.f2, 8.5, 6.5, C.shoe);
   seg(J.hip, J.k1, 10, C.pants); seg(J.k1, J.f1, 9, C.pants); foot(J.k1, J.f1, 9, 6.5, C.shoe);
@@ -537,21 +537,25 @@ function drawAlchemist(J, C, o) {
   if (A && has(6)) armourPauldron(add(J.sh, n, 9), td, pal, 1); // (the near shoulder's guard, over the arm)
 }
 // the golem armour, in pieces (has(i): piece i of ARMOR_PARTS is on him): a dark outline, the stone, a lighter edge and glowing seams
-const stoneSeg = (a, b, w, pal, c) => { seg(a, b, w + 4, pal.line); seg(a, b, w, c || pal.body); };
-const stonePlate = (p, w, h, rot, pal, c) => { ctx.save(); ctx.translate(p[0], p[1]); ctx.rotate(rot); ctx.fillStyle = c || pal.body; ctx.strokeStyle = pal.line; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, Math.min(w, h) * 0.3); ctx.fill(); ctx.stroke(); ctx.restore(); };
+const stoneSeg = (a, b, w, pal, c) => { seg(a, b, w + 4, pal.line); seg(a, b, w, c || pal.body); if (FX_ROBOT) { const m = mid(a, b, 0.5); ctx.strokeStyle = pal.line; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.arc(m[0], m[1], w * 0.62, 0, Math.PI * 2); ctx.stroke(); dot(mid(a, b, 0.12), 1.2, pal.line); dot(mid(a, b, 0.88), 1.2, pal.line); } }; // (Mimic: a band round the middle, rivets at the ends)
+const stonePlate = (p, w, h, rot, pal, c) => { ctx.save(); ctx.translate(p[0], p[1]); ctx.rotate(rot); ctx.fillStyle = c || pal.body; ctx.strokeStyle = pal.line; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, FX_ROBOT ? 2 : Math.min(w, h) * 0.3); ctx.fill(); ctx.stroke();
+  if (FX_ROBOT) { for (const sx of [-1, 1]) for (const sy of [-1, 1]) dot([sx * (w / 2 - 3), sy * (h / 2 - 2.6)], 1.1, pal.line); ctx.strokeStyle = 'rgba(0,0,0,.28)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-w / 2 + 2, 0); ctx.lineTo(w / 2 - 2, 0); ctx.stroke(); } // (Mimic: a bolted panel)
+  ctx.restore(); };
 const seam = (pts, pal, a = 0.85) => { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(${pal.core},${a})`; ctx.lineWidth = 1.6; ctx.beginPath(); pts.forEach((p, i) => ctx[i ? 'lineTo' : 'moveTo'](p[0], p[1])); ctx.stroke(); ctx.restore(); };
 function armourLegs(J, pal, has, fx) {
   for (const [k, f] of [[J.k2, J.f2], [J.k1, J.f1]]) {
     if (has(3)) stoneSeg(mid(J.hip, k, 0.25), mid(J.hip, k, 0.85), 11, pal, pal.dark);                                   // thigh plates
     if (has(1)) { stoneSeg(mid(k, f, 0.2), mid(k, f, 0.88), 11, pal); seam([mid(k, f, 0.3), mid(k, f, 0.75)], pal, fx ? 0.6 : 0); } // greaves, a glowing seam down the shin
     if (has(0)) { foot(k, f, 12, 9, pal.line); foot(k, f, 10.5, 7.5, pal.dark); }                                      // stone boots
-    if (has(2)) { ctx.fillStyle = pal.light; ctx.strokeStyle = pal.line; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(k[0], k[1], 8, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); // knee guards with a glowing stud
+    if (has(2) && FX_ROBOT) { dot(k, 9, pal.line); dot(k, 6.5, pal.dark); ctx.save(); ctx.globalCompositeOperation = 'lighter'; dot(k, 2.6, `rgba(${pal.core},.95)`); ctx.restore(); } // (Mimic: a knee joint with a light in it)
+    else if (has(2)) { ctx.fillStyle = pal.light; ctx.strokeStyle = pal.line; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(k[0], k[1], 8, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); // knee guards with a glowing stud
       if (fx) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; gemGlow(k, pal.core, 1.8, globalT); ctx.restore(); } }
   }
 }
 function armourArm(e, h, pal, has, k) {
   if (has(7)) { stoneSeg(mid(e, h, 0.15), mid(e, h, 0.8), 10 * k, pal); seam([mid(e, h, 0.25), mid(e, h, 0.7)], pal, 0.55); } // vambraces
-  if (has(8)) { ctx.fillStyle = pal.light; ctx.strokeStyle = pal.line; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(h[0], h[1], 9.5 * k, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); // gauntlets: a heavy stone fist with knuckle ridges
+  if (has(8) && FX_ROBOT) { ctx.save(); ctx.translate(h[0], h[1]); ctx.fillStyle = pal.light; ctx.strokeStyle = pal.line; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.roundRect(-9 * k, -9 * k, 18 * k, 18 * k, 3); ctx.fill(); ctx.stroke(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(${pal.core},.8)`; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(-6 * k, 4 * k); ctx.lineTo(6 * k, 4 * k); ctx.stroke(); ctx.restore(); } // (Mimic: a square mechanical fist with a glowing band)
+  else if (has(8)) { ctx.fillStyle = pal.light; ctx.strokeStyle = pal.line; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(h[0], h[1], 9.5 * k, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); // gauntlets: a heavy stone fist with knuckle ridges
     ctx.strokeStyle = pal.line; ctx.lineWidth = 1.4; for (const d of [-0.5, 0.5]) { ctx.beginPath(); ctx.arc(h[0], h[1], 6 * k, d - 0.3, d + 0.3); ctx.stroke(); } }
 }
 function armourPauldron(p, td, pal, k) { // a shoulder guard: two overlapping shells
@@ -567,11 +571,12 @@ function armourBody(J, n, td, add, pal, has, fx, skin) {
     ctx.moveTo(...add(add(J.sh, n, -16), td, -2)); ctx.lineTo(...add(add(J.sh, n, 16), td, -2)); ctx.lineTo(...add(add(mid(J.hip, J.sh, 0.45), n, 13), td, 0)); ctx.lineTo(...add(mid(J.hip, J.sh, 0.38), n, 0)); ctx.lineTo(...add(mid(J.hip, J.sh, 0.45), n, -13)); ctx.closePath(); ctx.fill(); ctx.stroke();
     for (let i = 0; i < 3; i++) stonePlate(mid(J.hip, J.sh, 0.12 + i * 0.1), 22 - i * 2, 7, an, pal, pal.dark);
     seam([add(c, n, -12), add(add(c, n, -4), td, -8), add(add(c, n, 4), td, -8), add(c, n, 12)], pal, fx ? 0.7 : 0);
-    if (fx) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; gemGlow(add(c, n, 2), pal.core, (skin ? 4 : 6) * (0.85 + 0.15 * Math.sin(globalT * 0.12)), globalT); ctx.restore(); }
+    if (FX_ROBOT) { const c2 = add(c, n, 2); ctx.strokeStyle = pal.line; ctx.lineWidth = 2.6; ctx.beginPath(); ctx.arc(c2[0], c2[1], 8.5, 0, Math.PI * 2); ctx.stroke(); for (let i = -1; i <= 1; i++) seg(add(add(c, n, -14 + i * 0), td, -3 + i * 4), add(add(c, n, -9), td, -3 + i * 4), 1.6, pal.line); } // (Mimic: a ring round the core, vents beside it)
+    if (fx || FX_ROBOT) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; gemGlow(add(c, n, 2), pal.core, (skin ? 4 : 6) * (0.85 + 0.15 * Math.sin(globalT * 0.12)), globalT); ctx.restore(); }
     if (skin) ctx.globalAlpha /= 0.85; }
   if (has(6)) armourPauldron(add(J.sh, n, -9), td, pal, 0.9); // (the far shoulder's guard)
 }
-function armourHelmet(pal, fx, t) { // the helmet, drawn in the head's own frame (it faces +x, up is +y): a dome, a crest, a faceplate and a glowing visor slit
+function armourHelmet(pal, fx, t) { if (FX_ROBOT) { robotArmourHelmet(pal, t); return; } // the helmet, drawn in the head's own frame (it faces +x, up is +y): a dome, a crest, a faceplate and a glowing visor slit
   ctx.fillStyle = pal.body; ctx.strokeStyle = pal.line; ctx.lineWidth = 2.5;
   ctx.beginPath(); ctx.arc(0, 1, 13.5, -0.35, Math.PI * 1.25); ctx.lineTo(-6, -11); ctx.lineTo(9, -12); ctx.lineTo(14, -4); ctx.closePath(); ctx.fill(); ctx.stroke(); // dome and jaw
   ctx.fillStyle = pal.dark; ctx.beginPath(); ctx.moveTo(-12, 9); ctx.quadraticCurveTo(0, 20, 12, 8); ctx.lineTo(9, 6); ctx.quadraticCurveTo(0, 15, -10, 6); ctx.closePath(); ctx.fill(); ctx.stroke(); // the crest along the top
