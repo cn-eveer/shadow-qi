@@ -4,7 +4,7 @@
 // version.json on the server says which version is live. When the two differ, the player is asked to reload without the
 // browser's cache, or to erase the site's saved data and reload.
 const RELEASES = [ // notes: a string, or { g: 'group', items: [...] } (groups nest)
-  { v: '1.5.3', date: '2026-11-03', notes: [
+  { v: '1.5.3', date: '2026-11-04', notes: [
     { g: 'アルドリック', items: [
       '→→+J しゃがみ斬り：発生16→30フレーム、持続14→20フレーム',
     ] },
