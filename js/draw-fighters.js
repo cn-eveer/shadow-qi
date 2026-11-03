@@ -544,7 +544,7 @@ function drawSalary(J, C, o) {
 }
 function drawBody(key, pose, x, yS, facing, hipUp, o = {}) {
   const ch = CHARS[key], s = o.scale || ch.scale, J = solve(pose); // (o.scale: a form that changes his size — Tanaka's double possession)
-  const C = o.flash ? FLASH : o.robot ? robotPal((o.alt && ch.altColors) || ch.colors) : (o.tint || (o.alt && ch.altColors) || ch.colors); // (o.robot: Mimic's copy, in steel — see robot.js)
+  const C = o.flash ? FLASH : o.robot ? robotPal((o.alt && ch.altColors) || ch.colors, o.alt) : (o.tint || (o.alt && ch.altColors) || ch.colors); // (o.robot: Mimic's copy, in steel — see robot.js)
   ctx.save();
   const sx = o.sx == null ? 1 : (o.sx >= 0 ? 1 : -1) * Math.max(0.18, Math.abs(o.sx));
   ctx.translate(x, yS); ctx.scale(facing * s * sx, -s); ctx.translate(0, hipUp);
@@ -553,7 +553,7 @@ function drawBody(key, pose, x, yS, facing, hipUp, o = {}) {
   if (o.alpha != null) ctx.globalAlpha = o.alpha;
   if (o.aura) drawAura(J, key);
   DRAWERS[key](J, C, o);
-  if (o.robot && !o.flash) drawRobotParts(J, key); // (the visor, core and joints that say whom he is copying)
+  if (o.robot && !o.flash) drawRobotParts(J, key, o.alt); // (the visor, core and joints that say whom he is copying)
   ctx.restore();
 }
 const DRAWERS = { ninja: (J, C, o) => drawNinja(J, C, o), brawler: (J, C, o) => drawBrawler(J, C, o), staff: (J, C, o) => drawBao(J, C, o), psychic: (J, C, o) => drawLyra(J, C, o), paladin: (J, C, o) => drawPaladin(J, C, o), kappa: (J, C, o) => drawKappa(J, C, o), gunman: (J, C, o) => drawGunman(J, C, o), salary: (J, C, o) => drawSalary(J, C, o) };

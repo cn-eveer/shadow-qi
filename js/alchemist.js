@@ -494,7 +494,7 @@ const golemLowAtk = o => !!(o && o.golem && o.golem.act && (GOLEM_ACT[o.golem.ac
 const GOLEM_PALS = [ // brown sandstone, and (for the second Hohen of a mirror match) blue-grey granite with a cold blue core
   { body: '#8b6a47', dark: '#7a5b3b', light: '#9a7852', head: '#94724c', line: '#4a3523', crack: '#5a4129', core: '255,190,80', hot: '255,230,150', eye: '255,170,60', spark: '170,130,80', glow: '255,200,110' },
   { body: '#7d8a99', dark: '#66727f', light: '#95a3b2', head: '#8794a3', line: '#2f3742', crack: '#465260', core: '110,215,255', hot: '200,245,255', eye: '120,230,255', spark: '140,155,175', glow: '150,225,255' }];
-const golemPal = f => GOLEM_PALS[f && f.alt ? 1 : 0];
+const golemPal = f => f && f.robot ? robotGolemPal(f) : GOLEM_PALS[f && f.alt ? 1 : 0]; // (Mimic copying Hohen: a robotic golem)
 const GEMS = [['110,255,220', -0.5], ['255,190,80', 0], ['150,170,255', 0.5]]; // glowing stones on his chest
 function gemGlow(p, col, r, t) { const g = ctx.createRadialGradient(p[0], p[1], 0.5, p[0], p[1], r * 2.6); g.addColorStop(0, `rgba(${col},.95)`); g.addColorStop(1, `rgba(${col},0)`);
   ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p[0], p[1], r * 2.6, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = `rgba(255,255,255,.9)`; ctx.beginPath(); ctx.arc(p[0], p[1], r * 0.55, 0, Math.PI * 2); ctx.fill(); }
