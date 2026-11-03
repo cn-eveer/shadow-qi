@@ -154,17 +154,6 @@ function robotMini(kind) { // the tiny angel and devil on his shoulders, as litt
   if (ang) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(${col},.95)`; ctx.lineWidth = 1.2; ctx.setLineDash([2, 1.5]); ctx.beginPath(); ctx.ellipse(0, -13, 5, 1.6, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
   else for (const sx of [-1, 1]) { seg([sx * 3, -9], [sx * 5, -15], 1.3, '#59627a'); ctx.save(); ctx.globalCompositeOperation = 'lighter'; dot([sx * 5, -15.5], 1.2, 'rgba(255,70,50,.95)'); ctx.restore(); }
 }
-function robotBigParts(kind, t) { // the full-size angel and devil: a visor, an antenna, a ring of light and glowing seams over the steel (their drawing space: y down, head near y = -265)
-  const ang = kind === 'angel', col = ang ? '255,225,120' : '255,70,50', hy = ang ? -266 : -262, hr = ang ? 26 : 30, pulse = 0.6 + 0.4 * Math.sin(t * 0.2);
-  ctx.fillStyle = 'rgba(12,16,26,.95)'; rrect(-hr * 0.1, hy - 8, hr * 1.25, 15, 6); ctx.fill();
-  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(${col},${0.75 + 0.25 * pulse})`; rrect(hr * 0.1, hy - 3.5, hr * 0.95, 5, 2.5); ctx.fill();
-  ctx.strokeStyle = `rgba(${col},${0.5 + 0.3 * pulse})`; ctx.lineWidth = 3; ctx.setLineDash([10, 8]); ctx.lineDashOffset = -t;
-  if (ang) { ctx.beginPath(); ctx.ellipse(0, -306, 30, 8, 0, 0, Math.PI * 2); ctx.stroke(); } // the halo, as segments
-  else { ctx.beginPath(); ctx.moveTo(-20, -40); ctx.quadraticCurveTo(-120, -20, -110, -90); ctx.stroke(); // the tail, as a live cable
-    for (const sd of [-1, 1]) { ctx.beginPath(); ctx.moveTo(sd * 20, -220); ctx.lineTo(sd * 150, -300 - Math.sin(t * 0.15) * 10); ctx.stroke(); } } // and the wings' spars
-  ctx.restore();
-  for (const sx of (ang ? [-1] : [-1, 1])) { seg([sx * 16, hy - hr + 4], [sx * 26, hy - hr - 34], 4, '#59627a'); ctx.save(); ctx.globalCompositeOperation = 'lighter'; dot([sx * 26, hy - hr - 36], 5 + 2 * pulse, `rgba(${col},.95)`); ctx.restore(); } // antenna(e)
-}
 /* ---------- Mimic copying Hohen: the golem as a robotic giant ---------- */
 function robotGiantBody(pal, bob) { // (the golem's drawing space) panel seams, rivets, a housing round the core, vents and shoulder plates instead of cracks
   ctx.strokeStyle = pal.crack; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-36, -76 - bob); ctx.lineTo(36, -76 - bob); ctx.moveTo(-34, -48 - bob); ctx.lineTo(34, -48 - bob); ctx.moveTo(0, -90 - bob); ctx.lineTo(0, -78 - bob); ctx.stroke();
@@ -194,5 +183,31 @@ function robotArmourHelmet(pal, t) { // Hohen's armour on Mimic: a boxy steel he
   ctx.fillStyle = pal.dark; rrect(-15, -5, 6, 12, 2); ctx.fill(); ctx.stroke();
   seg([-4, 13], [-8, 27], 2.6, pal.line); dot([-8, 28], 3.6, pal.dark); ctx.save(); ctx.globalCompositeOperation = 'lighter'; dot([-8, 28], 2.6 + 0.7 * Math.sin(t * 0.2), `rgba(${pal.eye},.95)`); ctx.restore();
   for (let i = 0; i < 3; i++) seg([-6, -6 + i * 3], [-1, -6 + i * 3], 1, pal.line);
+}
+function robotBigSpirit(kind, x, y, sc, a, t, face) { // the full-size angel and devil of the possession scenes, as steel machines — plain vector shapes (no canvas filter: it made these scenes lag)
+  if (a <= 0) return;
+  const ang = kind === 'angel', col = ang ? '255,225,120' : '255,70,50', pulse = 0.6 + 0.4 * Math.sin(t * 0.2), S = '#aeb8c8', SD = '#7d8799', E = '#39415a';
+  ctx.save(); ctx.translate(x, y); ctx.scale(sc * face, sc); ctx.globalAlpha = a; ctx.lineJoin = 'round';
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(0, -170, 10, 0, -170, 210); g.addColorStop(0, `rgba(${col},.32)`); g.addColorStop(1, `rgba(${col},0)`); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, -170, 210, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+  for (const sd of [-1, 1]) for (let i = 0; i < (ang ? 6 : 4); i++) { // wings: rigid blades fanning out, glowing along the edge
+    const th = (ang ? 0.35 + i * 0.24 : 0.7 + i * 0.32) + Math.sin(t * 0.1) * 0.04, L = (ang ? 150 : 175) - i * (ang ? 14 : 24), bx = sd * 16, by = -225, tx = bx + sd * Math.sin(th) * L, ty = by - Math.cos(th) * L * (ang ? 1 : 0.7);
+    ctx.fillStyle = i % 2 ? SD : S; ctx.strokeStyle = E; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(bx, by - 8); ctx.lineTo(tx, ty); ctx.lineTo(bx, by + 12); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; seg([bx, by - 8], [tx, ty], 2.4, `rgba(${col},${0.5 + 0.3 * pulse})`); ctx.restore(); }
+  ctx.fillStyle = SD; ctx.strokeStyle = E; ctx.lineWidth = 2.5; rrect(-26, -64, 22, 64, 5); ctx.fill(); ctx.stroke(); rrect(4, -64, 22, 64, 5); ctx.fill(); ctx.stroke(); // legs
+  ctx.fillStyle = S; rrect(-34, -240, 68, 170, 10); ctx.fill(); ctx.stroke(); rrect(-30, -96, 60, 28, 6); ctx.fillStyle = SD; ctx.fill(); ctx.stroke(); // torso and hips
+  ctx.strokeStyle = E; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-30, -150); ctx.lineTo(30, -150); ctx.moveTo(-30, -118); ctx.lineTo(30, -118); ctx.stroke();
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; const cg = ctx.createRadialGradient(0, -196, 2, 0, -196, 26); cg.addColorStop(0, `rgba(${col},1)`); cg.addColorStop(1, `rgba(${col},0)`); ctx.fillStyle = cg; ctx.globalAlpha = a * (0.7 + 0.3 * pulse); ctx.beginPath(); ctx.arc(0, -196, 26, 0, Math.PI * 2); ctx.fill(); ctx.restore(); // the core
+  for (const sd of [-1, 1]) { ctx.fillStyle = SD; rrect(sd * 34 - 14, -246, 28, 22, 5); ctx.fill(); ctx.stroke(); } // shoulder plates
+  ctx.lineCap = 'round';
+  if (ang) { seg([-36, -228], [-8, -190], 15, E); seg([-36, -228], [-8, -190], 11, S); seg([36, -228], [8, -190], 15, E); seg([36, -228], [8, -190], 11, S); dot([0, -188], 11, SD); } // hands together in prayer
+  else for (const sd of [-1, 1]) { const e = [sd * 70, -150], h = [sd * 62, -96]; seg([sd * 40, -226], e, 17, E); seg([sd * 40, -226], e, 13, S); seg(e, h, 17, E); seg(e, h, 13, SD); dot(e, 9, E); ctx.save(); ctx.globalCompositeOperation = 'lighter'; for (let i = -1; i <= 1; i++) seg([h[0] + i * 6, h[1]], [h[0] + i * 8, h[1] + 16], 3, `rgba(${col},.9)`); ctx.restore(); } // arms ending in glowing claws
+  ctx.fillStyle = S; ctx.strokeStyle = E; ctx.lineWidth = 2.5; rrect(-26, -296, 52, 50, 10); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#10131c'; rrect(-4, -282, 32, 14, 5); ctx.fill();
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(${col},${0.75 + 0.25 * pulse})`; rrect(0, -278, 25, 6, 3); ctx.fill(); ctx.restore(); // the visor
+  for (const sx of (ang ? [-1] : [-1, 1])) { seg([sx * 15, -296], [sx * 26, -332], 4, SD); ctx.save(); ctx.globalCompositeOperation = 'lighter'; dot([sx * 26, -334], 5 + 2 * pulse, `rgba(${col},.95)`); ctx.restore(); } // antenna(e)
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(${col},${0.55 + 0.3 * pulse})`; ctx.lineWidth = 3; ctx.setLineDash([10, 8]); ctx.lineDashOffset = -t;
+  if (ang) { ctx.beginPath(); ctx.ellipse(0, -318, 30, 8, 0, 0, Math.PI * 2); ctx.stroke(); } // a halo of segments
+  else { ctx.beginPath(); ctx.moveTo(-20, -40); ctx.quadraticCurveTo(-120, -20, -110, -90); ctx.stroke(); } // a live cable for a tail
+  ctx.restore(); ctx.restore();
 }
 COMBO_SET.robot = []; PUNISH_SET.robot = []; DEMOS.robot = [];
