@@ -416,8 +416,9 @@ function drawGunman(J, C, o) {
   seg(J.sh, J.e1, 9.5, C.coat); seg(J.e1, J.h1, 8.5, C.coat); dot(J.h1, 4.8, C.skin); if (o.gunOut !== false) drawRevolver(J.h1, J.e1, C);
 }
 // the salaryman, with a tiny angel and a tiny devil riding on his shoulders (until one of them takes him over)
+let FX_ROBOT = false; // (drawing Mimic's copy: the spirits and the possession forms are drawn as machines — see robot.js)
 function drawBigAngel(x, y, sc, a, t, face) { // a full-size angel: robes, a halo, great feathered wings, all light
-  if (a <= 0) return; ctx.save(); ctx.translate(x, y); ctx.scale(sc * face, sc); ctx.globalAlpha = a;
+  if (a <= 0) return; ctx.save(); ctx.translate(x, y); ctx.scale(sc * face, sc); ctx.globalAlpha = a; if (FX_ROBOT) ctx.filter = 'grayscale(.9) brightness(1.12) contrast(1.15)';
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(0, -170, 10, 0, -170, 210); g.addColorStop(0, 'rgba(255,248,220,.55)'); g.addColorStop(1, 'rgba(255,230,160,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, -170, 210, 0, Math.PI * 2); ctx.fill(); ctx.restore();
   for (const sd of [-1, 1]) for (let i = 0; i < 7; i++) { const an = -Math.PI / 2 + sd * (0.35 + i * 0.2) + Math.sin(t * 0.1) * 0.05 * sd, L = 150 - i * 12; // the wings: long feathers fanning out
     ctx.fillStyle = i % 2 ? 'rgba(255,252,240,.95)' : 'rgba(240,236,220,.95)'; ctx.save(); ctx.translate(sd * 14, -230); ctx.rotate(an + Math.PI / 2); ctx.beginPath(); ctx.ellipse(0, -L / 2, 13, L / 2, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
@@ -428,10 +429,11 @@ function drawBigAngel(x, y, sc, a, t, face) { // a full-size angel: robes, a hal
   ctx.fillStyle = '#5a4a3a'; ctx.fillRect(6, -270, 4, 3); ctx.fillRect(16, -270, 4, 3); // closed, peaceful eyes
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = 'rgba(255,225,120,.95)'; ctx.lineWidth = 5; ctx.beginPath(); ctx.ellipse(0, -306, 30, 8, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); // the halo
   ctx.strokeStyle = '#fbf7ec'; ctx.lineWidth = 14; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-26, -226); ctx.lineTo(-4, -190); ctx.moveTo(26, -226); ctx.lineTo(4, -190); ctx.stroke(); // hands together in prayer
+  if (FX_ROBOT) { ctx.filter = 'none'; robotBigParts('angel', t); }
   ctx.restore();
 }
 function drawBigDemon(x, y, sc, a, t, face) { // a full-size demon: hunched, horned, bat-winged, eyes burning
-  if (a <= 0) return; ctx.save(); ctx.translate(x, y); ctx.scale(sc * face, sc); ctx.globalAlpha = a;
+  if (a <= 0) return; ctx.save(); ctx.translate(x, y); ctx.scale(sc * face, sc); ctx.globalAlpha = a; if (FX_ROBOT) ctx.filter = 'grayscale(.9) brightness(1.12) contrast(1.15)';
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(0, -160, 10, 0, -160, 220); g.addColorStop(0, 'rgba(255,80,40,.45)'); g.addColorStop(1, 'rgba(120,0,0,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, -160, 220, 0, Math.PI * 2); ctx.fill(); ctx.restore();
   for (const sd of [-1, 1]) { const fl = Math.sin(t * 0.15) * 10; ctx.fillStyle = '#3a0d12'; ctx.beginPath(); ctx.moveTo(sd * 20, -220); ctx.lineTo(sd * 150, -300 - fl); ctx.lineTo(sd * 130, -240 - fl); ctx.lineTo(sd * 170, -200 - fl); ctx.lineTo(sd * 120, -180); ctx.lineTo(sd * 140, -130); ctx.lineTo(sd * 40, -170); ctx.closePath(); ctx.fill(); // bat wings
     ctx.strokeStyle = '#6a1a1a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(sd * 20, -220); ctx.lineTo(sd * 150, -300 - fl); ctx.moveTo(sd * 20, -215); ctx.lineTo(sd * 170, -200 - fl); ctx.moveTo(sd * 20, -210); ctx.lineTo(sd * 140, -130); ctx.stroke(); }
@@ -443,9 +445,11 @@ function drawBigDemon(x, y, sc, a, t, face) { // a full-size demon: hunched, hor
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ffdd66'; for (const ex of [6, 18]) { ctx.beginPath(); ctx.ellipse(ex, -266, 5, 3, 0.2, 0, Math.PI * 2); ctx.fill(); } ctx.restore(); // burning eyes
   ctx.fillStyle = '#fff'; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(-6 + i * 7, -246); ctx.lineTo(-3 + i * 7, -238); ctx.lineTo(i * 7, -246); ctx.fill(); } // fangs
   ctx.strokeStyle = '#7a1414'; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(-20, -40); ctx.quadraticCurveTo(-120, -20, -110, -90); ctx.stroke(); ctx.fillStyle = '#7a1414'; ctx.beginPath(); ctx.moveTo(-110, -90); ctx.lineTo(-122, -112); ctx.lineTo(-98, -102); ctx.closePath(); ctx.fill(); // the tail
+  if (FX_ROBOT) { ctx.filter = 'none'; robotBigParts('devil', t); }
   ctx.restore();
 }
 function possessDoubleFX(f) {
+  FX_ROBOT = !!f.robot;
   const mf = f.mf, s0 = f.ch.scale, face = f.facing, BIG = 1.5 * s0 * (200 / 300);
   const ax = f.x + face * 95 * s0, dx = f.x - face * 95 * s0, y0 = GROUND - f.y - 150 * s0; // the angel takes the side in front of him, the devil the side behind
   if (mf < 14) { const k = mf / 14; // both little ones rise off his shoulders, one each way, glowing
@@ -464,7 +468,8 @@ function possessDoubleFX(f) {
     for (const [col, a0] of [['255,240,190', -Math.PI / 2], ['255,80,50', Math.PI / 2]]) { ctx.strokeStyle = `rgba(${col},${1 - k})`; ctx.lineWidth = 8 * (1 - k) + 2; ctx.beginPath(); ctx.arc(f.x, GROUND - f.y - 100 * s0, 40 + 160 * k, a0, a0 + Math.PI); ctx.stroke(); }
     ctx.restore(); }
 }
-function possessFX(f, kind) { // the possession, in three acts: the little one rises and grows... into a full-size spirit behind him... which merges into him
+function possessFX(f, kind) {
+  FX_ROBOT = !!f.robot; // the possession, in three acts: the little one rises and grows... into a full-size spirit behind him... which merges into him
   const mf = f.mf, s0 = f.ch.scale, face = f.facing, angel = kind === 'angel';
   const sx = f.x - face * 34 * s0, sy = GROUND, BIG_SC = 1.5 * s0 * (200 / 300); // full size: one and a half times his height
   if (mf < 14) { const k = mf / 14; drawMini(kind, f.x + (angel ? face : -face) * 24 * (1 - k) - face * 20 * k, GROUND - f.y - (150 + 60 * k) * s0, 1.15 + k * 0.8, face); // the little one floats up behind him, glowing
@@ -479,6 +484,7 @@ function possessFX(f, kind) { // the possession, in three acts: the little one r
 function drawMini(kind, x, y, sc, face) { // drawn the canvas way up (y down)
   const bob = Math.sin(globalT * 0.12 + (kind === 'angel' ? 0 : 2)) * 2;
   ctx.save(); ctx.translate(x, y + bob); ctx.scale(sc * face, sc);
+  if (FX_ROBOT) { robotMini(kind); ctx.restore(); return; }
   if (kind === 'angel') {
     ctx.fillStyle = 'rgba(255,255,255,.95)'; ctx.beginPath(); ctx.ellipse(-7, 2, 6, 3.5, -0.5, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(7, 2, 6, 3.5, 0.5, 0, Math.PI * 2); ctx.fill(); // wings
     ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(-5, 12); ctx.lineTo(5, 12); ctx.lineTo(2, 2); ctx.lineTo(-2, 2); ctx.closePath(); ctx.fill(); // little robe
@@ -498,11 +504,13 @@ function drawMini(kind, x, y, sc, face) { // drawn the canvas way up (y down)
 }
 function drawSalary(J, C, o) {
   const t = globalT, td = J.td, n = [td[1], -td[0]], pos = o.possess;
-  if ((pos === 'angel' || pos === 'double') && !o.tint && !o.flash) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; // feathered wings of light on his back
+  if (o.robot && (pos === 'angel' || pos === 'double') && !o.flash) robotWings(J, n, t); // (Mimic: steel blades)
+  else if ((pos === 'angel' || pos === 'double') && !o.tint && !o.flash) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; // feathered wings of light on his back
     for (const k of [0, 1]) { const b = [J.sh[0] - n[0] * 8, J.sh[1] - n[1] * 8 - 4]; ctx.fillStyle = `rgba(255,248,225,${0.55 - k * 0.2})`; ctx.beginPath(); ctx.moveTo(b[0], b[1]);
       ctx.quadraticCurveTo(b[0] - 30 - k * 10, b[1] + 30 + Math.sin(t * 0.15) * 4, b[0] - 46 - k * 8, b[1] + 6); ctx.quadraticCurveTo(b[0] - 26, b[1] - 6, b[0], b[1] - 14); ctx.closePath(); ctx.fill(); }
     ctx.restore(); }
-  if ((pos === 'devil' || pos === 'double') && !o.tint && !o.flash) { ctx.strokeStyle = '#7a1414'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(J.hip[0] - n[0] * 8, J.hip[1]); ctx.quadraticCurveTo(J.hip[0] - 34, J.hip[1] - 20 + Math.sin(t * 0.2) * 5, J.hip[0] - 40, J.hip[1] + 6); ctx.stroke();
+  if (o.robot && (pos === 'devil' || pos === 'double') && !o.flash) robotTail(J, n, t); // (Mimic: a cable with a plug)
+  else if ((pos === 'devil' || pos === 'double') && !o.tint && !o.flash) { ctx.strokeStyle = '#7a1414'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(J.hip[0] - n[0] * 8, J.hip[1]); ctx.quadraticCurveTo(J.hip[0] - 34, J.hip[1] - 20 + Math.sin(t * 0.2) * 5, J.hip[0] - 40, J.hip[1] + 6); ctx.stroke();
     ctx.fillStyle = '#7a1414'; ctx.beginPath(); ctx.moveTo(J.hip[0] - 40, J.hip[1] + 6); ctx.lineTo(J.hip[0] - 47, J.hip[1] + 2); ctx.lineTo(J.hip[0] - 41, J.hip[1] + 13); ctx.closePath(); ctx.fill(); } // a devil's tail
   seg(J.hip, J.k2, 10, C.suitB); seg(J.k2, J.f2, 9, C.suitB); foot(J.k2, J.f2, 8.5, 6.5, C.shoe);
   seg(J.sh, J.e2, 9, C.suitB); seg(J.e2, J.h2, 8, C.suitB); dot(J.h2, 4.6, C.skin);
@@ -527,8 +535,10 @@ function drawSalary(J, C, o) {
   else if (hurt || o.face === 'attack') { ctx.fillStyle = '#5a2a2a'; ctx.beginPath(); ctx.ellipse(7.2, -5.4, 2.2, hurt ? 2.6 : 1.8, 0, 0, Math.PI * 2); ctx.fill(); }       // a shout, or a yelp
   else seg([5.4, -5.4], [9, -5.6], 1.2, '#8a4a3a');                                                                        // tired office mouth
   if (!pos && !hurt) { ctx.fillStyle = 'rgba(120,120,160,.25)'; ctx.fillRect(2, -2.6, 3.6, 1); ctx.fillRect(7, -2.6, 3.4, 1); } // the bags under his eyes
-  if (pos === 'devil' || pos === 'double') { ctx.fillStyle = '#d32f2f'; ctx.beginPath(); ctx.moveTo(-6, 9); ctx.quadraticCurveTo(-10, 18, -6, 23); ctx.lineTo(-3, 10); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(4, 10); ctx.quadraticCurveTo(4, 20, 9, 23); ctx.lineTo(7, 9); ctx.closePath(); ctx.fill(); } // red horns
-  if (pos === 'angel' || pos === 'double') { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(255,220,110,${0.85 + 0.15 * Math.sin(t * 0.2)})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(0, 18 + Math.sin(t * 0.1) * 1.5, 10, 3, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); } // halo
+  if (o.robot && (pos === 'devil' || pos === 'double')) robotHorns(t); // (Mimic: antennae)
+  else if (pos === 'devil' || pos === 'double') { ctx.fillStyle = '#d32f2f'; ctx.beginPath(); ctx.moveTo(-6, 9); ctx.quadraticCurveTo(-10, 18, -6, 23); ctx.lineTo(-3, 10); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(4, 10); ctx.quadraticCurveTo(4, 20, 9, 23); ctx.lineTo(7, 9); ctx.closePath(); ctx.fill(); } // red horns
+  if (o.robot && (pos === 'angel' || pos === 'double')) robotHalo(t); // (Mimic: a ring of light segments)
+  else if (pos === 'angel' || pos === 'double') { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(255,220,110,${0.85 + 0.15 * Math.sin(t * 0.2)})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(0, 18 + Math.sin(t * 0.1) * 1.5, 10, 3, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); } // halo
   ctx.restore();
   seg(J.sh, J.e1, 9, C.suit); seg(J.e1, J.h1, 8, C.suit); seg(mid(J.e1, J.h1, 0.85), J.h1, 6, C.shirt); dot(J.h1, 4.8, pos === 'devil' ? '#e05a4a' : C.skin);
   if (!pos && o.caseFront) { ctx.save(); ctx.translate(J.h1[0], J.h1[1]); ctx.rotate(Math.atan2(J.h1[1] - J.e1[1], J.h1[0] - J.e1[0])); ctx.fillStyle = C.bag; ctx.fillRect(2, -9, 26, 18); ctx.fillStyle = '#c8a46a'; ctx.fillRect(4, -2, 3, 4); ctx.restore(); } // a briefcase blow: the case swung out in his front hand
@@ -543,6 +553,7 @@ function drawSalary(J, C, o) {
   }
 }
 function drawBody(key, pose, x, yS, facing, hipUp, o = {}) {
+  FX_ROBOT = !!o.robot;
   const ch = CHARS[key], s = o.scale || ch.scale, J = solve(pose); // (o.scale: a form that changes his size — Tanaka's double possession)
   const C = o.flash ? FLASH : o.robot ? robotPal((o.alt && ch.altColors) || ch.colors, o.alt) : (o.tint || (o.alt && ch.altColors) || ch.colors); // (o.robot: Mimic's copy, in steel — see robot.js)
   ctx.save();
@@ -896,6 +907,7 @@ function drawFighter(f) {
   const prevOwner = FX_OWNER; FX_OWNER = f;
   if (f.brands > 0) drawBrands(f);
   drawHeavyFX(f);
+  if (f.robot && showOn() && game.round > 1) drawSpeech(f, copySayOf(f), clamp((game.phaseT - 14) / 8, 0, 1) * clamp((124 - game.phaseT) / 10, 0, 1)); // (Mimic announces each new copy at the start of every later round; the first round has the exchange)
   if (SHOW[f.key]) { const sh = SHOW[f.key]; if (showOn() && game.round === 1) { /* (the greeting line only before the first round) */ const t = game.phaseT - (f.side ? 8 : 0); drawSpeech(f, introSpeechOf(f), introSpeechAlpha(f)); }
     }
   if (f.state === 'win') { const ln = winLine(f); if (ln) drawSpeech(f, ln, clamp((f.st - 20) / 10, 0, 1)); }

@@ -362,7 +362,7 @@ function golemDamage(f, n, x, y) { // the golem takes a hit; at zero health it c
   const A = g.act && GOLEM_ACT[g.act.kind], counter = !!(A && !A.shield && g.act.t <= A.su); // (hit while it winds up its blow: a counter — it hurts more and the blow is lost)
   if (counter) { n = Math.round(n * 1.4); g.act = null; g.queue = null; g.cd = 45; popText(g.x, GROUND - 205 - g.y, L('COUNTER!', 'カウンター！'), '255,150,90'); game.freeze = Math.max(game.freeze, 6); }
   g.hp = Math.max(0, g.hp - n); g.flash = 5; sfx('hitH'); sparks(x, y, 'hit');
-  if (g.hp <= 0) golemBreak(f, L('GOLEM DOWN!', 'ゴーレム撃破！'));
+  if (g.hp <= 0) golemBreak(f, f.robot ? L('GIANT DOWN!', 'ロボ巨人撃破！') : L('GOLEM DOWN!', 'ゴーレム撃破！'));
 }
 function golemTakeHits(f, o) { // the opponent's attacks can hit the golem too (it stands in the way of blows meant for him)
   const g = f.golem, gb = golemBox(g);
@@ -397,8 +397,8 @@ function golemUpdate(f, o) {
     if (game.training && !game.demo && !f.ch.fused && !f.fuse) f.fuseG = 100; }
   f.oHp = o.hp; f.myHp = f.hp;
   if (fight) { if (f.ammo < f.ch.ammo) { if ((f.stoneT = (f.stoneT || 0) + 1) >= STONE_REGEN) { f.stoneT = 0; f.ammo++; sfx('select'); parts.push({ type: 'ring', x: f.x, y: GROUND - f.y - 60, r: 8, vr: 3, life: 10, max: 10, col: '255,220,140' }); } } else f.stoneT = 0; } // (the stones come back one at a time)
-  if (!g.broken && fight && --g.life <= 0) golemBreak(f, L('WORN OUT', '崩れた')); // (it lasts thirty seconds, whatever its health)
-  if (g.broken) { g.act = null; g.queue = null; g.hold = null; if (g.hidden) return; if (--g.brokenT <= 0) { g.broken = false; g.hp = g.max; g.life = GOLEM_LIFE; g.seen = {}; sfx('select'); if (!g.quiet) popText(g.x, GROUND - 190, L('GOLEM REBUILT', 'ゴーレム復活'), '255,220,140'); g.quiet = false; for (let i = 0; i < 14; i++) parts.push({ type: 'spark', x: g.x + rnd(-40, 40), y: GROUND - rnd(5, 120), vx: 0, vy: 2, life: 14, max: 14, col: golemPal(f).glow }); } return; }
+  if (!g.broken && fight && --g.life <= 0) golemBreak(f, f.robot ? L('OVERHEATED', 'オーバーヒート') : L('WORN OUT', '崩れた')); // (it lasts thirty seconds, whatever its health)
+  if (g.broken) { g.act = null; g.queue = null; g.hold = null; if (g.hidden) return; if (--g.brokenT <= 0) { g.broken = false; g.hp = g.max; g.life = GOLEM_LIFE; g.seen = {}; sfx('select'); if (!g.quiet) popText(g.x, GROUND - 190, f.robot ? L('GIANT REBOOTED', 'ロボ巨人再起動') : L('GOLEM REBUILT', 'ゴーレム復活'), '255,220,140'); g.quiet = false; for (let i = 0; i < 14; i++) parts.push({ type: 'spark', x: g.x + rnd(-40, 40), y: GROUND - rnd(5, 120), vx: 0, vy: 2, life: 14, max: 14, col: golemPal(f).glow }); } return; }
   const og = o.golem && !o.golem.broken && !o.golem.hidden ? o.golem : null, tgx = og && Math.abs(og.x - g.x) < Math.abs(o.x - g.x) ? og.x : o.x; // (a mirror match: it goes for whichever is nearer — the other Hohen, or his golem)
   const live = game.phase === 'fight' && !f.ko && !o.ko, dx = tgx - g.x, dir = Math.sign(dx) || g.facing, dist = Math.abs(dx);
   g.dashT = 0; // (the golem doesn't dash either)
@@ -671,8 +671,9 @@ function drawGolem(f) { // a stone golem, drawn in the world where it stands
   const bob = g.spd > 0 ? Math.abs(Math.sin(g.ph * 6)) * 3 : Math.sin(t * 0.05) * 1.2;
   rock(-24, -34 + Math.max(0, wk) * 6, 18, 34 - Math.max(0, wk) * 6, pal.dark); // legs
   rock(6, -34 + Math.max(0, -wk) * 6, 18, 34 - Math.max(0, -wk) * 6, pal.body);
+  if (f.robot) robotGiantLegs(pal);
   ctx.save(); ctx.translate(0, -34); ctx.rotate(lean); ctx.scale(1, squat); ctx.translate(0, 34); // the whole upper body sinks, leans and rises
-  const arm = (sx, sy, fx, fy, c) => { ctx.strokeStyle = pal.line; ctx.lineWidth = 19; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(fx, fy); ctx.stroke(); ctx.strokeStyle = c; ctx.lineWidth = 13; ctx.stroke(); ctx.fillStyle = c; ctx.strokeStyle = pal.line; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(fx, fy, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); };
+  const arm = (sx, sy, fx, fy, c) => { ctx.strokeStyle = pal.line; ctx.lineWidth = 19; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(fx, fy); ctx.stroke(); ctx.strokeStyle = c; ctx.lineWidth = 13; ctx.stroke(); ctx.fillStyle = c; ctx.strokeStyle = pal.line; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(fx, fy, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); if (f.robot) robotGiantJoint(sx, sy, fx, fy, pal); };
   const hand = (rest, two) => { if (g.hold) { const D = Math.abs(other(f).x - g.x) / 1.4; return [clamp(D - 6, 40, 110), -98]; } // (holding them: both arms stretch out to where they stand)
     if (!a) return rest; const [pull, fw] = GOLEM_ARMS[a.kind] || GOLEM_ARMS.lp, k = a.t, su = A.su, end = su + A.ac;
     if (A.leap) { const up = g.y > 0 && g.vy > -2 && !a.hit; return up ? pull : fw; } // (leaping: both fists raised over its head, then brought down)
@@ -687,10 +688,12 @@ function drawGolem(f) { // a stone golem, drawn in the world where it stands
   const farH = twoHanded ? hand([-30, -50], true) : useFar ? hand(farRest) : farRest, nearH = cheer ? [34, -136 - bob + Math.sin(t * 0.15) * 3] : (a && !useFar) ? hand(nearRest) : nearRest;
   if (!useFar) arm(-30, -86 - bob, farH[0] - (twoHanded ? 8 : 0), farH[1], pal.dark);                       // the far arm
   ctx.fillStyle = pal.body; ctx.strokeStyle = pal.line; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-30, -34 - bob); ctx.lineTo(30, -34 - bob); ctx.lineTo(38, -90 - bob); ctx.lineTo(-38, -90 - bob); ctx.closePath(); ctx.fill(); ctx.stroke(); // the body
-  ctx.strokeStyle = pal.crack; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-14, -90 - bob); ctx.lineTo(-6, -66 - bob); ctx.lineTo(-16, -48 - bob); ctx.moveTo(18, -76 - bob); ctx.lineTo(10, -58 - bob); ctx.stroke(); // cracks
+  if (f.robot) robotGiantBody(pal, bob); // (Mimic copying Hohen: a robotic giant, not a golem)
+  else { ctx.strokeStyle = pal.crack; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-14, -90 - bob); ctx.lineTo(-6, -66 - bob); ctx.lineTo(-16, -48 - bob); ctx.moveTo(18, -76 - bob); ctx.lineTo(10, -58 - bob); ctx.stroke(); } // cracks
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; const pu = (0.7 + 0.3 * Math.sin(t * 0.1)) * Math.min(1.4, glow), rr = 18 * Math.min(2.4, glow), gg = ctx.createRadialGradient(0, -62 - bob, 1, 0, -62 - bob, rr); gg.addColorStop(0, `rgba(${glow > 1.5 ? pal.hot : pal.core},${Math.min(1, 0.9 * pu)})`); gg.addColorStop(1, `rgba(${pal.core},0)`); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(0, -62 - bob, rr, 0, Math.PI * 2); ctx.fill(); ctx.restore(); // the stone that moves it
   rock(-15, -122 - bob, 30, 30, pal.head);                                                                    // the head
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(${pal.eye},.95)`; ctx.fillRect(1, -112 - bob, 6, 4); ctx.fillRect(9, -112 - bob, 5, 4); ctx.restore();
+  if (f.robot) robotGiantHead(pal, bob);
   if (useFar) arm(-30, -86 - bob, farH[0], farH[1], pal.light);                                               // (the other fist throws the second punch of a string)
   else arm(30, -86 - bob, nearH[0], nearH[1], pal.light);
   if (a && a.kind === 'shield') { ctx.save(); ctx.translate(nearH[0] + 12, nearH[1]); ctx.fillStyle = pal.dark; ctx.strokeStyle = pal.line; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(-9, -52, 20, 108, 6); ctx.fill(); ctx.stroke(); ctx.strokeStyle = pal.crack; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-4, -30); ctx.lineTo(4, -8); ctx.lineTo(-3, 18); ctx.stroke(); ctx.restore(); } // the slab of stone

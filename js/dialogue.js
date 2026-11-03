@@ -180,6 +180,18 @@ function mimicSay(f, slot) { // Mimic's line: [en, ja]
   return [t[0].replace('{O}', On[0]).replace('{T}', T[0]), t[1].replace('{O}', On[1]).replace('{T}', T[1])];
 }
 const nm0 = (ch, ja) => ja ? ch.nameJa : ch.name;
+const COPY_SAY = { // what Mimic says at the start of every later round, as he copies a fighter (two phrasings, by the round)
+  ninja: [["Copy: Kuro. Shadow arts loaded. Silence engaged.", "コピー：クロ。影の技、読み込み。静音モード、起動。"], ["Kuro’s data acquired. I vanish now.", "クロのデータ取得。これより消える。"]],
+  brawler: [["Copy: Tetsu. Qi fists calibrated.", "コピー：テツ。気の拳、調整完了。"], ["Tetsu’s stance loaded. Fists: ready.", "テツの構え、読み込み完了。拳、準備よし。"]],
+  staff: [["Copy: Mei. Staff and cloud online.", "コピー：メイ。棍と雲、起動。"], ["Mei’s agility acquired. Jumping now.", "メイの身軽さ、取得。跳躍を開始する。"]],
+  psychic: [["Copy: Lyra. Spell matrix loaded.", "コピー：ライラ。術式マトリクス、読み込み。"], ["Lyra’s sight acquired. Predicting you.", "ライラの視力を取得。あなたを予測する。"]],
+  paladin: [["Copy: Aldric. Holy shield deployed.", "コピー：アルドリック。聖なる盾、展開。"], ["Aldric’s oath loaded. Faith: simulated.", "アルドリックの誓い、読み込み。信仰：模擬。"]],
+  kappa: [["Copy: Kappa. Water systems filled.", "コピー：カッパ。水系統、充填完了。"], ["Kappa’s dish acquired. Cucumber: requested.", "カッパの皿を取得。きゅうり：要求。"]],
+  gunman: [["Copy: Jesse. Quick draw armed.", "コピー：ジェシー。早撃ち、装填。"], ["Jesse’s aim acquired. Hat: not included.", "ジェシーの照準を取得。帽子は非対応。"]],
+  salary: [["Copy: Tanaka. Overtime mode: on.", "コピー：田中。残業モード、起動。"], ["Tanaka’s tie acquired. Please go easy.", "田中のネクタイを取得。お手柔らかに。"]],
+  alchemist: [["Copy: Hohen. Giant unit deployed.", "コピー：ホーエン。巨大ユニット、展開。"], ["Hohen’s formula loaded. Experiment: start.", "ホーエンの式、読み込み。実験開始。"]],
+};
+const copySayOf = f => { const c = COPY_SAY[f.key]; return c ? L(...c[game.round % 2]) : L('Copy complete.', 'コピー完了'); };
 const sameKind = (f, o) => !!f.robot === !!o.robot;
 function introPair(f) { // the line this fighter says before the first round: [en, ja], or null
   const o = other(f); if (!o) return null;
