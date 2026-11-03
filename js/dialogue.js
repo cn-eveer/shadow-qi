@@ -1,8 +1,8 @@
 'use strict';
 /* ================= dialogue =================
    Fighters speak to each other: before the first round the left-hand fighter opens and the right-hand one answers (DLG[left][right]),
-   and every win has a line for that matchup (lines.js; the match-winning round: FINAL). A fighter who copies someone speaks as that fighter —
-   Mimic copying Kuro answers (or is answered by) anyone the way Kuro would. The special cases:
+   and every win has a line for that matchup (lines.js; the match-winning round: FINAL). Mimic has a voice of his own (MIMIC_TPL: a machine naming
+   the fighter he faces and the technique he copied) and a real fighter facing him has lines for a machine (ROBOTD). The special cases:
      · the mirror match (the same fighter on both sides): different lines for the left and the right fighter (DLG[x][x]; MIR2 and FINAL.self2 for a right-hand win);
      · a real fighter against Mimic copying them: COPYD / COPYW / FINAL.copy for them, MIRROR_ROBOT (lines.js) for Mimic. */
 const DLG = { // DLG[left][right] = [left opens (en, ja), right answers (en, ja)]
@@ -151,6 +151,35 @@ const COPYW = { // a round won against Mimic copying them: [win, narrow, very na
   alchemist: [["A copy is never the original.", "写しは、原型にはなれない。"], ["The copy nearly corrected me.", "写しが私を修正しかけた。"], ["Original and copy... equally cracked.", "原型も写しも、同じだけ割れた。"]],
 };
 
+const ROBOTD = { // a real fighter against Mimic (copying someone else): [they open, they answer Mimic's opener]
+  ninja: [["A machine? ...Keep quiet.", "機械か。音を立てるな。"], ["Analyze this.", "解析できるものならな。"], ["The copy fades. The shadow stays.", "写しは消え、影が残る。"]],  // (the third: they win the match)
+  brawler: [["Metal and wire? Fine. I’ll break it.", "鉄と配線か。いいだろう、砕く。"], ["Strong, yes. Predictable, no.", "強い。だが予測はできん。"], ["Metal breaks. Spirit does not.", "鉄は折れる。魂は折れん。"]],  // (the third: they win the match)
+  staff: [["A robot?! Cool! Can it do tricks?", "ロボット！？かっこいい！芸できる？"], ["Copy me? Try keeping up!", "あたしを真似？ついてこれる？"], ["Robot-san, nice try! Hee hee!", "ロボさん、惜しかったね！ひひっ！"]],  // (the third: they win the match)
+  psychic: [["A machine without spirit. Curious.", "魂のない機械…興味深いですね。"], ["You cannot scan what I haven’t cast.", "放っていない魔法は、スキャンできませんよ。"], ["A reflection of steel. It cracked.", "鋼の鏡像は、割れました。"]],  // (the third: they win the match)
+  paladin: [["A construct of steel. Show me your oath.", "鋼の造り物か。誓いを示せ。"], ["Then measure my sword.", "ならば、我が剣を測るがよい。"], ["Steel yields to faith.", "鋼は、信仰に屈する。"]],  // (the third: they win the match)
+  kappa: [["A robot! Do you eat cucumber?", "ロボットだ！きゅうり食べる？"], ["Stay dry, you’ll rust!", "ぬれるとサビるよ！"], ["Robot-san, don’t rust! Good game!", "ロボさん、サビないでね！いい勝負だった！"]],  // (the third: they win the match)
+  gunman: [["Well I’ll be. A walking toaster.", "こりゃ驚いた。歩くトースターか。"], ["Copy the draw. Not the nerve.", "早撃ちは真似できても、度胸は無理だぜ。"], ["Scrap metal. Nothing personal.", "ただの鉄くずだ。恨みはねえぜ。"]],  // (the third: they win the match)
+  salary: [["A r-robot? Is it... a coworker?", "ろ、ロボット？同僚の方ですか？"], ["Please don’t take my job!", "私の仕事を取らないでください！"], ["Please... don’t replace me. Thank you.", "私を、クビにしないでください…。ありがとうございました。"]],  // (the third: they win the match)
+  alchemist: [["A synthetic organism? Fascinating.", "人工生命体か。実に興味深い。"], ["A copy of a copy. Elegant.", "写しの写し。なかなか洒落ている。"], ["The artificial specimen is... decommissioned.", "人工の標本は…廃棄とする。"]],  // (the third: they win the match)
+};
+// Mimic's own voice: a machine reading out what it is doing, naming the fighter it faces and the technique it copied. Three phrasings for each moment
+// (and, for a win, a fourth from ROBOT_WIN in lines.js), chosen by who he is copying and who he faces.
+const MIMIC_TECH = { ninja: ['Kuro’s shadow arts', 'クロの影の技'], brawler: ['Tetsu’s qi fists', 'テツの気の拳'], staff: ['Mei’s staff', 'メイの棍'], psychic: ['Lyra’s magic', 'ライラの魔法'], paladin: ['Aldric’s holy arms', 'アルドリックの聖なる武装'], kappa: ['Kappa’s water arts', 'カッパの水の技'], gunman: ['Jesse’s quick draw', 'ジェシーの早撃ち'], salary: ['Tanaka’s overtime', '田中の残業'], alchemist: ['Hohen’s golem', 'ホーエンのゴーレム'] };
+const MIMIC_TPL = {
+  open: [['Target: {O}. Loading {T}. Begin.', '対象：{O}。{T}、起動。開始する。'], ['Scanning {O}... {T} ready.', '{O}をスキャン…{T}、準備完了。'], ['{O} detected. {T} engaged.', '{O}を検出。{T}、展開。']],
+  answer: [['Understood, {O}. {T} loaded.', '了解、{O}。{T}、読み込み完了。'], ['Your move is noted, {O}. Running {T}.', '{O}の動きを記録。{T}を実行する。'], ['{O}, acknowledged. {T}: online.', '{O}、確認。{T}、稼働中。']],
+  win: [['{O}: defeated with {T}. Copy confirmed.', '{O}を{T}で撃破。コピー、確認。'], ['{T} works well on {O}. Logging data.', '{O}に{T}は有効。データを記録する。'], ['Round complete. {O}: down. {T}: stable.', 'ラウンド完了。{O}、ダウン。{T}、安定。']],
+  c: [['{T}: unstable... but {O} is down.', '{T}…不安定。だが{O}は倒れた。'], ['Damage high. {O} down. {T} holding.', '損傷大。{O}、ダウン。{T}、維持。'], ['Close. {O} nearly broke my copy.', '危なかった。{O}に、コピーを壊されかけた。']],
+  d: [['Warning: critical. {O} down. {T} nearly lost.', '警告：危険域。{O}、ダウン。{T}、消失寸前。'], ['...Systems failing. {O}: down. Barely.', '…機能停止寸前。{O}、ダウン。ぎりぎりだ。'], ['{T}... flickering. {O} is down. Copy holds.', '{T}…点滅中。{O}は倒れた。コピーは保持。']],
+  final: [['{O}’s data: complete. {T}: mine.', '{O}のデータ、取得完了。{T}は、私のものだ。'], ['Match over. {O} analyzed, defeated, filed.', '試合終了。{O}を解析、撃破、保存。'], ['All of {O}’s data acquired. Copy: perfect.', '{O}の全データ取得。コピー、完璧。']],
+};
+function mimicSay(f, slot) { // Mimic's line: [en, ja]
+  const o = other(f), ks = Object.keys(MIMIC_TECH), v = (ks.indexOf(f.key) + (o.robot ? 4 : ks.indexOf(o.key))) % 4, T = MIMIC_TECH[f.key] || ['the copy', 'コピー'];
+  if (v === 3 && slot !== 'open' && slot !== 'answer') { const w = ROBOT_WIN[f.key]; const l = w && w[slot === 'win' ? 'b' : slot]; if (l) return l; }
+  const t = MIMIC_TPL[slot][v % 3], On = o.robot ? ['MIMIC', 'ミミック'] : [nm0(CHARS[o.key], 0), nm0(CHARS[o.key], 1)];
+  return [t[0].replace('{O}', On[0]).replace('{T}', T[0]), t[1].replace('{O}', On[1]).replace('{T}', T[1])];
+}
+const nm0 = (ch, ja) => ja ? ch.nameJa : ch.name;
 const sameKind = (f, o) => !!f.robot === !!o.robot;
 function introPair(f) { // the line this fighter says before the first round: [en, ja], or null
   const o = other(f); if (!o) return null;
@@ -159,6 +188,8 @@ function introPair(f) { // the line this fighter says before the first round: [e
     if (f.robot) return f.side === 0 ? (MIRROR_ROBOT[a] && MIRROR_ROBOT[a].intro) : (COPYD[a] && COPYD[a][1]);
     return COPYD[a] ? (f.side === 0 ? COPYD[a][0] : COPYD[a][2]) : null;
   }
+  if (f.robot) return mimicSay(f, f.side === 0 ? 'open' : 'answer'); // (Mimic speaks as himself, not as the fighter he copies)
+  if (o.robot) { const d = ROBOTD[a]; return d ? (f.side === 0 ? d[0] : d[1]) : null; } // (a real fighter facing him)
   const left = f.side === 0 ? a : b, right = f.side === 0 ? b : a, d = DLG[left] && DLG[left][right];
   return d ? (f.side === 0 ? d[0] : d[1]) : null;
 }
@@ -172,6 +203,8 @@ function winPick(f) { // the line for this win: [en, ja], or null
     if (f.robot) return MIRROR_ROBOT[a] && MIRROR_ROBOT[a][fin ? 'final' : i === 0 ? 'win' : i === 1 ? 'c' : 'd'];
     return fin ? FINAL[a].copy : COPYW[a][i];
   }
+  if (f.robot) return mimicSay(f, tier === 'ab' ? 'win' : tier);
+  if (o.robot) return fin ? (ROBOTD[a] && ROBOTD[a][2]) : (T[a] && T[a].robot); // (a real fighter beating Mimic)
   if (a === b && f.side === 1) return fin ? FINAL[a].self2 : MIR2[a][i]; // the mirror, won by the right-hand fighter
   if (fin) return FINAL[a] && FINAL[a][a === b ? 'self' : b];
   return T[a] && T[a][b];
