@@ -544,7 +544,7 @@ function drawSalary(J, C, o) {
 }
 function drawBody(key, pose, x, yS, facing, hipUp, o = {}) {
   const ch = CHARS[key], s = o.scale || ch.scale, J = solve(pose); // (o.scale: a form that changes his size — Tanaka's double possession)
-  const C = o.flash ? FLASH : (o.tint || (o.alt && ch.altColors) || ch.colors);
+  const C = o.flash ? FLASH : o.robot ? robotPal((o.alt && ch.altColors) || ch.colors, o.alt) : (o.tint || (o.alt && ch.altColors) || ch.colors); // (o.robot: Mimic's copy, in steel — see robot.js)
   ctx.save();
   const sx = o.sx == null ? 1 : (o.sx >= 0 ? 1 : -1) * Math.max(0.18, Math.abs(o.sx));
   ctx.translate(x, yS); ctx.scale(facing * s * sx, -s); ctx.translate(0, hipUp);
@@ -553,6 +553,7 @@ function drawBody(key, pose, x, yS, facing, hipUp, o = {}) {
   if (o.alpha != null) ctx.globalAlpha = o.alpha;
   if (o.aura) drawAura(J, key);
   DRAWERS[key](J, C, o);
+  if (o.robot && !o.flash) drawRobotParts(J, key, o.alt); // (the visor, core and joints that say whom he is copying)
   ctx.restore();
 }
 const DRAWERS = { ninja: (J, C, o) => drawNinja(J, C, o), brawler: (J, C, o) => drawBrawler(J, C, o), staff: (J, C, o) => drawBao(J, C, o), psychic: (J, C, o) => drawLyra(J, C, o), paladin: (J, C, o) => drawPaladin(J, C, o), kappa: (J, C, o) => drawKappa(J, C, o), gunman: (J, C, o) => drawGunman(J, C, o), salary: (J, C, o) => drawSalary(J, C, o) };
@@ -890,12 +891,12 @@ function drawFighter(f) {
     ctx.strokeStyle = `rgba(220,240,255,${0.5 + 0.3 * Math.sin(globalT * 0.6)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(f.x, GROUND - 4, 40, 9, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); } // getting up: invincible — a pale glow and a blinking body
   if (f.state === 'win') { drawWinFX(f); const ws = winStaffSpin(f); if (ws != null) staffSpin = ws; } // victory.js
   if (f.golem) drawGolem(f);
-  drawBody(f.key, f.pose, f.x + (f.animDX || 0), GROUND - f.y - dance - (f.ch.hover ? hoverOf(f) : 0), f.facing, f.hipUp, { scale: f.ch.scale, armor: f.golem ? armorOf(f) : 0, praying: !!(mv && mv.pose === 'saKneelPray'), caseFront: !!(mv && f.state === 'attack' && f.key === 'salary' && /Briefcase|Case/.test(mv.label || '')), hideMini: f.state === 'attack' && f.move ? (f.move.toDouble ? 'both' : f.move.id === 'smAngel' ? 'angel' : f.move.id === 'smDevil' ? 'devil' : null) : null, gunOut, rot, sx: (turn === null ? 1 : Math.cos(2 * Math.PI * turn)) * tailSx, flash: f.flash > 3 || (wakeInv && Math.floor(globalT / 3) % 2 === 0), aura, blade, sword, speed: Math.abs(f.vx), alpha: blink ? 0.6 : 1, staffExt, staffSpin, floorSpin: !!(mv && mv.floorSpin), alt: f.alt, shieldSpin: !!(mv && mv.shieldSpin), aegisRing: !!(mv && mv.aegisRing), bladeHalo: !!(mv && mv.bladeHalo), shieldOut: !!f.shieldOut, staffOut: !!f.staffOut, possess: f.ch.possess, plateOut: !!f.plateOut, face: f.state, edgeA: excalAura(f, mv), wrist: f.state === 'charge' ? 0 : mv ? (mv.wrist != null ? mv.wrist : 0.25) : 0.6 });
+  drawBody(f.key, f.pose, f.x + (f.animDX || 0), GROUND - f.y - dance - (f.ch.hover ? hoverOf(f) : 0), f.facing, f.hipUp, { scale: f.ch.scale, robot: f.robot, armor: f.golem ? armorOf(f) : 0, praying: !!(mv && mv.pose === 'saKneelPray'), caseFront: !!(mv && f.state === 'attack' && f.key === 'salary' && /Briefcase|Case/.test(mv.label || '')), hideMini: f.state === 'attack' && f.move ? (f.move.toDouble ? 'both' : f.move.id === 'smAngel' ? 'angel' : f.move.id === 'smDevil' ? 'devil' : null) : null, gunOut, rot, sx: (turn === null ? 1 : Math.cos(2 * Math.PI * turn)) * tailSx, flash: f.flash > 3 || (wakeInv && Math.floor(globalT / 3) % 2 === 0), aura, blade, sword, speed: Math.abs(f.vx), alpha: blink ? 0.6 : 1, staffExt, staffSpin, floorSpin: !!(mv && mv.floorSpin), alt: f.alt, shieldSpin: !!(mv && mv.shieldSpin), aegisRing: !!(mv && mv.aegisRing), bladeHalo: !!(mv && mv.bladeHalo), shieldOut: !!f.shieldOut, staffOut: !!f.staffOut, possess: f.ch.possess, plateOut: !!f.plateOut, face: f.state, edgeA: excalAura(f, mv), wrist: f.state === 'charge' ? 0 : mv ? (mv.wrist != null ? mv.wrist : 0.25) : 0.6 });
   const fx = () => { // (mirror match: the second fighter's effects in another hue — the body keeps its own palette)
   const prevOwner = FX_OWNER; FX_OWNER = f;
   if (f.brands > 0) drawBrands(f);
   drawHeavyFX(f);
-  if (SHOW[f.key]) { const sh = SHOW[f.key]; if (showOn() && game.round === 1) { /* (the greeting line only before the first round) */ const t = game.phaseT - (f.side ? 8 : 0); drawSpeech(f, L(...sh.introLine), clamp((t - 14) / 8, 0, 1) * clamp((130 - t) / 10, 0, 1)); }
+  if (SHOW[f.key]) { const sh = SHOW[f.key]; if (showOn() && game.round === 1) { /* (the greeting line only before the first round) */ const t = game.phaseT - (f.side ? 8 : 0); drawSpeech(f, f.robot ? ROBOT_LINE() : L(...sh.introLine), clamp((t - 14) / 8, 0, 1) * clamp((130 - t) / 10, 0, 1)); }
     }
   if (f.state === 'win') { const ln = winLine(f); if (ln) drawSpeech(f, ln, clamp((f.st - 20) / 10, 0, 1)); }
   if (mv && f.state === 'attack' && f.pre > 0 && mv.tellPre && (mv.preTotal - f.pre) < mv.tellPre) drawTellFX(f, mv, mv.preTotal - f.pre);

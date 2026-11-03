@@ -384,9 +384,9 @@ function healthBar(f, x, left) {
   const ny = my + mh + 7;
   ctx.textBaseline = 'top'; ctx.textAlign = left ? 'left' : 'right';
   ctx.font = `18px ${HUD}`;
-  ctx.fillStyle = '#000'; ctx.fillText(nm(f.ch), (left ? x : x + w) + 1, ny + 1);
-  ctx.fillStyle = '#fff'; ctx.fillText(nm(f.ch), left ? x : x + w, ny);
-  const nw = ctx.measureText(nm(f.ch)).width;
+  ctx.fillStyle = '#000'; ctx.fillText(fname(f), (left ? x : x + w) + 1, ny + 1);
+  ctx.fillStyle = '#fff'; ctx.fillText(fname(f), left ? x : x + w, ny);
+  const nw = ctx.measureText(fname(f)).width;
   ctx.font = SMALL; ctx.fillStyle = 'rgba(255,255,255,.78)';
   ctx.fillText(game.online ? (f.netName || '') + (f.side === NET.side ? L(' (you)', '（あなた）') : '') : game.watch ? 'CPU ' + (f.side + 1) : game.demo ? (f.side === 0 ? L('DEMO', '見本') : L('DUMMY', 'ダミー')) : f.side === 0 ? L('YOU', 'あなた') : (game.training ? L('DUMMY', 'ダミー') : 'CPU'), left ? x + nw + 8 : x + w - nw - 8, ny + 4);
   if (f.ch.ammo) (f.key === 'alchemist' ? stoneRow : ammoRow)(f, left ? x + w - 52 : x + 52, ny + 9, left);
@@ -501,7 +501,7 @@ function drawAnnounce() {
   } else if (game.phase === 'fight' && !game.training && t < 45 && game.round) { txt = L('FIGHT!', 'ファイト！'); local = t;
   } else if (game.phase === 'ko' || game.phase === 'time') {
     if (t < 100) { txt = game.phase === 'ko' ? 'K.O.' : L('TIME', 'タイムアップ'); local = t; }
-    else { const w = game.roundWinner; txt = w ? L(w.ch.name + ' WINS', nm(w.ch) + 'の勝利') : L('DRAW', '引き分け'); local = t - 100; }
+    else { const w = game.roundWinner; txt = w ? L((w.robot ? 'MIMIC' : w.ch.name) + ' WINS', (w.robot ? 'ミミック' : nm(w.ch)) + 'の勝利') : L('DRAW', '引き分け'); local = t - 100; }
   }
   if (!txt) return;
   const sc = (big ? 1.6 : 1) * (1 + Math.max(0, 8 - local) * 0.07);
@@ -542,6 +542,7 @@ function drawPreview() {
       g.addColorStop(0, `rgba(${CHARS[key].auraCol},.45)`); g.addColorStop(1, `rgba(${CHARS[key].auraCol},0)`);
       ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, GROUND, 110, 26, 0, 0, Math.PI * 2); ctx.fill();
     }
+    if (key === 'robot' && drawRobotPreview(i, x, fc, sel, mirror)) return; // (Mimic: his plain body, then copy after copy)
     const p = idlePose(i * 1.7, key);
     drawShadow(x, 0, CHARS[key].scale);
     drawBody(key, p, x, GROUND, fc, hipFor(p), { aura: sel, alpha: sel ? 1 : 0.7, alt: mirror && i === 1 });

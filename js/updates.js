@@ -4,6 +4,18 @@
 // version.json on the server says which version is live. When the two differ, the player is asked to reload without the
 // browser's cache, or to erase the site's saved data and reload.
 const RELEASES = [ // notes: a string, or { g: 'group', items: [...] } (groups nest)
+  { v: '1.6.0', date: '2026-11-04', notes: [
+    { g: '新キャラ：ミミック', items: [
+      'ラウンドごとに他のファイターを一人コピーし、その技で戦う（与ダメージは92%）',
+      'コピー相手の色でバイザーとコアが光る。ミラーマッチでは右側が別の色',
+      'トレーニング：Nキーでコピー相手を切り替え',
+    ] },
+    { g: 'その他', items: [
+      'オープニングの新キャラ紹介をミミックに。ホーエンの場面を1つに減らし、テツとメイの場面は技が当たった直後に次へ',
+      '勝ちゼリフ：全キャラが対戦相手ごと（ミラーマッチ・ミミック含む）に、残り体力30%以上・30%未満・10%未満で用意。ミミックはコピー相手と残り体力ごとに用意',
+      'ゴーレムのメテオが届かず連続技が止まる不具合を修正',
+    ] },
+  ] },
   { v: '1.5.3', date: '2026-11-04', notes: [
     { g: 'アルドリック', items: [
       '→→+J しゃがみ斬り：発生16→30フレーム、持続14→20フレーム',

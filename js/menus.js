@@ -43,6 +43,7 @@ function updateTbar() {
   tbar.hidden = !(game.mode === 'fight' && game.training && !game.demo);
   tbar.querySelector('[data-t="dummy"]').textContent = L(`Dummy: ${DUMMY_LABEL[game.dummyMode]} (T)`, `ダミー：${DUMMY_LABEL[game.dummyMode]} (T)`);
   tbar.querySelector('[data-t="mp"]').textContent = L(`MP refill: ${game.mpFull ? 'on' : 'off'} (M)`, `MP回復：${game.mpFull ? 'オン' : 'オフ'} (M)`);
+  const mb = tbar.querySelector('[data-t="mimic"]'); mb.hidden = !fighters.some(f => f.robot); { const r = fighters.find(f => f.robot); mb.textContent = L(`Mimic: ${r ? nm(CHARS[r.mimic]) : ''} (N)`, `コピー：${r ? nm(CHARS[r.mimic]) : ''} (N)`); } // (Mimic: which fighter he is copying — step through them)
   tbar.querySelector('[data-t="reset"]').textContent = L('Reset to start position (R)', '初期位置に戻す (R)');
   const lb = tbar.querySelector('[data-t="list"]'); lb.textContent = L(`Moves: ${game.moveList ? 'on' : 'off'} (L)`, `技表：${game.moveList ? 'オン' : 'オフ'} (L)`); lb.setAttribute('aria-pressed', String(!!game.moveList));
   const hb = tbar.querySelector('[data-t="hitbox"]'); hb.textContent = L(`Hitboxes: ${game.showHitboxes ? 'on' : 'off'} (H)`, `当たり判定：${game.showHitboxes ? 'オン' : 'オフ'} (H)`); hb.setAttribute('aria-pressed', String(!!game.showHitboxes));
@@ -55,6 +56,7 @@ function trainingAction(t) {
   if (t === 'dummy') game.dummyMode = DUMMY_MODES[(DUMMY_MODES.indexOf(game.dummyMode) + 1) % DUMMY_MODES.length];
   else if (t === 'mp') game.mpFull = !game.mpFull;
   else if (t === 'reset') resetPositions();
+  else if (t === 'mimic') robotCycle(1);
   else if (t === 'list') game.moveList = !game.moveList;
   else if (t === 'hitbox') game.showHitboxes = !game.showHitboxes;
   sfx('select'); updateTbar();
@@ -146,6 +148,7 @@ function showMenu() {
       ${pick('gunman', 'Gunslinger. Two revolvers and a long coat: mid-range shots, jump shots, no kicks.', 'ガンマン。二丁拳銃とロングコート：中距離の射撃、ジャンプショット、足技なし。')}
       ${pick('salary', 'Salaryman. An angel and a devil ride his shoulders, and either can take him over.', 'サラリーマン。両肩の天使と悪魔、どちらかに憑依されて戦う。')}
       ${pick('alchemist', 'Golem Doctor. U and I: his stone golem’s blows. J and K: his own stone-knuckle and glowing stones. Strung together, they fight as one.', 'ゴーレム博士。U・Iは石のゴーレムの攻撃、J・Kは博士自身の石拳と光る石。つなげて二人で一つの戦い方。')}
+      ${pick('robot', 'Copy Robot. Every round he scans the stage and copies one of the other fighters: their techniques, in steel plate. The colour of his visor and core says who.', 'コピーロボ。ラウンドごとに他のファイターを一人コピーし、その技で戦う。鋼の体、バイザーとコアの色でだれかわかる。')}
     </div>
     <div class="pickinfo"><span><b>${nm(CHARS[c])}</b> ${blurbs[c]}</span><button class="ghost sm" data-act="moves">${L('Move list', '技表')}</button></div>
     <div class="vsrow">${L('CPU opponent:', 'CPUの相手：')} ${CHAR_ORDER.map(k => `<button class="${game.p2Char === k ? 'on' : ''}" data-vs="${k}" aria-pressed="${game.p2Char === k}">${nm(CHARS[k])}</button>`).join('')}</div>
@@ -175,7 +178,7 @@ function showResult(w) {
   }
   ov.hidden = false;
   ov.innerHTML = `<div class="panel">
-    <div class="logo sm">${w ? L(w.ch.name + ' WINS', nm(w.ch) + 'の勝利') : L('DRAW GAME', '引き分け')}</div>
+    <div class="logo sm">${w ? L((w.robot ? 'MIMIC' : w.ch.name) + ' WINS', (w.robot ? 'ミミック' : nm(w.ch)) + 'の勝利') : L('DRAW GAME', '引き分け')}</div>
     <p class="sub">${w ? L(`${who} the match as the ${w.ch.title}.`, `${whoJa}（${w.ch.titleJa}）の勝ち。`) : L('Nobody takes the match.', '勝者なし。')}</p>
     <div class="row"><button class="go" data-act="rematch">${L('REMATCH', '再戦')}</button><button class="ghost" data-act="menu">${L('Change fighters', 'キャラ変更')}</button></div>
     <div class="hint">${L('Enter for a rematch, Esc for the menu.', 'Enterで再戦、Escでメニュー。')}</div>
@@ -276,6 +279,7 @@ window.addEventListener('keydown', e => {
       else if (e.code === 'KeyR') trainingAction('reset');
       else if (e.code === 'KeyL') trainingAction('list');
       else if (e.code === 'KeyH') trainingAction('hitbox');
+      else if (e.code === 'KeyN' && fighters.some(f => f.robot)) trainingAction('mimic');
       else if (e.code === 'KeyC' && game.moveList) stepTab(); // (the 技表's tabs)
       else if (e.code === 'Comma' && game.moveList) stepMoveList(-1);
       else if (e.code === 'Period' && game.moveList) stepMoveList(1);
@@ -309,9 +313,9 @@ function applyLang() { // header, drawer, tabs and which language of the command
   drawer.querySelectorAll('[data-l]').forEach(el => { const [en, ja] = el.dataset.l.split('|'); el.textContent = L(en, ja); });
   drawer.querySelectorAll('[data-diff]').forEach(b => { b.textContent = L(...DIFF_NAMES[b.dataset.diff]); b.classList.toggle('on', b.dataset.diff === game.diff); b.setAttribute('aria-pressed', String(b.dataset.diff === game.diff)); });
   const tagEl = document.getElementById('tagline');
-  tagEl.textContent = IS_MOBILE ? L('Nine fighters. Touch controls: the pad on the left, U I J K on the right.', '9人のファイター。タッチ操作：左のパッドで移動、右のU・I・J・Kで攻撃。') : L('Nine fighters. CPU battles on four difficulties, training, sample combos and online battles. Keyboard required.', '9人のファイター。4段階の難易度のCPU戦、トレーニング、コンボ見本、オンライン対戦。キーボードで操作します。');
+  tagEl.textContent = IS_MOBILE ? L('Ten fighters. Touch controls: the pad on the left, U I J K on the right.', '10人のファイター。タッチ操作：左のパッドで移動、右のU・I・J・Kで攻撃。') : L('Ten fighters. CPU battles on four difficulties, training, sample combos and online battles. Keyboard required.', '10人のファイター。4段階の難易度のCPU戦、トレーニング、コンボ見本、オンライン対戦。キーボードで操作します。');
   tagEl.title = tagEl.textContent; // (the whole line on hover, when it's shortened)
-  const tabNames = { ctl: ['Controls', '操作'], ninja: ['Kuro', 'クロ'], brawler: ['Tetsu', 'テツ'], staff: ['Mei', 'メイ'], psychic: ['Lyra', 'ライラ'], paladin: ['Aldric', 'アルドリック'], kappa: ['Kappa', 'カッパ'], alchemist: ['Hohen', 'ホーエン'], gunman: ['Jesse', 'ジェシー'], salary: ['Tanaka', '田中'] };
+  const tabNames = { ctl: ['Controls', '操作'], ninja: ['Kuro', 'クロ'], brawler: ['Tetsu', 'テツ'], staff: ['Mei', 'メイ'], psychic: ['Lyra', 'ライラ'], paladin: ['Aldric', 'アルドリック'], kappa: ['Kappa', 'カッパ'], alchemist: ['Hohen', 'ホーエン'], robot: ['Mimic', 'ミミック'], gunman: ['Jesse', 'ジェシー'], salary: ['Tanaka', '田中'] };
   drawer.querySelectorAll('.tabs button').forEach(b => { b.textContent = L(...tabNames[b.dataset.tab]); b.classList.toggle('on', b.dataset.tab === drawerTab); b.setAttribute('aria-selected', String(b.dataset.tab === drawerTab)); });
   drawer.querySelectorAll('article.card').forEach(a => { a.hidden = !(a.dataset.tab === drawerTab && a.dataset.lang === game.lang); });
 }
