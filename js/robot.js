@@ -117,14 +117,10 @@ function drawRobotFX(f) { // the ring on the floor and the scan when a round beg
     ctx.fillStyle = g; ctx.fillRect(x - 54 * s, y - 16, 108 * s, 32);
     ctx.strokeStyle = `rgba(${col},${0.7 * (1 - k)})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(x, GROUND + 2, (20 + k * 80) * s, 4 + k * 12, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
 }
-function drawRobotPreview(i, x, fc, sel, mirror) { // the picking screen: his plain body, then a scan, then a copy, round and round through the fighters
-  const pool = mimicPool(), T = 170, t = globalT + i * 57, n = Math.floor(t / T), ph = t % T, k = pool[n % pool.length], nx = pool[(n + 1) % pool.length], col = mimicCol(k, mirror && i === 1);
-  const p = idlePose(i * 1.7, k);
+function drawRobotPreview(i, x, fc, sel, mirror) { // the picking screen: just his robot form (its core slowly takes on each fighter's colour in turn)
+  const pool = mimicPool(), n = Math.floor((globalT + i * 57) / 170) % pool.length, p = idlePose(i * 1.7, 'robot');
   drawShadow(x, 0, 1.04);
-  if (ph < 44) { drawBody('robot', idlePose(i * 1.7, 'robot'), x, GROUND, fc, hipFor(p), { aura: sel, alpha: sel ? 1 : 0.7, alt: mirror && i === 1, core: mimicCol(nx, mirror && i === 1) }); }
-  else drawBody(k, p, x, GROUND, fc, hipFor(p), { aura: false, alpha: sel ? 1 : 0.7, robot: true, alt: mirror && i === 1 });
-  const sc = ph < 44 ? ph / 44 : ph < 62 ? (ph - 44) / 18 : -1; // a scan bar on the change
-  if (sc >= 0) { const y = GROUND - sc * 190; ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createLinearGradient(0, y - 14, 0, y + 14); g.addColorStop(0, `rgba(${ph < 44 ? mimicCol(nx, mirror && i === 1) : col},0)`); g.addColorStop(0.5, `rgba(${ph < 44 ? mimicCol(nx, mirror && i === 1) : col},.8)`); g.addColorStop(1, `rgba(${ph < 44 ? mimicCol(nx, mirror && i === 1) : col},0)`); ctx.fillStyle = g; ctx.fillRect(x - 50, y - 14, 100, 28); ctx.restore(); }
+  drawBody('robot', p, x, GROUND, fc, hipFor(p), { aura: sel, alpha: sel ? 1 : 0.7, alt: mirror && i === 1, core: mimicCol(pool[n], mirror && i === 1) });
   return true;
 }
 COMBO_SET.robot = []; PUNISH_SET.robot = []; DEMOS.robot = [];

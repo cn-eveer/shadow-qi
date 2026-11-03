@@ -17,12 +17,12 @@ const OP_ROSTER = [
 const OP_CUT = 150, OP_PRO = 130, OP_NEW = 170, OP_CLASH = 110, OP_CLASHES = [['ninja', 'staff'], ['brawler', 'paladin'], ['psychic', 'ninja']];
 // real battle footage: the actual game, playing one of each fighter's sample combos, filmed up close
 const OP_BATTLE = [ // a highlight reel: each clip starts right at the action (from: the step to start on; upto: the step to stop before — Mei ends on her super) and runs until the combo's last hit has landed; supers and big combos. Samples are found by name, so adding samples never shifts the reel
-  { key: 'ninja', name: '6. Lightning stun: two juggles', from: 2, len: 195, sup: true }, { key: 'staff', name: '6. Jump-in Falling Staff: two juggles', from: 2, upto: 4, len: 205, sup: true },
-  { key: 'psychic', name: '3. Falling Star: Spirit Fist finish', len: 180 }, { key: 'brawler', name: '6. Qi Parry: two juggles', from: 3, len: 205, sup: true },
+  { key: 'ninja', name: '6. Lightning stun: two juggles', from: 2, len: 195, sup: true }, { key: 'staff', name: '6. Jump-in Falling Staff: two juggles', from: 2, upto: 4, len: 145, sup: true },
+  { key: 'psychic', name: '3. Falling Star: Spirit Fist finish', len: 180 }, { key: 'brawler', name: '6. Qi Parry: two juggles', from: 3, len: 52, sup: true },
   { key: 'kappa', name: '8. Great Flood (super)', len: 290, sup: true }, { key: 'salary', name: '6. Devil Possession: Demon Uppercut', len: 255 },
   { key: 'gunman', name: '8. High Noon (super)', len: 150, sup: true }, { key: 'paladin', name: '8. Sanctuary (super)', len: 150, sup: true },
   { key: 'alchemist', name: '2. Golem in front (long): lift, lift, bounce', len: 260 }, // (Hohen: one clip, his golem's long combo)
-  { key: 'robot', spot: true, pre: 100, len: 0 }]; // Mimic, the newest: just his entrance — his robot form and the word 登場 (no clips: he fights as everyone else)
+  { key: 'robot', spot: true, pre: 150, len: 0 }]; // Mimic, the newest: just his entrance — the word 登場 and his robot form, scanning into a copy of every fighter in turn (no clips: he fights as everyone else)
 const OP_NEWS = { head: () => L('ENTRANCE', '登場') }; // (the newest fighter's word)
 const opDemoIdx = c => { const i = (COMBO_SET[c.key] || []).findIndex(d => d.name === c.name); return i >= 0 ? i : 0; };
 const OP_BAT0 = OP_PRO, OP_CLASH0 = OP_BAT0 + OP_BATTLE.reduce((n, c) => n + (c.pre || 0) + c.len, 0); // (no slow roster cuts or clashes any more: straight into the action)
@@ -271,16 +271,18 @@ function opStripes(y, h, off, col, a) { // a hazard band: the fighter's colour o
   for (let x = -h - 40 + ((off % 40) + 40) % 40; x < W + h; x += 40) { ctx.beginPath(); ctx.moveTo(x, y + h); ctx.lineTo(x + 18, y + h); ctx.lineTo(x + 18 + h, y); ctx.lineTo(x + h, y); ctx.closePath(); ctx.fill(); }
   ctx.restore();
 }
-function opNewcomer(i, k) { // the newest fighter's entrance: his plain robot form against the speed lines, and one word — 登場
+function opNewcomer(i, k) { // the newest fighter's entrance: the word 登場, and his robot form against the speed lines scanning into a copy of every fighter in turn
   const r = OP_ROSTER.find(q => q.key === OP_BATTLE[i].key), col = r.col, gy = H - 90;
   opBackdrop(col, k);
   opSpeedLines(col, 0.35, -1, 14);
-  const x = lerp(200, 330, ease(k / 30));
-  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(x, gy); ctx.scale(1, 0.28); ctx.rotate(k * 0.012); // a ring on the ground
-  for (const [lw, al] of [[10, 0.25], [3, 0.95]]) { ctx.strokeStyle = `rgba(${col},${al * ease(k / 14)})`; ctx.lineWidth = lw; ctx.beginPath(); ctx.arc(0, 0, 150, 0, Math.PI * 2); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0, 112, 0, Math.PI * 2); ctx.stroke(); }
+  const x = lerp(200, 330, ease(k / 30)), pool = mimicPool(), T = 9, n = k < 34 || k >= 34 + T * pool.length ? -1 : Math.floor((k - 34) / T), kc = n < 0 ? null : pool[n], cc = kc ? mimicCol(kc) : col, ph = n < 0 ? 0 : (k - 34) % T;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(x, gy); ctx.scale(1, 0.28); ctx.rotate(k * 0.012); // a ring on the ground, in the colour of the copy
+  for (const [lw, al] of [[10, 0.25], [3, 0.95]]) { ctx.strokeStyle = `rgba(${cc},${al * ease(k / 14)})`; ctx.lineWidth = lw; ctx.beginPath(); ctx.arc(0, 0, 150, 0, Math.PI * 2); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0, 112, 0, Math.PI * 2); ctx.stroke(); }
   ctx.restore();
   ctx.save(); ctx.translate(330, gy - 100); ctx.scale(1.25, 1.25); ctx.translate(-330, -(gy - 100));
-  opPose('robot', k < 26 ? POSES.idle : lerpPose(POSES.idle, POSES.opRobot, ease((k - 26) / 10)), x, gy, 1, { aura: k > 26, alpha: ease(k / 12) });
+  if (kc) opPose(kc, idlePose(0, kc), x, gy, 1, { robot: true });
+  else opPose('robot', k < 26 ? POSES.idle : lerpPose(POSES.idle, POSES.opRobot, ease(Math.min(1, (k - 26) / 10))), x, gy, 1, { aura: k > 26, alpha: ease(k / 12), core: mimicCol(pool[0]) });
+  if (n >= 0) { const sy = gy - (ph / T) * 200; ctx.globalCompositeOperation = 'lighter'; const sg = ctx.createLinearGradient(0, sy - 14, 0, sy + 14); sg.addColorStop(0, `rgba(${cc},0)`); sg.addColorStop(0.5, `rgba(${cc},.9)`); sg.addColorStop(1, `rgba(${cc},0)`); ctx.fillStyle = sg; ctx.fillRect(x - 70, sy - 14, 140, 28); }
   ctx.restore();
   const tk = clamp((k - 20) / 10, 0, 1), sc = 1 + (1 - ease(tk)) * 1.8;
   ctx.save(); ctx.translate(690, 250); ctx.scale(sc, sc); opBigText(OP_NEWS.head(), 0, 0, 110, '#ffffff', tk, 'center', true); ctx.restore();
@@ -356,7 +358,7 @@ const OP_TEAM = [ // back row first (drawn behind, a little higher up the ridge)
   { key: 'ninja', pose: 'opNinja', x: 242, y: -10, sc: 1, f: 1, enter: 'smoke', fx: 'shadow' },
   { key: 'brawler', pose: 'opBrawler', x: 612, y: -10, sc: 1, f: -1, enter: 'drop', fx: 'qi' },
   { key: 'gunman', pose: 'opGunman', x: 797, y: 0, sc: 1, f: -1, enter: 'slide', fx: 'dust' },
-  { key: 'robot', pose: 'opRobot', x: 427, y: 0, sc: 1, f: 1, enter: 'drop', fx: 'none' }, // (front row, centre: the newest, last to arrive, in his own robot form)
+  { key: 'robot', pose: 'opRobot', x: 427, y: 0, sc: 1, f: 1, enter: 'drop', fx: 'none' }, // (front row, centre: the newest, last to arrive, in his plain robot form)
 ];
 function opGroup(k) { // everyone together, then the logo
   const gy = H - 70;
