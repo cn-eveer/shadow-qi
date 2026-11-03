@@ -896,7 +896,7 @@ function drawFighter(f) {
   const prevOwner = FX_OWNER; FX_OWNER = f;
   if (f.brands > 0) drawBrands(f);
   drawHeavyFX(f);
-  if (SHOW[f.key]) { const sh = SHOW[f.key]; if (showOn() && game.round === 1) { /* (the greeting line only before the first round) */ const t = game.phaseT - (f.side ? 8 : 0); drawSpeech(f, L(...sh.introLine), clamp((t - 14) / 8, 0, 1) * clamp((130 - t) / 10, 0, 1)); }
+  if (SHOW[f.key]) { const sh = SHOW[f.key]; if (showOn() && game.round === 1) { /* (the greeting line only before the first round) */ const t = game.phaseT - (f.side ? 8 : 0); drawSpeech(f, f.robot ? ROBOT_LINE() : L(...sh.introLine), clamp((t - 14) / 8, 0, 1) * clamp((130 - t) / 10, 0, 1)); }
     }
   if (f.state === 'win') { const ln = winLine(f); if (ln) drawSpeech(f, ln, clamp((f.st - 20) / 10, 0, 1)); }
   if (mv && f.state === 'attack' && f.pre > 0 && mv.tellPre && (mv.preTotal - f.pre) < mv.tellPre) drawTellFX(f, mv, mv.preTotal - f.pre);

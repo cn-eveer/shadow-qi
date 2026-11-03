@@ -37,6 +37,8 @@ function robotRoll(f) { const pool = mimicPool().filter(k => k !== f.mimicLast);
 { const hit = applyHit; applyHit = function (a, d, h, side, hb, hu) { // a copy hits a little softer
   if (a && a.robot && h && h.dmg) { h = { ...h, dmg: Math.max(1, Math.round(h.dmg * ROBOT_DMG)) }; arguments[2] = h; }
   return hit.apply(this, arguments); }; }
+const ROBOT_LINE = () => L('Copy complete.', 'コピー完了'); // (what Mimic says — never the line of the fighter he is copying: at the start of the match and when he wins)
+{ const wl = winLine; winLine = function (f) { return f && f.robot ? ROBOT_LINE() : wl(f); }; }
 const fname = f => f.robot ? L('MIMIC ▸ ', 'ミミック▸') + nm(f.ch) : nm(f.ch); // (the health bar: who he is, and who he is copying)
 const golemSteel = {};
 function robotGolemPal(f) { // Hohen's golem when Mimic copies him: a robotic giant — steel plate, a core and eyes in the copy's colour
