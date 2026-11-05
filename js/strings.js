@@ -627,7 +627,7 @@ function spawnOrb(f, idx, big) { // (big: ← ← + I's one great Thunder Ball, 
 function launchOrb(f, idx) {
   for (const p of projs) if (p.owner === f && p.type === 'homing' && p.hold && p.idx === idx) {
     const o = other(f), dx = o.x - p.x, dy = o.y + 70 - p.y, L = Math.hypot(dx, dy) || 1;
-    const v = p.big ? 4 : 5; p.hold = false; p.vx = dx / L * v; p.vy = dy / L * v; p.dir = Math.sign(dx) || f.facing; sfx(p.big ? 'beam' : 'throw');
+    const v = p.big ? 4 : 5; p.hold = false; p.vx = dx / L * v; p.vy = dy / L * v; p.dir = Math.sign(dx) || f.facing; p.startX = p.x; p.startY = p.y; sfx(p.big ? 'beam' : 'throw');
   }
 }
 function projBox(p) {
@@ -917,6 +917,9 @@ function updateProjs() {
         orbHold(p); continue;
       }
       p.ft = (p.ft || 0) + 1;
+      const maxRange = 300; // short range for lightning ball
+      const travelDist = Math.hypot(p.x - (p.startX || p.x), p.y - (p.startY || p.y));
+      if (travelDist > maxRange) { p.dead = true; sparks(p.x, GROUND - p.y, 'clash'); continue; } // dies at max range
       if (p.ft < 60) { // track the opponent for about a second
         const o = other(p.owner), dx = o.x - p.x, dy = (caughtIn(o) ? o.y : 0) + 70 * o.ch.scale - p.y, L = Math.hypot(dx, dy) || 1; // (they home in at body height: jump over them)
         if (caughtIn(o) || o.y < 20) p.vx += (dx / L * 6 - p.vx) * 0.07; if (caughtIn(o)) p.vy += (dy / L * 6 - p.vy) * 0.07; else { p.vy = 0; p.y += (70 - p.y) * 0.25; } // (on someone not in a combo they drop to body height and fly level: a jump clears them)
