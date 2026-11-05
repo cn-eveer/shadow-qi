@@ -406,28 +406,31 @@ const AFTER_TWO_RISES = 1.0; // hits after the second lift or bounce do their no
 const EXTEND_BONUS = 26; // a combo that adds its second lift or bounce (within the rules) earns this much extra damage, once — so juggle → bounce → finisher always does clearly more than juggle → finisher
 const BOUNCE_DMG = 1.3; // a bounce (slammed into the floor and back up) hits 30% harder
 // How high an attack hits, from its animation (where its hitbox reaches when it connects) and what it does:
-//   'low'     legs only (sweeps, slides, floor shockwaves): a crouching guard stops it, a standing one doesn't; jump over it
-//   'midlow'  reaches the legs and the body (launchers rising off the floor, bounces and drops crashing down to it,
-//             big low swings, supers that fill the screen): it hits a crouching guard; a standing guard stops it; jump over it
-//   'mid'     the body, or the body and the head: a standing guard stops it; it hits a crouching fighter, as a counter hit
-//             (punches and anything higher pass over a crouching fighter)
+//   'low'     the legs (sweeps, slides, floor shockwaves), and everything that reaches them: launchers rising off the floor,
+//             bounces, drops and overheads crashing down, big low swings, supers that fill the screen — a crouching guard
+//             stops it, a standing one doesn't; jump over it
+//   'mid'     the body: a standing guard stops it; it hits a crouching fighter, as a counter hit. A mid that reaches above a
+//             standing head is a high (heightTag): it passes over a crouching fighter (ducksUnder)
 const LOW_TOP = 45, SHIN = 24; // (in game units from the floor)
 const fromAbove = m => !!(m && (m.bounce || m.meteor || m.overhead)), rising = m => !!(m && (m.launch || m.relaunch || m.neutralLaunch));
+// There is no 'midlow' any more: everything that used to be mid + low (bounces, drops, overheads, column hits, launchers
+// rising off the floor, swings that sweep the legs) is a low — guarded crouching, not standing.
 function heightClass(h, hb) {
-  if (fromAbove(h) || (hb && hb.y1 - hb.y0 >= 390)) return 'midlow'; // bounces, drops and overheads crashing down; column hits (supers, crystals, pillars)
+  if (fromAbove(h) || (hb && hb.y1 - hb.y0 >= 390)) return 'low'; // bounces, drops and overheads crashing down; column hits (supers, crystals, pillars)
   if (h.low) return 'low'; // slides and sweeps along the floor, even the ones that scoop them up into a juggle
-  if (rising(h)) return 'midlow'; // launchers rising off the floor
+  if (rising(h)) return 'low'; // launchers rising off the floor
   if (hb && hb.y1 <= LOW_TOP) return 'low';
-  if (hb && hb.y0 < SHIN) return 'midlow'; // a swing that sweeps the legs as well as the body
+  if (hb && hb.y0 < SHIN) return 'low'; // a swing that sweeps the legs as well as the body
   return 'mid';
 }
 // Training: each attack's height, shown where it lands (Settings → attack heights). A mid is split by how far up it reaches on them:
-// high (passes over a crouching fighter), high + mid (from the body to above the head, so it can't be ducked or jumped early) and mid (the body)
-const HEIGHT_TAGS = { high: ['HIGH', '上段', '150,205,255'], highmid: ['HIGH + MID', '上中段', '140,235,215'], mid: ['MID', '中段', '255,226,120'], midlow: ['MID + LOW', '中下段', '255,165,90'], low: ['LOW', '下段', '255,125,160'] };
+// high (anything reaching above a standing head: it passes over a crouching fighter) and mid (the body)
+const HEIGHT_TAGS = { high: ['HIGH', '上段', '150,205,255'], mid: ['MID', '中段', '255,226,120'], low: ['LOW', '下段', '255,125,160'] };
 function heightTag(h, hb, d) {
   const c = heightClass(h, hb), s = d.ch.scale;
-  return c !== 'mid' || !hb ? c : hb.y0 >= 95 * s ? 'high' : hb.y1 > 135 * s ? 'highmid' : 'mid'; // (a crouching fighter is 95 tall, a standing one 135)
+  return c !== 'mid' || !hb ? c : hb.y0 >= 95 * s || hb.y1 > 135 * s ? 'high' : 'mid'; // (a crouching fighter is 95 tall, a standing one 135: a blow over the standing head is a high, whatever it reaches down to)
 }
+const ducksUnder = (d, h, hb) => d.y <= 0 && !h.grab && (d.state === 'crouch' || (!!d.inp && !!d.inp.down && ['stand', 'guard', 'blockstun', 'recover', 'hitstun'].includes(d.state))) && heightTag(h, hb, d) === 'high'; // a crouching fighter is under a high: it misses
 function showHeight(d, side, hb, h, miss) {
   if (!game.training || game.demo || !game.heights || !hb || d.state === 'knock' || d.state === 'down') return; // (not on a juggle or someone lying down)
   const t = HEIGHT_TAGS[heightTag(h, hb, d)], s = d.ch.scale;
@@ -516,6 +519,7 @@ function applyHit(a, d, h, side, hb, hu) {
   const canGuard = !d.ch.noGuard && ((d.state === 'stand' || d.state === 'crouch' || d.state === 'guard' || d.state === 'blockstun' || d.state === 'recover' || d.state === 'bdash' || midCombo) && d.y <= 0 && !h.grab) || airGuard; // a throw can't be guarded; a back dash still guards
   const autoAll = !airGuard && autoGuardFor(d, -side), hc = heightClass(h, hb);
   const low = !!d.inp.down || d.state === 'crouch'; // (crouching: the guard is a crouching one — lows only)
+  if (ducksUnder(d, h, hb)) { showHeight(d, side, hb, h, true); return null; } // a high over someone crouching: it whiffs, like a punch over their head
   // holding away guards every attack, standing or crouching;
   // for a moment after the sides swap (a cross-up), holding either direction still guards
   const holding = d.inp.h === side || (!h.noGrace && d.inp.h !== 0 && game.frame - d.sideT <= 10)
@@ -524,11 +528,11 @@ function applyHit(a, d, h, side, hb, hu) {
   const autoBlock = d.ch.autoBlock && !d.ch.noGuard && d.state === 'stand' && d.y <= 0 && d.st >= 10 && Math.abs(d.vx) < 0.5 && !(d.inp && (d.inp.h || d.inp.btn || d.inp.down)) && !h.grab
     && !(d.ctrl instanceof Dummy && game.dummyMode !== 'guard'); // (a training dummy set to stand still stays hittable, for practising combos)
   if (autoBlock && !holding) popTextOnce(d, L('AUTO GUARD', 'オートガード'));
-  // a crouching guard stops lows only — a mid or a mid + low hits someone crouching, as a counter hit (highs pass over them);
-  // a standing guard stops highs, mids and mid + lows but not lows
-  const lowHit = !airGuard && ((hc === 'low' && !low) || ((hc === 'midlow' || hc === 'mid') && low));
+  // a crouching guard stops lows only — a mid hits someone crouching, as a counter hit (highs pass over them, see ducksUnder);
+  // a standing guard stops highs and mids but not lows
+  const lowHit = !airGuard && ((hc === 'low' && !low) || (hc === 'mid' && low));
   showHeight(d, side, hb, h);
-  if (hc !== 'low' && low && !airGuard && canGuard && (holding || autoAll)) popText(d.x, GROUND - d.y - 175, hc === 'midlow' ? L('MID + LOW!', '中下段！') : L('MID!', '中段！'), '255,200,120'); // (crouch-guarding a mid or a mid + low: it hits)
+  if (hc !== 'low' && low && !airGuard && canGuard && (holding || autoAll)) popText(d.x, GROUND - d.y - 175, L('MID!', '中段！'), '255,200,120'); // (crouch-guarding a mid: it hits)
   if (canGuard && (holding || autoBlock || autoAll) && !lowHit) {
     const pushB = (h.bpush != null ? h.bpush : (h.push || 1) * 0.9) * (h.rushTag ? 1 : a.ch.pushMul || 1); // (rush strings keep their own spacing)
     const big = guardBig(a, h); d.guard -= guardCost(a, d, h, big); d.guardIdle = 0;

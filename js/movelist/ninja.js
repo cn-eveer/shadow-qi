@@ -12,7 +12,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Kunai Slash<small>Heavy punch. Lunges in with a wide blade slash.</small></td><td class="keys"><kbd>I</kbd></td></tr>
           <tr><td>Crescent Kick<small>Heavy kick. A high arcing kick that also catches jumpers.</small></td><td class="keys"><kbd>K</kbd></td></tr>
           <tr><td>Moon Tempest<small>A crescent of shadow along the floor: a mid that can be jumped, short-lived (0.4 s). 14F, 5 frames of recovery, even when guarded; knocks down.</small></td><td class="cmd">← → + U</td></tr>
-          <tr><td>Full Moon Tempest<small>A tall, slow crescent that lasts much longer: it can’t be jumped and it hits a crouching guard (TOP). 18F, 5 frames of recovery, even when guarded; knocks down.</small></td><td class="cmd">← → + I</td></tr>
+          <tr><td>Full Moon Tempest<small>A tall, slow crescent that lasts much longer: it can’t be jumped. A low: guard it crouching (a standing guard won’t stop it). 18F, 5 frames of recovery, even when guarded; knocks down.</small></td><td class="cmd">← → + I</td></tr>
           <tr><td>Sweep<small>Low, with a long reach. Knocks down; like the Crescent Kick, on a counter hit or a punish it launches them instead: juggle with U, U, K.</small></td><td class="cmd">↓ + K</td></tr>
           <tr><td>Shadow Charge Upper<small>Looks exactly like Shadow Clone Strike, but the shadow dashing in is the real Kuro and the one doing the hand sign is a decoy. It ends in a smooth rising uppercut that launches the opponent so you can juggle them. If the uppercut is guarded or misses, pick a follow-up instead. If he’s hit before the kick, he vanishes, reappears behind the attacker and slashes, leaving them stunned so he can launch them.</small></td><td class="cmd">→ → + U</td></tr>
           <tr class="sub"><td>Shadow Strike<small>Reappears behind the opponent and slashes. Hit from behind, they’re left stunned, so you can launch them with ↓ + I.</small></td><td class="cmd">then U</td></tr>
@@ -68,7 +68,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>クナイ斬り<small>強パンチ。大きく踏み込んで斬りつける。</small></td><td class="keys"><kbd>I</kbd></td></tr>
           <tr><td>三日月蹴り<small>強キック。弧を描く高い蹴り。カウンターや確定反撃で当てると打ち上げる。</small></td><td class="keys"><kbd>K</kbd></td></tr>
           <tr><td>月の嵐<small>影の三日月が床を走る。中段でジャンプでかわせ、すぐ消える（0.4秒）。発生14F、硬直5、ガードされても五分。ダウンを奪う。</small></td><td class="cmd">← → + U</td></tr>
-          <tr><td>満月の嵐<small>背の高いゆっくりした三日月で、長く残る。ジャンプでかわせず、しゃがみガードにも当たる（中下段）。発生18F、硬直5、ガードされても五分。ダウンを奪う。</small></td><td class="cmd">← → + I</td></tr>
+          <tr><td>満月の嵐<small>背の高いゆっくりした三日月で、長く残る。ジャンプでかわせない。下段：しゃがみガードで防ぐ（立ちガードでは止まらない）。発生18F、硬直5、ガードされても五分。ダウンを奪う。</small></td><td class="cmd">← → + I</td></tr>
           <tr><td>足払い<small>下段でリーチが長い。ダウンを奪う。三日月蹴りと同じく、カウンターや確定反撃で当てると打ち上げ、U、U、Kで追撃できる。</small></td><td class="cmd">↓ + K</td></tr>
           <tr><td>影突進アッパー<small>分身の術に見せかけて、本物のクロが影となって突進し、なめらかなアッパーで打ち上げる。ガードされたら追加入力（下記）。突進前に攻撃されると消えて背後に現れ、斬って気絶させる。</small></td><td class="cmd">→ → + U</td></tr>
           <tr class="sub"><td>影斬り<small>背後に現れて斬る。背後から当たると相手は気絶。</small></td><td class="cmd">続けて U</td></tr>

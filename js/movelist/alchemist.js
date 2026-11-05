@@ -10,11 +10,11 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <div class="scroll"><table>
         <tbody>
           <tr><td>Golem Jab · Hook <small>Mid. U, then U again: its other fist.</small></td><td class="keys"><kbd>U</kbd></td></tr>
-          <tr><td>Golem Hammer <small>Mid + low (from above: guard standing). The third U of a string; knocks down. Guarded, Hohen is open.</small></td><td class="keys"><kbd>U</kbd> <kbd>U</kbd> <kbd>U</kbd></td></tr>
+          <tr><td>Golem Hammer <small>Low (from above: guard crouching). The third U of a string; knocks down. Guarded, Hohen is open.</small></td><td class="keys"><kbd>U</kbd> <kbd>U</kbd> <kbd>U</kbd></td></tr>
           <tr><td>Golem Low Punch <small>Low: guard crouching.</small></td><td class="cmd">↓ + U</td></tr>
           <tr><td>Golem Grab <small>Can’t be guarded (jump it, or hit Hohen). It holds them up to three seconds, facing him, and lets go after four hits or a knockdown; then it can’t grab again for two and a half seconds. Held, they take more from his blows; U then makes Hohen walk up to them and punch them himself (it only lands up close). Also a string finisher.</small></td><td class="keys"><kbd>I</kbd></td></tr>
           <tr><td>Golem Heave <small>While it holds them: it hoists them overhead and throws them up — a launcher.</small></td><td class="keys"><kbd>I</kbd> <small>(held)</small></td></tr>
-          <tr><td>Golem Uppercut <small>Mid + low. A launcher; slow, and punishable when guarded.</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>Golem Uppercut <small>Low. A launcher; slow, and punishable when guarded.</small></td><td class="cmd">↓ + I</td></tr>
           <tr><td>Golem Low Kick <small>Low. J orders the golem to kick at their ankles.</small></td><td class="keys"><kbd>J</kbd></td></tr>
           <tr><td>Stone Knuckle / Stone Throw <small>Mid. Up close he drives a stone held in his fist (no stone spent); further off he throws one. No recovery: plus on guard.</small></td><td class="cmd">← → + U</td></tr>
           <tr><td>Stone Barrage <small>The third J of a string: two blows, the second knocks down.</small></td><td class="keys"><kbd>J</kbd> <kbd>J</kbd> <kbd>J</kbd></td></tr>
@@ -22,10 +22,10 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Great Stone <small>Mid. One huge, slow stone that takes over half a full guard (a second one breaks it) and knocks them down; he's free the moment it's thrown, plus on guard. (K no longer charges.)</small></td><td class="cmd">← → + K</td></tr>
           <tr><td>Crouching Stone <small>Thrown from a crouch at chest height: a top (stand to guard).</small></td><td class="cmd">↓ + J</td></tr>
           <tr><td>Crouching Golem Sweep <small>↓ + K: he stays crouched and orders the golem's low sweep (no stones).</small></td><td class="cmd">↓ + K</td></tr>
-          <tr><td>Stone Lob <small>Mid + low (drops from above). It stuns.</small></td><td class="cmd">→ → + J</td></tr>
+          <tr><td>Stone Lob <small>Low (drops from above). It stuns.</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>Trap Stone <small>Set on the floor ahead; bursts when they step on it, or after six seconds. Six at most.</small></td><td class="cmd">→ → + K</td></tr>
-          <tr><td>Golem Shield Bash <small>Mid + low. A slab of stone that stops shots and bashes; safe.</small></td><td class="cmd">→ → + U</td></tr>
-          <tr><td>Golem Tackle <small>Mid + low. It charges in from anywhere; punishable when guarded. On someone in the air: Golem Meteor, a leap that slams them into the floor (the bounce).</small></td><td class="cmd">→ → + I</td></tr>
+          <tr><td>Golem Shield Bash <small>Low. A slab of stone that stops shots and bashes; safe.</small></td><td class="cmd">→ → + U</td></tr>
+          <tr><td>Golem Tackle <small>Low. It charges in from anywhere; punishable when guarded. On someone in the air: Golem Meteor, a leap that slams them into the floor (the bounce).</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>Bedrock Stride <small>His skin turns to stone as he strides in (armour: blows land but don’t stop him), then it bursts all round him and knocks down. Throws and supers go through the armour; the burst runs along the floor, so jump it; punishable when guarded.</small></td><td class="cmd">← ← + K</td></tr>
           <tr><td colspan="2"><b>In a juggle</b> (once they’re launched)</td></tr>
           <tr><td>Golem Rising Jab <small>The golem punches up and holds them in the air. U, U, U — and J in between: his stone.</small></td><td class="keys"><kbd>U</kbd></td></tr>
@@ -57,11 +57,11 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <div class="scroll"><table>
         <tbody>
           <tr><td>ゴーレムジャブ・フック <small>中段。Uのあと、もう一度U：もう片方の拳。</small></td><td class="keys"><kbd>U</kbd></td></tr>
-          <tr><td>ゴーレムハンマー <small>中下段（上から：立ちガード）。連続技の3回目のU。ダウンさせる。ガードされると博士にスキ。</small></td><td class="keys"><kbd>U</kbd> <kbd>U</kbd> <kbd>U</kbd></td></tr>
+          <tr><td>ゴーレムハンマー <small>下段（上から：しゃがみガード）。連続技の3回目のU。ダウンさせる。ガードされると博士にスキ。</small></td><td class="keys"><kbd>U</kbd> <kbd>U</kbd> <kbd>U</kbd></td></tr>
           <tr><td>ゴーレム下段パンチ <small>下段：しゃがんでガード。</small></td><td class="cmd">↓ + U</td></tr>
           <tr><td>ゴーレムの掴み <small>ガード不能（ジャンプでかわすか、博士を攻撃）。最大3秒、博士の方へ向けて押さえ、4発当たるかダウンで離す。離した後2.5秒は掴めない。捕まえている間は博士の攻撃が強くなる。このときUで博士が自分で歩み寄って殴る（近くでのみ当たる）。連続技の締めにも。</small></td><td class="keys"><kbd>I</kbd></td></tr>
           <tr><td>ゴーレムの持ち上げ <small>掴んでいる間に：頭上に持ち上げて投げ上げる（浮かせ技）。</small></td><td class="keys"><kbd>I</kbd> <small>（掴み中）</small></td></tr>
-          <tr><td>ゴーレムアッパー <small>中下段。浮かせ技。遅く、ガードされると反撃を受ける。</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>ゴーレムアッパー <small>下段。浮かせ技。遅く、ガードされると反撃を受ける。</small></td><td class="cmd">↓ + I</td></tr>
           <tr><td>ゴーレムの下段蹴り <small>下段。Jでゴーレムが足元を蹴る。</small></td><td class="keys"><kbd>J</kbd></td></tr>
           <tr><td>石拳・石投げ <small>中段。近くでは石を握った拳（石は減らない）、離れると石を投げる。硬直なしで、ガードされても有利。</small></td><td class="cmd">← → + U</td></tr>
           <tr><td>石の連打 <small>連続技の3回目のJ：2発、2発目でダウン。</small></td><td class="keys"><kbd>J</kbd> <kbd>J</kbd> <kbd>J</kbd></td></tr>
@@ -69,10 +69,10 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>大石 <small>中段。大きくて遅い石を一つ投げる。満タンのガードの半分以上を削り（2発目で割れる）、ダウンを奪う。（Kの溜めは廃止。）</small></td><td class="cmd">← → + K</td></tr>
           <tr><td>しゃがみ投げの石 <small>しゃがんで胸の高さに投げる上段。立ちガードで防ぐ。</small></td><td class="cmd">↓ + J</td></tr>
           <tr><td>しゃがみゴーレム足払い <small>↓＋K：しゃがんだまま、ゴーレムに足払いを命じる（石は投げない）。</small></td><td class="cmd">↓ + K</td></tr>
-          <tr><td>石の山なり投げ <small>中下段（上から落ちる）。気絶させる。</small></td><td class="cmd">→ → + J</td></tr>
+          <tr><td>石の山なり投げ <small>下段（上から落ちる）。気絶させる。</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>罠の石 <small>前方の床に置く。踏むか6秒で爆発。最大6個。</small></td><td class="cmd">→ → + K</td></tr>
-          <tr><td>ゴーレムシールドバッシュ <small>中下段。飛び道具を止めて殴る。反撃されない。</small></td><td class="cmd">→ → + U</td></tr>
-          <tr><td>ゴーレムタックル <small>中下段。どこからでも突進。ガードされると反撃を受ける。空中の相手には：ゴーレムメテオ（跳んで床に叩きつける・バウンド）。</small></td><td class="cmd">→ → + I</td></tr>
+          <tr><td>ゴーレムシールドバッシュ <small>下段。飛び道具を止めて殴る。反撃されない。</small></td><td class="cmd">→ → + U</td></tr>
+          <tr><td>ゴーレムタックル <small>下段。どこからでも突進。ガードされると反撃を受ける。空中の相手には：ゴーレムメテオ（跳んで床に叩きつける・バウンド）。</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>岩肌の行進 <small>肌が石になって前進（アーマー：攻撃を受けても止まらない）、そして周囲に炸裂してダウンさせる。投げと超必殺技はアーマーを貫く。炸裂は床を走るのでジャンプでかわせる。ガードされると反撃を受ける。</small></td><td class="cmd">← ← + K</td></tr>
           <tr><td colspan="2"><b>空中コンボ中</b>（浮かせた後）</td></tr>
           <tr><td>ゴーレムのライジングジャブ <small>上へ殴って空中に留める。U、U、U——間にJで博士の石。</small></td><td class="keys"><kbd>U</kbd></td></tr>
@@ -83,7 +83,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td><b>ゴーレムアーマー</b> <small>融合ゲージ満タンで（石の下のゲージ。30秒で溜まり、攻撃を当てても受けても早く溜まる）。ゴーレムが砕け、ブーツからヘルメットまで一つずつ博士に装着される。装着される瞬間、近くの相手はスタンする。20秒間、博士自身が鎧で戦う——攻撃力が上がり、受けるダメージが減り、必殺技にアーマーが付く（Jは石拳、Kは岩の蹴り、↓＋Kは低い岩払い）。その後鎧は崩れ、ゴーレムが復活する。鎧の間のコマンドはテツと同じ：</small></td><td class="cmd">← → + J + K</td></tr>
           <tr><td>・石の拳 <small>U U U U K、U U I（石柱アッパー・浮かせ）、U U K。空中コンボはU U U、I、K（腹のコアから光の炸裂）。</small></td><td class="keys"><kbd>U</kbd></td></tr>
           <tr><td>・コアビーム <small>腹のコアからゆっくり進む光の玉。</small></td><td class="cmd">→ → + U</td></tr>
-          <tr><td>・ボルダートス <small>岩が手に集まって大岩になり、弧を描いて投げ落とす（中下段・バウンド）。空中コンボ中は：空から大岩を呼び落とすボルダークラッシュ。</small></td><td class="cmd">→ → + I</td></tr>
+          <tr><td>・ボルダートス <small>岩が手に集まって大岩になり、弧を描いて投げ落とす（下段・バウンド）。空中コンボ中は：空から大岩を呼び落とすボルダークラッシュ。</small></td><td class="cmd">→ → + I</td></tr>
           <tr><td>・ラブルウェーブ <small>下段：床を走る短い瓦礫の波がすくい上げる。</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>・ストーンアーム <small>目の前の床から巨大な石の腕が突き出し、殴り飛ばす（空中コンボ中は相手の真下から）。</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>・ローリングボルダー <small>床を転がる大岩：3回当たる。</small></td><td class="cmd">← ← + U</td></tr>
