@@ -623,7 +623,7 @@ function orbHold(p) {
 }
 function spawnOrb(f, idx, big) { // (big: ← ← + I's one great Thunder Ball, which hits as hard as the three it replaced)
   const p = { id: ++serial, type: 'homing', owner: f, idx, hold: true, big: !!big, x: 0, y: 0, vx: 0, vy: 0, r: 13, dmg: big ? 95 : 34, stun: big ? 30 : 16, bstun: big ? 18 : 10, push: big ? 5 : 3, hitstop: big ? 12 : 6,
-    stunT: 85, stunKind: 'shock', life: 200, chip: true, air: true, dir: f.facing };
+    stunT: 85, stunKind: 'shock', life: 200, chip: true, air: true, height: 'high', dir: f.facing };
   orbHold(p); projs.push(p); sfx('zap');
 }
 function launchOrb(f, idx) {
@@ -906,7 +906,7 @@ function updateProjs() {
         if (hu && overlap(hb, hu)) {
           const last = p.hits === p.max - 1;
           applyHit(own, tgt, { dmg: last ? p.lastDmg : p.dmg, stun: p.stun, bstun: p.bstun, push: last ? 4 : p.push, kd: false, type: 'mid', chip: true,
-            hitstop: last ? 8 : 2, proj: true, str: last ? 2 : 1, gdrain: 2, label: 'Fire Breath' }, own.facing, hb, hu);
+            hitstop: last ? 8 : 2, proj: true, str: last ? 2 : 1, gdrain: 2, height: 'high', label: 'Fire Breath' }, own.facing, hb, hu);
           p.hits++; p.last = p.t;
         }
       }
@@ -953,7 +953,7 @@ function updateProjs() {
       const hb = projBox(p);
       if (overlap(hb, hu) && ['qi', 'homing', 'shuriken', 'orb'].includes(p.type) && parryReflect(tgt, p)) continue; // (Earth Stomp's wave isn't sent back: parried, it stops)
       if (overlap(hb, hu)) {
-        const pr = applyHit(p.owner, tgt, { dmg: p.dmg, stun: p.stun, bstun: p.bstun, push: p.push, kd: !!p.kd, type: 'mid', chip: !!p.chip, hitstop: p.hitstop,
+        const pr = applyHit(p.owner, tgt, { dmg: p.dmg, stun: p.stun, bstun: p.bstun, push: p.push, kd: !!p.kd, type: 'mid', chip: !!p.chip, hitstop: p.hitstop, height: p.height,
           proj: true, str: p.kd ? 2 : 1, superHit: !!p.superHit, gMul: p.gMul, low: !!p.lowHit, overhead: !!p.overhead, kdVx: p.kdVx, kdVy: p.kdVy, jugVy: p.jugVy, fixedLift: !!p.fixedLift, launch: !!p.launch, launchVy: p.launchVy, bounce: !!p.bounce, stunT: p.stunT, stunKind: p.stunKind, gdrain: p.type === 'shuriken' || p.type === 'homing' ? 5 : p.juggle ? 4 : 8,
           label: p.type === 'pfist' ? (p.superHit ? 'Crystal Storm' : 'Crystal Shard') : p.type === 'shuriken' ? 'Shuriken' : p.type === 'homing' ? 'Lightning Ball' : p.type === 'wave' ? 'Earth Stomp' : p.type === 'rain' ? (p.qi ? 'Qi Spiral' : 'Lightning Rain') : p.type === 'qi' ? 'Qi Blast' : p.relay ? 'Clone Relay' : p.juggle ? 'Shadow Army' : 'Shadow Clone' }, Math.sign(p.vx) || p.dir, hb, hu);
         p.dead = true;

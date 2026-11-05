@@ -720,7 +720,7 @@ function checkHits(a, o) {
     stun: mv.stun, bstun: mv.bstun, gbstun: 45,
     push: (multi > 1 && last && mv.lastPush) ? mv.lastPush : mv.push,
     kd: multi > 1 ? (last && mv.kd) : mv.kd,
-    type: mv.type, low: !!mv.low, overhead: !!mv.overhead, hitstop: mv.hitstop, chip: mv.chip, bpush: mv.guardPush, /* (a technique's own push on a guard: guardPush) */ guardPop: !!mv.guardPop, str: mv.str != null ? mv.str : a.str, proj: false, // (low: must be guarded crouching)
+    type: mv.type, low: !!mv.low, overhead: !!mv.overhead, height: mv.height, hitstop: mv.hitstop, chip: mv.chip, bpush: mv.guardPush, /* (a technique's own push on a guard: guardPush) */ guardPop: !!mv.guardPop, str: mv.str != null ? mv.str : a.str, proj: false, // (low: must be guarded crouching)
     gdrain: mv.gdrain != null ? mv.gdrain : (multi > 1 ? 2 : 8), rushTag: !!mv.rushTag, tech: isTech(mv), label: mv.label || '', slash: !!mv.slash, iai: !!mv.iai, heavy: !!(mv.normal && mv.str === 1), kdVx: mv.kdVx, kdVy: mv.kdVy, noGrace: !!mv.noGrace, launch: multi > 1 ? (last && !!mv.launch) : !!mv.launch, launchVy: mv.launchVy, bounce: !!mv.bounce, cpLaunch: !!mv.cpLaunch, cpCarry: !!mv.cpCarry, jugVy: (multi > 1 && last && mv.lastJugVy) ? mv.lastJugVy : mv.jugVy, fixedLift: !!mv.fixedLift, meteor: !!mv.meteor, stunT: mv.stunT, stunKind: mv.stunKind, neutralLaunch: multi > 1 ? (last && !!mv.neutralLaunch) : !!mv.neutralLaunch, relaunch: !!mv.relaunch, slashMark: !!mv.slashMark, brand: mv.brand || 0, grab: !!mv.grab, fullDmg: !!mv.fullDmg, noDmg: !!mv.noDmg,
   };
   if (mv.normal && !mv.air) {

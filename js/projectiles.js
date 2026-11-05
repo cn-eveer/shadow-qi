@@ -25,7 +25,7 @@ function spawnClone(f, sup, idx, dmg, lvl, near) { // (dmg: a super's own damage
   if (near) x = fromBack ? clamp(o.x + side * 120, -60, W + 60) : side * (o.x - side * 140 - x) > 0 ? o.x - side * 140 : x; // (to catch someone bouncing off the floor)
   projs.push({ id: ++serial, type: 'clone', owner: f, x, y: 0, vx: dir * sp, vy: 0, w: 28, h0: lvl === 'mid' ? 30 : lvl === 'low' ? 0 : 10, h1: lvl === 'low' ? 40 : 120, low: lvl === 'low', lowHit: lvl === 'low',
     dmg: dmg || (sup ? 32 : 66), stun: sup ? 24 : 26, bstun: 15, push: sup ? 1.5 : 5,
-    kd: false, juggle: sup, superHit: sup, hitstop: 7, life: Math.round(range / sp), chip: true, dir });
+    kd: false, juggle: sup, superHit: sup, hitstop: 7, life: Math.round(range / sp), chip: true, height: sup ? undefined : 'high', dir }); // (→ → + J's clone is a high: duck under it; the Shadow Army's are not)
   puff(x, 60); sfx('clone');
   return projs[projs.length - 1];
 }

@@ -12,6 +12,7 @@ const CHARS = {
     techDelay: { teleSlide: 5 }, // (and the other way: frames added before this one — the Drop Slide comes out a little later)
     spBF: { lp: 'moonTempest', hp: 'fullMoon' }, // ← → + U / I: Moon Tempest, Full Moon Tempest (his I is no longer held to charge)
     superPreMul: 0.2, // (Shadow Army: a shorter warning before the clones come — 発生 faster)
+    normalHeight: { cp1: 'high' }, // (his ↓ + I Uppercut Launcher is a high: it passes over a crouching fighter)
     noLowSp: true, // (no ↓ versions of his techniques on demand: they still come out by themselves on someone in the air)
     name: 'KURO', dmgMul: 1.08, title: 'Shadow Ninja', nameJa: 'クロ', titleJa: '影の忍者', jugDmg: 1.15, scale: 1, walk: 3.4, back: 2.8, jumpX: 4.4,
     pDmg: 0.9, kDmg: 0.92, pReach: 1, kReach: 1.08, reachMul: 0.62, hurtMul: 0.72, /* (every normal and string hit reaches 38% less far, and his hurtbox is 28% narrower: he has to get in close, and is harder to reach there) */ chargeRate: 0.5, auraCol: '185,145,255',
