@@ -416,6 +416,7 @@ const fromAbove = m => !!(m && (m.bounce || m.meteor || m.overhead)), rising = m
 // There is no 'midlow' any more: everything that used to be mid + low (bounces, drops, overheads, column hits, launchers
 // rising off the floor, swings that sweep the legs) is a low — guarded crouching, not standing.
 function heightClass(h, hb) {
+  if (h.height) return h.height === 'low' ? 'low' : 'mid'; // (height: a blow that says what it is — the golem's — whatever its box reaches)
   if (fromAbove(h) || (hb && hb.y1 - hb.y0 >= 390)) return 'low'; // bounces, drops and overheads crashing down; column hits (supers, crystals, pillars)
   if (h.low) return 'low'; // slides and sweeps along the floor, even the ones that scoop them up into a juggle
   if (rising(h)) return 'low'; // launchers rising off the floor
@@ -427,6 +428,7 @@ function heightClass(h, hb) {
 // high (anything reaching above a standing head: it passes over a crouching fighter) and mid (the body)
 const HEIGHT_TAGS = { high: ['HIGH', '上段', '150,205,255'], mid: ['MID', '中段', '255,226,120'], low: ['LOW', '下段', '255,125,160'] };
 function heightTag(h, hb, d) {
+  if (h.height === 'high' || h.height === 'mid') return h.height;
   const c = heightClass(h, hb), s = d.ch.scale;
   return c !== 'mid' || !hb ? c : hb.y0 >= 95 * s || hb.y1 > 135 * s ? 'high' : 'mid'; // (a crouching fighter is 95 tall, a standing one 135: a blow over the standing head is a high, whatever it reaches down to)
 }
