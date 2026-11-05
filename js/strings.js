@@ -922,10 +922,7 @@ function updateProjs() {
       const maxRange = 300; // short range for lightning ball
       const travelDist = Math.hypot(p.x - (p.startX || p.x), p.y - (p.startY || p.y));
       if (travelDist > maxRange) { p.dead = true; sparks(p.x, GROUND - p.y, 'clash'); continue; } // dies at max range
-      if (p.ft < 60) { // track the opponent for about a second
-        const o = other(p.owner), dx = o.x - p.x, dy = (caughtIn(o) ? o.y : 0) + 70 * o.ch.scale - p.y, L = Math.hypot(dx, dy) || 1; // (they home in at body height: jump over them)
-        if (caughtIn(o) || o.y < 20) p.vx += (dx / L * 6 - p.vx) * 0.07; if (caughtIn(o)) p.vy += (dy / L * 6 - p.vy) * 0.07; else { p.vy = 0; p.y += (70 - p.y) * 0.25; } // (on someone not in a combo they drop to body height and fly level: a jump clears them)
-      }
+      // straight line travel: no homing, no curving
       if (p.t % 2 === 0) parts.push({ type: 'aura', x: p.x - p.vx + rnd(-4, 4), y: GROUND - p.y + rnd(-4, 4), vx: 0, vy: -0.4, life: 12, max: 12, r: rnd(2.5, 5), col: '160,200,255' });
     }
     p.x += p.vx; p.y += p.vy; p.life--;
@@ -934,6 +931,8 @@ function updateProjs() {
     if (p.type === 'wave' && p.t % 2 === 0) dustAt(p.x, false);
     if (p.type === 'qi' && p.t % 2 === 0) parts.push({ type: 'aura', x: p.x - p.vx * 2 + rnd(-6, 6), y: GROUND - p.y + rnd(-10, 10), vx: -p.vx * 0.1, vy: rnd(-0.6, 0.6), life: 14, max: 14, r: rnd(3, 6), col: '125,235,255' });
     if (p.air && p.y <= 8) { p.dead = true; sparks(p.x, GROUND - 8, 'block'); continue; }
+    // Lightning ball hits wall: die immediately
+    if (p.type === 'homing' && (p.x < WALL_L || p.x > WALL_R)) { p.dead = true; sparks(p.x, GROUND - p.y, 'clash'); continue; }
     if (p.x < -60 || p.x > W + 60 || p.life <= 0) { p.dead = true; if (p.type === 'clone') puff(p.x, 60); continue; }
     const tgt = other(p.owner), hu = hurtbox(tgt, !!p.juggle, !!p.low);
     if (tgt.state === 'attack' && tgt.move && tgt.move.barrier && tgt.mf > tgt.move.startup && tgt.mf <= tgt.move.startup + tgt.move.active && ['qi', 'homing', 'shuriken', 'orb', 'pfist', 'wave', 'rain'].includes(p.type)) {
