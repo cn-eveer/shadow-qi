@@ -488,7 +488,7 @@ function applyHit(a, d, h, side, hb, hu) {
     game.freeze = Math.max(game.freeze, 3); return null;
   }
   if (d.aegisT > 0 && !['hitstun', 'knock', 'down', 'getup', 'gbreak', 'stunned', 'slashed'].includes(d.state)) { // Aegis: from any side, at the cost of guard meter
-    d.guard -= ((h.gdrain || 6) * 2.4 + (h.dmg || 0) * 0.35 + 6) / 10; d.guardIdle = 0; d.aegisHitT = game.frame; // (each hit wears the light down a little: about three heavy blows use up its quarter of the meter)
+    d.guard -= ((h.gdrain || 6) * 2.4 + (h.dmg || 0) * 0.35 + 6) / 6; d.guardIdle = 0; d.aegisHitT = game.frame; // (each hit wears the light down: about three heavy blows use up its 40% of the meter)
     d.hp = Math.max(1, d.hp - Math.ceil((h.dmg || 0) * 0.25)); // a quarter of the damage still gets through the light
     if (d.guard <= 0) { d.guard = 0; d.guardSlowT = 600; d.aegisT = 0; setState(d, 'gbreak'); d.stun = 50 + GBREAK_EXTRA; d.move = null; popText(d.x, GROUND - d.y - 165, 'GUARD BREAK!', '255,120,130'); sparks(cx, cy, 'big'); sfx('break'); game.freeze = Math.max(game.freeze, 10); return 'block'; }
     if (d.guard <= (d.aegisFloor || 0)) { d.aegisT = 0; aegisSpent(d); sparks(cx, cy, 'big'); sfx('break'); popText(d.x, GROUND - d.y - 190, 'AEGIS BROKEN', '190,225,255'); game.freeze = Math.max(game.freeze, 6); return 'block'; } // (its quarter of the meter is used up: the light shatters, but his own guard holds)

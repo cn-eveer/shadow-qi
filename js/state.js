@@ -383,7 +383,7 @@ function update(f, o, inp) {
   if (f.golem) golemUpdate(f, o);
   if (f.brands && --f.brandT <= 0) f.brands = 0; // holy brands fade
   if (f.healT > 0) f.healT--;
-  if (f.aegisT > 0) { // Aldric's Aegis: it stays up for four seconds while he moves and fights, living on a quarter of his guard meter (aegisFloor: where it stops)
+  if (f.aegisT > 0) { // Aldric's Aegis: it stays up for four seconds while he moves and fights, living on 40% of his guard meter (aegisFloor: where it stops)
     f.guard = Math.max(0, f.guard - AEGIS_COST / 240); f.guardIdle = 0;
     if (--f.aegisT <= 0 || f.guard <= (f.aegisFloor || 0) || f.ko) { f.aegisT = 0; aegisSpent(f); }
   }

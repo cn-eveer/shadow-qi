@@ -554,7 +554,7 @@ function specialMoveBase(id) {
         f.vx = 0;
         if (mf === 3) sfx('charge');
         if (mf < 14 && mf % 3 === 0) parts.push({ type: 'ring', x: f.x, y: GROUND - f.y - 100, r: 70 - mf * 4, vr: -1, life: 6, max: 6, col: '190,225,255' }); // casting: the light gathers (hit him now: counter)
-        if (mf === 14) { sfx('orb'); if (!(f.aegisT > 0)) { f.aegisT = 240; f.aegisHitT = null; f.aegisFloor = Math.max(0, f.guard - AEGIS_COST); } } // (not again while it's up) (it may use a quarter of the guard meter, no more)
+        if (mf === 14) { sfx('orb'); if (!(f.aegisT > 0)) { f.aegisT = 240; f.aegisHitT = null; f.aegisFloor = Math.max(0, f.guard - AEGIS_COST); } } // (not again while it's up) (it may use 40% of the guard meter, no more)
       } };
     // super: Sanctuary. He plants the sword and a dome of light swells around him: caught inside, they're held and burned
     // again and again while his guard refills and his wounds close, then the dome bursts
