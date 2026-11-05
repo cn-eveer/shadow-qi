@@ -151,10 +151,10 @@ function iaiSweepBox(f, mv, hb0) {
 // frame by frame with it — starting up near the head and coming down to the arm — instead of a single box sized to
 // cover the whole arc at once
 function kunaiBox(f) {
-  const J = solve(f.pose), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0;
+  const J = solve(f.pose), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, past = (f.move && f.move.kunaiReach) || 42; // (how far past the hand the box reaches: a move can shorten it)
   const dx = J.h1[0] - J.e1[0], dy = J.h1[1] - J.e1[1], L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
   const W = (lx, ly) => [f.x + (f.animDX || 0) + d * s * lx, Math.max(0, f.y + s * (ly + hu))];
-  const [hx, hy] = W(J.h1[0], J.h1[1]), [tx, ty] = W(J.h1[0] + ux * 42, J.h1[1] + uy * 42), pad = 7 * s; // 42: a longer reach past the hand, well past the blade's own drawn 21
+  const [hx, hy] = W(J.h1[0], J.h1[1]), [tx, ty] = W(J.h1[0] + ux * past, J.h1[1] + uy * past), pad = 7 * s; // 42 by default: a longer reach past the hand, well past the blade's own drawn 21
   return { x0: Math.min(hx, tx) - pad, x1: Math.max(hx, tx) + pad, y0: Math.max(0, Math.min(hy, ty) - pad), y1: Math.max(hy, ty) + pad };
 }
 // a hitbox that moves with the limb actually throwing the blow — the kicking foot, the hand holding the fist or the blade —
