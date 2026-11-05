@@ -13,7 +13,7 @@ function spawnAirShuriken(f) {
 }
 function spawnQi(f) {
   projs.push({ id: ++serial, type: 'qi', owner: f, x: f.x + f.facing * 58 * f.ch.scale, y: 88, vx: f.facing * 6.5, vy: 0, r: 20,
-    dmg: 75, stun: 20, bstun: 16, push: 5, hitstop: 8, life: 240, chip: true, dir: f.facing });
+    dmg: 75, stun: 20, bstun: 16, push: 5, hitstop: 8, life: 240, chip: true, height: 'high', dir: f.facing }); // (a high: it passes over a crouching fighter)
   sfx('qi');
 }
 function spawnClone(f, sup, idx, dmg, lvl, near) { // (dmg: a super's own damage per clone; lvl: 'mid' — above the shins — or 'low' — along the floor; near: it appears close to them)

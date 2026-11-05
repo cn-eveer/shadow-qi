@@ -43,6 +43,7 @@ const CHARS = {
   brawler: {
     name: 'TETSU', dmgMul: 0.97, title: 'Qi Brawler', nameJa: 'テツ', titleJa: '気の拳士', armor: 3, jugDmg: 1.2, scale: 1.08, walk: 3.0, back: 2.4, jumpX: 3.9,
     pDmg: 1.4, kDmg: 1.2, pReach: 1.04, kReach: 0.96, chargeRate: 0.68, auraCol: '125,235,255',
+    normalHeight: { cp1: 'mid' }, // (his ↓ + I Uppercut Launcher is a mid)
     sp: { fP: 'meteorFist', fPH: 'duckUpper', fK: 'qiSweep', fKH: 'shoulder', bP: 'pushParry', bPH: 'kickParry', bK: 'stomp', bKH: 'tornado', dP: 'risingFist' }, sup: 'qiCannon',
     spBF: { lp: 'qiBlast', hp: 'tripleQi' }, // ← → + U: Qi Blast, ← → + I: Swift Qi Blast
     hitPlus: 4, counterStun: 8, // every hit leaves him 4 frames further ahead; a counter hit 8 (everyone else: 4)
@@ -68,7 +69,7 @@ const CHARS = {
       $tlD: { su: 21, act: 8, rec: 24, blk: -16 }, // J, J, ↓ + K (mid)
     },
     heavy: {
-      p: { label: 'Qi Palm', startup: 10, active: 4, recovery: 19, hitbox: [20,118,106,130], wind: 'palmW', pose: 'palm', lunge: [3, 11, 5], push: 10, gdrain: 22, burst: [80, 108], bodyHurt: true,
+      p: { label: 'Qi Palm', height: 'mid', startup: 10, active: 4, recovery: 19, hitbox: [20,118,106,130], wind: 'palmW', pose: 'palm', lunge: [3, 11, 5], push: 10, gdrain: 22, burst: [80, 108], bodyHurt: true,
         limbJoint: 'h1', limbReach: 70, limbBack: 12, limbUp: 16, limbDown: 16, hitFrom: 5, // a compact box on the striking palm, live as it starts forward
         poseFn(f, mf) { // pulled back, then pushed out evenly through the rest of the wind-up into the strike (the generic strike whips it out in the last two frames)
           const mv = f.move, su = mv.startup, total = su + mv.active; if (mf >= total) return null;
@@ -76,7 +77,7 @@ const CHARS = {
           if (mf <= su + 1) return lerpPose(POSES.palmW, POSES.palm, easeInOutQ((mf - 4) / (su - 3)));
           return POSES.palm;
         } },
-      k: { label: 'Axe Kick', startup: 6, active: 11, recovery: 18, hitbox: [20,104,0,150], wind: 'axeW', pose: 'axe', lunge: [3, 11, 5.5], cpLaunch: true, launchVy: 13, kd: true, stomp: [56, 0], // active/recovery here are overwritten by the brawler frames table's 'K' entry at runtime (moveFrames) — kept in sync with it so this object stays an accurate picture of what actually plays
+      k: { label: 'Axe Kick', height: 'mid', startup: 6, active: 11, recovery: 18, hitbox: [20,104,0,150], wind: 'axeW', pose: 'axe', lunge: [3, 11, 5.5], cpLaunch: true, launchVy: 13, kd: true, stomp: [56, 0], // active/recovery here are overwritten by the brawler frames table's 'K' entry at runtime (moveFrames) — kept in sync with it so this object stays an accurate picture of what actually plays
         limbJoint: 'f1', limbReach: 42, limbBack: 14, limbUp: 10, limbDown: 10, hitFrom: 2, // a compact box on the kicking foot, longer reach, shorter height
         poseFn(f, mf) { // the leg lifts up near his own head first, holds there a beat, then comes down slowly through the rest of the window — a real chop, not a snap
           const mv = f.move, total = mv.startup + mv.active; if (mf >= total) return null;

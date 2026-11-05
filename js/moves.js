@@ -1108,7 +1108,7 @@ function specialMoveBase(id) {
     case 'jWave': return { id, label: 'Spirit Fist Burst', startup: 6, active: 6, recovery: 18, wind: 'psyW', pose: 'psyUp', giantFist: [115, 150, 1.1, -0.5],
       hitbox: [30,175,30,250], dmg: 50, kd: true, kdVx: 14, kdVy: 9, type: 'mid', hitstop: 13, gdrain: 10 };
     // ----- Tetsu -----
-    case 'meteorFist': return { id, label: 'Meteor Fist', pre: 6, startup: 16, active: 10, recovery: 18, wind: 'meteorW', pose: 'meteorPunch', fx: 'comet', manualY: true, noPush: true, selfMove: true, aura: true, bodyHurt: true,
+    case 'meteorFist': return { id, label: 'Meteor Fist', height: 'high', pre: 6, startup: 16, active: 10, recovery: 18, wind: 'meteorW', pose: 'meteorPunch', fx: 'comet', manualY: true, noPush: true, selfMove: true, aura: true, bodyHurt: true,
       limbJoint: 'h1', limbReach: 40, limbBack: 34, limbUp: 24, limbDown: 28, sweepBox: true, hitFrom: 2, // (dangerous from the top of the jump: the fist is already coming down)
       // a box on the slamming fist, longer reach, lower and more compact — the slam, not a tall guess
       hitbox: [-10,80,-20,90], dmg: 62, stun: 20, bstun: 14, push: 3, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 11, gdrain: 12,
@@ -1160,7 +1160,7 @@ function specialMoveBase(id) {
       dmg: 50, stun: 20, bstun: 12, push: 3, launch: true, launchVy: 13, noGrace: true, type: 'mid', hitstop: 12, gdrain: 10 };
     case 'stomp': return { id, label: 'Earth Stomp', low: true, projInvul: [0, 32], pre: 7, startup: 12, active: 2, recovery: 18, wind: 'stompW', pose: 'stompDown', proj: 'wave', limit: 1, // (low: its shockwave runs along the floor)
       onFrame(f, o, mf) { if (mf === 12) { spawnWave(f); dustAt(f.x + f.facing * 40, true); cracks(f.x + f.facing * 22); game.shake = Math.max(game.shake, 4); sfx('land'); } } };
-    case 'tornado': return { id, label: 'Cyclone Lariat', projInvul: [1, 34], pre: 7, startup: 12, active: 21, recovery: 12, wind: 'lariatW', pose: 'lariat', fx: 'cyclone', manualY: true, noPush: true, selfMove: true, spin: [13, 33], bodyHurt: true,
+    case 'tornado': return { id, label: 'Cyclone Lariat', height: 'mid', projInvul: [1, 34], pre: 7, startup: 12, active: 21, recovery: 12, wind: 'lariatW', pose: 'lariat', fx: 'cyclone', manualY: true, noPush: true, selfMove: true, spin: [13, 33], bodyHurt: true,
       hitFrom: 8, hitbox: [20,80,70,145], multi: 3, interval: 5, dmg: 22, lastDmg: 34, stun: 18, bstun: 10, push: 1.5, lastPush: 3, launch: true, launchVy: 12, type: 'mid', hitstop: 6, gdrain: 10, // raised off the floor: the lariat is a swinging arm at chest/head height, not something that should also catch a low crouch
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
       onFrame(f, o, mf) { // a small backstep, then a jumping spinning lariat forward
@@ -1201,7 +1201,7 @@ function specialMoveBase(id) {
         if (mf <= 8) { const e = mf / 8; f.x = lerp(f.tj.x0, f.tj.tx, e); f.y = f.tj.top * e; }
         else if (mf <= 26) { f.y = Math.max(f.y, f.y + (o.y + 10 - f.y) * 0.3); f.x = clamp(o.x - f.facing * 30, WALL_L, WALL_R); } // keep level with them as they rise
       } };
-    case 'duckUpper': return { id, label: 'Crouching Upper', pre: 6, startup: 11, active: 10, recovery: 18, wind: 'crouch', pose: 'uppercut', selfMove: true, speedFx: true, aura: true, burst: [60, 170], bodyHurt: true, // → → + I: ducks in low and drives an uppercut up through them
+    case 'duckUpper': return { id, label: 'Crouching Upper', height: 'mid', pre: 6, startup: 11, active: 10, recovery: 18, wind: 'crouch', pose: 'uppercut', selfMove: true, speedFx: true, aura: true, burst: [60, 170], bodyHurt: true, // → → + I: ducks in low and drives an uppercut up through them
       limbJoint: 'h1', limbReach: 50, limbBack: 16, limbUp: 38, limbDown: 38, // a more centered box on the fist itself (was heavily up-biased, so it already covered the top before he'd risen) — now it genuinely climbs with him
       poseFn(f, mf) { // two blows: a straight punch at mid height out of the dash, then the fist drops back low and the uppercut drives up through them
         const mv = f.move; if (mf >= mv.startup + mv.active) return null;
@@ -1221,9 +1221,9 @@ function specialMoveBase(id) {
         if (mf <= 16 && f.hitCount === 1) f.lastHitMf = Math.max(f.lastHitMf, 16); // (the uppercut can't land before the fist starts rising: frame 19 on)
         if (mf <= f.move.startup + 4 && !f.hitConnected && Math.abs(o.x - f.x) > 60) { f.vx = f.facing * 9; if (mf % 2 === 0) dustAt(f.x, false); } else f.vx *= 0.6;
       } };
-    case 'tripleQi': return { id, label: 'Swift Qi Blast', pre: 8, startup: 13, active: 2, recovery: 22, wind: 'blastW', pose: 'blast', proj: 'qi', limit: 1, aura: true, // ← → + I: one qi blast, out a little sooner than ← → + U's and flying much faster
+    case 'tripleQi': return { id, label: 'Swift Qi Blast', height: 'high', pre: 8, startup: 13, active: 2, recovery: 22, wind: 'blastW', pose: 'blast', proj: 'qi', limit: 1, aura: true, // ← → + I: one qi blast, out a little sooner than ← → + U's and flying much faster
       onFrame(f, o, mf) { if (mf === 13) { spawnQi(f); projs[projs.length - 1].vx = f.facing * 11; } } };
-    case 'qiBlast': return { id, label: 'Qi Blast', pre: 8, startup: 13, active: 2, recovery: 22, wind: 'blastW', pose: 'blast', proj: 'qi', limit: 1, aura: true,
+    case 'qiBlast': return { id, label: 'Qi Blast', height: 'high', /* (the shot is a high: see spawnQi) */ pre: 8, startup: 13, active: 2, recovery: 22, wind: 'blastW', pose: 'blast', proj: 'qi', limit: 1, aura: true,
       onFrame(f, o, mf) { if (mf === 13) spawnQi(f); } };
     case 'risingFist': return { id, label: 'Rising Fist', startup: 3, active: 14, recovery: 99, untilLand: true, landT: 12, wind: 'uppercutW', pose: 'dragonFist', spin: [4, 11], fx: 'helix', aura: true, bodyHurt: true,
       limbJoint: 'h1', limbReach: 75, limbBack: 14, limbUp: 30, limbDown: 90, // a box on the rising fist — tall, since the pose itself stretches his arm (and so his hipUp) a long way up: this still moves with him, not a fixed guess; extra reach keeps it ahead of his own hurtbox through the whole active window
