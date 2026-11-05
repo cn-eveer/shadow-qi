@@ -43,7 +43,6 @@ const CHARS = {
   brawler: {
     name: 'TETSU', dmgMul: 0.97, title: 'Qi Brawler', nameJa: 'テツ', titleJa: '気の拳士', armor: 3, jugDmg: 1.2, scale: 1.08, walk: 3.0, back: 2.4, jumpX: 3.9,
     pDmg: 1.4, kDmg: 1.2, pReach: 1.04, kReach: 0.96, chargeRate: 0.68, auraCol: '125,235,255',
-    normalHeight: { cp1: 'mid' }, // (his ↓ + I Uppercut Launcher is a mid)
     sp: { fP: 'meteorFist', fPH: 'duckUpper', fK: 'qiSweep', fKH: 'shoulder', bP: 'pushParry', bPH: 'kickParry', bK: 'stomp', bKH: 'tornado', dP: 'risingFist' }, sup: 'qiCannon',
     spBF: { lp: 'qiBlast', hp: 'tripleQi' }, // ← → + U: Qi Blast, ← → + I: Swift Qi Blast
     hitPlus: 4, counterStun: 8, // every hit leaves him 4 frames further ahead; a counter hit 8 (everyone else: 4)

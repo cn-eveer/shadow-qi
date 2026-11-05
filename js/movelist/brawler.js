@@ -21,7 +21,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>Kick Parry<small>The same quick parry, but a parried blow gets a counter kick that knocks them away. Projectiles are not parried: they hit him. Neither is Lyra’s magic. Slower still to recover if it catches nothing.</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>Earth Stomp<small>A shockwave along the floor. Hits low, even someone lying down. Projectiles and rays pass through him while he stomps. Safe when guarded.</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>Cyclone Lariat<small>A mid. Backsteps, then spins forward with both arms out: three hits that launch. While he spins, projectiles and rays (Lyra’s shots, fireballs, lightning) pass through him; only close-range attacks can hit him.</small></td><td class="cmd">← ← + K</td></tr>
-          <tr><td>Rising Fist<small>An invincible corkscrew uppercut that launches.</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>Rising Fist<small>A mid. An invincible corkscrew uppercut that launches.</small></td><td class="cmd">↓ + I</td></tr>
           <tr class="super"><td>Super: Great Qi Cannon<small>A screen-long qi beam that hits 13 times. Not invincible: until the beam fires, light hits from up close don't stop it (he still takes their full damage — enough of it finishes him), but heavy attacks, techniques and anything from further away do. Needs a full MP gauge.</small></td><td class="cmd">Punch + Kick</td></tr>
         </tbody>
       </table></div>
@@ -74,7 +74,7 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
           <tr><td>蹴り返し<small>同じく出の速い受け流しで、受け流した相手に反撃の蹴りを当てて吹き飛ばす。飛び道具は受け流せず、そのまま当たる。ライラの魔法も受け流せない。空振りするとさらに硬直が長い。</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>大地踏み<small>地を這う衝撃波。下段で、倒れた相手にも当たる。踏み込み中は飛び道具がすり抜ける。ガードされても安全。</small></td><td class="cmd">← ← + J</td></tr>
           <tr><td>旋風ラリアット<small>中段。下がってから両腕を広げて回転、3段で打ち上げ。回転中は飛び道具や光線がすり抜ける（近接攻撃だけ当たる）。</small></td><td class="cmd">← ← + K</td></tr>
-          <tr><td>昇龍拳<small>無敵の螺旋アッパーで打ち上げ。</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>昇龍拳<small>中段。無敵の螺旋アッパーで打ち上げ。</small></td><td class="cmd">↓ + I</td></tr>
           <tr class="super"><td>超必殺技：大気功砲<small>画面を貫く気のビームで13ヒット。無敵ではない：ビームが出るまで、近くからの弱い攻撃では止まらない（ダメージはそのまま受け、体力が尽きればKO）が、強い攻撃・必殺技・離れた位置からの攻撃では止まる。MP満タンが必要。</small></td><td class="cmd">パンチ + キック</td></tr>
         </tbody>
       </table></div>
