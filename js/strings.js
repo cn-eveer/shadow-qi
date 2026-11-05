@@ -629,7 +629,7 @@ function spawnOrb(f, idx, big) { // (big: ← ← + I's one great Thunder Ball, 
 function launchOrb(f, idx) {
   for (const p of projs) if (p.owner === f && p.type === 'homing' && p.hold && p.idx === idx) {
     const o = other(f), dx = o.x - p.x, dy = o.y + 70 - p.y, L = Math.hypot(dx, dy) || 1;
-    const v = p.big ? 4 : 5; p.hold = false; p.vx = dx / L * v; p.vy = dy / L * v; p.dir = Math.sign(dx) || f.facing; p.startX = p.x; p.startY = p.y; sfx(p.big ? 'beam' : 'throw');
+    const v = p.big ? 7 : 5; p.hold = false; p.vx = dx / L * v; p.vy = dy / L * v; p.dir = Math.sign(dx) || f.facing; p.startX = p.x; p.startY = p.y; sfx(p.big ? 'beam' : 'throw');
   }
 }
 function projBox(p) {
