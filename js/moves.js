@@ -142,9 +142,9 @@ function specialMoveBase(id) {
         if (mf === 47) sfx('rise');
         if (mf >= 47 && mf <= 51) f.y = Math.max(0, 14 * Math.sin(Math.PI * (mf - 46) / 6)); // a little lift as he rises into it
       } };
-    case 'counterVanish': return { id, label: 'Counter Vanish', startup: 6, active: 3, recovery: 18, wind: 'crouch', pose: 'slash', blade: true, noGrace: true,
-      hitbox: [10,88,40,130], dmg: 62, stun: 20, bstun: 12, push: 2, stunT: 62, stunKind: 'shadow', type: 'mid', hitstop: 10, gdrain: 10,
-      trail: { cx: 15, cy: 105, r: 72, a0: 70, a1: -30, col: '200,170,255' } };
+    case 'counterVanish': return { id, label: 'Counter Vanish', startup: 4, active: 1, recovery: 8, wind: 'crouch', pose: 'crouch', noGrace: true, antiDone: true,
+      hitbox: null, dmg: 0, // no strike and no stun: he only reappears behind them, and is free to act a moment later
+      poseFn(f, mf) { return lerpPose(POSES.crouch, POSES.idle, Math.min(1, mf / 8)); } };
     case 'swordSlash': return { id, label: 'Iai Slash', startup: 16, active: 12, recovery: 26, blockAdv: -20, /* (−18 measured: it cuts through) */ cpLaunch: true, launchVy: 13, wind: 'iaiStance', pose: 'iaiDash', sword: true, iai: true, slow: true, selfMove: true, noPush: true,
       bodyHurt: true, // (fitted to his actual silhouette through the dash)
       hitbox: [-5,80,35,115], dmg: 80, stun: 20, bstun: 12, push: 0, slash: true, type: 'mid', hitstop: 12, gdrain: 20, // (the blade's own reach, longer and thinner — iaiSweepBox covers the 32 px/frame dash so it still can't pass through someone)
