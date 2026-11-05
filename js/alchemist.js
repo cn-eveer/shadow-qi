@@ -81,16 +81,16 @@ const hStone = (label, chain) => beat(label, 'alThrow', null, { noSmear: true, w
   const throwing = (label, fn, ex = {}) => beat(label, 'alThrow', null, { noSmear: true, wind: 'alThrowW', startup: 9, recovery: 14, also: fn, ...ex });
   const L = CHARS.alchemist.normalLook;
   L.sp0 = beat('Golem Jab', 'gAim', 'lp', { chain: DUET1, holdPunch: true });
-  L.cp0 = beat('Golem Low Punch', 'gLow', 'lowp', { crouch: true, wind: 'crouch', chain: DUET1 });
+  L.cp0 = beat('Golem Body Punch', 'gLow', 'lowp', { crouch: true, wind: 'crouch', chain: DUET1 });
   L.jp0 = beat('Golem Jab', 'gAim', 'lp');
   for (const st of ['s', 'j']) L[st + 'p1'] = beat('Golem Grab', 'gTwin', 'hp');
   L.cp1 = beat('Golem Uppercut', 'gTwin', 'upper', { crouch: true });
-  L.sk0 = beat('Golem Knee', 'gLow', 'lowj', { chain: DUET1 }); // J: the golem's knee (his own stone-knuckle / throw is ← → + U now)
+  L.sk0 = beat('Golem Thrust', 'gAim', 'lowj', { chain: DUET1 }); // J: the golem's thrust (his own stone-knuckle / throw is ← → + U now)
   L.ck0 = throwing('Crouching Stone Throw', (f, o) => alchemistStone(f, o, 92, {}), { pose: 'alThrowLow', crouch: true }); // (thrown from a crouch, at chest height: a top, no longer a low)
-  L.ck1 = beat('Golem Backhand', 'gLow', 'lowk', { crouch: true, wind: 'crouch' }); // ↓ + K: no more stones — crouched, he orders the golem's low sweep
+  L.ck1 = beat('Golem Backhand', 'gAim', 'lowk', { crouch: true, wind: 'crouch' }); // ↓ + K: no more stones — crouched, he orders the golem's low sweep
   L.jk0 = throwing('Air Stone Throw', (f, o) => alchemistStone(f, o, 70, {}), { startup: 7 });
   L.jk1 = throwing('Air Stone Volley', (f, o) => alchemistVolley(f, o, 0, 1), { startup: 7 });
-  L.sk1 = beat('Golem Backhand', 'gLow', 'lowk'); // K: the golem's heavy backhand at head height (K no longer charges a volley: the great stone is ← → + K)
+  L.sk1 = beat('Golem Backhand', 'gAim', 'lowk'); // K: the golem's heavy backhand at head height (K no longer charges a volley: the great stone is ← → + K)
 }
 const GOLEM_LIFE = 1800, GOLEM_REBUILD = 300, GOLEM_HP = 250; // frames the golem lasts before it crumbles (thirty seconds) and takes to rebuild (five); its own health (a third of a fighter's)
 const STONE_REGEN = 90; // frames for a stone to come back (a second and a half)
@@ -291,9 +291,9 @@ const GOLEM_SLOW = 0.4; // (the golem moves at 40% of its old speed: slow and he
 const GOLEM_ACT = { // startup / active / recovery (frames), and the blow
   lp: { su: 9, ac: 3, rec: 17, recHit: 12, light: true, reach: [-20, 85], y: [40, 140], h: { dmg: 27, stun: 22, bstun: 11, push: 1.4, hitstop: 6, str: 0, gdrain: 4, height: 'mid', label: 'Golem Jab' } }, // U: mid
   lp2: { su: 8, ac: 3, rec: 17, recHit: 12, light: true, reach: [-20, 90], y: [40, 140], h: { dmg: 28, stun: 22, bstun: 11, push: 1.4, hitstop: 6, str: 0, gdrain: 5, height: 'high', label: 'Golem Hook' } }, // U, U: the other fist, at head height — a high
-  lowp: { su: 11, ac: 3, rec: 20, recHit: 14, light: true, reach: [-20, 95], y: [40, 140], h: { dmg: 22, stun: 17, bstun: 11, push: 1.6, hitstop: 6, str: 0, gdrain: 4, height: 'mid', label: 'Golem Body Punch' } }, // ↓ + U: a punch into the body — a mid (the golem has no lows)
-  lowj: { su: 11, ac: 4, rec: 20, recHit: 14, light: true, reach: [-10, 105], y: [40, 120], h: { dmg: 26, stun: 18, bstun: 11, push: 1.6, hitstop: 6, str: 0, gdrain: 5, height: 'mid', label: 'Golem Knee' } }, // J: a stone knee into the body — a mid
-  lowk: { su: 14, ac: 4, rec: 34, recHit: 24, reach: [-10, 120], y: [90, 175], h: { dmg: 44, stun: 22, bstun: 14, push: 2, hitstop: 9, str: 1, gdrain: 12, height: 'high', kd: true, kdVx: 6, kdVy: 7, label: 'Golem Backhand', heavy: true } }, // K: a heavy arm swung at head height — a high: duck under it
+  lowp: { su: 11, ac: 3, rec: 20, recHit: 14, light: true, reach: [-20, 95], y: [60, 130], h: { dmg: 22, stun: 17, bstun: 11, push: 1.6, hitstop: 6, str: 0, gdrain: 4, height: 'mid', label: 'Golem Body Punch' } }, // ↓ + U: a short hook into the belly — a mid (the golem has no lows)
+  lowj: { su: 11, ac: 4, rec: 20, recHit: 14, light: true, reach: [-10, 105], y: [60, 140], h: { dmg: 26, stun: 18, bstun: 11, push: 1.6, hitstop: 6, str: 0, gdrain: 5, height: 'mid', label: 'Golem Thrust' } }, // J: a straight stone fist into the chest — a mid
+  lowk: { su: 14, ac: 4, rec: 34, recHit: 24, reach: [-10, 120], y: [95, 145], h: { dmg: 44, stun: 22, bstun: 14, push: 2, hitstop: 9, str: 1, gdrain: 12, height: 'high', kd: true, kdVx: 6, kdVy: 7, label: 'Golem Backhand', heavy: true } }, // K: a heavy arm swung at head height — a high: duck under it
   ham: { su: 13, ac: 3, rec: 43, recHit: 31, reach: [-10, 105], y: [0, 175], h: { dmg: 48, stun: 24, bstun: 16, push: 3, hitstop: 10, str: 1, gdrain: 16, overhead: true, height: 'high', kd: true, kdVx: 7, kdVy: 8, label: 'Golem Hammer', heavy: true } }, // U, U, U: both fists down from above — a high: duck under it
   upper: { su: 16, ac: 3, rec: 45, recHit: 32, reach: [-10, 95], y: [10, 210], h: { dmg: 40, stun: 22, bstun: 14, push: 0.5, hitstop: 10, str: 1, gdrain: 10, launch: true, launchVy: 13.5, height: 'mid', label: 'Golem Uppercut', heavy: true } }, // ↓ + I: the launcher — a mid
   rise: { su: 10, ac: 4, rec: 17, recHit: 12, light: true, jug: true, reach: [-30, 95], y: [60, 290], h: { dmg: 26, stun: 18, bstun: 10, push: 0.6, hitstop: 6, str: 0, gdrain: 4, jugVy: 7, height: 'mid', label: 'Golem Rising Jab' } }, // U in a juggle
@@ -307,7 +307,7 @@ const GOLEM_ACT = { // startup / active / recovery (frames), and the blow
 const GOLEM_DMG = 1.3; // (its blows hit harder: a stone fist)
 for (const k in GOLEM_ACT) if (GOLEM_ACT[k].h && GOLEM_ACT[k].h.dmg) GOLEM_ACT[k].h.dmg = Math.round(GOLEM_ACT[k].h.dmg * GOLEM_DMG);
 for (const k in GOLEM_ACT) if (GOLEM_ACT[k].reach) GOLEM_ACT[k].reach = [GOLEM_ACT[k].reach[0], GOLEM_ACT[k].reach[1] + 25]; // (it keeps them a little further off now — GOLEM_GAP — so its arms reach that much further: its blows land from where it stands)
-const GOLEM_ARMS = { lp: [[8, -92], [0, -92]], lp2: [[-4, -100], [4, -96]], lowp: [[10, -60], [0, -30]], lowj: [[6, -56], [20, -20]], lowk: [[-20, -70], [70, -12]], ham: [[6, -178], [58, -26]], upper: [[24, -26], [30, -176]], rise: [[16, -60], [26, -184]], hp: [[30, -96], [62, -98]],
+const GOLEM_ARMS = { lp: [[8, -92], [0, -92]], lp2: [[-4, -100], [4, -96]], lowp: [[12, -62], [4, -72]], lowj: [[2, -70], [34, -78]], lowk: [[-24, -98], [70, -88]], /* (body punch: a short hook into the belly; thrust: a straight into the chest; backhand: the arm swung at head height — their fists, and so their hitboxes, at body and head height, no longer at the floor) */ ham: [[6, -178], [58, -26]], upper: [[24, -26], [30, -176]], rise: [[16, -60], [26, -184]], hp: [[30, -96], [62, -98]],
   shield: [[10, -118], [52, -92]], tackle: [[-14, -88], [36, -92]], heave: [[34, -50], [14, -176]], pound: [[24, -164], [60, -8]], meteor: [[6, -176], [52, -40]] }; // each blow's arm: drawn back, then thrown (x forward of the golem, y up)
 function newGolem(f) { f.pillars = []; f.fuse = null; f.fuseT = 0; f.opus = null; f.fuseG = 0; return { x: f.x - f.facing * 90, facing: f.facing, act: null, queue: null, qT: 0, cd: 30, dashT: 0, ph: 0, spd: 0, y: 0, vy: 0, js: 0, crouch: false, hp: GOLEM_HP, max: GOLEM_HP, life: GOLEM_LIFE, broken: false, brokenT: 0, seen: {}, hold: null, flash: 0, grabCD: 0 }; }
 // the golem's blow: its fist where it's drawn (see drawGolem's hand(): drawn back, then thrown, stopping at them up close), swept from last frame;
@@ -656,7 +656,8 @@ function drawGolem(f) { // a stone golem, drawn in the world where it stands
   const t = globalT, a = g.act, A = a && GOLEM_ACT[a.kind], s = 1.4, wk = Math.sin(g.ph * 6) * (g.spd > 0 ? 1 : 0), e = x => x * x * (3 - 2 * x);
   let squat = g.crouch ? 0.78 : 1, lean = 0, glow = 1;
   if (a) { const k = a.t, su = A.su;
-    if (/^low/.test(a.kind)) { squat = k <= su ? 1 - 0.28 * e(k / su) : 0.72; lean = k <= su ? -0.05 : 0.14; } // the low punch, kick and sweep: it drops into a crouch
+    if (a.kind === 'lowp' || a.kind === 'lowj') lean = k <= su ? -0.05 : 0.1; // the body punch and the thrust: a lean into the blow, standing tall
+    if (a.kind === 'lowk') { lean = k <= su ? -0.12 * e(k / su) : 0.08; squat = k <= su ? 1.03 : 1; } // the backhand: it draws back and up, then swings the arm across at head height
     if (a.kind === 'tackle') lean = k <= su ? -0.1 : 0.32; if (a.kind === 'shield') lean = k <= su ? -0.04 : 0.1;
     if (a.kind === 'hp') lean = k <= su ? -0.06 : 0.1; if (a.kind === 'lp' || a.kind === 'lp2') lean = k <= su ? -0.04 : 0.06;
     if (a.kind === 'ham') { lean = k <= su ? -0.12 * e(k / su) : 0.28; squat = k <= su ? 1.05 : 0.86; glow = k <= su ? 1 + e(k / su) : 1; } // rears up, then brings both fists down

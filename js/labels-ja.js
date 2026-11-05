@@ -389,7 +389,7 @@ const LABEL_JA = {
   "Halo Skim": "光輪投げ",
   "Hellfire Spit": "地獄の火吐き",
   "Feint Hammer": "フェイント叩き",
-  "Golem Knee": "ゴーレムの膝蹴り",
+  "Golem Thrust": "ゴーレムの突き",
   "Golem Backhand": "ゴーレムの裏拳",
   "Great Stone": "大石",
   "Heavy Stone": "重い石",
