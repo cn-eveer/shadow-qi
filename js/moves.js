@@ -283,7 +283,7 @@ function specialMoveBase(id) {
     case 'vanishSlide': return { id, label: 'Vanish Slide', startup: 20, active: 42, recovery: 8, blockAdv: -16, cpLaunch: true, crouch: true, wind: 'crouch', pose: 'slideKick', selfMove: true, noPush: true, // (crouch: his hurtbox stays low the whole slide, not a standing-height one — he's flat on the ground)
       bodyHurt: true, // (fitted to his actual silhouette through the slide — low and stretched out, not a fixed box)
       maxTravel: 420, // (the 42 active frames at 10 px/frame can cover this much ground on their own — the default dash cap would otherwise freeze him mid-slide, well short of a far opponent, for the rest of his active frames)
-      hitbox: [0,112,0,22], dmg: 52, stun: 30, bstun: 10, push: 0, kd: true, kdVx: 4, kdVy: 6, launchVy: 13, low: true, type: 'mid', hitstop: 6, gdrain: 6, // (longer reach, matching how far the slide actually stretches him out — the hurtbox already covers that whole span)
+      hitbox: [0,78,0,22], dmg: 52, stun: 30, bstun: 10, push: 0, kd: true, kdVx: 4, kdVy: 6, launchVy: 13, low: true, type: 'mid', hitstop: 6, gdrain: 6, // (reach shortened from 112: the slide has to arrive before it hits — the hurtbox already covers that whole span)
       poseFn(f, mf) { return mf <= 20 ? POSES.crouch : null; },
       onFrame(f, o, mf) {
         if (mf <= 20) { shadowRetreat(f, mf); return; }
