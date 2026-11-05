@@ -28,6 +28,9 @@ const RELEASES = [ // notes: a string, or { g: 'group', items: [...] } (groups n
     { g: 'アルドリック', items: [
       '攻撃力 ×1.08→×0.92',
     ] },
+    { g: 'カッパ', items: [
+      '大洪水中、離れた相手を投げ（K・J）やベリースライドで捕らえるとゲームが止まる不具合を修正',
+    ] },
   ] },
   { v: '1.5.3', date: '2026-11-04', notes: [
     { g: 'アルドリック', items: [
