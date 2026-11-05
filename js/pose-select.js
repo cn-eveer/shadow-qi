@@ -244,7 +244,7 @@ const KURO_SIGNS = {
   flame: { animal: 'phoenix', kanji: '鳳', en: 'Phoenix Seal', ja: '鳳凰の印', col: '255,125,60', seq: ['seal4', 'seal3', 'seal2'] }, // Fire Breath
   shadowCharge: { animal: 'serpent', kanji: '蛇', en: 'Serpent Seal', ja: '蛇の印', col: '175,125,255', seq: ['seal', 'seal4', 'seal5'] }, // Shadow Charge Upper
   swordSlash: { animal: 'crane', kanji: '鶴', en: 'Crane Seal', ja: '鶴の印', col: '225,238,255', seq: ['seal5', 'seal', 'seal3'] },    // Iai Slash
-  cloneStrike: { animal: 'fox', kanji: '狐', en: 'Fox Seal', ja: '狐の印', col: '210,160,255', seq: ['seal2', 'seal5', 'seal4'] },      // Shadow Clone
+  cloneStrike: { animal: 'fox', kanji: '狐', en: 'Fox Seal', ja: '狐の印', col: '255,95,80', seq: ['seal2', 'seal5', 'seal4'] },        // Shadow Clone (a red fox)
   vanishSlide: { animal: 'rat', kanji: '鼠', en: 'Rat Seal', ja: '鼠の印', col: '185,185,210', seq: ['seal4', 'seal', 'seal2'] },       // Vanish Slide
   vanishDrop: { animal: 'raven', kanji: '烏', en: 'Raven Seal', ja: '烏の印', col: '160,120,230', seq: ['seal3', 'seal2', 'seal5'] },   // Vanish Drop Kick
 };
