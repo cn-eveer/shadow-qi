@@ -14,7 +14,7 @@ const CHARS = {
     superPreMul: 0.2, // (Shadow Army: a shorter warning before the clones come — 発生 faster)
     noLowSp: true, // (no ↓ versions of his techniques on demand: they still come out by themselves on someone in the air)
     name: 'KURO', dmgMul: 1.08, title: 'Shadow Ninja', nameJa: 'クロ', titleJa: '影の忍者', jugDmg: 1.15, scale: 1, walk: 3.4, back: 2.8, jumpX: 4.4,
-    pDmg: 0.9, kDmg: 0.92, pReach: 1, kReach: 1.08, chargeRate: 0.5, auraCol: '185,145,255',
+    pDmg: 0.9, kDmg: 0.92, pReach: 1, kReach: 1.08, reachMul: 0.88, /* (every normal and string hit reaches 12% less far: he has to get in closer) */ chargeRate: 0.5, auraCol: '185,145,255',
     sp: { fP: 'shadowCharge', fPH: 'swordSlash', fK: 'cloneStrike', fKH: 'teleKick', bP: 'flame', bPH: 'fireballs', bK: 'vanishSlide', bKH: 'vanishDrop' }, sup: 'shadowArmy',
     heavy: {
       p: { label: 'Kunai Slash', startup: 9, active: 5, recovery: 18, hitbox: [10,104,106,140], wind: 'slashW', pose: 'slash', blade: true, lunge: [3, 9, 4.5], hitstop: 10, speedFx: true, bodyHurt: true, // (hitbox: a fallback box for the other systems that read it; the real one below is the kunai itself. bodyHurt: his own hurtbox fitted to the swing too)

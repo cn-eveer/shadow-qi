@@ -33,7 +33,7 @@ const STRINGS = {
         if (f.hitConnected && f.lastResult === 'hit' && !f.move.heavyHit) { f.move.heavyHit = true; game.shake = Math.max(game.shake, 9); sfx('hitH'); } } }),
     nL: SL('Kunai Rise', 'uppercutW', 'kunaiRise', { blade: true, trail: { cx: 10, cy: 90, r: 95, a0: -30, a1: 95, col: '225,235,255' } }),
     nE: SF('k', 'Crescent Kick', 'kickW', 'highKick', { dmg: 50, trail: { cx: 0, cy: 62, r: 78, a0: -45, a1: 95, col: '190,150,255' } }),
-    nl2: SG('k', 'Sweep Slash', 'crouch', 'lowKick', { low: true, blade: true, hitbox: [20,90,8,44] }),
+    nl2: SG('k', 'Sweep Slash', 'crouch', 'lowKick', { low: true, blade: true, hitbox: [20,90,8,44], recovery: 16, advBlock: -6 }), // J, J: slow to recover (16, 12 after his faster recovery) and −6 when guarded: a low that can be punished
     nlE: SF('k', 'Shadow Snap Kick', 'kickW', 'midKick', { step: 8, hitbox: [15,100,45,130], kdVy: 5 }), // J, J, K / J, K: low, low… then a mid (guard the lows crouching and this one hits)
     nD: SF('k', 'Shadow Reaper', 'crouch', 'sweep', { fixedFrames: true, pre: 6, startup: 10, active: 7, recovery: 22, advBlock: -6, /* (−12 with the guard stall) */ noFiveLag: true, low: true, step: 8, hitbox: [0,105,0,34], kd: true, kdVx: 6, kdVy: 6 }), // U, U, ↓ + K: the low ending (U, U, K drops from above instead)
     jPalm: SJ('p', 'Rising Kunai Slash', 'jabW', 'kunaiRise', { blade: true, trail: { cx: 10, cy: 90, r: 80, a0: -30, a1: 90, col: '225,235,255' } }),
