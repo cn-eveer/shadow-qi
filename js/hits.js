@@ -284,8 +284,8 @@ function poseHurtbox(d, bodyOnly) { // (bodyOnly: the torso, head and legs — n
     if (wx < x0) x0 = wx; if (wx > x1) x1 = wx;
     if (wy < y0) y0 = wy; if (wy > y1) y1 = wy;
   }
-  const pad = 9 * s;
-  return { x0: x0 - pad, x1: x1 + pad, y0: Math.max(0, y0 - pad), y1: y1 + pad };
+  const pad = 9 * s, padX = pad * (d.ch.hurtMul || 1); // (hurtMul: narrower either side; the height stays, so highs and lows read the same)
+  return { x0: x0 - padX, x1: x1 + padX, y0: Math.max(0, y0 - pad), y1: y1 + pad };
 }
 function hurtbox(d, juggle, low) {
   if (d.invul > 0 || d.hidden || d.ko || d.state === 'getup' || d.state === 'roll' || d.state === 'slashed') return null;
@@ -308,7 +308,7 @@ function hurtbox(d, juggle, low) {
   if (crouching) h = 95;
   if (d.state === 'land') h = 110;
   if (d.y > 0 || d.state === 'knock') h = 118;
-  const w = (atkMv && d.move.hurtW) || 25; // narrower than the usual 25 either side: a move that pulls most of him back out of the way
+  const w = ((atkMv && d.move.hurtW) || 25) * (d.ch.hurtMul || 1); // narrower than the usual 25 either side: a move that pulls most of him back out of the way (hurtMul: a fighter who is harder to reach, like Kuro)
   const back = (atkMv && d.move.hurtBack) || 0; // shifted behind his facing, away from however far forward the attack reaches
   const cx = d.x - back * d.facing;
   return { x0: cx - w * s, x1: cx + w * s, y0: d.y, y1: d.y + h * s };

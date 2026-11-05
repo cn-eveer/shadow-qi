@@ -14,11 +14,11 @@ const CHARS = {
     superPreMul: 0.2, // (Shadow Army: a shorter warning before the clones come — 発生 faster)
     noLowSp: true, // (no ↓ versions of his techniques on demand: they still come out by themselves on someone in the air)
     name: 'KURO', dmgMul: 1.08, title: 'Shadow Ninja', nameJa: 'クロ', titleJa: '影の忍者', jugDmg: 1.15, scale: 1, walk: 3.4, back: 2.8, jumpX: 4.4,
-    pDmg: 0.9, kDmg: 0.92, pReach: 1, kReach: 1.08, reachMul: 0.78, /* (every normal and string hit reaches 22% less far: he has to get in closer) */ chargeRate: 0.5, auraCol: '185,145,255',
+    pDmg: 0.9, kDmg: 0.92, pReach: 1, kReach: 1.08, reachMul: 0.62, hurtMul: 0.72, /* (every normal and string hit reaches 38% less far, and his hurtbox is 28% narrower: he has to get in close, and is harder to reach there) */ chargeRate: 0.5, auraCol: '185,145,255',
     sp: { fP: 'shadowCharge', fPH: 'swordSlash', fK: 'cloneStrike', fKH: 'teleKick', bP: 'flame', bPH: 'fireballs', bK: 'vanishSlide', bKH: 'vanishDrop' }, sup: 'shadowArmy',
     heavy: {
       p: { label: 'Kunai Slash', startup: 9, active: 5, recovery: 18, hitbox: [10,104,106,140], wind: 'slashW', pose: 'slash', blade: true, lunge: [3, 9, 4.5], hitstop: 10, speedFx: true, bodyHurt: true, // (hitbox: a fallback box for the other systems that read it; the real one below is the kunai itself. bodyHurt: his own hurtbox fitted to the swing too)
-        kunaiBox: true, kunaiReach: 30, // the hitbox is exactly the drawn kunai (kunaiReach: how far past the hand, shortened from the 42 default) — hand to blade-tip, read straight off the same pose drawBody uses, frame by frame through the swing
+        kunaiBox: true, kunaiReach: 22, // the hitbox is exactly the drawn kunai (kunaiReach: how far past the hand, shortened from the 42 default) — hand to blade-tip, read straight off the same pose drawBody uses, frame by frame through the swing
         poseFn(f, mf) { // the swing (slashW, kunai raised overhead -> slash, brought down and through) plays across the whole technique, wind-up and strike together, so it's still under way during the active frames instead of finished before them
           const mv = f.move, su = mv.startup, total = su + mv.active; if (mf >= total) return null; // recovery: back to the generic system
           const riseEnd = Math.max(1, Math.round(su * 0.55)); // raised overhead partway through the wind-up…
@@ -27,7 +27,7 @@ const CHARS = {
         },
         trail: { cx: 15, cy: 105, r: 80, a0: 80, a1: -35, col: '225,235,255' } },
       k: { label: 'Crescent Kick', startup: 10, active: 5, recovery: 19, hitbox: [15,92,45,140], wind: 'crescentW', pose: 'crescent', lunge: [2, 8, 3.5], cpLaunch: true, launchVy: 13, bodyHurt: true,
-        limbJoint: 'f1', limbReach: 24, limbBack: 15, limbUp: 15, limbDown: 15, // a compact box on the kicking foot (reach shortened: he has to get in closer)
+        limbJoint: 'f1', limbReach: 16, limbBack: 15, limbUp: 15, limbDown: 15, // a compact box on the kicking foot (reach shortened: he has to get in closer)
         poseFn(f, mf) { // the kick swings through: crescentW raised, into crescent, across the whole technique so it's still turning during the active frames
           const mv = f.move, su = mv.startup, total = su + mv.active; if (mf >= total) return null;
           const riseEnd = Math.max(1, Math.round(su * 0.5));
