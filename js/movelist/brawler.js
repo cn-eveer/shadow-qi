@@ -9,19 +9,19 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="note"><b>Theme.</b> Iron qi & mountains · cyan and bronze. A temple brawler who trained by breaking stone. Signatures: U, U, K Mountain Splitter (stomps the ground open, then twin palms); U, U, I Ascending Dragon (a qi dragon coils up around him).</p>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>Qi Palm<small>Heavy punch. A palm strike with a qi burst that blasts the opponent back and drains more guard. A counter hit launches them.</small></td><td class="keys"><kbd>I</kbd></td></tr>
-          <tr><td>Axe Kick<small>Heavy kick. Steps in and drops the heel from above; knocks down, and launches if it counters or punishes.</small></td><td class="keys"><kbd>K</kbd></td></tr>
-          <tr><td>Meteor Fist<small>Leaps in and slams both fists down (a mid). Guarded, it shoves them far back and tears at the guard. A counter hit launches them.</small></td><td class="cmd">→ → + U</td></tr>
-          <tr><td>Crouching Upper<small>Ducks in low and drives an uppercut up through them. A counter hit launches them.</small></td><td class="cmd">→ → + I</td></tr>
-          <tr><td>Qi Blast<small>A qi projectile, out quickly and safe when guarded.</small></td><td class="cmd">← → + U</td></tr>
-          <tr><td>Swift Qi Blast<small>One qi blast, out a little sooner than ← → + U's and flying much faster. Safe when guarded.</small></td><td class="cmd">← → + I</td></tr>
+          <tr><td>Qi Palm<small>Heavy punch, a mid. A palm strike with a qi burst that blasts the opponent back and drains more guard. A counter hit launches them.</small></td><td class="keys"><kbd>I</kbd></td></tr>
+          <tr><td>Axe Kick<small>Heavy kick, a mid. Steps in and drops the heel from above; knocks down, and launches if it counters or punishes.</small></td><td class="keys"><kbd>K</kbd></td></tr>
+          <tr><td>Meteor Fist<small>Leaps in and slams both fists down (a high: duck under it). Guarded, it shoves them far back and tears at the guard. A counter hit launches them.</small></td><td class="cmd">→ → + U</td></tr>
+          <tr><td>Crouching Upper<small>A mid. Ducks in low and drives an uppercut up through them. A counter hit launches them.</small></td><td class="cmd">→ → + I</td></tr>
+          <tr><td>Qi Blast<small>A qi projectile, a high: it passes over a crouching fighter. Out quickly and safe when guarded.</small></td><td class="cmd">← → + U</td></tr>
+          <tr><td>Swift Qi Blast<small>One qi blast, a high like ← → + U’s, out a little sooner than ← → + U's and flying much faster. Safe when guarded.</small></td><td class="cmd">← → + I</td></tr>
           <tr><td>Qi Sweep<small>Lunges in low and scoops them up with both palms.</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>Shoulder Charge<small>A shoulder tackle that charges in from about a third of the screen and knocks them back. Shrugs off light hits on the way in; punishable if guarded.</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>Push Parry<small>A quick parry (from the 5th frame, for 14 frames). A blow that hits him during it is parried and he shoves them far away, without damage. Projectiles are not parried: they hit him. Neither is Lyra’s magic. Slow to recover if it catches nothing.</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>Kick Parry<small>The same quick parry, but a parried blow gets a counter kick that knocks them away. Projectiles are not parried: they hit him. Neither is Lyra’s magic. Slower still to recover if it catches nothing.</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>Earth Stomp<small>A shockwave along the floor. Hits low, even someone lying down. Projectiles and rays pass through him while he stomps. Safe when guarded.</small></td><td class="cmd">← ← + J</td></tr>
-          <tr><td>Cyclone Lariat<small>Backsteps, then spins forward with both arms out: three hits that launch. While he spins, projectiles and rays (Lyra’s shots, fireballs, lightning) pass through him; only close-range attacks can hit him.</small></td><td class="cmd">← ← + K</td></tr>
-          <tr><td>Rising Fist<small>An invincible corkscrew uppercut that launches.</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>Cyclone Lariat<small>A mid. Backsteps, then spins forward with both arms out: three hits that launch. While he spins, projectiles and rays (Lyra’s shots, fireballs, lightning) pass through him; only close-range attacks can hit him.</small></td><td class="cmd">← ← + K</td></tr>
+          <tr><td>Rising Fist<small>A mid. An invincible corkscrew uppercut that launches.</small></td><td class="cmd">↓ + I</td></tr>
           <tr class="super"><td>Super: Great Qi Cannon<small>A screen-long qi beam that hits 13 times. Not invincible: until the beam fires, light hits from up close don't stop it (he still takes their full damage — enough of it finishes him), but heavy attacks, techniques and anything from further away do. Needs a full MP gauge.</small></td><td class="cmd">Punch + Kick</td></tr>
         </tbody>
       </table></div>
@@ -62,19 +62,19 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
       <p class="note"><b>テーマ.</b> 鉄の気と山・水色と青銅。岩を砕いて修行した寺の拳士。決め技：U、U、K「山割り」（地面を踏み割り、双掌）／U、U、I「昇龍」（気の龍が体に巻きつき昇る）。</p>
       <div class="scroll"><table>
         <tbody>
-          <tr><td>気功掌<small>強パンチ。気の爆発で吹き飛ばし、ガードを大きく削る。</small></td><td class="keys"><kbd>I</kbd></td></tr>
-          <tr><td>踵落とし<small>強キック。上から踵を落としてダウン。カウンターや確定反撃で打ち上げ。</small></td><td class="keys"><kbd>K</kbd></td></tr>
-          <tr><td>流星拳<small>跳び込んで両拳を叩きつける（中段）。ガードされても大きく押し返し、ガードゲージを削る。カウンターで打ち上げる。</small></td><td class="cmd">→ → + U</td></tr>
-          <tr><td>潜り昇拳<small>低く潜り込んでアッパーで突き上げる。カウンターで打ち上げる。</small></td><td class="cmd">→ → + I</td></tr>
-          <tr><td>気功弾<small>出の速い気の飛び道具。ガードされても安全。</small></td><td class="cmd">← → + U</td></tr>
-          <tr><td>疾風気弾<small>気弾を1発放つ。← → + Uより少し早く出て、ずっと速く飛ぶ。ガードされても安全。</small></td><td class="cmd">← → + I</td></tr>
+          <tr><td>気功掌<small>強パンチ、中段。気の爆発で吹き飛ばし、ガードを大きく削る。</small></td><td class="keys"><kbd>I</kbd></td></tr>
+          <tr><td>踵落とし<small>強キック、中段。上から踵を落としてダウン。カウンターや確定反撃で打ち上げ。</small></td><td class="keys"><kbd>K</kbd></td></tr>
+          <tr><td>流星拳<small>跳び込んで両拳を叩きつける（上段：しゃがんでかわせる）。ガードされても大きく押し返し、ガードゲージを削る。カウンターで打ち上げる。</small></td><td class="cmd">→ → + U</td></tr>
+          <tr><td>潜り昇拳<small>中段。低く潜り込んでアッパーで突き上げる。カウンターで打ち上げる。</small></td><td class="cmd">→ → + I</td></tr>
+          <tr><td>気功弾<small>出の速い気の飛び道具。上段：しゃがむと頭上を通る。ガードされても安全。</small></td><td class="cmd">← → + U</td></tr>
+          <tr><td>疾風気弾<small>気弾を1発放つ（上段）。← → + Uより少し早く出て、ずっと速く飛ぶ。ガードされても安全。</small></td><td class="cmd">← → + I</td></tr>
           <tr><td>気の掬い<small>低く踏み込み、両掌で掬い上げる。</small></td><td class="cmd">→ → + J</td></tr>
           <tr><td>肩当て<small>画面の約3分の1から突進する体当たりで押し返す。突進中は弱い攻撃を耐える。ガードされると反撃される。</small></td><td class="cmd">→ → + K</td></tr>
           <tr><td>気の押し返し<small>出の速い受け流し（5フレーム目から14フレーム）。受け流した相手をダメージなしで大きく押し返す。飛び道具は受け流せず、そのまま当たる。ライラの魔法も受け流せない。空振りすると硬直が長い。</small></td><td class="cmd">← ← + U</td></tr>
           <tr><td>蹴り返し<small>同じく出の速い受け流しで、受け流した相手に反撃の蹴りを当てて吹き飛ばす。飛び道具は受け流せず、そのまま当たる。ライラの魔法も受け流せない。空振りするとさらに硬直が長い。</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>大地踏み<small>地を這う衝撃波。下段で、倒れた相手にも当たる。踏み込み中は飛び道具がすり抜ける。ガードされても安全。</small></td><td class="cmd">← ← + J</td></tr>
-          <tr><td>旋風ラリアット<small>下がってから両腕を広げて回転、3段で打ち上げ。回転中は飛び道具や光線がすり抜ける（近接攻撃だけ当たる）。</small></td><td class="cmd">← ← + K</td></tr>
-          <tr><td>昇龍拳<small>無敵の螺旋アッパーで打ち上げ。</small></td><td class="cmd">↓ + I</td></tr>
+          <tr><td>旋風ラリアット<small>中段。下がってから両腕を広げて回転、3段で打ち上げ。回転中は飛び道具や光線がすり抜ける（近接攻撃だけ当たる）。</small></td><td class="cmd">← ← + K</td></tr>
+          <tr><td>昇龍拳<small>中段。無敵の螺旋アッパーで打ち上げ。</small></td><td class="cmd">↓ + I</td></tr>
           <tr class="super"><td>超必殺技：大気功砲<small>画面を貫く気のビームで13ヒット。無敵ではない：ビームが出るまで、近くからの弱い攻撃では止まらない（ダメージはそのまま受け、体力が尽きればKO）が、強い攻撃・必殺技・離れた位置からの攻撃では止まる。MP満タンが必要。</small></td><td class="cmd">パンチ + キック</td></tr>
         </tbody>
       </table></div>

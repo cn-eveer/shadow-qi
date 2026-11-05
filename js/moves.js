@@ -39,6 +39,7 @@ function normalMove(ch, kind, str, stance) {
   if (mv && ch.sturdy && !mv.air && !mv.held) { mv.startup += 2; mv.recovery = Math.round(mv.recovery * 1.15); } // Aldric: heavy armor, slow, deliberate swings // Mei and Lyra swing a little slower
   if (mv && ch.normalPre && !mv.air) mv.pre = ch.normalPre; // Lyra gathers her power for a moment before every attack
   if (mv && mv.floorGlyph && ch.normalLook) { mv.low = true; mv.lunge = null; } // a fighter's own animation for this button
+  if (mv && ch.normalHeight && ch.normalHeight[stance + kind + str]) mv.height = ch.normalHeight[stance + kind + str]; // (a fighter's own height for a normal: Kuro's ↓ + I is a high)
   if (mv && ch === CHARS.ninja && mv.recovery < 90) mv.recovery = Math.max(5, Math.round(mv.recovery * 0.75)); // Kuro recovers faster
   return mv;
 }
@@ -114,7 +115,7 @@ function specialMove(id) {
 }
 function specialMoveBase(id) {
   switch (id) {
-    case 'cloneStrike': return { id, label: 'Shadow Clone', startup: 13, active: 6, recovery: 8, blockAdv: 0, noFmRec: true, noGuardLag: true, bodyHurt: true, /* (the clone does the work: if it's guarded after he's recovered, he isn't caught off balance) */ /* (no recovery added by his frame tuning) */ wind: 'seal', pose: 'seal', proj: 'clone', limit: 1,
+    case 'cloneStrike': return { id, label: 'Shadow Clone', height: 'high', /* (the clone's kick is a high: see spawnClone) */ startup: 13, active: 6, recovery: 8, blockAdv: 0, noFmRec: true, noGuardLag: true, bodyHurt: true, /* (the clone does the work: if it's guarded after he's recovered, he isn't caught off balance) */ /* (no recovery added by his frame tuning) */ wind: 'seal', pose: 'seal', proj: 'clone', limit: 1,
       onFrame(f, o, mf) { if (mf === 12) spawnClone(f, false, 0); } };
     case 'shadowCharge': return { id, label: 'Shadow Charge Upper', startup: 46, active: 9, recovery: 16, blockAdv: -21, wind: 'seal', pose: 'uppercut', selfMove: true, counterVanish: true, slow: true, interruptChance: 0.2,
       bodyHurt: true, // (fitted to his actual silhouette, mid-dash and mid-rise)
@@ -142,9 +143,9 @@ function specialMoveBase(id) {
         if (mf === 47) sfx('rise');
         if (mf >= 47 && mf <= 51) f.y = Math.max(0, 14 * Math.sin(Math.PI * (mf - 46) / 6)); // a little lift as he rises into it
       } };
-    case 'counterVanish': return { id, label: 'Counter Vanish', startup: 6, active: 3, recovery: 18, wind: 'crouch', pose: 'slash', blade: true, noGrace: true,
-      hitbox: [10,88,40,130], dmg: 62, stun: 20, bstun: 12, push: 2, stunT: 62, stunKind: 'shadow', type: 'mid', hitstop: 10, gdrain: 10,
-      trail: { cx: 15, cy: 105, r: 72, a0: 70, a1: -30, col: '200,170,255' } };
+    case 'counterVanish': return { id, label: 'Counter Vanish', startup: 4, active: 1, recovery: 8, wind: 'crouch', pose: 'crouch', noGrace: true, antiDone: true,
+      hitbox: null, dmg: 0, // no strike and no stun: he only reappears behind them, and is free to act a moment later
+      poseFn(f, mf) { return lerpPose(POSES.crouch, POSES.idle, Math.min(1, mf / 8)); } };
     case 'swordSlash': return { id, label: 'Iai Slash', startup: 16, active: 12, recovery: 26, blockAdv: -20, /* (−18 measured: it cuts through) */ cpLaunch: true, launchVy: 13, wind: 'iaiStance', pose: 'iaiDash', sword: true, iai: true, slow: true, selfMove: true, noPush: true,
       bodyHurt: true, // (fitted to his actual silhouette through the dash)
       hitbox: [-5,80,35,115], dmg: 80, stun: 20, bstun: 12, push: 0, slash: true, type: 'mid', hitstop: 12, gdrain: 20, // (the blade's own reach, longer and thinner — iaiSweepBox covers the 32 px/frame dash so it still can't pass through someone)
@@ -206,7 +207,7 @@ function specialMoveBase(id) {
       trail: { cx: 0, cy: 70, r: 86, a0: -60, a1: 40, col: '190,150,255' },
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; puff(f.x, 40); },
       onFrame(f, o, mf) { if (mf === 5) { dustAt(f.x, false); sfx('swing'); } if (mf === 18) sfx('slash'); } };
-    case 'teleKick': return { id, label: 'Sky Drop Kick', startup: 28, active: 14, recovery: 16, blockAdv: -21, wind: 'seal', pose: 'diveKick', manualY: true, noPush: true, selfMove: true,
+    case 'teleKick': return { id, label: 'Sky Drop Kick', height: 'high', startup: 28, active: 14, recovery: 16, blockAdv: -21, wind: 'seal', pose: 'diveKick', manualY: true, noPush: true, selfMove: true,
       bodyHurt: true, // (fitted to his actual silhouette, hanging in the air and falling — no narrower than he really is: the whole point of the longer hang is that he's genuinely open there)
       hitbox: [-10,52,-12,50], dmg: 58, stun: 24, bstun: 14, push: 2, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 9, gdrain: 10,
       limbJoint: 'f1', limbReach: 35, limbBack: 10, limbUp: 6, limbDown: 18, // (the box travels with the falling kick, and doesn't reach up past the foot)
@@ -242,18 +243,18 @@ function specialMoveBase(id) {
       hitbox: [10,98,40,118], dmg: 85, stun: 20, bstun: 14, push: 5, kd: true, kdVx: 15, kdVy: 10, type: 'mid', hitstop: 11, gdrain: 14,
       trail: { cx: 0, cy: 70, r: 86, a0: -60, a1: 40, col: '190,150,255' },
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; sfx('slash'); } };
-    case 'flame': return { id, label: 'Fire Breath', startup: 24, active: 32, recovery: 16, /* (a shorter stream: 32 + 3 active) */ blockAdv: -14, hitAdv: 10, wind: 'seal', pose: 'breath', proj: 'flame', limit: 1, slow: true, interruptChance: 0.4,
+    case 'flame': return { id, label: 'Fire Breath', height: 'high', /* (the stream is a high: see the flame hit in strings.js) */ startup: 24, active: 32, recovery: 16, /* (a shorter stream: 32 + 3 active) */ blockAdv: -14, hitAdv: 10, wind: 'seal', pose: 'breath', proj: 'flame', limit: 1, slow: true, interruptChance: 0.4,
       poseFn(f, mf) { return mf <= 24 ? handSign(mf) : null; },
       onFrame(f, o, mf) { if (mf <= 24 && mf % 2 === 0) ember(f); if (mf === 25) spawnFlame(f); } };
-    case 'fireballs': return { id, label: 'Thunder Ball', startup: 34, active: 15, recovery: 1, noGuardLag: true, fixedFrames: true, /* (he's free once the last ball flies, frame 48: a projectile — no frameMod recovery added) */ wind: 'seal', pose: 'throw', proj: 'homing', limit: 1, slow: true, interruptChance: 0.4,
-      poseFn(f, mf) { return mf <= 34 ? handSign(mf) : null; },
+    case 'fireballs': return { id, label: 'Thunder Ball', height: 'high', /* (the ball is a high: see spawnOrb) */ startup: 44, active: 15, recovery: 1, noGuardLag: true, fixedFrames: true, /* (he's free once the last ball flies, frame 58: a projectile — no frameMod recovery added) */ wind: 'seal', pose: 'throw', proj: 'homing', limit: 1, slow: true, interruptChance: 0.4,
+      poseFn(f, mf) { return mf <= 44 ? handSign(mf) : null; },
       onFrame(f, o, mf) {
         if (mf === 8) spawnOrb(f, 1, true);                                       // one great lightning ball crackles into being overhead during the hand signs, swelling as they go on
-        if (mf > 8 && mf <= 34) for (const p of projs) if (p.owner === f && p.type === 'homing' && p.hold) p.r = 13 + (mf - 8) * 0.8;
-        if (mf === 36) launchOrb(f, 1);                                           // then flies at the opponent
-        if (mf <= 34 && mf % 2 === 0) crackle(f);
+        if (mf > 8 && mf <= 44) for (const p of projs) if (p.owner === f && p.type === 'homing' && p.hold) p.r = 13 + (mf - 8) * 0.8;
+        if (mf === 46) launchOrb(f, 1);                                           // then flies at the opponent
+        if (mf <= 44 && mf % 2 === 0) crackle(f);
       } };
-    case 'vanishDrop': return { id, label: 'Vanish Drop Kick', startup: 36, active: 22, recovery: 15, blockAdv: -16, /* (a longer fall: out longer in the air, where it can be punished) */ wind: 'crouch', pose: 'axe', manualY: true,
+    case 'vanishDrop': return { id, label: 'Vanish Drop Kick', height: 'high', startup: 36, active: 22, recovery: 15, blockAdv: -16, /* (a longer fall: out longer in the air, where it can be punished) */ wind: 'crouch', pose: 'axe', manualY: true,
       bodyHurt: true, // (fitted to his actual silhouette through the leap)
       trail: { cx: 5, cy: 62, r: 72, a0: 110, a1: -20, col: '190,150,255' }, noPush: true, selfMove: true,
       hitbox: [-30,55,0,40], dmg: 60, stun: 20, bstun: 14, push: 4, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 10, gdrain: 12, // (hitbox: the fallback for other systems; the real one below is the kicking leg)
@@ -283,7 +284,7 @@ function specialMoveBase(id) {
     case 'vanishSlide': return { id, label: 'Vanish Slide', startup: 20, active: 42, recovery: 8, blockAdv: -16, cpLaunch: true, crouch: true, wind: 'crouch', pose: 'slideKick', selfMove: true, noPush: true, // (crouch: his hurtbox stays low the whole slide, not a standing-height one — he's flat on the ground)
       bodyHurt: true, // (fitted to his actual silhouette through the slide — low and stretched out, not a fixed box)
       maxTravel: 420, // (the 42 active frames at 10 px/frame can cover this much ground on their own — the default dash cap would otherwise freeze him mid-slide, well short of a far opponent, for the rest of his active frames)
-      hitbox: [0,112,0,22], dmg: 52, stun: 30, bstun: 10, push: 0, kd: true, kdVx: 4, kdVy: 6, launchVy: 13, low: true, type: 'mid', hitstop: 6, gdrain: 6, // (longer reach, matching how far the slide actually stretches him out — the hurtbox already covers that whole span)
+      hitbox: [0,78,0,22], dmg: 52, stun: 30, bstun: 10, push: 0, kd: true, kdVx: 4, kdVy: 6, launchVy: 13, low: true, type: 'mid', hitstop: 6, gdrain: 6, // (reach shortened from 112: the slide has to arrive before it hits — the hurtbox already covers that whole span)
       poseFn(f, mf) { return mf <= 20 ? POSES.crouch : null; },
       onFrame(f, o, mf) {
         if (mf <= 20) { shadowRetreat(f, mf); return; }
@@ -554,7 +555,7 @@ function specialMoveBase(id) {
         f.vx = 0;
         if (mf === 3) sfx('charge');
         if (mf < 14 && mf % 3 === 0) parts.push({ type: 'ring', x: f.x, y: GROUND - f.y - 100, r: 70 - mf * 4, vr: -1, life: 6, max: 6, col: '190,225,255' }); // casting: the light gathers (hit him now: counter)
-        if (mf === 14) { sfx('orb'); if (!(f.aegisT > 0)) { f.aegisT = 240; f.aegisHitT = null; f.aegisFloor = Math.max(0, f.guard - AEGIS_COST); } } // (not again while it's up) (it may use a quarter of the guard meter, no more)
+        if (mf === 14) { sfx('orb'); if (!(f.aegisT > 0)) { f.aegisT = 240; f.aegisHitT = null; f.aegisFloor = Math.max(0, f.guard - AEGIS_COST); } } // (not again while it's up) (it may use 40% of the guard meter, no more)
       } };
     // super: Sanctuary. He plants the sword and a dome of light swells around him: caught inside, they're held and burned
     // again and again while his guard refills and his wounds close, then the dome bursts
@@ -1107,7 +1108,7 @@ function specialMoveBase(id) {
     case 'jWave': return { id, label: 'Spirit Fist Burst', startup: 6, active: 6, recovery: 18, wind: 'psyW', pose: 'psyUp', giantFist: [115, 150, 1.1, -0.5],
       hitbox: [30,175,30,250], dmg: 50, kd: true, kdVx: 14, kdVy: 9, type: 'mid', hitstop: 13, gdrain: 10 };
     // ----- Tetsu -----
-    case 'meteorFist': return { id, label: 'Meteor Fist', pre: 6, startup: 16, active: 10, recovery: 18, wind: 'meteorW', pose: 'meteorPunch', fx: 'comet', manualY: true, noPush: true, selfMove: true, aura: true, bodyHurt: true,
+    case 'meteorFist': return { id, label: 'Meteor Fist', height: 'high', pre: 6, startup: 16, active: 10, recovery: 18, wind: 'meteorW', pose: 'meteorPunch', fx: 'comet', manualY: true, noPush: true, selfMove: true, aura: true, bodyHurt: true,
       limbJoint: 'h1', limbReach: 40, limbBack: 34, limbUp: 24, limbDown: 28, sweepBox: true, hitFrom: 2, // (dangerous from the top of the jump: the fist is already coming down)
       // a box on the slamming fist, longer reach, lower and more compact — the slam, not a tall guess
       hitbox: [-10,80,-20,90], dmg: 62, stun: 20, bstun: 14, push: 3, launch: true, launchVy: 10, bounce: true, type: 'mid', hitstop: 11, gdrain: 12,
@@ -1159,7 +1160,7 @@ function specialMoveBase(id) {
       dmg: 50, stun: 20, bstun: 12, push: 3, launch: true, launchVy: 13, noGrace: true, type: 'mid', hitstop: 12, gdrain: 10 };
     case 'stomp': return { id, label: 'Earth Stomp', low: true, projInvul: [0, 32], pre: 7, startup: 12, active: 2, recovery: 18, wind: 'stompW', pose: 'stompDown', proj: 'wave', limit: 1, // (low: its shockwave runs along the floor)
       onFrame(f, o, mf) { if (mf === 12) { spawnWave(f); dustAt(f.x + f.facing * 40, true); cracks(f.x + f.facing * 22); game.shake = Math.max(game.shake, 4); sfx('land'); } } };
-    case 'tornado': return { id, label: 'Cyclone Lariat', projInvul: [1, 34], pre: 7, startup: 12, active: 21, recovery: 12, wind: 'lariatW', pose: 'lariat', fx: 'cyclone', manualY: true, noPush: true, selfMove: true, spin: [13, 33], bodyHurt: true,
+    case 'tornado': return { id, label: 'Cyclone Lariat', height: 'mid', projInvul: [1, 34], pre: 7, startup: 12, active: 21, recovery: 12, wind: 'lariatW', pose: 'lariat', fx: 'cyclone', manualY: true, noPush: true, selfMove: true, spin: [13, 33], bodyHurt: true,
       hitFrom: 8, hitbox: [20,80,70,145], multi: 3, interval: 5, dmg: 22, lastDmg: 34, stun: 18, bstun: 10, push: 1.5, lastPush: 3, launch: true, launchVy: 12, type: 'mid', hitstop: 6, gdrain: 10, // raised off the floor: the lariat is a swinging arm at chest/head height, not something that should also catch a low crouch
       onStart(f, o) { f.facing = Math.sign(o.x - f.x) || f.facing; },
       onFrame(f, o, mf) { // a small backstep, then a jumping spinning lariat forward
@@ -1200,7 +1201,7 @@ function specialMoveBase(id) {
         if (mf <= 8) { const e = mf / 8; f.x = lerp(f.tj.x0, f.tj.tx, e); f.y = f.tj.top * e; }
         else if (mf <= 26) { f.y = Math.max(f.y, f.y + (o.y + 10 - f.y) * 0.3); f.x = clamp(o.x - f.facing * 30, WALL_L, WALL_R); } // keep level with them as they rise
       } };
-    case 'duckUpper': return { id, label: 'Crouching Upper', pre: 6, startup: 11, active: 10, recovery: 18, wind: 'crouch', pose: 'uppercut', selfMove: true, speedFx: true, aura: true, burst: [60, 170], bodyHurt: true, // → → + I: ducks in low and drives an uppercut up through them
+    case 'duckUpper': return { id, label: 'Crouching Upper', height: 'mid', pre: 6, startup: 11, active: 10, recovery: 18, wind: 'crouch', pose: 'uppercut', selfMove: true, speedFx: true, aura: true, burst: [60, 170], bodyHurt: true, // → → + I: ducks in low and drives an uppercut up through them
       limbJoint: 'h1', limbReach: 50, limbBack: 16, limbUp: 38, limbDown: 38, // a more centered box on the fist itself (was heavily up-biased, so it already covered the top before he'd risen) — now it genuinely climbs with him
       poseFn(f, mf) { // two blows: a straight punch at mid height out of the dash, then the fist drops back low and the uppercut drives up through them
         const mv = f.move; if (mf >= mv.startup + mv.active) return null;
@@ -1220,11 +1221,11 @@ function specialMoveBase(id) {
         if (mf <= 16 && f.hitCount === 1) f.lastHitMf = Math.max(f.lastHitMf, 16); // (the uppercut can't land before the fist starts rising: frame 19 on)
         if (mf <= f.move.startup + 4 && !f.hitConnected && Math.abs(o.x - f.x) > 60) { f.vx = f.facing * 9; if (mf % 2 === 0) dustAt(f.x, false); } else f.vx *= 0.6;
       } };
-    case 'tripleQi': return { id, label: 'Swift Qi Blast', pre: 8, startup: 13, active: 2, recovery: 22, wind: 'blastW', pose: 'blast', proj: 'qi', limit: 1, aura: true, // ← → + I: one qi blast, out a little sooner than ← → + U's and flying much faster
+    case 'tripleQi': return { id, label: 'Swift Qi Blast', height: 'high', pre: 8, startup: 13, active: 2, recovery: 22, wind: 'blastW', pose: 'blast', proj: 'qi', limit: 1, aura: true, // ← → + I: one qi blast, out a little sooner than ← → + U's and flying much faster
       onFrame(f, o, mf) { if (mf === 13) { spawnQi(f); projs[projs.length - 1].vx = f.facing * 11; } } };
-    case 'qiBlast': return { id, label: 'Qi Blast', pre: 8, startup: 13, active: 2, recovery: 22, wind: 'blastW', pose: 'blast', proj: 'qi', limit: 1, aura: true,
+    case 'qiBlast': return { id, label: 'Qi Blast', height: 'high', /* (the shot is a high: see spawnQi) */ pre: 8, startup: 13, active: 2, recovery: 22, wind: 'blastW', pose: 'blast', proj: 'qi', limit: 1, aura: true,
       onFrame(f, o, mf) { if (mf === 13) spawnQi(f); } };
-    case 'risingFist': return { id, label: 'Rising Fist', startup: 3, active: 14, recovery: 99, untilLand: true, landT: 12, wind: 'uppercutW', pose: 'dragonFist', spin: [4, 11], fx: 'helix', aura: true, bodyHurt: true,
+    case 'risingFist': return { id, label: 'Rising Fist', height: 'mid', startup: 3, active: 14, recovery: 99, untilLand: true, landT: 12, wind: 'uppercutW', pose: 'dragonFist', spin: [4, 11], fx: 'helix', aura: true, bodyHurt: true,
       limbJoint: 'h1', limbReach: 75, limbBack: 14, limbUp: 30, limbDown: 90, // a box on the rising fist — tall, since the pose itself stretches his arm (and so his hipUp) a long way up: this still moves with him, not a fixed guess; extra reach keeps it ahead of his own hurtbox through the whole active window
       hitbox: [0,52,40,170], dmg: 85, stun: 20, bstun: 16, push: 4, launch: true, launchVy: 14, type: 'mid', hitstop: 10, chip: true, gdrain: 8,
       onStart(f) { f.invul = 5; },
@@ -1241,14 +1242,14 @@ function specialMoveBase(id) {
       } };
     // ← → + U / I: a crescent of shadow along the floor — Moon Tempest is a mid you can jump, short-lived; Full Moon Tempest is tall
     // (no jumping it, and it hits a crouching guard: TOP), slower and out much longer. Both: 5 frames of recovery, even when guarded
-    case 'moonTempest': return { id, label: 'Moon Tempest', startup: 13, active: 2, recovery: 5, fixedFrames: true, blockAdv: 0, wind: 'slashW', pose: 'slash', hitbox: null,
-      onFrame(f, o, mf) { f.vx *= 0.6; if (mf === f.move.startup) { sfx('slash'); spawnPJ(f, 'crescent', { x: f.x + f.facing * 70, y: 70, vx: f.facing * 13, life: 24, r: 34, h: { dmg: 60, stun: 22, bstun: 8, push: 3, kd: true, kdVx: 12, kdVy: 7, gdrain: 10, label: 'Moon Tempest' } }); } } };
-    case 'fullMoon': return { id, label: 'Full Moon Tempest', startup: 17, active: 2, recovery: 5, fixedFrames: true, blockAdv: 0, wind: 'slashW', pose: 'slash', hitbox: null, aura: true,
+    case 'moonTempest': return { id, label: 'Moon Tempest', height: 'high', startup: 13, active: 2, recovery: 5, fixedFrames: true, blockAdv: 0, wind: 'slashW', pose: 'slash', hitbox: null,
+      onFrame(f, o, mf) { f.vx *= 0.6; if (mf === f.move.startup) { sfx('slash'); spawnPJ(f, 'crescent', { x: f.x + f.facing * 70, y: 70, vx: f.facing * 13, life: 24, r: 34, h: { dmg: 60, stun: 22, bstun: 8, push: 3, kd: true, kdVx: 12, kdVy: 7, gdrain: 10, height: 'high', label: 'Moon Tempest' } }); } } };
+    case 'fullMoon': return { id, label: 'Full Moon Tempest', height: 'high', startup: 17, active: 2, recovery: 5, fixedFrames: true, blockAdv: 0, wind: 'slashW', pose: 'slash', hitbox: null, aura: true,
       drawFX(f) { const S = f.move.startup, mf = f.mf; if (mf > S + 6) return; const k = Math.min(1, mf / S), a = mf <= S ? k : 1 - (mf - S) / 6; // a full moon rises behind him as he gathers it
         fxLighter(() => { const x = f.x - f.facing * 10, y = GROUND - f.y - 150, g = ctx.createRadialGradient(x, y, 4, x, y, 70 * k + 10); g.addColorStop(0, `rgba(255,250,235,${0.9 * a})`); g.addColorStop(0.5, `rgba(210,190,255,${0.5 * a})`); g.addColorStop(1, 'rgba(150,110,255,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 70 * k + 10, 0, Math.PI * 2); ctx.fill(); }); },
       onFrame(f, o, mf) { f.vx *= 0.6; if (mf < f.move.startup && mf % 3 === 0) parts.push({ type: 'ring', x: f.x - f.facing * 10, y: GROUND - f.y - 150, r: 70 - mf * 3, vr: -1.5, life: 8, max: 8, col: '220,200,255' });
         if (mf === f.move.startup) { sfx('slash'); sfx('super'); game.shake = Math.max(game.shake, 8); for (let i = 0; i < 3; i++) parts.push({ type: 'ring', x: f.x + f.facing * 70, y: GROUND - 100, r: 20 + i * 18, vr: 6 + i * 2, life: 16, max: 16, col: i ? '200,170,255' : '255,250,235' }); dustAt(f.x + f.facing * 60, true);
-        spawnPJ(f, 'crescent', { big: true, x: f.x + f.facing * 70, y: 100, vx: f.facing * 8, life: 70, r: 100, h: { dmg: 90, stun: 24, bstun: 8, push: 4, kd: true, kdVx: 16, kdVy: 8, gdrain: 18, overhead: true, floor: true, label: 'Full Moon Tempest' } }); /* (from the floor up to well above a jump: nothing ducks or dives under it) */ } } };
+        spawnPJ(f, 'crescent', { big: true, x: f.x + f.facing * 70, y: 100, vx: f.facing * 8, life: 70, r: 100, h: { dmg: 90, stun: 24, bstun: 8, push: 4, kd: true, kdVx: 16, kdVy: 8, gdrain: 18, overhead: true, floor: true, height: 'high', label: 'Full Moon Tempest' } }); /* (from the floor up to well above a jump — but a high: duck under it) */ } } };
     case 'shadowArmy': return { id, super: true, name: 'SHADOW ARMY', label: 'Shadow Army', startup: 14, active: 125, recovery: 22, blockAdv: 0, cutOnGuard: true, /* (out longer, slower to recover; even when guarded: once its clones are guarded he's done) */ wind: 'seal', pose: 'seal', aura: true,
       supArmor: true, // not invincible: until the clones come out, light hits from up close don't stop him (taken in full); strong ones do
       onStart(f) {},

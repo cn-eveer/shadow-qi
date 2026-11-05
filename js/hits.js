@@ -151,10 +151,10 @@ function iaiSweepBox(f, mv, hb0) {
 // frame by frame with it — starting up near the head and coming down to the arm — instead of a single box sized to
 // cover the whole arc at once
 function kunaiBox(f) {
-  const J = solve(f.pose), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0;
+  const J = solve(f.pose), s = f.ch.scale, d = f.facing, hu = f.hipUp || 0, past = (f.move && f.move.kunaiReach) || 42; // (how far past the hand the box reaches: a move can shorten it)
   const dx = J.h1[0] - J.e1[0], dy = J.h1[1] - J.e1[1], L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
   const W = (lx, ly) => [f.x + (f.animDX || 0) + d * s * lx, Math.max(0, f.y + s * (ly + hu))];
-  const [hx, hy] = W(J.h1[0], J.h1[1]), [tx, ty] = W(J.h1[0] + ux * 42, J.h1[1] + uy * 42), pad = 7 * s; // 42: a longer reach past the hand, well past the blade's own drawn 21
+  const [hx, hy] = W(J.h1[0], J.h1[1]), [tx, ty] = W(J.h1[0] + ux * past, J.h1[1] + uy * past), pad = 7 * s; // 42 by default: a longer reach past the hand, well past the blade's own drawn 21
   return { x0: Math.min(hx, tx) - pad, x1: Math.max(hx, tx) + pad, y0: Math.max(0, Math.min(hy, ty) - pad), y1: Math.max(hy, ty) + pad };
 }
 // a hitbox that moves with the limb actually throwing the blow — the kicking foot, the hand holding the fist or the blade —
@@ -284,8 +284,8 @@ function poseHurtbox(d, bodyOnly) { // (bodyOnly: the torso, head and legs — n
     if (wx < x0) x0 = wx; if (wx > x1) x1 = wx;
     if (wy < y0) y0 = wy; if (wy > y1) y1 = wy;
   }
-  const pad = 9 * s;
-  return { x0: x0 - pad, x1: x1 + pad, y0: Math.max(0, y0 - pad), y1: y1 + pad };
+  const pad = 9 * s, padX = pad * (d.ch.hurtMul || 1); // (hurtMul: narrower either side; the height stays, so highs and lows read the same)
+  return { x0: x0 - padX, x1: x1 + padX, y0: Math.max(0, y0 - pad), y1: y1 + pad };
 }
 function hurtbox(d, juggle, low) {
   if (d.invul > 0 || d.hidden || d.ko || d.state === 'getup' || d.state === 'roll' || d.state === 'slashed') return null;
@@ -308,7 +308,7 @@ function hurtbox(d, juggle, low) {
   if (crouching) h = 95;
   if (d.state === 'land') h = 110;
   if (d.y > 0 || d.state === 'knock') h = 118;
-  const w = (atkMv && d.move.hurtW) || 25; // narrower than the usual 25 either side: a move that pulls most of him back out of the way
+  const w = ((atkMv && d.move.hurtW) || 25) * (d.ch.hurtMul || 1); // narrower than the usual 25 either side: a move that pulls most of him back out of the way (hurtMul: a fighter who is harder to reach, like Kuro)
   const back = (atkMv && d.move.hurtBack) || 0; // shifted behind his facing, away from however far forward the attack reaches
   const cx = d.x - back * d.facing;
   return { x0: cx - w * s, x1: cx + w * s, y0: d.y, y1: d.y + h * s };
@@ -406,28 +406,33 @@ const AFTER_TWO_RISES = 1.0; // hits after the second lift or bounce do their no
 const EXTEND_BONUS = 26; // a combo that adds its second lift or bounce (within the rules) earns this much extra damage, once — so juggle → bounce → finisher always does clearly more than juggle → finisher
 const BOUNCE_DMG = 1.3; // a bounce (slammed into the floor and back up) hits 30% harder
 // How high an attack hits, from its animation (where its hitbox reaches when it connects) and what it does:
-//   'low'     legs only (sweeps, slides, floor shockwaves): a crouching guard stops it, a standing one doesn't; jump over it
-//   'midlow'  reaches the legs and the body (launchers rising off the floor, bounces and drops crashing down to it,
-//             big low swings, supers that fill the screen): it hits a crouching guard; a standing guard stops it; jump over it
-//   'mid'     the body, or the body and the head: a standing guard stops it; it hits a crouching fighter, as a counter hit
-//             (punches and anything higher pass over a crouching fighter)
+//   'low'     the legs (sweeps, slides, floor shockwaves), and everything that reaches them: launchers rising off the floor,
+//             bounces, drops and overheads crashing down, big low swings, supers that fill the screen — a crouching guard
+//             stops it, a standing one doesn't; jump over it
+//   'mid'     the body: a standing guard stops it; it hits a crouching fighter, as a counter hit. A mid that reaches above a
+//             standing head is a high (heightTag): it passes over a crouching fighter (ducksUnder)
 const LOW_TOP = 45, SHIN = 24; // (in game units from the floor)
 const fromAbove = m => !!(m && (m.bounce || m.meteor || m.overhead)), rising = m => !!(m && (m.launch || m.relaunch || m.neutralLaunch));
+// There is no 'midlow' any more: everything that used to be mid + low (bounces, drops, overheads, column hits, launchers
+// rising off the floor, swings that sweep the legs) is a low — guarded crouching, not standing.
 function heightClass(h, hb) {
-  if (fromAbove(h) || (hb && hb.y1 - hb.y0 >= 390)) return 'midlow'; // bounces, drops and overheads crashing down; column hits (supers, crystals, pillars)
+  if (h.height) return h.height === 'low' ? 'low' : 'mid'; // (height: a blow that says what it is — the golem's — whatever its box reaches)
+  if (fromAbove(h) || (hb && hb.y1 - hb.y0 >= 390)) return 'low'; // bounces, drops and overheads crashing down; column hits (supers, crystals, pillars)
   if (h.low) return 'low'; // slides and sweeps along the floor, even the ones that scoop them up into a juggle
-  if (rising(h)) return 'midlow'; // launchers rising off the floor
+  if (rising(h)) return 'low'; // launchers rising off the floor
   if (hb && hb.y1 <= LOW_TOP) return 'low';
-  if (hb && hb.y0 < SHIN) return 'midlow'; // a swing that sweeps the legs as well as the body
+  if (hb && hb.y0 < SHIN) return 'low'; // a swing that sweeps the legs as well as the body
   return 'mid';
 }
 // Training: each attack's height, shown where it lands (Settings → attack heights). A mid is split by how far up it reaches on them:
-// high (passes over a crouching fighter), high + mid (from the body to above the head, so it can't be ducked or jumped early) and mid (the body)
-const HEIGHT_TAGS = { high: ['HIGH', '上段', '150,205,255'], highmid: ['HIGH + MID', '上中段', '140,235,215'], mid: ['MID', '中段', '255,226,120'], midlow: ['MID + LOW', '中下段', '255,165,90'], low: ['LOW', '下段', '255,125,160'] };
+// high (anything reaching above a standing head: it passes over a crouching fighter) and mid (the body)
+const HEIGHT_TAGS = { high: ['HIGH', '上段', '150,205,255'], mid: ['MID', '中段', '255,226,120'], low: ['LOW', '下段', '255,125,160'] };
 function heightTag(h, hb, d) {
+  if (h.height === 'high' || h.height === 'mid') return h.height;
   const c = heightClass(h, hb), s = d.ch.scale;
-  return c !== 'mid' || !hb ? c : hb.y0 >= 95 * s ? 'high' : hb.y1 > 135 * s ? 'highmid' : 'mid'; // (a crouching fighter is 95 tall, a standing one 135)
+  return c !== 'mid' || !hb ? c : hb.y0 >= 95 * s || hb.y1 > 135 * s ? 'high' : 'mid'; // (a crouching fighter is 95 tall, a standing one 135: a blow over the standing head is a high, whatever it reaches down to)
 }
+const ducksUnder = (d, h, hb) => d.y <= 0 && !h.grab && (d.state === 'crouch' || (!!d.inp && !!d.inp.down && ['stand', 'guard', 'blockstun', 'recover', 'hitstun'].includes(d.state))) && heightTag(h, hb, d) === 'high'; // a crouching fighter is under a high: it misses
 function showHeight(d, side, hb, h, miss) {
   if (!game.training || game.demo || !game.heights || !hb || d.state === 'knock' || d.state === 'down') return; // (not on a juggle or someone lying down)
   const t = HEIGHT_TAGS[heightTag(h, hb, d)], s = d.ch.scale;
@@ -483,7 +488,7 @@ function applyHit(a, d, h, side, hb, hu) {
     game.freeze = Math.max(game.freeze, 3); return null;
   }
   if (d.aegisT > 0 && !['hitstun', 'knock', 'down', 'getup', 'gbreak', 'stunned', 'slashed'].includes(d.state)) { // Aegis: from any side, at the cost of guard meter
-    d.guard -= ((h.gdrain || 6) * 2.4 + (h.dmg || 0) * 0.35 + 6) / 10; d.guardIdle = 0; d.aegisHitT = game.frame; // (each hit wears the light down a little: about three heavy blows use up its quarter of the meter)
+    d.guard -= ((h.gdrain || 6) * 2.4 + (h.dmg || 0) * 0.35 + 6) / 6; d.guardIdle = 0; d.aegisHitT = game.frame; // (each hit wears the light down: about three heavy blows use up its 40% of the meter)
     d.hp = Math.max(1, d.hp - Math.ceil((h.dmg || 0) * 0.25)); // a quarter of the damage still gets through the light
     if (d.guard <= 0) { d.guard = 0; d.guardSlowT = 600; d.aegisT = 0; setState(d, 'gbreak'); d.stun = 50 + GBREAK_EXTRA; d.move = null; popText(d.x, GROUND - d.y - 165, 'GUARD BREAK!', '255,120,130'); sparks(cx, cy, 'big'); sfx('break'); game.freeze = Math.max(game.freeze, 10); return 'block'; }
     if (d.guard <= (d.aegisFloor || 0)) { d.aegisT = 0; aegisSpent(d); sparks(cx, cy, 'big'); sfx('break'); popText(d.x, GROUND - d.y - 190, 'AEGIS BROKEN', '190,225,255'); game.freeze = Math.max(game.freeze, 6); return 'block'; } // (its quarter of the meter is used up: the light shatters, but his own guard holds)
@@ -516,6 +521,7 @@ function applyHit(a, d, h, side, hb, hu) {
   const canGuard = !d.ch.noGuard && ((d.state === 'stand' || d.state === 'crouch' || d.state === 'guard' || d.state === 'blockstun' || d.state === 'recover' || d.state === 'bdash' || midCombo) && d.y <= 0 && !h.grab) || airGuard; // a throw can't be guarded; a back dash still guards
   const autoAll = !airGuard && autoGuardFor(d, -side), hc = heightClass(h, hb);
   const low = !!d.inp.down || d.state === 'crouch'; // (crouching: the guard is a crouching one — lows only)
+  if (ducksUnder(d, h, hb)) { showHeight(d, side, hb, h, true); return null; } // a high over someone crouching: it whiffs, like a punch over their head
   // holding away guards every attack, standing or crouching;
   // for a moment after the sides swap (a cross-up), holding either direction still guards
   const holding = d.inp.h === side || (!h.noGrace && d.inp.h !== 0 && game.frame - d.sideT <= 10)
@@ -524,11 +530,11 @@ function applyHit(a, d, h, side, hb, hu) {
   const autoBlock = d.ch.autoBlock && !d.ch.noGuard && d.state === 'stand' && d.y <= 0 && d.st >= 10 && Math.abs(d.vx) < 0.5 && !(d.inp && (d.inp.h || d.inp.btn || d.inp.down)) && !h.grab
     && !(d.ctrl instanceof Dummy && game.dummyMode !== 'guard'); // (a training dummy set to stand still stays hittable, for practising combos)
   if (autoBlock && !holding) popTextOnce(d, L('AUTO GUARD', 'オートガード'));
-  // a crouching guard stops lows only — a mid or a mid + low hits someone crouching, as a counter hit (highs pass over them);
-  // a standing guard stops highs, mids and mid + lows but not lows
-  const lowHit = !airGuard && ((hc === 'low' && !low) || ((hc === 'midlow' || hc === 'mid') && low));
+  // a crouching guard stops lows only — a mid hits someone crouching, as a counter hit (highs pass over them, see ducksUnder);
+  // a standing guard stops highs and mids but not lows
+  const lowHit = !airGuard && ((hc === 'low' && !low) || (hc === 'mid' && low));
   showHeight(d, side, hb, h);
-  if (hc !== 'low' && low && !airGuard && canGuard && (holding || autoAll)) popText(d.x, GROUND - d.y - 175, hc === 'midlow' ? L('MID + LOW!', '中下段！') : L('MID!', '中段！'), '255,200,120'); // (crouch-guarding a mid or a mid + low: it hits)
+  if (hc !== 'low' && low && !airGuard && canGuard && (holding || autoAll)) popText(d.x, GROUND - d.y - 175, L('MID!', '中段！'), '255,200,120'); // (crouch-guarding a mid: it hits)
   if (canGuard && (holding || autoBlock || autoAll) && !lowHit) {
     const pushB = (h.bpush != null ? h.bpush : (h.push || 1) * 0.9) * (h.rushTag ? 1 : a.ch.pushMul || 1); // (rush strings keep their own spacing)
     const big = guardBig(a, h); d.guard -= guardCost(a, d, h, big); d.guardIdle = 0;
@@ -687,22 +693,22 @@ function checkHits(a, o) {
   if (a.hitCount >= multi) return;
   if (a.hitCount > 0 && a.mf - a.lastHitMf < (mv.interval || 99)) return;
   let hb = mv.kunaiBox ? kunaiBox(a) : mv.limbJoint ? limbBox(a, mv) : boxOf(a, meleeBox(a, mv.hitbox));
-  let parts = null;
-  if (a.key === 'staff' && a.pose && mv.spinStaff && mv.limbJoint) { parts = staffBoxes(a, mv).concat([hb]); hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) })); } // (a kick with the staff twirling: both the foot and the staff hit)
-  else if (a.key === 'paladin' && a.pose && !mv.super) { parts = aldricParts(a, mv); hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) })); }
-  else if (a.key === 'salary' && a.pose && !mv.super && (parts = tanakaParts(a, mv))) hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) }));
-  else if (a.key === 'kappa' && a.pose && !mv.super && (parts = kappaParts(a, mv))) hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) }));
-  else if (a.key === 'psychic' && (parts = lyraParts(a, mv, o))) hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) }));
-  else if (a.key === 'staff' && a.pose && !/kick|Kick/.test((mv.pose || '') + ' ' + (mv.label || ''))) { parts = staffBoxes(a, mv); hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) })); }
+  let boxes = null;
+  if (a.key === 'staff' && a.pose && mv.spinStaff && mv.limbJoint) { boxes = staffBoxes(a, mv).concat([hb]); hb = boxes.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) })); } // (a kick with the staff twirling: both the foot and the staff hit)
+  else if (a.key === 'paladin' && a.pose && !mv.super) { boxes = aldricParts(a, mv); hb = boxes.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) })); }
+  else if (a.key === 'salary' && a.pose && !mv.super && (boxes = tanakaParts(a, mv))) hb = boxes.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) }));
+  else if (a.key === 'kappa' && a.pose && !mv.super && (boxes = kappaParts(a, mv))) hb = boxes.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) }));
+  else if (a.key === 'psychic' && (boxes = lyraParts(a, mv, o))) hb = boxes.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) }));
+  else if (a.key === 'staff' && a.pose && !/kick|Kick/.test((mv.pose || '') + ' ' + (mv.label || ''))) { boxes = staffBoxes(a, mv); hb = boxes.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) })); }
   if (mv.iai || mv.sweepBox) hb = iaiSweepBox(a, mv, hb); // a tight box on the limb itself, swept along its own path so a fast or diagonal motion can't tunnel past someone between two frames (mv.sweepBox: any other move whose tracked limb moves fast enough to need the same thing — Vanish Drop Kick's diagonal arc, say)
   if (floodOwner(a)) hb = { ...hb, x0: -200, x1: W + 200 }; // the flood carries the kappa's every blow: it reaches them anywhere on the stage // Mei: the staff hits along its front half, out to the tip — not at her fists
-  mv.dbgBox = hb; mv.dbgParts = parts; mv.dbgBoxMf = a.mf; // training's H overlay reads this back, so it draws exactly the box just computed here — never a separate, possibly stale recomputation (iaiSweepBox in particular keeps its own frame-to-frame state, which a second call would corrupt)
+  mv.dbgBox = hb; mv.dbgParts = boxes; mv.dbgBoxMf = a.mf; // training's H overlay reads this back, so it draws exactly the box just computed here — never a separate, possibly stale recomputation (iaiSweepBox in particular keeps its own frame-to-frame state, which a second call would corrupt)
   if (hitDecoys(a, hb)) { // a guarding shadow soaked up this attack
     a.hitCount = multi; a.hitConnected = true; a.lastResult = 'block'; a.vx -= (Math.sign(o.x - a.x) || a.facing) * 2;
     return;
   }
   const hu = hurtbox(o, !!mv.juggle, !!mv.low);
-  const touch = hu && (parts ? parts.find(b => overlap(b, hu)) : overlap(hb, hu) && hb); // (Mei's staff: only the stick itself connects)
+  const touch = hu && (boxes ? boxes.find(b => overlap(b, hu)) : overlap(hb, hu) && hb); // (Mei's staff: only the stick itself connects)
   if (!touch) {
     if (hu && hb.x0 < hu.x1 && hb.x1 > hu.x0) mv.passed = hb; // (in reach, but over or under them)
     if (mv.passed && !a.hitConnected && a.mf === mv.startup + mv.active) showHeight(o, Math.sign(o.x - a.x) || a.facing, mv.passed, mv, true);
@@ -714,7 +720,7 @@ function checkHits(a, o) {
     stun: mv.stun, bstun: mv.bstun, gbstun: 45,
     push: (multi > 1 && last && mv.lastPush) ? mv.lastPush : mv.push,
     kd: multi > 1 ? (last && mv.kd) : mv.kd,
-    type: mv.type, low: !!mv.low, overhead: !!mv.overhead, hitstop: mv.hitstop, chip: mv.chip, bpush: mv.guardPush, /* (a technique's own push on a guard: guardPush) */ guardPop: !!mv.guardPop, str: mv.str != null ? mv.str : a.str, proj: false, // (low: must be guarded crouching)
+    type: mv.type, low: !!mv.low, overhead: !!mv.overhead, height: mv.height, hitstop: mv.hitstop, chip: mv.chip, bpush: mv.guardPush, /* (a technique's own push on a guard: guardPush) */ guardPop: !!mv.guardPop, str: mv.str != null ? mv.str : a.str, proj: false, // (low: must be guarded crouching)
     gdrain: mv.gdrain != null ? mv.gdrain : (multi > 1 ? 2 : 8), rushTag: !!mv.rushTag, tech: isTech(mv), label: mv.label || '', slash: !!mv.slash, iai: !!mv.iai, heavy: !!(mv.normal && mv.str === 1), kdVx: mv.kdVx, kdVy: mv.kdVy, noGrace: !!mv.noGrace, launch: multi > 1 ? (last && !!mv.launch) : !!mv.launch, launchVy: mv.launchVy, bounce: !!mv.bounce, cpLaunch: !!mv.cpLaunch, cpCarry: !!mv.cpCarry, jugVy: (multi > 1 && last && mv.lastJugVy) ? mv.lastJugVy : mv.jugVy, fixedLift: !!mv.fixedLift, meteor: !!mv.meteor, stunT: mv.stunT, stunKind: mv.stunKind, neutralLaunch: multi > 1 ? (last && !!mv.neutralLaunch) : !!mv.neutralLaunch, relaunch: !!mv.relaunch, slashMark: !!mv.slashMark, brand: mv.brand || 0, grab: !!mv.grab, fullDmg: !!mv.fullDmg, noDmg: !!mv.noDmg,
   };
   if (mv.normal && !mv.air) {

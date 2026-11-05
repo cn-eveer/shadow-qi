@@ -12,13 +12,14 @@ const CHARS = {
     techDelay: { teleSlide: 5 }, // (and the other way: frames added before this one — the Drop Slide comes out a little later)
     spBF: { lp: 'moonTempest', hp: 'fullMoon' }, // ← → + U / I: Moon Tempest, Full Moon Tempest (his I is no longer held to charge)
     superPreMul: 0.2, // (Shadow Army: a shorter warning before the clones come — 発生 faster)
+    normalHeight: { cp1: 'high' }, // (his ↓ + I Uppercut Launcher is a high: it passes over a crouching fighter)
     noLowSp: true, // (no ↓ versions of his techniques on demand: they still come out by themselves on someone in the air)
     name: 'KURO', dmgMul: 1.08, title: 'Shadow Ninja', nameJa: 'クロ', titleJa: '影の忍者', jugDmg: 1.15, scale: 1, walk: 3.4, back: 2.8, jumpX: 4.4,
-    pDmg: 0.9, kDmg: 0.92, pReach: 1, kReach: 1.08, chargeRate: 0.5, auraCol: '185,145,255',
+    pDmg: 0.9, kDmg: 0.92, pReach: 1, kReach: 1.08, reachMul: 0.62, hurtMul: 0.72, /* (every normal and string hit reaches 38% less far, and his hurtbox is 28% narrower: he has to get in close, and is harder to reach there) */ chargeRate: 0.5, auraCol: '185,145,255',
     sp: { fP: 'shadowCharge', fPH: 'swordSlash', fK: 'cloneStrike', fKH: 'teleKick', bP: 'flame', bPH: 'fireballs', bK: 'vanishSlide', bKH: 'vanishDrop' }, sup: 'shadowArmy',
     heavy: {
       p: { label: 'Kunai Slash', startup: 9, active: 5, recovery: 18, hitbox: [10,104,106,140], wind: 'slashW', pose: 'slash', blade: true, lunge: [3, 9, 4.5], hitstop: 10, speedFx: true, bodyHurt: true, // (hitbox: a fallback box for the other systems that read it; the real one below is the kunai itself. bodyHurt: his own hurtbox fitted to the swing too)
-        kunaiBox: true, // the hitbox is exactly the drawn kunai — hand to blade-tip, read straight off the same pose drawBody uses, frame by frame through the swing
+        kunaiBox: true, kunaiReach: 22, // the hitbox is exactly the drawn kunai (kunaiReach: how far past the hand, shortened from the 42 default) — hand to blade-tip, read straight off the same pose drawBody uses, frame by frame through the swing
         poseFn(f, mf) { // the swing (slashW, kunai raised overhead -> slash, brought down and through) plays across the whole technique, wind-up and strike together, so it's still under way during the active frames instead of finished before them
           const mv = f.move, su = mv.startup, total = su + mv.active; if (mf >= total) return null; // recovery: back to the generic system
           const riseEnd = Math.max(1, Math.round(su * 0.55)); // raised overhead partway through the wind-up…
@@ -27,7 +28,7 @@ const CHARS = {
         },
         trail: { cx: 15, cy: 105, r: 80, a0: 80, a1: -35, col: '225,235,255' } },
       k: { label: 'Crescent Kick', startup: 10, active: 5, recovery: 19, hitbox: [15,92,45,140], wind: 'crescentW', pose: 'crescent', lunge: [2, 8, 3.5], cpLaunch: true, launchVy: 13, bodyHurt: true,
-        limbJoint: 'f1', limbReach: 34, limbBack: 15, limbUp: 15, limbDown: 15, // a compact box on the kicking foot, longer reach than just the foot's own width
+        limbJoint: 'f1', limbReach: 16, limbBack: 15, limbUp: 15, limbDown: 15, // a compact box on the kicking foot (reach shortened: he has to get in closer)
         poseFn(f, mf) { // the kick swings through: crescentW raised, into crescent, across the whole technique so it's still turning during the active frames
           const mv = f.move, su = mv.startup, total = su + mv.active; if (mf >= total) return null;
           const riseEnd = Math.max(1, Math.round(su * 0.5));
@@ -67,7 +68,7 @@ const CHARS = {
       $tlD: { su: 21, act: 8, rec: 24, blk: -16 }, // J, J, ↓ + K (mid)
     },
     heavy: {
-      p: { label: 'Qi Palm', startup: 10, active: 4, recovery: 19, hitbox: [20,118,106,130], wind: 'palmW', pose: 'palm', lunge: [3, 11, 5], push: 10, gdrain: 22, burst: [80, 108], bodyHurt: true,
+      p: { label: 'Qi Palm', height: 'mid', startup: 10, active: 4, recovery: 19, hitbox: [20,118,106,130], wind: 'palmW', pose: 'palm', lunge: [3, 11, 5], push: 10, gdrain: 22, burst: [80, 108], bodyHurt: true,
         limbJoint: 'h1', limbReach: 70, limbBack: 12, limbUp: 16, limbDown: 16, hitFrom: 5, // a compact box on the striking palm, live as it starts forward
         poseFn(f, mf) { // pulled back, then pushed out evenly through the rest of the wind-up into the strike (the generic strike whips it out in the last two frames)
           const mv = f.move, su = mv.startup, total = su + mv.active; if (mf >= total) return null;
@@ -75,7 +76,7 @@ const CHARS = {
           if (mf <= su + 1) return lerpPose(POSES.palmW, POSES.palm, easeInOutQ((mf - 4) / (su - 3)));
           return POSES.palm;
         } },
-      k: { label: 'Axe Kick', startup: 6, active: 11, recovery: 18, hitbox: [20,104,0,150], wind: 'axeW', pose: 'axe', lunge: [3, 11, 5.5], cpLaunch: true, launchVy: 13, kd: true, stomp: [56, 0], // active/recovery here are overwritten by the brawler frames table's 'K' entry at runtime (moveFrames) — kept in sync with it so this object stays an accurate picture of what actually plays
+      k: { label: 'Axe Kick', height: 'mid', startup: 6, active: 11, recovery: 18, hitbox: [20,104,0,150], wind: 'axeW', pose: 'axe', lunge: [3, 11, 5.5], cpLaunch: true, launchVy: 13, kd: true, stomp: [56, 0], // active/recovery here are overwritten by the brawler frames table's 'K' entry at runtime (moveFrames) — kept in sync with it so this object stays an accurate picture of what actually plays
         limbJoint: 'f1', limbReach: 42, limbBack: 14, limbUp: 10, limbDown: 10, hitFrom: 2, // a compact box on the kicking foot, longer reach, shorter height
         poseFn(f, mf) { // the leg lifts up near his own head first, holds there a beat, then comes down slowly through the rest of the window — a real chop, not a snap
           const mv = f.move, total = mv.startup + mv.active; if (mf >= total) return null;
@@ -178,7 +179,7 @@ const CHARS = {
     meterCol: ['#c04fd8', '#ffc3f4'], bannerCol: 'rgba(170,60,190,.88)', idle: 'idleL', chargePose: 'chargeL', winPose: 'winL', atkCD: 12, recoverT: 12, hitFx: 'ripple',
   },
   paladin: {
-    name: 'ALDRIC', title: 'Holy Paladin', nameJa: 'アルドリック', titleJa: '聖騎士', autoBlock: true, dmgMul: 1.08, guardDmgMul: 0.55, guardMul: 0.3, sturdy: true, jugDmg: 1.2, scale: 1.08, walk: 2.5, back: 1.9, jumpX: 3.0, jumpV: 14,
+    name: 'ALDRIC', title: 'Holy Paladin', nameJa: 'アルドリック', titleJa: '聖騎士', autoBlock: true, dmgMul: 0.92, guardDmgMul: 0.55, guardMul: 0.3, sturdy: true, jugDmg: 1.2, scale: 1.08, walk: 2.5, back: 1.9, jumpX: 3.0, jumpV: 14,
     pDmg: 1.05, kDmg: 1.0, pReach: 1.5, kReach: 1.3, chargeRate: 0.55, auraCol: '190,225,255', fxCol: '205,232,255',
     sp: { fP: 'plRampart', fPH: 'plJudgeThrust', fK: 'plWindmill', fKH: 'plLeap', bP: 'plParryRise', bPH: 'plParryStun', bK: 'plAegis', bKH: 'plPray' }, sup: 'plJudgement',
     frames: { // 発生, 持続, 硬直 and 硬直差 on guard for each attack (see moveFrames)

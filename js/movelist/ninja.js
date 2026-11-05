@@ -11,23 +11,23 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
         <tbody>
           <tr><td>Kunai Slash<small>Heavy punch. Lunges in with a wide blade slash.</small></td><td class="keys"><kbd>I</kbd></td></tr>
           <tr><td>Crescent Kick<small>Heavy kick. A high arcing kick that also catches jumpers.</small></td><td class="keys"><kbd>K</kbd></td></tr>
-          <tr><td>Moon Tempest<small>A crescent of shadow along the floor: a mid that can be jumped, short-lived (0.4 s). 14F, 5 frames of recovery, even when guarded; knocks down.</small></td><td class="cmd">← → + U</td></tr>
-          <tr><td>Full Moon Tempest<small>A tall, slow crescent that lasts much longer: it can’t be jumped and it hits a crouching guard (TOP). 18F, 5 frames of recovery, even when guarded; knocks down.</small></td><td class="cmd">← → + I</td></tr>
+          <tr><td>Moon Tempest<small>A crescent of shadow along the floor: a high — duck under it or jump it — short-lived (0.4 s). 14F, 5 frames of recovery, even when guarded; knocks down.</small></td><td class="cmd">← → + U</td></tr>
+          <tr><td>Full Moon Tempest<small>A tall, slow crescent that lasts much longer: it can’t be jumped. A high: duck under it. 18F, 5 frames of recovery, even when guarded; knocks down.</small></td><td class="cmd">← → + I</td></tr>
           <tr><td>Sweep<small>Low, with a long reach. Knocks down; like the Crescent Kick, on a counter hit or a punish it launches them instead: juggle with U, U, K.</small></td><td class="cmd">↓ + K</td></tr>
-          <tr><td>Shadow Charge Upper<small>Looks exactly like Shadow Clone Strike, but the shadow dashing in is the real Kuro and the one doing the hand sign is a decoy. It ends in a smooth rising uppercut that launches the opponent so you can juggle them. If the uppercut is guarded or misses, pick a follow-up instead. If he’s hit before the kick, he vanishes, reappears behind the attacker and slashes, leaving them stunned so he can launch them.</small></td><td class="cmd">→ → + U</td></tr>
+          <tr><td>Shadow Charge Upper<small>Looks exactly like Shadow Clone Strike, but the shadow dashing in is the real Kuro and the one doing the hand sign is a decoy. It ends in a smooth rising uppercut that launches the opponent so you can juggle them. If the uppercut is guarded or misses, pick a follow-up instead. If he’s hit before the uppercut, he vanishes and reappears behind the attacker, free to act — no strike and no stun.</small></td><td class="cmd">→ → + U</td></tr>
           <tr class="sub"><td>Shadow Strike<small>Reappears behind the opponent and slashes. Hit from behind, they’re left stunned, so you can launch them with ↓ + I.</small></td><td class="cmd">then U</td></tr>
           <tr class="sub"><td>Shadow Leap<small>Jumps high and crashes down about a second later, bouncing the opponent into a juggle. Walking back can dodge it.</small></td><td class="cmd">then I</td></tr>
           <tr class="sub"><td>Shadow Slide<small>Low sliding kick that pops the opponent up; he slides through, ends up behind and can juggle them.</small></td><td class="cmd">then J</td></tr>
           <tr class="sub"><td>Shadow Roundhouse<small>Turns all the way around, then swings a roundhouse that sends the opponent flying. Can be interrupted during the turn.</small></td><td class="cmd">then K</td></tr>
           <tr><td>Iai Slash<small>Settles into a stance with his hand on the sword, then dashes straight through the opponent in one cut and stops behind them. The cut lands a moment later and they fall; on a counter hit or a punish it launches them instead. Guarded, he’s open behind them (−18).</small></td><td class="cmd">→ → + I</td></tr>
-          <tr><td>Shadow Clone Strike<small>A clone dashes in and kicks while Kuro holds the hand sign. Hitting the clone breaks it.</small></td><td class="cmd">→ → + J</td></tr>
-          <tr><td>Sky Drop Kick<small>Teleports above the opponent and drops a kick that bounces them off the ground into a juggle, landing behind them. Juggle with any attack, or pick a follow-up:</small></td><td class="cmd">→ → + K</td></tr>
+          <tr><td>Shadow Clone Strike<small>High: it passes over a crouching fighter. A clone dashes in and kicks while Kuro holds the hand sign. Hitting the clone breaks it.</small></td><td class="cmd">→ → + J</td></tr>
+          <tr><td>Sky Drop Kick<small>High: duck under it. Teleports above the opponent and drops a kick that bounces them off the ground into a juggle, landing behind them. Juggle with any attack, or pick a follow-up:</small></td><td class="cmd">→ → + K</td></tr>
           <tr class="sub"><td>Drop Slide<small>Low slide back into the opponent.</small></td><td class="cmd">then J</td></tr>
           <tr class="sub"><td>Turnaround Kick<small>Turns around (a little quicker) into a roundhouse that sends the opponent flying. Can be interrupted during the turn.</small></td><td class="cmd">then K</td></tr>
-          <tr><td>Fire Breath<small>Under half a second of hand signs, then a long stream of fire. If it hits Kuro recovers well first (+10); guarded it’s −14. Getting hit during the hand signs stops it.</small></td><td class="cmd">← ← + U</td></tr>
-          <tr><td>Thunder Ball<small>A short casting raises one great thunder ball overhead, swelling as he signs, then it chases the opponent. If they hit, the opponent is electrified and stunned, so you can dash in and combo. Kuro is free soon after it flies, so it’s safe guarded. Getting hit before it launches cancels it.</small></td><td class="cmd">← ← + I</td></tr>
+          <tr><td>Fire Breath<small>High: it passes over a crouching fighter. Under half a second of hand signs, then a long stream of fire. If it hits Kuro recovers well first (+10); guarded it’s −14. Getting hit during the hand signs stops it.</small></td><td class="cmd">← ← + U</td></tr>
+          <tr><td>Thunder Ball<small>High: it passes over a crouching fighter. A short casting raises one great thunder ball overhead, swelling as he signs, then it chases the opponent. If they hit, the opponent is electrified and stunned, so you can dash in and combo. Kuro is free soon after it flies, so it’s safe guarded. Getting hit before it launches cancels it.</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>Vanish Slide<small>Leaves a shadow standing on guard (it blocks up to two attacks), back-dashes as a shadow, then slides in and knocks the opponent down, coming out behind them; on a counter hit or a punish it pops them up for a juggle. Guarded, he stops where he is (−16).</small></td><td class="cmd">← ← + J</td></tr>
-          <tr><td>Vanish Drop Kick<small>Leaves a shadow standing on guard, back-dashes as a shadow, then leaps high over long-range attacks and brings his heel down, bouncing the opponent off the ground into a juggle. It only travels about a quarter of the stage, so it can land short of a distant opponent.</small></td><td class="cmd">← ← + K</td></tr>
+          <tr><td>Vanish Drop Kick<small>High: duck under it. Leaves a shadow standing on guard, back-dashes as a shadow, then leaps high over long-range attacks and brings his heel down, bouncing the opponent off the ground into a juggle. It only travels about a quarter of the stage, so it can land short of a distant opponent.</small></td><td class="cmd">← ← + K</td></tr>
           <tr class="super"><td>Super: Shadow Army<small>Three tides of clones: mids from both sides (guard standing), then lows from both sides (guard crouching), then one dives slowly from above (stand). If the dive hits, a last clone kicks them at body height from behind, back toward Kuro; if not, it comes in low from behind once the dive has landed (crouch, the other way) and sweeps them off their feet. With them in the corner, every clone comes from Kuro’s side and the tides last longer. In a combo, ten clones keep them up and the last bounces them back to Kuro. Even when guarded. Not invincible: until the clones come out, light hits from up close don't stop it (he still takes their full damage — enough of it finishes him), but heavy attacks, techniques and anything from further away do. Needs a full MP gauge.</small></td><td class="cmd">Punch + Kick</td></tr>
         </tbody>
       </table></div>
@@ -67,21 +67,21 @@ document.getElementById('info').insertAdjacentHTML('beforeend', `
         <tbody>
           <tr><td>クナイ斬り<small>強パンチ。大きく踏み込んで斬りつける。</small></td><td class="keys"><kbd>I</kbd></td></tr>
           <tr><td>三日月蹴り<small>強キック。弧を描く高い蹴り。カウンターや確定反撃で当てると打ち上げる。</small></td><td class="keys"><kbd>K</kbd></td></tr>
-          <tr><td>月の嵐<small>影の三日月が床を走る。中段でジャンプでかわせ、すぐ消える（0.4秒）。発生14F、硬直5、ガードされても五分。ダウンを奪う。</small></td><td class="cmd">← → + U</td></tr>
-          <tr><td>満月の嵐<small>背の高いゆっくりした三日月で、長く残る。ジャンプでかわせず、しゃがみガードにも当たる（中下段）。発生18F、硬直5、ガードされても五分。ダウンを奪う。</small></td><td class="cmd">← → + I</td></tr>
+          <tr><td>月の嵐<small>影の三日月が床を走る。上段：しゃがむかジャンプでかわせ、すぐ消える（0.4秒）。発生14F、硬直5、ガードされても五分。ダウンを奪う。</small></td><td class="cmd">← → + U</td></tr>
+          <tr><td>満月の嵐<small>背の高いゆっくりした三日月で、長く残る。ジャンプでかわせない。上段：しゃがんでかわす。発生18F、硬直5、ガードされても五分。ダウンを奪う。</small></td><td class="cmd">← → + I</td></tr>
           <tr><td>足払い<small>下段でリーチが長い。ダウンを奪う。三日月蹴りと同じく、カウンターや確定反撃で当てると打ち上げ、U、U、Kで追撃できる。</small></td><td class="cmd">↓ + K</td></tr>
-          <tr><td>影突進アッパー<small>分身の術に見せかけて、本物のクロが影となって突進し、なめらかなアッパーで打ち上げる。ガードされたら追加入力（下記）。突進前に攻撃されると消えて背後に現れ、斬って気絶させる。</small></td><td class="cmd">→ → + U</td></tr>
+          <tr><td>影突進アッパー<small>分身の術に見せかけて、本物のクロが影となって突進し、なめらかなアッパーで打ち上げる。ガードされたら追加入力（下記）。突進前に攻撃されると消えて背後に現れる。斬りも気絶もなく、すぐ動ける。</small></td><td class="cmd">→ → + U</td></tr>
           <tr class="sub"><td>影斬り<small>背後に現れて斬る。背後から当たると相手は気絶。</small></td><td class="cmd">続けて U</td></tr>
           <tr class="sub"><td>影跳び<small>高く跳んで約1秒後に落下、バウンドさせる。</small></td><td class="cmd">続けて I</td></tr>
           <tr class="sub"><td>影滑り<small>下段スライディングで浮かせ、背後に抜ける。</small></td><td class="cmd">続けて J</td></tr>
           <tr class="sub"><td>影回し蹴り<small>一回転してから回し蹴りで吹き飛ばす。回転中は潰される。</small></td><td class="cmd">続けて K</td></tr>
           <tr><td>居合斬り<small>構えてから一瞬で相手を斬り抜ける。少し遅れて斬撃が入る。カウンターや確定反撃で当てると打ち上げる。ガードされると背後で隙（−18）。</small></td><td class="cmd">→ → + I</td></tr>
-          <tr><td>分身の術<small>分身が突進して蹴る。分身は攻撃で壊せる。</small></td><td class="cmd">→ → + J</td></tr>
-          <tr><td>天落蹴り<small>相手の上にワープして落下蹴り、バウンドさせる。追加でJ（滑り込み）かK（振り向き蹴り）。</small></td><td class="cmd">→ → + K</td></tr>
-          <tr><td>火遁<small>印を結んでから炎を吐く。当たればクロが先に動ける（+10）、ガードされると−14。印の途中で攻撃されると止まる。</small></td><td class="cmd">← ← + U</td></tr>
-          <tr><td>雷球<small>大きな雷の球をひとつ浮かべ（印を結ぶ間に膨らむ）、追尾させる。当たると感電して気絶。球が飛んだらクロはすぐ動けるので、ガードされても安全。</small></td><td class="cmd">← ← + I</td></tr>
+          <tr><td>分身の術<small>上段：しゃがむと頭上を通る。分身が突進して蹴る。分身は攻撃で壊せる。</small></td><td class="cmd">→ → + J</td></tr>
+          <tr><td>天落蹴り<small>上段：しゃがんでかわせる。相手の上にワープして落下蹴り、バウンドさせる。追加でJ（滑り込み）かK（振り向き蹴り）。</small></td><td class="cmd">→ → + K</td></tr>
+          <tr><td>火遁<small>上段：しゃがむと頭上を通る。印を結んでから炎を吐く。当たればクロが先に動ける（+10）、ガードされると−14。印の途中で攻撃されると止まる。</small></td><td class="cmd">← ← + U</td></tr>
+          <tr><td>雷球<small>上段：しゃがむと頭上を通る。大きな雷の球をひとつ浮かべ（印を結ぶ間に膨らむ）、追尾させる。当たると感電して気絶。球が飛んだらクロはすぐ動けるので、ガードされても安全。</small></td><td class="cmd">← ← + I</td></tr>
           <tr><td>消身滑り<small>ガードする影を残して下がり、滑り込んでダウンを奪う。カウンターや確定反撃なら浮かせて追撃できる。ガードされるとその場で止まる（−16）。</small></td><td class="cmd">← ← + J</td></tr>
-          <tr><td>消身踵落とし<small>影を残して下がり、高く跳んで踵落とし。バウンドさせる。</small></td><td class="cmd">← ← + K</td></tr>
+          <tr><td>消身踵落とし<small>上段：しゃがんでかわせる。影を残して下がり、高く跳んで踵落とし。バウンドさせる。</small></td><td class="cmd">← ← + K</td></tr>
           <tr class="super"><td>超必殺技：影分身・軍勢<small>分身が3つの波で襲う：両側から中段（立ちガード）、両側から下段（しゃがみガード）、最後に上からゆっくり急降下（立ち）。急降下が当たれば最後の1体が背後から中段で蹴り、クロの方へ吹き飛ばす。当たらなければ着地後に背後から下段（しゃがんで逆向きにガード）、当たると足を払って転ばせる。相手が画面端なら全てクロ側から来て、波が長くなる。コンボ中なら10体で浮かせ続け、最後の1体で手前にバウンド。ガードされても五分。無敵ではない：分身が出るまで、近くからの弱い攻撃では止まらない（ダメージはそのまま受け、体力が尽きればKO）が、強い攻撃・必殺技・離れた位置からの攻撃では止まる。MP満タンが必要。</small></td><td class="cmd">パンチ + キック</td></tr>
         </tbody>
       </table></div>

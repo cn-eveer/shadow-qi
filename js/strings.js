@@ -33,7 +33,7 @@ const STRINGS = {
         if (f.hitConnected && f.lastResult === 'hit' && !f.move.heavyHit) { f.move.heavyHit = true; game.shake = Math.max(game.shake, 9); sfx('hitH'); } } }),
     nL: SL('Kunai Rise', 'uppercutW', 'kunaiRise', { blade: true, trail: { cx: 10, cy: 90, r: 95, a0: -30, a1: 95, col: '225,235,255' } }),
     nE: SF('k', 'Crescent Kick', 'kickW', 'highKick', { dmg: 50, trail: { cx: 0, cy: 62, r: 78, a0: -45, a1: 95, col: '190,150,255' } }),
-    nl2: SG('k', 'Sweep Slash', 'crouch', 'lowKick', { low: true, blade: true, hitbox: [20,90,8,44] }),
+    nl2: SG('k', 'Sweep Slash', 'crouch', 'lowKick', { low: true, blade: true, hitbox: [20,90,8,44], recovery: 16, advBlock: -6 }), // J, J: slow to recover (16, 12 after his faster recovery) and −6 when guarded: a low that can be punished
     nlE: SF('k', 'Shadow Snap Kick', 'kickW', 'midKick', { step: 8, hitbox: [15,100,45,130], kdVy: 5 }), // J, J, K / J, K: low, low… then a mid (guard the lows crouching and this one hits)
     nD: SF('k', 'Shadow Reaper', 'crouch', 'sweep', { fixedFrames: true, pre: 6, startup: 10, active: 7, recovery: 22, advBlock: -6, /* (−12 with the guard stall) */ noFiveLag: true, low: true, step: 8, hitbox: [0,105,0,34], kd: true, kdVx: 6, kdVy: 6 }), // U, U, ↓ + K: the low ending (U, U, K drops from above instead)
     jPalm: SJ('p', 'Rising Kunai Slash', 'jabW', 'kunaiRise', { blade: true, trail: { cx: 10, cy: 90, r: 80, a0: -30, a1: 90, col: '225,235,255' } }),
@@ -615,19 +615,21 @@ function spawnFlame(f) {
   sfx('flame');
 }
 function orbHold(p) {
-  const f = p.owner, s = f.ch.scale;
+  const f = p.owner, o = other(f), s = f.ch.scale;
   p.x = f.x + f.facing * (-26 + p.idx * 26) * s;
-  p.y = f.y + (158 + (p.idx === 1 ? 16 : 0) + (p.big ? p.r : 0) + Math.sin(globalT * 0.2 + p.idx) * 3) * s; // (the great ball rises as it swells)
+  const oppJumping = o && o.y > 20; // opponent is in the air
+  const yHeight = oppJumping ? 100 : 158; // lower spawn point if opponent is jumping
+  p.y = f.y + (yHeight + (p.idx === 1 ? 16 : 0) + (p.big ? p.r : 0) + Math.sin(globalT * 0.2 + p.idx) * 3) * s; // (the great ball rises as it swells)
 }
 function spawnOrb(f, idx, big) { // (big: ← ← + I's one great Thunder Ball, which hits as hard as the three it replaced)
-  const p = { id: ++serial, type: 'homing', owner: f, idx, hold: true, big: !!big, x: 0, y: 0, vx: 0, vy: 0, r: 13, dmg: big ? 80 : 34, stun: big ? 22 : 16, bstun: big ? 14 : 10, push: big ? 5 : 3, hitstop: big ? 12 : 6,
-    stunT: 70, stunKind: 'shock', life: 200, chip: true, air: true, dir: f.facing };
+  const p = { id: ++serial, type: 'homing', owner: f, idx, hold: true, big: !!big, x: 0, y: 0, vx: 0, vy: 0, r: 13, dmg: big ? 95 : 34, stun: big ? 30 : 16, bstun: big ? 18 : 10, push: big ? 5 : 3, hitstop: big ? 12 : 6,
+    stunT: 85, stunKind: 'shock', life: 200, chip: true, air: true, height: 'high', dir: f.facing };
   orbHold(p); projs.push(p); sfx('zap');
 }
 function launchOrb(f, idx) {
   for (const p of projs) if (p.owner === f && p.type === 'homing' && p.hold && p.idx === idx) {
     const o = other(f), dx = o.x - p.x, dy = o.y + 70 - p.y, L = Math.hypot(dx, dy) || 1;
-    const v = p.big ? 4 : 5; p.hold = false; p.vx = dx / L * v; p.vy = dy / L * v; p.dir = Math.sign(dx) || f.facing; sfx(p.big ? 'beam' : 'throw');
+    const v = p.big ? 7 : 5; p.hold = false; p.vx = dx / L * v; p.vy = dy / L * v; p.dir = Math.sign(dx) || f.facing; p.startX = p.x; p.startY = p.y; sfx(p.big ? 'beam' : 'throw');
   }
 }
 function projBox(p) {
@@ -904,7 +906,7 @@ function updateProjs() {
         if (hu && overlap(hb, hu)) {
           const last = p.hits === p.max - 1;
           applyHit(own, tgt, { dmg: last ? p.lastDmg : p.dmg, stun: p.stun, bstun: p.bstun, push: last ? 4 : p.push, kd: false, type: 'mid', chip: true,
-            hitstop: last ? 8 : 2, proj: true, str: last ? 2 : 1, gdrain: 2, label: 'Fire Breath' }, own.facing, hb, hu);
+            hitstop: last ? 8 : 2, proj: true, str: last ? 2 : 1, gdrain: 2, height: 'high', label: 'Fire Breath' }, own.facing, hb, hu);
           p.hits++; p.last = p.t;
         }
       }
@@ -917,10 +919,10 @@ function updateProjs() {
         orbHold(p); continue;
       }
       p.ft = (p.ft || 0) + 1;
-      if (p.ft < 60) { // track the opponent for about a second
-        const o = other(p.owner), dx = o.x - p.x, dy = (caughtIn(o) ? o.y : 0) + 70 * o.ch.scale - p.y, L = Math.hypot(dx, dy) || 1; // (they home in at body height: jump over them)
-        if (caughtIn(o) || o.y < 20) p.vx += (dx / L * 6 - p.vx) * 0.07; if (caughtIn(o)) p.vy += (dy / L * 6 - p.vy) * 0.07; else { p.vy = 0; p.y += (70 - p.y) * 0.25; } // (on someone not in a combo they drop to body height and fly level: a jump clears them)
-      }
+      const maxRange = 300; // short range for lightning ball
+      const travelDist = Math.hypot(p.x - (p.startX || p.x), p.y - (p.startY || p.y));
+      if (travelDist > maxRange) { p.dead = true; sparks(p.x, GROUND - p.y, 'clash'); continue; } // dies at max range
+      // straight line travel: no homing, no curving
       if (p.t % 2 === 0) parts.push({ type: 'aura', x: p.x - p.vx + rnd(-4, 4), y: GROUND - p.y + rnd(-4, 4), vx: 0, vy: -0.4, life: 12, max: 12, r: rnd(2.5, 5), col: '160,200,255' });
     }
     p.x += p.vx; p.y += p.vy; p.life--;
@@ -929,6 +931,8 @@ function updateProjs() {
     if (p.type === 'wave' && p.t % 2 === 0) dustAt(p.x, false);
     if (p.type === 'qi' && p.t % 2 === 0) parts.push({ type: 'aura', x: p.x - p.vx * 2 + rnd(-6, 6), y: GROUND - p.y + rnd(-10, 10), vx: -p.vx * 0.1, vy: rnd(-0.6, 0.6), life: 14, max: 14, r: rnd(3, 6), col: '125,235,255' });
     if (p.air && p.y <= 8) { p.dead = true; sparks(p.x, GROUND - 8, 'block'); continue; }
+    // Lightning ball hits wall: die immediately
+    if (p.type === 'homing' && (p.x < WALL_L || p.x > WALL_R)) { p.dead = true; sparks(p.x, GROUND - p.y, 'clash'); continue; }
     if (p.x < -60 || p.x > W + 60 || p.life <= 0) { p.dead = true; if (p.type === 'clone') puff(p.x, 60); continue; }
     const tgt = other(p.owner), hu = hurtbox(tgt, !!p.juggle, !!p.low);
     if (tgt.state === 'attack' && tgt.move && tgt.move.barrier && tgt.mf > tgt.move.startup && tgt.mf <= tgt.move.startup + tgt.move.active && ['qi', 'homing', 'shuriken', 'orb', 'pfist', 'wave', 'rain'].includes(p.type)) {
@@ -949,7 +953,7 @@ function updateProjs() {
       const hb = projBox(p);
       if (overlap(hb, hu) && ['qi', 'homing', 'shuriken', 'orb'].includes(p.type) && parryReflect(tgt, p)) continue; // (Earth Stomp's wave isn't sent back: parried, it stops)
       if (overlap(hb, hu)) {
-        const pr = applyHit(p.owner, tgt, { dmg: p.dmg, stun: p.stun, bstun: p.bstun, push: p.push, kd: !!p.kd, type: 'mid', chip: !!p.chip, hitstop: p.hitstop,
+        const pr = applyHit(p.owner, tgt, { dmg: p.dmg, stun: p.stun, bstun: p.bstun, push: p.push, kd: !!p.kd, type: 'mid', chip: !!p.chip, hitstop: p.hitstop, height: p.height,
           proj: true, str: p.kd ? 2 : 1, superHit: !!p.superHit, gMul: p.gMul, low: !!p.lowHit, overhead: !!p.overhead, kdVx: p.kdVx, kdVy: p.kdVy, jugVy: p.jugVy, fixedLift: !!p.fixedLift, launch: !!p.launch, launchVy: p.launchVy, bounce: !!p.bounce, stunT: p.stunT, stunKind: p.stunKind, gdrain: p.type === 'shuriken' || p.type === 'homing' ? 5 : p.juggle ? 4 : 8,
           label: p.type === 'pfist' ? (p.superHit ? 'Crystal Storm' : 'Crystal Shard') : p.type === 'shuriken' ? 'Shuriken' : p.type === 'homing' ? 'Lightning Ball' : p.type === 'wave' ? 'Earth Stomp' : p.type === 'rain' ? (p.qi ? 'Qi Spiral' : 'Lightning Rain') : p.type === 'qi' ? 'Qi Blast' : p.relay ? 'Clone Relay' : p.juggle ? 'Shadow Army' : 'Shadow Clone' }, Math.sign(p.vx) || p.dir, hb, hu);
         p.dead = true;

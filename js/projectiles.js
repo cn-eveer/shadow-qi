@@ -13,7 +13,7 @@ function spawnAirShuriken(f) {
 }
 function spawnQi(f) {
   projs.push({ id: ++serial, type: 'qi', owner: f, x: f.x + f.facing * 58 * f.ch.scale, y: 88, vx: f.facing * 6.5, vy: 0, r: 20,
-    dmg: 75, stun: 20, bstun: 16, push: 5, hitstop: 8, life: 240, chip: true, dir: f.facing });
+    dmg: 75, stun: 20, bstun: 16, push: 5, hitstop: 8, life: 240, chip: true, height: 'high', dir: f.facing }); // (a high: it passes over a crouching fighter)
   sfx('qi');
 }
 function spawnClone(f, sup, idx, dmg, lvl, near) { // (dmg: a super's own damage per clone; lvl: 'mid' — above the shins — or 'low' — along the floor; near: it appears close to them)
@@ -25,7 +25,7 @@ function spawnClone(f, sup, idx, dmg, lvl, near) { // (dmg: a super's own damage
   if (near) x = fromBack ? clamp(o.x + side * 120, -60, W + 60) : side * (o.x - side * 140 - x) > 0 ? o.x - side * 140 : x; // (to catch someone bouncing off the floor)
   projs.push({ id: ++serial, type: 'clone', owner: f, x, y: 0, vx: dir * sp, vy: 0, w: 28, h0: lvl === 'mid' ? 30 : lvl === 'low' ? 0 : 10, h1: lvl === 'low' ? 40 : 120, low: lvl === 'low', lowHit: lvl === 'low',
     dmg: dmg || (sup ? 32 : 66), stun: sup ? 24 : 26, bstun: 15, push: sup ? 1.5 : 5,
-    kd: false, juggle: sup, superHit: sup, hitstop: 7, life: Math.round(range / sp), chip: true, dir });
+    kd: false, juggle: sup, superHit: sup, hitstop: 7, life: Math.round(range / sp), chip: true, height: sup ? undefined : 'high', dir }); // (→ → + J's clone is a high: duck under it; the Shadow Army's are not)
   puff(x, 60); sfx('clone');
   return projs[projs.length - 1];
 }
@@ -371,7 +371,7 @@ function drawPossessBar(f) { // the time left in the possession, over his head
   ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(x - 1, y - 1, 62, 7);
   ctx.fillStyle = angel ? '#ffd86b' : '#ff4a3a'; ctx.fillRect(x, y, 60 * k, 5);
 }
-const AEGIS_COST = 25; // the Aegis lives on a quarter of the guard meter: its four seconds use it all, hits use it up sooner
+const AEGIS_COST = 40; // the Aegis lives on 40% of the guard meter: its four seconds use it all, hits use it up sooner
 function aegisSpent(f) { f.guardSlowT = 600; } // after the Aegis: the guard meter comes back slowly
 // heavy techniques are slow to recover when they miss or are guarded, but quick to follow up when they land
 function hitRecover(f, n) { const mv = f.move; if (!mv.cut && f.hitConnected && f.lastResult !== 'block') { mv.cut = true; mv.recovery = Math.min(mv.recovery, n); } }
