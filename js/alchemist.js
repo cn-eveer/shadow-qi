@@ -438,7 +438,7 @@ function golemUpdate(f, o) {
       if (a.t > A.su && a.t <= A.su + A.ac && !a.hit) {
         const parts = golemStrike(f, g, a, A, { x: tgx }), hb = parts.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), x1: Math.max(u.x1, b.x1), y0: Math.min(u.y0, b.y0), y1: Math.max(u.y1, b.y1) })), hu = hurtbox(o, !!(A.leap || A.jug), !!A.h.low); // (a low punch reaches someone lying on the floor too)
         g.dbgParts = parts; g.dbgMf = game.frame; // (training's hitbox view draws these)
-        const slip = A.grab && (o.y > 20 || o.state === 'knock' || (g.grabCD > 0 && !f.fuseT)); // (no grabbing someone in the air, or again too soon after letting go — unless fused/in super)
+        const slip = A.grab && (o.y > 20 || o.state === 'knock' || g.grabCD > 0); // (no grabbing someone in the air, or again too soon after letting go)
         const touch = hu && parts.find(b => overlap(b, hu)), gTouch = og && !A.grab ? parts.find(b => overlap(b, golemBox(og))) : null; // (the other golem, if it's the nearer one, takes the blow)
         if (gTouch && !a.hit && tgx === og.x) { golemDamage(o, Math.round((A.h.dmg || 20) * (f.ch.dmgMul || 1)), (gTouch.x0 + gTouch.x1) / 2, GROUND - (gTouch.y0 + gTouch.y1) / 2); a.hit = true; a.res = 'hit'; }
         if (touch && !slip && !a.hit) { const res = golemHit(f, o, { type: 'mid', chip: false, proj: false, gbstun: 45, juggle: !!A.jug, ...A.h }, touch, hu); if (res) { a.hit = true; a.res = res; if (A.grab && res === 'hit') golemSeize(f, o); if (A.leap) { g.mvx = 0; g.vy = Math.min(g.vy, 2); } if (a.kind === 'ham') { dustAt(g.x + g.facing * 70, true); game.shake = Math.max(game.shake, 5); } } }
