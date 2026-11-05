@@ -245,13 +245,13 @@ function specialMoveBase(id) {
     case 'flame': return { id, label: 'Fire Breath', startup: 24, active: 32, recovery: 16, /* (a shorter stream: 32 + 3 active) */ blockAdv: -14, hitAdv: 10, wind: 'seal', pose: 'breath', proj: 'flame', limit: 1, slow: true, interruptChance: 0.4,
       poseFn(f, mf) { return mf <= 24 ? handSign(mf) : null; },
       onFrame(f, o, mf) { if (mf <= 24 && mf % 2 === 0) ember(f); if (mf === 25) spawnFlame(f); } };
-    case 'fireballs': return { id, label: 'Thunder Ball', startup: 34, active: 15, recovery: 1, noGuardLag: true, fixedFrames: true, /* (he's free once the last ball flies, frame 48: a projectile — no frameMod recovery added) */ wind: 'seal', pose: 'throw', proj: 'homing', limit: 1, slow: true, interruptChance: 0.4,
-      poseFn(f, mf) { return mf <= 34 ? handSign(mf) : null; },
+    case 'fireballs': return { id, label: 'Thunder Ball', startup: 44, active: 15, recovery: 1, noGuardLag: true, fixedFrames: true, /* (he's free once the last ball flies, frame 58: a projectile — no frameMod recovery added) */ wind: 'seal', pose: 'throw', proj: 'homing', limit: 1, slow: true, interruptChance: 0.4,
+      poseFn(f, mf) { return mf <= 44 ? handSign(mf) : null; },
       onFrame(f, o, mf) {
         if (mf === 8) spawnOrb(f, 1, true);                                       // one great lightning ball crackles into being overhead during the hand signs, swelling as they go on
-        if (mf > 8 && mf <= 34) for (const p of projs) if (p.owner === f && p.type === 'homing' && p.hold) p.r = 13 + (mf - 8) * 0.8;
-        if (mf === 36) launchOrb(f, 1);                                           // then flies at the opponent
-        if (mf <= 34 && mf % 2 === 0) crackle(f);
+        if (mf > 8 && mf <= 44) for (const p of projs) if (p.owner === f && p.type === 'homing' && p.hold) p.r = 13 + (mf - 8) * 0.8;
+        if (mf === 46) launchOrb(f, 1);                                           // then flies at the opponent
+        if (mf <= 44 && mf % 2 === 0) crackle(f);
       } };
     case 'vanishDrop': return { id, label: 'Vanish Drop Kick', startup: 36, active: 22, recovery: 15, blockAdv: -16, /* (a longer fall: out longer in the air, where it can be punished) */ wind: 'crouch', pose: 'axe', manualY: true,
       bodyHurt: true, // (fitted to his actual silhouette through the leap)
