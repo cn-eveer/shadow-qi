@@ -622,8 +622,8 @@ function orbHold(p) {
   p.y = f.y + (yHeight + (p.idx === 1 ? 16 : 0) + (p.big ? p.r : 0) + Math.sin(globalT * 0.2 + p.idx) * 3) * s; // (the great ball rises as it swells)
 }
 function spawnOrb(f, idx, big) { // (big: ← ← + I's one great Thunder Ball, which hits as hard as the three it replaced)
-  const p = { id: ++serial, type: 'homing', owner: f, idx, hold: true, big: !!big, x: 0, y: 0, vx: 0, vy: 0, r: 13, dmg: big ? 80 : 34, stun: big ? 22 : 16, bstun: big ? 14 : 10, push: big ? 5 : 3, hitstop: big ? 12 : 6,
-    stunT: 70, stunKind: 'shock', life: 200, chip: true, air: true, dir: f.facing };
+  const p = { id: ++serial, type: 'homing', owner: f, idx, hold: true, big: !!big, x: 0, y: 0, vx: 0, vy: 0, r: 13, dmg: big ? 95 : 34, stun: big ? 30 : 16, bstun: big ? 18 : 10, push: big ? 5 : 3, hitstop: big ? 12 : 6,
+    stunT: 85, stunKind: 'shock', life: 200, chip: true, air: true, dir: f.facing };
   orbHold(p); projs.push(p); sfx('zap');
 }
 function launchOrb(f, idx) {
